@@ -1,11 +1,13 @@
 import csv
-from functools import reduce
+
+from core.export import BaseExport
 
 
-class FicheDetectionExport:
+class FicheDetectionExport(BaseExport):
     fiche_detection_fields = [
         ("numero", "Numéro de fiche"),
         ("evenement__numero", "Num. événement"),
+        ("evenement__etat", "État de l’évènement"),
         ("evenement__organisme_nuisible__libelle_court", "Organisme nuisible"),
         ("evenement__organisme_nuisible__code_oepp", "Code OEPP"),
         ("evenement__statut_reglementaire__libelle", "Statut réglementaire"),
@@ -71,15 +73,6 @@ class FicheDetectionExport:
             + self.zone_infestee_fields
         )
         return [header for _, header in all_fields]
-
-    def get_field_value(self, instance, field):
-        """Récupère et formate la valeur d'un champ, en suivant les relations Django si nécessaire."""
-        return reduce(lambda obj, attr: getattr(obj, attr, None) if obj else None, field.split("__"), instance)
-
-    def add_data(self, result, instance, fields):
-        for field, header in fields:
-            result[header] = self.get_field_value(instance, field)
-        return result
 
     def add_fiche_detection_data(self, result, fiche):
         return self.add_data(result, fiche, self.fiche_detection_fields)
