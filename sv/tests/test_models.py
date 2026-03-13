@@ -651,6 +651,8 @@ def test_delete_fiche_zone_creates_revision_on_evenement():
             "libelle": fiche_zone.createur.libelle,
             "niveau1": fiche_zone.createur.niveau1,
             "niveau2": fiche_zone.createur.niveau2,
+            "departement": None,
+            "region": None,
         },
         "commentaire": fiche_zone.commentaire,
         "zones_infestees": [
