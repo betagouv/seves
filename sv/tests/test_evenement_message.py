@@ -547,6 +547,7 @@ def test_create_multiple_messages_adds_contacts_once(
         assert message.message_type == Message.MESSAGE
 
     # Vérification des contacts dans l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
 
     agents_section = page.locator("[data-testid='contacts-agents']")
