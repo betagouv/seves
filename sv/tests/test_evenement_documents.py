@@ -46,7 +46,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
         expect(accordion.locator(".errorlist")).to_have_text(
             "L'extension de fichier « json » n’est pas autorisée pour le type de document « Compte rendu de réunion ». "
             "Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, "
-            "txt, eml."
+            "txt, eml, ppt, pptx, odp."
         )
         expect(accordion.locator('[name$="nom"]')).to_have_value(document_page.BASIC_DOCUMENT_NAME)
         expect(accordion.locator('[name$="document_type"]')).to_have_value(Document.TypeDocument.COMPTE_RENDU_REUNION)
