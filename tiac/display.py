@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from tiac.models import EvenementSimple, InvestigationTiac
 
@@ -16,6 +17,7 @@ class DisplayItem:
     etat: str
     readable_etat: str
     etablissements: list[str]
+    last_update: datetime
 
     @classmethod
     def from_evenement_simple(cls, evenement_simple: EvenementSimple):
@@ -32,6 +34,7 @@ class DisplayItem:
             etat=evenement_simple.etat,
             readable_etat=evenement_simple.readable_etat,
             etablissements=[e.displayed_name for e in evenement_simple.etablissements.all()],
+            last_update=evenement_simple.last_updated,
         )
 
     @classmethod
@@ -49,6 +52,7 @@ class DisplayItem:
             etat=investigation_tiac.etat,
             readable_etat=investigation_tiac.readable_etat,
             etablissements=[e.displayed_name for e in investigation_tiac.etablissements.all()],
+            last_update=investigation_tiac.last_updated,
         )
 
     @classmethod

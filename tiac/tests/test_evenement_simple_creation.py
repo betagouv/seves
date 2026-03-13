@@ -69,7 +69,9 @@ def test_can_create_evenement_simple_with_all_fields(
 
     evenement = EvenementSimple.objects.last()
     assert_models_are_equal(
-        input_data, evenement, to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation"]
+        input_data,
+        evenement,
+        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation", "last_updated"],
     )
     assert LienLibre.objects.count() == 3
 

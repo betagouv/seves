@@ -13,6 +13,8 @@ from core.model_mixins import (
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
+    WithLastUpdatedDatetime,
+    update_last_updated_on_revision,
 )
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -27,6 +29,7 @@ from ssa.models.mixins import (
 )
 
 
+@update_last_updated_on_revision
 @reversion.register
 class EvenementInvestigationCasHumain(
     SsaBaseEvenementModel,
@@ -43,6 +46,7 @@ class EvenementInvestigationCasHumain(
     EmailNotificationMixin,
     WithMessageUrlsMixin,
     DirtyFieldsMixin,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     source = models.CharField(

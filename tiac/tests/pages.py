@@ -320,23 +320,26 @@ class EvenementListPage(WithTreeSelect):
     def date_creation_cell(self, line_index=1):
         return self._cell_content(line_index, 3)
 
-    def etablissement_cell(self, line_index=1):
+    def date_maj_cell(self, line_index=1):
         return self._cell_content(line_index, 4)
 
-    def malades_cell(self, line_index=1):
+    def etablissement_cell(self, line_index=1):
         return self._cell_content(line_index, 5)
 
-    def type_cell(self, line_index=1):
+    def malades_cell(self, line_index=1):
         return self._cell_content(line_index, 6)
 
-    def conclusion_cell(self, line_index=1):
+    def type_cell(self, line_index=1):
         return self._cell_content(line_index, 7)
 
-    def danger_cell(self, line_index=1):
+    def conclusion_cell(self, line_index=1):
         return self._cell_content(line_index, 8)
 
-    def etat_cell(self, line_index=1):
+    def danger_cell(self, line_index=1):
         return self._cell_content(line_index, 9)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 10)
 
     def open_sidebar(self):
         self.page.locator(".open-sidebar").click()

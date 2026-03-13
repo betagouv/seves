@@ -74,6 +74,7 @@ def test_can_create_investigation_cas_humain_with_all_fields(
             "numero_evenement",
             "date_creation",
             "numero_rasff",
+            "last_updated",
             "id",
         ],
     )

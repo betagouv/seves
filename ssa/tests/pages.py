@@ -388,17 +388,20 @@ class EvenementProduitListPage(WithTreeSelect):
     def date_creation_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
-    def description_cell(self, line_index=1):
+    def date_maj_cell(self, line_index=1):
         return self._cell_content(line_index, 3)
 
-    def type_evenement_cell(self, line_index=1):
-        return self._cell_content(line_index, 6)
+    def description_cell(self, line_index=1):
+        return self._cell_content(line_index, 4)
 
-    def createur_cell(self, line_index=1):
+    def type_evenement_cell(self, line_index=1):
         return self._cell_content(line_index, 7)
 
-    def etat_cell(self, line_index=1):
+    def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 8)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 9)
 
     @property
     def annee_field(self):
