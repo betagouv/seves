@@ -210,6 +210,7 @@ def test_fichezonedelimitee_update_adds_agent_and_structure_contacts(
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
 
     # Vérification de l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
     expect(
         page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
@@ -251,6 +252,7 @@ def test_fichezonedelimitee_update_multiple_times_adds_contacts_once(
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
 
     # Vérification de l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
     expect(
         page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)

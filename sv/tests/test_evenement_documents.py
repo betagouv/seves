@@ -291,6 +291,7 @@ def test_adding_multiple_documents_adds_contacts_once(live_server, page: Page, m
     assert evenement.documents.count() == previous + 7
 
     # Vérification des contacts dans l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
 
     # Vérification qu'il n'y a qu'une occurrence de chaque contact
