@@ -1,7 +1,7 @@
+from django.db.models import Q
 from django.forms.widgets import DateInput
 import django_filters
 
-from core.constants import REGION_STRUCTURE_MAPPING
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
     WithEtatFilterMixin,
@@ -64,15 +64,9 @@ class EvenementFilter(
     def filter_region(self, queryset, name, value):
         """
         Filtre les événements en fonction d'une région selon deux critères :
-        1. Premier niveau : événements ayant au moins une fiche détection avec un ou plusieurs lieux dans la région spécifiée
-        2. Deuxième niveau : événements dont la structure créatrice appartient à la région spécifiée (selon un mapping prédéfini) et
-         - n'ayant aucun lieu ou,
-         - un/plusieurs lieux sans la region renseignée et/ou dans une région différente.
+        1. Événements ayant au moins une fiche détection avec un ou plusieurs lieux dans la région spécifiée
+        2. Événements dont la structure créatrice à un lien à la région spécifiée
         """
-        # Premier niveau
-        region_queryset = queryset.filter(detections__lieux__departement__region=value).distinct()
-        # Deuxième niveau
-        if region_structure := REGION_STRUCTURE_MAPPING.get(value.nom):
-            structure_queryset = queryset.filter(detections__createur__niveau2=region_structure).distinct()
-            return region_queryset | structure_queryset
-        return region_queryset
+        return queryset.filter(
+            Q(detections__lieux__departement__region=value) | Q(detections__createur__region=value)
+        ).distinct()

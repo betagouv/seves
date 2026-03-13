@@ -82,6 +82,11 @@ class Structure(models.Model):
 
     force_can_be_contacted = models.BooleanField(default=False)
 
+    region = models.ForeignKey("Region", on_delete=models.PROTECT, verbose_name="Région", blank=True, null=True)
+    departement = models.ForeignKey(
+        "Departement", on_delete=models.PROTECT, verbose_name="Département", blank=True, null=True
+    )
+
     objects = StructureQueryset.as_manager()
 
     def __str__(self):
