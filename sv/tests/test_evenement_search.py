@@ -2,7 +2,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import REGION_STRUCTURE_MAPPING, Visibilite
+from core.constants import Visibilite
 from core.factories import ContactAgentFactory, ContactStructureFactory, RegionFactory, StructureFactory
 from core.models import Contact, Region
 from seves import settings
@@ -161,9 +161,8 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     lorsque les lieux n'ont pas de région spécifiée."""
     charente, finistere, *_ = ensure_departements("Charente-Maritime", "Finistère")
     nouvelle_aquitaine: Region = charente.region
-    structure_region_nouvelle_aquitaine = REGION_STRUCTURE_MAPPING.get(nouvelle_aquitaine.nom)
-    structure_nouvelle_aquitaine = StructureFactory(
-        niveau2=structure_region_nouvelle_aquitaine, libelle=structure_region_nouvelle_aquitaine
+    structure = StructureFactory(
+        niveau2="DRAAF-NOUVELLE-AQUITAINE", libelle="DRAAF-NOUVELLE-AQUITAINE", region=nouvelle_aquitaine
     )
 
     # Evenements avec lieu(x)
@@ -173,15 +172,15 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     evenement_lieu_naq_structure_naq = LieuFactory(
         commune="La Rochelle",
         departement=charente,
-        fiche_detection__evenement__createur=structure_nouvelle_aquitaine,
+        fiche_detection__evenement__createur=structure,
     ).fiche_detection.evenement
-    fiche_detection = FicheDetectionFactory(createur=structure_nouvelle_aquitaine)
+    fiche_detection = FicheDetectionFactory(createur=structure)
     LieuFactory(fiche_detection=fiche_detection, departement__nom="Finistère", commune="Quimper")
     LieuFactory(fiche_detection=fiche_detection, departement=None, commune="")
     evenement_structure_naq = fiche_detection.evenement
 
     # Evenements sans lieu
-    evenement_sans_lieu_structure_naq = FicheDetectionFactory(createur=structure_nouvelle_aquitaine).evenement
+    evenement_sans_lieu_structure_naq = FicheDetectionFactory(createur=structure).evenement
     evenement_sans_lieu_structure_autre = FicheDetectionFactory().evenement
     Evenement.objects.update(visibilite=Visibilite.NATIONALE)
 
