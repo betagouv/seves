@@ -19,6 +19,8 @@ from core.model_mixins import (
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
+    WithLastUpdatedDatetime,
+    update_last_updated_on_revision,
 )
 from core.models import BaseEtablissement, Departement, Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -84,6 +86,7 @@ class BaseTiacModel(models.Model):
         ]
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementSimple(
     AllowsSoftDeleteMixin,
@@ -97,6 +100,7 @@ class EvenementSimple(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
@@ -276,6 +280,7 @@ class Analyses(models.TextChoices):
     INCONNU = "ne sait pas", "Ne sait pas"
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
@@ -289,6 +294,7 @@ class InvestigationTiac(
     EmailNotificationMixin,
     BaseTiacModel,
     DirtyFieldsMixin,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")

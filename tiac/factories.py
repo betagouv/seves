@@ -76,6 +76,10 @@ class BaseTiacFactory(DjangoModelFactory):
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
 
+    @factory.lazy_attribute
+    def last_updated(self):
+        return timezone.make_aware(datetime.datetime.now())
+
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
         if extracted and create:

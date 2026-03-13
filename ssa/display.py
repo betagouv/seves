@@ -10,6 +10,7 @@ if typing.TYPE_CHECKING:
 @dataclasses.dataclass
 class EvenementDisplay:
     date_creation: datetime
+    last_update: datetime
     numero: str
     createur: "Structure"
     description: str
@@ -44,4 +45,5 @@ class EvenementDisplay:
             categorie_produit=categorie_produit,
             categorie_danger=categorie_danger,
             type_evenement=evenement.get_type_evenement_display(),
+            last_update=evenement.last_updated,
         )

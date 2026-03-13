@@ -150,3 +150,20 @@ class WithLocalisableMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+class WithLastUpdatedDatetime(models.Model):
+    last_updated = models.DateTimeField(
+        db_index=True,
+        null=True,
+        blank=True,
+        verbose_name="Date de dernière mise à jour",
+    )
+
+    class Meta:
+        abstract = True
+
+
+def update_last_updated_on_revision(cls):
+    cls._update_last_updated_on_revision = True
+    return cls

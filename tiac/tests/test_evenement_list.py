@@ -1,3 +1,5 @@
+import datetime
+
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory
@@ -24,10 +26,10 @@ def test_list_table_order(live_server, mocked_authentification_user, page: Page)
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
-    assert search_page.numero_cell(line_index=1).text_content() == "T-2025.22"
-    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
+    assert search_page.numero_cell(line_index=1).text_content() == "T-2024.22"
+    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.22"
     assert search_page.numero_cell(line_index=3).text_content() == "T-2025.1"
-    assert search_page.numero_cell(line_index=4).text_content() == "T-2024.22"
+    assert search_page.numero_cell(line_index=4).text_content() == "T-2025.2"
 
 
 def test_row_content_evenement_simple(live_server, mocked_authentification_user, page: Page):
@@ -39,6 +41,7 @@ def test_row_content_evenement_simple(live_server, mocked_authentification_user,
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert (
         search_page.etablissement_cell().text_content().strip().replace("\n", "")
         == f"{etablissement.enseigne_usuelle} ({etablissement.raison_sociale})"
@@ -59,6 +62,7 @@ def test_row_content_investigation_tiac(live_server, mocked_authentification_use
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert (
         search_page.etablissement_cell().text_content().strip().replace("\n", "")
         == f"{etablissement.enseigne_usuelle} ({etablissement.raison_sociale})"
@@ -80,8 +84,8 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
 
     search_page.annee_field.fill("2025")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "T-2025.2"
-    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.1"
+    assert search_page.numero_cell().text_content() == "T-2025.1"
+    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
     expect(search_page.page.get_by_text("2024.22")).not_to_be_visible()
     expect(search_page.page.get_by_text("2024.2")).not_to_be_visible()
 
@@ -98,8 +102,8 @@ def test_list_can_filter_by_date_creation(live_server, mocked_authentification_u
     search_page.start_date_field.fill("2024-06-17")
     search_page.end_date_field.fill("2024-06-20")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "T-2025.3"
-    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
+    assert search_page.numero_cell().text_content() == "T-2025.2"
+    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.3"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
@@ -118,8 +122,8 @@ def test_list_can_filter_by_date_reception(live_server, mocked_authentification_
     search_page.end_date_reception_field.fill("2024-06-20")
     search_page.add_filters()
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "T-2025.3"
-    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.2"
+    assert search_page.numero_cell().text_content() == "T-2025.2"
+    assert search_page.numero_cell(line_index=2).text_content() == "T-2025.3"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 

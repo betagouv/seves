@@ -530,7 +530,7 @@ def sirene_api(request, siret: str):
 
 
 class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
-    compare_exclude = ["date_derniere_mise_a_jour", "is_infected", "deleted_by", "notification_sent"]
+    compare_exclude = ["date_derniere_mise_a_jour", "is_infected", "deleted_by", "notification_sent", "last_updated"]
     template_name = "reversion/version_list.html"
 
     def dispatch(self, request, *args, **kwargs):

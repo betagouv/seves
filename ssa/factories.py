@@ -73,6 +73,10 @@ class EvenementProduitFactory(DjangoModelFactory):
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
 
+    @factory.lazy_attribute
+    def last_updated(self):
+        return timezone.make_aware(datetime.now())
+
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
         if extracted and create:
@@ -159,6 +163,10 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def createur(self):
         return Structure.objects.get(libelle="Structure Test")
+
+    @factory.lazy_attribute
+    def last_updated(self):
+        return datetime.now()
 
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811

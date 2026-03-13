@@ -81,6 +81,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
         "numero_evenement",
         "date_creation",
         "numero_rasff",
+        "last_updated",
         "id",
     ]
     evenement_produit_data = {k: v for k, v in evenement_produit.__dict__.items() if k not in fields_to_exclude}

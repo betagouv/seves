@@ -1,3 +1,5 @@
+import datetime
+
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 from pytest_django.asserts import assertRedirects
@@ -16,18 +18,17 @@ def test_old_url_redirects(client):
     assertRedirects(response, reverse("ssa:evenements-liste"), status_code=301)
 
 
-def test_list_table_order(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
-    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=22)
-    InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
+def test_list_table_order_by_default(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(numero_annee=2025, numero_evenement=2, last_updated=datetime.datetime.now())
+    EvenementProduitFactory(numero_annee=2025, numero_evenement=1, last_updated=datetime.datetime.now())
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=22, last_updated=datetime.datetime.now())
+    InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22, last_updated=datetime.datetime.now())
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-
-    assert search_page.numero_cell(line_index=1).text_content() == "A-2025.22"
-    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.2"
+    assert search_page.numero_cell(line_index=1).text_content() == "A-2024.22"
+    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.22"
     assert search_page.numero_cell(line_index=3).text_content() == "A-2025.1"
-    assert search_page.numero_cell(line_index=4).text_content() == "A-2024.22"
+    assert search_page.numero_cell(line_index=4).text_content() == "A-2025.2"
 
 
 def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, page: Page):
@@ -68,6 +69,7 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
 
     assert search_page.numero_cell().text_content() == evenement.numero
     assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert search_page.description_cell().inner_text() == evenement.description
     assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
@@ -83,7 +85,8 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
 
     search_page.annee_field.fill("2025")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "A-2025.2"
+    assert search_page.numero_cell().text_content() == "A-2025.1"
+    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2024.22")).not_to_be_visible()
 
 
