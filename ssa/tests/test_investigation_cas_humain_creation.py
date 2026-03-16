@@ -369,8 +369,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     evenement = InvestigationCasHumainFactory.build()
 
     mock_requests_get.return_value.text = "mocked content"
-    mock_csv_reader.return_value = None
-    call_count = {"count": 0}
+    mock_csv_reader.return_value = iter([])
+    call_count = {"count": 0, "count_communes": 0}
 
     def handle_insee_siret(route):
         data = {
@@ -415,14 +415,11 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
-        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        data = {"nom": "Paris 15e Arrondissement", "code": "75115", "departement": {"code": "75", "nom": "Paris"}}
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
+        call_count["count_communes"] += 1
 
-    page.route(
-        "https://geo.api.gouv.fr/communes/.+",
-        handle_insee_commune,
-    )
+    page.route("https://geo.api.gouv.fr/communes/75115?fields=departement", handle_insee_commune)
 
     creation_page = InvestigationCasHumainFormPage(page, live_server.url)
 
@@ -442,6 +439,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     )
     departement = page.locator(".fr-modal__content").locator("visible=true").locator('[id$="-departement"]')
     expect(departement).to_have_value("75")
+    assert call_count["count_communes"] == 1
+    assert call_count["count"] == 1
 
 
 def test_can_add_free_links(live_server, page: Page, choice_js_fill):
