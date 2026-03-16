@@ -116,9 +116,9 @@ def fin_suivi_removed(sender, instance, **kwargs):
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
-    AuditLog.objects.create(user=user, ip=request.META.get("X-Forwarded-For"), action="Login success")
+    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login success")
 
 
 @receiver(user_login_failed)
 def log_user_login_failed(sender, request, user, **kwargs):
-    AuditLog.objects.create(user=user, ip=request.META.get("X-Forwarded-For"), action="Login failed")
+    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login failed")
