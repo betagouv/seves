@@ -13,6 +13,7 @@ from django.views.generic.detail import BaseDetailView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
@@ -128,6 +129,7 @@ class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateV
         return HttpResponseRedirect(self.object.get_absolute_url())
 
 
+@audit_log("page view")
 class InvestigationCasHumainDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,

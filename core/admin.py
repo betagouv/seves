@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Agent, Contact, Departement, Document, Export, FinSuiviContact, Message, Region, Structure
+from .models import Agent, AuditLog, Contact, Departement, Document, Export, FinSuiviContact, Message, Region, Structure
 
 admin.site.register(Document)
 admin.site.register(Message)
@@ -24,8 +24,15 @@ class ExportAdmin(admin.ModelAdmin):
     pass
 
 
+class AuditLogAdmin(admin.ModelAdmin):
+    search_fields = ("ip", "action", "user__email")
+    raw_id_fields = ("user",)
+    readonly_fields = ("created_at",)
+
+
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Export, ExportAdmin)
 admin.site.register(FinSuiviContact)
 admin.site.register(Departement)
 admin.site.register(Region)
+admin.site.register(AuditLog, AuditLogAdmin)

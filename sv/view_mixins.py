@@ -5,11 +5,13 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch
 from django.http import Http404
 
+from core.mixins import WithOrderingMixin
 from sv.forms import (
     PrelevementForm,
 )
 
 from .constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES, KNOWN_OEPPS
+from .filters import EvenementFilter
 from .models import (
     Evenement,
     FicheDetection,
@@ -146,3 +148,39 @@ class EvenementDetailMixin(UserPassesTestMixin):
 
     def handle_no_permission(self):
         raise PermissionDenied()
+
+
+class WithFilteredListMixin(WithOrderingMixin):
+    def get_ordering_fields(self):
+        return {
+            "ac_notified": "is_ac_notified",
+            "numero_evenement": ("numero_annee", "numero_evenement"),
+            "organisme": "organisme_nuisible__libelle_court",
+            "creation": "date_creation",
+            "maj": "date_derniere_mise_a_jour_globale",
+            "createur": "createur__libelle",
+            "etat": "etat",
+            "visibilite": "visibilite",
+            "detections": "nb_fiches_detection",
+            "zone": "fiche_zone_delimitee__id",
+        }
+
+    def get_default_order_by(self):
+        return "maj"
+
+    def get_raw_queryset(self):
+        contact = self.request.user.agent.structure.contact_set.get()
+        return (
+            Evenement.objects.all()
+            .get_user_can_view(self.request.user)
+            .with_list_of_lieux_with_commune()
+            .with_fin_de_suivi(contact)
+            .with_nb_fiches_detection()
+            .optimized_for_list()
+            .with_date_derniere_mise_a_jour()
+        )
+
+    def get_queryset(self):
+        queryset = self.apply_ordering(self.get_raw_queryset())
+        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
+        return self.filter.qs

@@ -9,6 +9,7 @@ import {setUpSiretChoices} from "siret"
  * @typedef EtablissementData
  * @property {String} adresse_lieu_dit
  * @property {String} code_insee
+ * @property {String} code_postal
  * @property {String} commune
  * @property {String} departement
  * @property {String} pays
@@ -27,6 +28,7 @@ import {setUpSiretChoices} from "siret"
  * @property {HTMLSelectElement} departementInputTarget
  * @property {HTMLInputElement} paysInputTarget
  * @property {HTMLInputElement} codeInseeInputTarget
+ * @property {HTMLInputElement} codePostalInputTarget
  * @property {HTMLInputElement} communeInputTarget
  * @property {HTMLInputElement} siretInputTarget
  * @property {HTMLInputElement} deleteInputTarget
@@ -51,6 +53,7 @@ class EtablissementFormController extends BaseFormInModal {
         "adresseInput",
         "typeEtablissementInput",
         "codeInseeInput",
+        "codePostalInput",
         "siretInput",
         "numeroAgrementInput",
         "detailModal",
@@ -77,25 +80,31 @@ class EtablissementFormController extends BaseFormInModal {
         this.hasInspectionTarget.dispatchEvent(new Event("input"))
     }
 
-    onAddressChoice(event) {
-        this.communeInputTarget.value = event.detail.customProperties.city
-        this.codeInseeInputTarget.value = event.detail.customProperties.inseeCode
-        if (event.detail.customProperties.context) {
+    onAddressChoice({
+        detail: {
+            customProperties: {city, inseeCode, postCode, context},
+        },
+    }) {
+        this.communeInputTarget.value = city
+        this.codeInseeInputTarget.value = inseeCode
+        this.codePostalInputTarget.value = postCode
+        if (context) {
             this.paysInputTarget.value = "FR"
-            const [num, ..._] = event.detail.customProperties.context.split(/\s*,\s*/)
+            const [num, ..._] = context.split(/\s*,\s*/)
             this.departementInputTarget.value = num
         }
     }
 
     onSiretChoice({
         detail: {
-            customProperties: {code_commune, commune, raison, siret, streetData},
+            customProperties: {code_commune, code_postal, commune, raison, siret, streetData},
         },
     }) {
         this.siretInputTarget.value = siret
         this.raisonSocialeInputTarget.value = raison
         this.communeInputTarget.value = commune
         this.codeInseeInputTarget.value = code_commune
+        this.codePostalInputTarget.value = code_postal
         this.paysInputTarget.value = "FR"
 
         if (streetData) {
@@ -118,14 +127,15 @@ class EtablissementFormController extends BaseFormInModal {
             })
 
         if (!!code_commune && !!this.communesApiValue) {
-            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`)
-                .then(async response => {
+            fetch(`${this.communesApiValue}/${code_commune}?fields=departement`).then(
+                async response => {
                     const json = await response.json()
                     this.departementInputTarget.value = json.departement.code
-                })
-                .catch(() => {
+                },
+                () => {
                     /* NOOP */
-                })
+                },
+            )
         }
     }
 
@@ -159,6 +169,12 @@ class EtablissementFormController extends BaseFormInModal {
     renderCard(etablissement) {
         const title = etablissement.enseigne_usuelle || etablissement.raison_sociale
         const subTitle = etablissement.enseigne_usuelle ? etablissement.raison_sociale : ""
+        let location = etablissement.commune
+        if (etablissement.code_postal) {
+            location += ` (${etablissement.code_postal}) | ${etablissement.departement.replace(/^\s*\w+\s+-\s+/, "")}`
+        } else {
+            location += ` | ${etablissement.departement}`
+        }
         return `<div class="etablissement-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
@@ -170,7 +186,7 @@ class EtablissementFormController extends BaseFormInModal {
                     ${this.optionalText(subTitle, `<p class="fr-text--sm card-subtitle">${subTitle}</p>`)}
                     <div class="fr-card__desc">
                         <address class="fr-card__detail fr-icon-map-pin-2-line fr-my-2v adresse">
-                            ${this.joinText(" | ", etablissement.commune, etablissement.departement)}
+                            ${location}
                         </address>
                         ${this.optionalText(etablissement.siret, `<p>Siret : ${etablissement.siret}</p>`)}
                         ${this.optionalText(etablissement.type_etablissement, this.renderBadges([etablissement.type_etablissement]))}
@@ -197,7 +213,7 @@ class EtablissementFormController extends BaseFormInModal {
     }
 
     getDeleteConfirmationSentence(etablissement) {
-        return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
+        return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
 
     getDeleteConfirmationTitle(_etablissement) {

@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django_countries.fields import CountryField
 import reversion
 
+from core.model_mixins import WithLocalisableMixin
 from core.models import Departement, Region  # noqa F403
 
 
@@ -42,7 +43,7 @@ def validate_wgs84_latitude(value):
 
 
 @reversion.register()
-class Lieu(models.Model):
+class Lieu(WithLocalisableMixin, models.Model):
     class Meta:
         verbose_name = "Lieu"
         verbose_name_plural = "Lieux"
@@ -61,26 +62,7 @@ class Lieu(models.Model):
         verbose_name="Latitude WGS84", blank=True, null=True, validators=[validate_wgs84_latitude]
     )
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
-    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
-    code_insee = models.CharField(
-        max_length=5,
-        blank=True,
-        verbose_name="Code INSEE de la commune",
-        validators=[
-            RegexValidator(
-                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
-                message="Le code INSEE doit être valide",
-                code="invalid_code_insee",
-            ),
-        ],
-    )
-    departement = models.ForeignKey(
-        Departement,
-        on_delete=models.PROTECT,
-        verbose_name="Département",
-        blank=True,
-        null=True,
-    )
+
     is_etablissement = models.BooleanField(verbose_name="Établissement", default=False)
     activite_etablissement = models.CharField(max_length=100, verbose_name="Activité établissement", blank=True)
     pays_etablissement = CountryField(verbose_name="Pays établissement", blank=True)

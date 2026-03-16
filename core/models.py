@@ -28,7 +28,7 @@ from .managers import (
     MessagQueryset,
     StructureQueryset,
 )
-from .model_mixins import WithDocumentPermissionMixin
+from .model_mixins import WithDocumentPermissionMixin, WithLocalisableMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
@@ -633,7 +633,7 @@ class Departement(models.Model):
         return f"{self.numero} - {self.nom}"
 
 
-class BaseEtablissement(models.Model):
+class BaseEtablissement(WithLocalisableMixin, models.Model):
     siret = models.CharField(
         max_length=14,
         verbose_name="SIRET de l'établissement",
@@ -654,27 +654,6 @@ class BaseEtablissement(models.Model):
     enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
 
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
-    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
-    code_insee = models.CharField(
-        max_length=5,
-        blank=True,
-        verbose_name="Code INSEE de la commune",
-        validators=[
-            RegexValidator(
-                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
-                message="Le code INSEE doit être valide",
-                code="invalid_code_insee",
-            ),
-        ],
-    )
-    departement = models.ForeignKey(
-        Departement,
-        on_delete=models.PROTECT,
-        verbose_name="Département",
-        related_name="%(app_label)s_%(class)ss",
-        blank=True,
-        null=True,
-    )
     pays = CountryField(null=True)
 
     class Meta:
@@ -690,3 +669,14 @@ class BaseEtablissement(models.Model):
 class CustomRevisionMetaData(models.Model):
     revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
     extra_data = models.JSONField()
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    action = models.CharField()
+    path = models.CharField()
+
+    def __str__(self):
+        return f"{self.ip} - {self.action}"

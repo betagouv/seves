@@ -15,7 +15,9 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from docxtpl import DocxTemplate
 from reversion.models import Version
+from waffle import flag_is_active
 
+from core.audit import audit_log
 from core.diffs import create_manual_version
 from core.mixins import (
     MediaDefiningMixin,
@@ -45,7 +47,7 @@ from tiac.tasks import export_tiac_task
 from .constants import DangersSyndromiques, EvenementFollowUp
 from .display import DisplayItem
 from .filters import TiacFilter
-from .forms import EvenementSimpleTransferForm
+from .forms import EvenementSimpleTransferForm, InvestigationTiacFormNewTreeslect
 from .formsets import (
     AlimentFormSet,
     AnalysesAlimentairesFormSet,
@@ -166,6 +168,7 @@ class EvenementSimpleUpdateView(UserPassesTestMixin, EvenementSimpleManipulation
         return {**super().get_etablissement_formset_kwargs(), "instance": self.get_object()}
 
 
+@audit_log("page view")
 class EvenementSimpleDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
@@ -368,6 +371,11 @@ class InvestigationTiacBaseView(
     def analyse_alimentaire_formset(self):
         return AnalysesAlimentairesFormSet(**self.get_formset_kwargs())
 
+    def get_form_class(self):
+        if flag_is_active(self.request, "new_treeselect"):
+            return InvestigationTiacFormNewTreeslect
+        return super().get_form_class()
+
     def get_formset_kwargs(self, **kwargs):
         result = kwargs.copy()
 
@@ -521,6 +529,7 @@ class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
         return kwargs
 
 
+@audit_log("page view")
 class InvestigationTiacDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,

@@ -384,6 +384,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
                         "citycode": "75115",
+                        "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
                     }
@@ -414,6 +415,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
     assert etablissement.adresse_lieu_dit == "251 Rue de Vaugirard"
     assert etablissement.commune == "Paris"
     assert etablissement.code_insee == "75115"
+    assert etablissement.code_postal == "75015"
     assert etablissement.pays.name == "France"
     assert etablissement.departement == Departement.objects.get(nom="Paris")
 
@@ -459,6 +461,7 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     assert etablissement.adresse_lieu_dit == "Mon addresse qui n'existe pas"
     assert etablissement.commune == ""
     assert etablissement.code_insee == ""
+    assert etablissement.code_postal == ""
     assert etablissement.pays.name == ""
     assert etablissement.departement is None
 
@@ -519,7 +522,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     settings.SIRENE_CONSUMER_SECRET = "BAR"
     ensure_departements("Paris")
     evenement = EvenementProduitFactory.build()
-    call_count = {"count": 0}
+    call_count = {"count": 0, "count_commune": 0}
 
     def handle_insee_siret(route):
         data = {
@@ -535,7 +538,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
                         "numeroVoieEtablissement": "175",
                         "typeVoieEtablissement": "RUE",
                         "libelleVoieEtablissement": "DU CHEVALERET",
-                        "codePostalEtablissement": "75013",
+                        "codePostalEtablissement": "75015",
                         "libelleCommuneEtablissement": "PARIS",
                         "codeCommuneEtablissement": "75115",
                     },
@@ -548,14 +551,11 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
-        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        data = {"nom": "Paris 15e Arrondissement", "code": "75115", "departement": {"code": "75", "nom": "Paris"}}
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
+        call_count["count_commune"] += 1
 
-    page.route(
-        "https://geo.api.gouv.fr/communes/.+",
-        handle_insee_commune,
-    )
+    page.route("https://geo.api.gouv.fr/communes/75115?fields=departement", handle_insee_commune)
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
 
@@ -568,11 +568,12 @@ def test_can_create_etablissement_with_sirene_autocomplete(
         creation_page.fill_required_fields(evenement)
 
         creation_page.open_etablissement_modal()
-        expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS"
+        expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75015 PARIS"
         creation_page.add_etablissement_siren("120 079 017", expected_value, choice_js_fill_from_element)
-        assert call_count["count"] == 1
         creation_page.page.wait_for_timeout(1000)
         mocked_view.assert_called_once()
+        assert call_count["count"] == 1
+        assert call_count["count_commune"] == 1
         assert mocked_view.call_args[0][0].get_full_path() == "/ssa/api/find-numero-agrement/?siret=12007901700030"
         creation_page.close_etablissement_modal()
         creation_page.submit_as_draft()
@@ -581,6 +582,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.adresse_lieu_dit == "175 RUE DU CHEVALERET"
     assert etablissement.commune == "PARIS"
     assert etablissement.code_insee == "75115"
+    assert etablissement.code_postal == "75015"
     assert etablissement.pays.name == "France"
     assert etablissement.numero_agrement == "03.223.432"
     assert etablissement.siret == "12007901700030"

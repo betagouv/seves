@@ -75,13 +75,30 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
             "-evenement__numero_annee", "-evenement__numero_evenement", "-numero_detection_only"
         )
 
-    def optimized_for_details(self):
-        return self.select_related("contexte", "createur", "evenement", "statut_evenement")
-
     def get_all_not_in_fiche_zone_delimitee(self, instance):
         query = Q(zone_infestee__isnull=True, hors_zone_infestee__isnull=True)
         query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
         return self.filter(query)
+
+    def optimized_for_export(self):
+        return self.select_related(
+            "contexte",
+            "createur",
+            "evenement",
+            "statut_evenement",
+            "evenement__organisme_nuisible",
+            "evenement__statut_reglementaire",
+            "evenement__fiche_zone_delimitee",
+        ).prefetch_related(
+            "lieux",
+            "lieux__departement",
+            "lieux__site_inspection",
+            "lieux__prelevements",
+            "lieux__prelevements__structure_preleveuse",
+            "lieux__prelevements__espece_echantillon",
+            "lieux__prelevements__matrice_prelevee",
+            "lieux__prelevements__laboratoire",
+        )
 
 
 class FicheZoneManager(WithDerniereMiseAJourManagerMixin, models.Manager):

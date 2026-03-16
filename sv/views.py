@@ -24,6 +24,7 @@ from django.views.generic import (
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.constants import Visibilite
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
@@ -40,7 +41,6 @@ from core.mixins import (
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
-    WithOrderingMixin,
 )
 from core.models import Contact
 from core.redirect import safe_redirect
@@ -58,7 +58,6 @@ from sv.forms import (
 )
 
 from .export import FicheDetectionExport
-from .filters import EvenementFilter
 from .models import (
     Evenement,
     FicheDetection,
@@ -70,49 +69,16 @@ from .models import (
 )
 from .view_mixins import (
     EvenementDetailMixin,
+    WithFilteredListMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
     WithStatusToOrganismeNuisibleMixin,
 )
 
 
-class EvenementListView(WithOrderingMixin, ListView):
+class EvenementListView(WithFilteredListMixin, ListView):
     model = Evenement
     paginate_by = 100
-
-    def get_ordering_fields(self):
-        return {
-            "ac_notified": "is_ac_notified",
-            "numero_evenement": ("numero_annee", "numero_evenement"),
-            "organisme": "organisme_nuisible__libelle_court",
-            "creation": "date_creation",
-            "maj": "date_derniere_mise_a_jour_globale",
-            "createur": "createur__libelle",
-            "etat": "etat",
-            "visibilite": "visibilite",
-            "detections": "nb_fiches_detection",
-            "zone": "fiche_zone_delimitee__id",
-        }
-
-    def get_default_order_by(self):
-        return "maj"
-
-    def get_raw_queryset(self):
-        contact = self.request.user.agent.structure.contact_set.get()
-        return (
-            Evenement.objects.all()
-            .get_user_can_view(self.request.user)
-            .with_list_of_lieux_with_commune()
-            .with_fin_de_suivi(contact)
-            .with_nb_fiches_detection()
-            .optimized_for_list()
-            .with_date_derniere_mise_a_jour()
-        )
-
-    def get_queryset(self):
-        queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
-        return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -135,6 +101,7 @@ class EvenementListView(WithOrderingMixin, ListView):
         return context
 
 
+@audit_log("page view")
 class EvenementDetailView(
     EvenementDetailMixin,
     WithBlocCommunPermission,
@@ -443,12 +410,17 @@ class FicheDetectionUpdateView(
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FicheDetectionExportView(View):
+class FicheDetectionExportView(WithFilteredListMixin, View):
     http_method_names = ["post"]
+
+    def get_queryset(self):
+        # WithFilteredListMixin gives a list of Evenement and we need a list of detections for the export
+        detections = [d.id for e in super().get_queryset() for d in e.detections.all()]
+        return FicheDetection.objects.filter(id__in=detections).optimized_for_export()
 
     def post(self, request):
         response = HttpResponse(content_type="text/csv")
-        FicheDetectionExport().export(stream=response, user=request.user)
+        FicheDetectionExport().export(stream=response, queryset=self.get_queryset())
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
 

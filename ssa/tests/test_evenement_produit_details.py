@@ -4,6 +4,7 @@ from playwright.sync_api import Page, expect
 import pytest
 
 from core.factories import StructureFactory
+from core.models import AuditLog
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
@@ -49,6 +50,7 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
 
     expect(details_page.actions_block.get_by_text(evenement.get_actions_engagees_display())).to_be_visible()
     expect(details_page.rappel_block.get_by_text("1999-01-0123")).to_be_visible()
+    assert AuditLog.objects.count() == 1
 
 
 def test_evenement_produit_detail_wont_show_pam_if_not_danger_bacterien(live_server, page: Page):
