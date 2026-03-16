@@ -4,14 +4,16 @@ from .models import Agent, AuditLog, Contact, Departement, Document, Export, Fin
 
 admin.site.register(Document)
 admin.site.register(Message)
-admin.site.register(Agent)
+
+
+class AgentAdmin(admin.ModelAdmin):
+    search_fields = ("nom", "prenom", "user__email")
+    raw_id_fields = ("user",)
 
 
 class StructureAdmin(admin.ModelAdmin):
     list_display = ("niveau1", "niveau2", "libelle")
-
-
-admin.site.register(Structure, StructureAdmin)
+    search_fields = ("niveau1", "niveau2", "libelle")
 
 
 class ContactAdmin(admin.ModelAdmin):
@@ -30,9 +32,11 @@ class AuditLogAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at",)
 
 
+admin.site.register(Agent, AgentAdmin)
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Export, ExportAdmin)
 admin.site.register(FinSuiviContact)
 admin.site.register(Departement)
 admin.site.register(Region)
 admin.site.register(AuditLog, AuditLogAdmin)
+admin.site.register(Structure, StructureAdmin)
