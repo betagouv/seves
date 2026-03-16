@@ -51,6 +51,8 @@ class Diff:
             return "Transféré à"
         if field == "messages":
             return "Fil de suivi"
+        if field == "is_deleted":
+            return "Supprimé"
         return field
 
     def __init__(self, field, old, new, revision=None, comment=""):

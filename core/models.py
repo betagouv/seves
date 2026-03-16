@@ -305,7 +305,7 @@ class Document(models.Model):
         validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    is_deleted = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False, verbose_name="Suppression")
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created", null=True)
     created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
     deleted_by = models.ForeignKey(
