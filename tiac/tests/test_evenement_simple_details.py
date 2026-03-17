@@ -1,7 +1,7 @@
 from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
-from core.models import LienLibre
+from core.models import AuditLog, LienLibre
 from tiac.factories import EtablissementFactory, EvenementSimpleFactory
 from tiac.models import Etablissement, EvenementSimple
 from tiac.tests.pages import EvenementSimpleDetailsPage
@@ -32,6 +32,7 @@ def test_evenement_simple_detail_page_content(live_server, page: Page):
     expect(details_page.context_block.get_by_text(evenement.get_follow_up_display(), exact=True)).to_be_visible()
 
     expect(details_page.links_block.get_by_text(other_evenement.numero, exact=True)).to_be_visible()
+    assert AuditLog.objects.count() == 1
 
 
 def test_evenement_simple_detail_page_content_etablissement(

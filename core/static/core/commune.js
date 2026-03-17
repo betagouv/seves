@@ -1,18 +1,27 @@
 import choicesDefaults from "choicesDefaults"
 
 export function fetchCommunes(query) {
-    return fetch(`https://geo.api.gouv.fr/communes?nom=${query}&fields=departement&boost=population&limit=15`)
+    return fetch(
+        `https://geo.api.gouv.fr/communes?nom=${query}&fields=departement,codesPostaux&boost=population&limit=15`,
+    )
         .then(response => response.json())
-        .then(data =>
-            data.map(item => ({
-                value: item.nom,
-                label: `${item.nom} (${item.departement.code})`,
-                customProperties: {
-                    departementCode: item.departement.code,
-                    inseeCode: item.code,
-                },
-            })),
-        )
+        .then(data => {
+            const result = []
+            for (const item of data) {
+                for (const postCode of item.codesPostaux) {
+                    result.push({
+                        value: item.nom,
+                        label: `${item.nom} (${postCode})`,
+                        customProperties: {
+                            departementCode: item.departement.code,
+                            inseeCode: item.code,
+                            postCode,
+                        },
+                    })
+                }
+            }
+            return result
+        })
         .catch(error => {
             console.error("Erreur lors de la récupération des données:", error)
             return []

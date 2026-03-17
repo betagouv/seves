@@ -14,6 +14,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
@@ -99,6 +100,7 @@ class EvenementProduitCreateView(
         return context
 
 
+@audit_log("page view")
 class EvenementProduitDetailView(
     WithBlocCommunPermission,
     WithDocumentListInContextMixin,

@@ -8,11 +8,11 @@ import pytest
 from core.constants import Visibilite
 from sv.export import FicheDetectionExport
 from sv.factories import FicheDetectionFactory, FicheZoneFactory, LieuFactory, PrelevementFactory, ZoneInfesteeFactory
-from sv.models import StructurePreleveuse
+from sv.models import Evenement, FicheDetection, StructurePreleveuse
 
 
 @pytest.mark.django_db
-def test_export_headers_content(mocked_authentification_user):
+def test_export_headers_content():
     expected_headers = [
         "Numéro de fiche",
         "Num. événement",
@@ -73,7 +73,9 @@ def test_export_headers_content(mocked_authentification_user):
         lieu__fiche_detection__evenement__fiche_zone_delimitee=FicheZoneFactory(),
     )
 
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
     stream.seek(0)
     headers = next(csv.reader(stream))
 
@@ -81,7 +83,7 @@ def test_export_headers_content(mocked_authentification_user):
 
 
 @pytest.mark.django_db
-def test_export_data_values(mocked_authentification_user):
+def test_export_data_values():
     stream = StringIO()
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
@@ -96,7 +98,9 @@ def test_export_data_values(mocked_authentification_user):
     fiche_detection = prelevement.lieu.fiche_detection
     evenement = fiche_detection.evenement
 
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
     stream.seek(0)
     next(csv.reader(stream))  # Skip headers
     data = next(csv.reader(stream))
@@ -158,7 +162,7 @@ def test_export_data_values(mocked_authentification_user):
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_performance(django_assert_num_queries, mocked_authentification_user):
+def test_export_fiche_detection_performance(django_assert_num_queries):
     structure, _ = StructurePreleveuse.objects.get_or_create(nom="My structure")
 
     PrelevementFactory(
@@ -166,8 +170,10 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
         lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
     )
     stream = StringIO()
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
     with django_assert_num_queries(9):
-        FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+        FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     PrelevementFactory.create_batch(
         3,
@@ -175,8 +181,10 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
         lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
     )
     stream = StringIO()
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
     with django_assert_num_queries(9):
-        FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+        FicheDetectionExport().export(stream=stream, queryset=queryset)
 
 
 @pytest.mark.django_db
@@ -187,11 +195,13 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
         (lambda: FicheDetectionFactory.create_batch(2), 2),
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection(mocked_authentification_user, factory, expected_data_lines):
+def test_numbers_of_line_when_export_fiche_detection(factory, expected_data_lines):
     factory()
 
     stream = StringIO()
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
     reader = csv.reader(stream)
@@ -208,13 +218,13 @@ def test_numbers_of_line_when_export_fiche_detection(mocked_authentification_use
         (lambda: LieuFactory.create_batch(2), 2),
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection_with_lieu(
-    mocked_authentification_user, factory, expected_data_lines
-):
+def test_numbers_of_line_when_export_fiche_detection_with_lieu(factory, expected_data_lines):
     factory()
 
     stream = StringIO()
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
     reader = csv.reader(stream)
@@ -231,16 +241,16 @@ def test_numbers_of_line_when_export_fiche_detection_with_lieu(
         (2, 3, 6),  # 2 lieux avec 3 prélèvements chacun = 6 lignes
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection_with_prelevements(
-    mocked_authentification_user, nb_lieu, nb_prelevement, expected_data_lines
-):
+def test_numbers_of_line_when_export_fiche_detection_with_prelevements(nb_lieu, nb_prelevement, expected_data_lines):
     fiche = FicheDetectionFactory()
     for _ in range(nb_lieu):
         lieu = LieuFactory(fiche_detection=fiche)
         PrelevementFactory.create_batch(nb_prelevement, lieu=lieu)
 
     stream = StringIO()
-    FicheDetectionExport().export(stream=stream, user=mocked_authentification_user)
+    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
     reader = csv.reader(stream)

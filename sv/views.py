@@ -1,4 +1,7 @@
 from collections import OrderedDict
+import datetime
+import io
+import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -6,9 +9,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
 from django.forms import Media
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
@@ -19,8 +21,10 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
+from docxtpl import DocxTemplate
 from reversion.models import Version
 
+from core.audit import audit_log
 from core.constants import Visibilite
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
@@ -30,13 +34,13 @@ from core.mixins import (
     WithClotureContextMixin,
     WithContactFormsInContextMixin,
     WithContactListInContextMixin,
+    WithDocumentExportContextMixin,
     WithDocumentListInContextMixin,
     WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
-    WithOrderingMixin,
 )
 from core.models import Contact
 from core.redirect import safe_redirect
@@ -54,7 +58,6 @@ from sv.forms import (
 )
 
 from .export import FicheDetectionExport
-from .filters import EvenementFilter
 from .models import (
     Evenement,
     FicheDetection,
@@ -65,49 +68,17 @@ from .models import (
     StructurePreleveuse,
 )
 from .view_mixins import (
+    EvenementDetailMixin,
+    WithFilteredListMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
     WithStatusToOrganismeNuisibleMixin,
 )
 
 
-class EvenementListView(WithOrderingMixin, ListView):
+class EvenementListView(WithFilteredListMixin, ListView):
     model = Evenement
     paginate_by = 100
-
-    def get_ordering_fields(self):
-        return {
-            "ac_notified": "is_ac_notified",
-            "numero_evenement": ("numero_annee", "numero_evenement"),
-            "organisme": "organisme_nuisible__libelle_court",
-            "creation": "date_creation",
-            "maj": "date_derniere_mise_a_jour_globale",
-            "createur": "createur__libelle",
-            "etat": "etat",
-            "visibilite": "visibilite",
-            "detections": "nb_fiches_detection",
-            "zone": "fiche_zone_delimitee__id",
-        }
-
-    def get_default_order_by(self):
-        return "maj"
-
-    def get_raw_queryset(self):
-        contact = self.request.user.agent.structure.contact_set.get()
-        return (
-            Evenement.objects.all()
-            .get_user_can_view(self.request.user)
-            .with_list_of_lieux_with_commune()
-            .with_fin_de_suivi(contact)
-            .with_nb_fiches_detection()
-            .optimized_for_list()
-            .with_date_derniere_mise_a_jour()
-        )
-
-    def get_queryset(self):
-        queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
-        return self.filter.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -130,7 +101,9 @@ class EvenementListView(WithOrderingMixin, ListView):
         return context
 
 
+@audit_log("page view")
 class EvenementDetailView(
+    EvenementDetailMixin,
     WithBlocCommunPermission,
     WithDocumentListInContextMixin,
     WithFicheObjectDocumentUploadFormMixin,
@@ -140,57 +113,9 @@ class EvenementDetailView(
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     WithFinDeSuiviMixin,
-    UserPassesTestMixin,
     DetailView,
 ):
     model = Evenement
-
-    def get_queryset(self):
-        return (
-            Evenement.objects.all()
-            .select_related("createur", "organisme_nuisible", "statut_reglementaire")
-            .prefetch_related(
-                Prefetch(
-                    "detections",
-                    queryset=FicheDetection.objects.all()
-                    .with_numero_detection_only()
-                    .order_by("numero_detection_only"),
-                ),
-                "detections__createur",
-                "detections__contexte",
-                Prefetch(
-                    "detections__lieux__prelevements",
-                    queryset=Prelevement.objects.select_related(
-                        "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
-                    ),
-                ),
-                "detections__lieux__departement",
-                "detections__lieux__departement__region",
-                "detections__lieux__position_chaine_distribution_etablissement",
-                "detections__lieux__site_inspection",
-            )
-        )
-
-    def get_object(self, queryset=None):
-        if hasattr(self, "object"):
-            return self.object
-
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        try:
-            annee, numero_evenement = self.kwargs["numero"].split(".")
-            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
-            return self.object
-        except (ValueError, Evenement.DoesNotExist):
-            raise Http404("Événement non trouvé")
-
-    def test_func(self) -> bool | None:
-        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
-        return self.get_object().can_user_access(self.request.user)
-
-    def handle_no_permission(self):
-        raise PermissionDenied()
 
     def get_permission_context(self):
         user = self.request.user
@@ -485,12 +410,17 @@ class FicheDetectionUpdateView(
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FicheDetectionExportView(View):
+class FicheDetectionExportView(WithFilteredListMixin, View):
     http_method_names = ["post"]
+
+    def get_queryset(self):
+        # WithFilteredListMixin gives a list of Evenement and we need a list of detections for the export
+        detections = [d.id for e in super().get_queryset() for d in e.detections.all()]
+        return FicheDetection.objects.filter(id__in=detections).optimized_for_export()
 
     def post(self, request):
         response = HttpResponse(content_type="text/csv")
-        FicheDetectionExport().export(stream=response, user=request.user)
+        FicheDetectionExport().export(stream=response, queryset=self.get_queryset())
         response["Content-Disposition"] = "attachment; filename=export_fiche_detection.csv"
         return response
 
@@ -778,3 +708,56 @@ class FicheZoneDelimiteeDeleteView(UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         messages.success(self.request, "La zone a bien été supprimée")
         return self.request.POST.get("next")
+
+
+class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, View):
+    http_method_names = ["post"]
+
+    def create_detections_sub_doc(self, detections):
+        sub_template = DocxTemplate("sv/doc_templates/detection.docx")
+        sub_template.render({"detections": detections})
+        sub_doc_file = "subdoc_detection.docx"
+        sub_template.save(sub_doc_file)
+        return sub_doc_file
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        doc = DocxTemplate("sv/doc_templates/evenement.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        sub_doc_detection = doc.new_subdoc(self.create_detections_sub_doc(self.object.detections.all()))
+        fiche_zone = self.get_object().fiche_zone_delimitee
+        detections_hors_zone_infestee, zones_infestees = None, None
+        if fiche_zone:
+            detections_hors_zone_infestee = ", ".join([f.numero for f in fiche_zone.fichedetection_set.all()])
+            zones_infestees = [
+                (zone_infestee, zone_infestee.fichedetection_set.all())
+                for zone_infestee in fiche_zone.zoneinfestee_set.all()
+            ]
+
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+            "detections": sub_doc_detection,
+            "detections_hors_zone_infestee": detections_hors_zone_infestee,
+            "zones_infestees": zones_infestees,
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)

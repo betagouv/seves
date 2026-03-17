@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.validators import RegexValidator
 from django.db import models, transaction
 
 
@@ -99,3 +100,53 @@ class WithContactPermissionMixin(BasePermissionMixin):
 
     def can_delete_contact(self, user):
         return self._user_can_interact(user)
+
+
+class WithLocalisableMixin(models.Model):
+    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    code_insee = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE de la commune",
+        validators=[
+            RegexValidator(
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
+                message="Le code INSEE doit être valide",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    code_postal = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code postal de la commune",
+        validators=[
+            RegexValidator(
+                regex=r"^(?:\d{5})$",
+                message="Le code postal doit être valide",
+                code="invalid_code_postal",
+            ),
+        ],
+    )
+    departement = models.ForeignKey(
+        "core.Departement",
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        related_name="%(app_label)s_%(class)s_set",
+        blank=True,
+        null=True,
+    )
+
+    @property
+    def address_summary(self):
+        value = "nc."
+        if self.commune:
+            code_postal = f" ({self.code_postal})" if self.code_postal else ""
+            value = f"{self.commune}{code_postal}"
+        if self.departement:
+            departement_numero = "" if self.code_postal else f" - {self.departement.numero}"
+            value += f" | {departement_numero}{self.departement.nom}"
+        return value
+
+    class Meta:
+        abstract = True

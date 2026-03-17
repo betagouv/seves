@@ -50,6 +50,9 @@ class ConclusionFormController extends Controller {
             },
         })
         patchItems(this.treeselect.srcElement)
+        if (this.suspicionConclusionValue !== "") {
+            this.suspicionConclusionValueChanged(this.suspicionConclusionChoicesValue)
+        }
     }
 
     selectedHazardTreeselectTargetDiconnected() {
@@ -57,8 +60,8 @@ class ConclusionFormController extends Controller {
         this.treeselect = undefined
     }
 
-    connect() {
-        this.suspicionConclusionTarget.dispatchEvent(new Event("change"))
+    suspicionConclusionTargetConnected(el) {
+        el.dispatchEvent(new Event("change"))
     }
 
     onUpdateDom() {
@@ -116,8 +119,9 @@ class ConclusionFormController extends Controller {
         this.selectedHazardTreeselectTarget.querySelector(".treeselect-input__tags-count").innerText = text
     }
 
-    onSuspicionConclusionChanged({target: {value}}) {
-        this.suspicionConclusionValue = value
+    suspicionConclusionValueChanged(value) {
+        if (this.treeselect === undefined) return
+
         this.conclusionRepasTarget.disabled = false
         this.conclusionAlimentTarget.disabled = false
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
@@ -156,6 +160,10 @@ class ConclusionFormController extends Controller {
             this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
             this.selectedHazardTreeselectInitializedValue = true
         }
+    }
+
+    onSuspicionConclusionChanged({target: {value}}) {
+        this.suspicionConclusionValue = value
     }
 }
 

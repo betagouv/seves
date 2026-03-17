@@ -126,7 +126,7 @@ class QuantificationUnite(models.TextChoices):
         ]
 
 
-@reversion.register(follow=["contacts"])
+@reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementProduit(
     SsaBaseEvenementModel,
     AllowsSoftDeleteMixin,
@@ -321,6 +321,11 @@ class EvenementProduit(
         <li>Danger : {self.get_categorie_danger_display()}</li>
         </ul>
         """
+
+    def get_prefetch_for_revision_list_view(self):
+        from ssa.models import Etablissement
+
+        return [("_prefetched_etablissements", Etablissement.objects.filter(evenement_produit=self))]
 
     class Meta:
         constraints = [

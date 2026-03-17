@@ -1,5 +1,6 @@
 from playwright.sync_api import Page, expect
 
+from core.models import AuditLog
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
 
@@ -25,6 +26,7 @@ def test_investigation_cas_humain_detail_page_content(live_server, page: Page):
     expect(details_page.risque_block.get_by_text(evenement.evaluation, exact=True)).to_be_visible()
     expect(details_page.risque_block.get_by_text(evenement.reference_souches, exact=True)).to_be_visible()
     expect(details_page.risque_block.get_by_text(evenement.reference_clusters, exact=True)).to_be_visible()
+    assert AuditLog.objects.count() == 1
 
 
 def test_investigation_cas_humain_detail_page_content_etablissement(

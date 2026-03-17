@@ -1,13 +1,20 @@
 from collections import defaultdict
 
-from django.core.exceptions import ValidationError
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Prefetch
+from django.http import Http404
 
+from core.mixins import WithOrderingMixin
 from sv.forms import (
     PrelevementForm,
 )
 
 from .constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES, KNOWN_OEPPS
+from .filters import EvenementFilter
 from .models import (
+    Evenement,
+    FicheDetection,
     Laboratoire,
     OrganismeNuisible,
     Prelevement,
@@ -92,3 +99,88 @@ class WithPrelevementResultatsMixin:
         context = super().get_context_data(**kwargs)
         context["prelevement_resultats"] = dict(Prelevement.Resultat.choices)
         return context
+
+
+class EvenementDetailMixin(UserPassesTestMixin):
+    def get_queryset(self):
+        return (
+            Evenement.objects.all()
+            .select_related("createur", "organisme_nuisible", "statut_reglementaire")
+            .prefetch_related(
+                Prefetch(
+                    "detections",
+                    queryset=FicheDetection.objects.all()
+                    .with_numero_detection_only()
+                    .order_by("numero_detection_only"),
+                ),
+                "detections__createur",
+                "detections__contexte",
+                Prefetch(
+                    "detections__lieux__prelevements",
+                    queryset=Prelevement.objects.select_related(
+                        "structure_preleveuse", "matrice_prelevee", "espece_echantillon", "laboratoire"
+                    ),
+                ),
+                "detections__lieux__departement",
+                "detections__lieux__departement__region",
+                "detections__lieux__position_chaine_distribution_etablissement",
+                "detections__lieux__site_inspection",
+            )
+        )
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        try:
+            annee, numero_evenement = self.kwargs["numero"].split(".")
+            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            return self.object
+        except (ValueError, Evenement.DoesNotExist):
+            raise Http404("Événement non trouvé")
+
+    def test_func(self) -> bool | None:
+        """Vérifie si l'utilisateur peut accéder à la vue (cf. UserPassesTestMixin)."""
+        return self.get_object().can_user_access(self.request.user)
+
+    def handle_no_permission(self):
+        raise PermissionDenied()
+
+
+class WithFilteredListMixin(WithOrderingMixin):
+    def get_ordering_fields(self):
+        return {
+            "ac_notified": "is_ac_notified",
+            "numero_evenement": ("numero_annee", "numero_evenement"),
+            "organisme": "organisme_nuisible__libelle_court",
+            "creation": "date_creation",
+            "maj": "date_derniere_mise_a_jour_globale",
+            "createur": "createur__libelle",
+            "etat": "etat",
+            "visibilite": "visibilite",
+            "detections": "nb_fiches_detection",
+            "zone": "fiche_zone_delimitee__id",
+        }
+
+    def get_default_order_by(self):
+        return "maj"
+
+    def get_raw_queryset(self):
+        contact = self.request.user.agent.structure.contact_set.get()
+        return (
+            Evenement.objects.all()
+            .get_user_can_view(self.request.user)
+            .with_list_of_lieux_with_commune()
+            .with_fin_de_suivi(contact)
+            .with_nb_fiches_detection()
+            .optimized_for_list()
+            .with_date_derniere_mise_a_jour()
+        )
+
+    def get_queryset(self):
+        queryset = self.apply_ordering(self.get_raw_queryset())
+        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
+        return self.filter.qs

@@ -28,7 +28,7 @@ from .managers import (
     MessagQueryset,
     StructureQueryset,
 )
-from .model_mixins import WithDocumentPermissionMixin
+from .model_mixins import WithDocumentPermissionMixin, WithLocalisableMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
@@ -81,6 +81,11 @@ class Structure(models.Model):
     libelle = models.CharField(max_length=255, blank=True)
 
     force_can_be_contacted = models.BooleanField(default=False)
+
+    region = models.ForeignKey("Region", on_delete=models.PROTECT, verbose_name="Région", blank=True, null=True)
+    departement = models.ForeignKey(
+        "Departement", on_delete=models.PROTECT, verbose_name="Département", blank=True, null=True
+    )
 
     objects = StructureQueryset.as_manager()
 
@@ -300,13 +305,16 @@ class Document(models.Model):
         validators=[AnyOfValidator(FileExtensionValidator(AllowedExtensions.values), MagicMimeValidator())],
     )
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-    is_deleted = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False, verbose_name="Suppression")
     created_by = models.ForeignKey(Agent, on_delete=models.PROTECT, related_name="documents_created", null=True)
     created_by_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="documents_created")
     deleted_by = models.ForeignKey(
         Agent, on_delete=models.PROTECT, related_name="documents_deleted", null=True, blank=True
     )
     is_infected = models.BooleanField(default=None, null=True, verbose_name="Est ce que le fichier est infecté")
+    notification_sent = models.BooleanField(
+        default=False, null=False, verbose_name="Est-ce qu'une notification a été envoyé suite à l'upload'"
+    )
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
@@ -316,13 +324,25 @@ class Document(models.Model):
 
     objects = DocumentManager.from_queryset(DocumentQueryset)()
 
+    NEED_NOTIFICATION = [
+        TypeDocument.TRACABILITE_AVAL_RECIPIENT,
+        TypeDocument.RAPPORT_ANALYSE,
+        TypeDocument.ANALYSE_RISQUE,
+    ]
+
+    ignored_fields_in_revision_list = ["is_infected"]
+
     class Meta:
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
 
     def __str__(self):
-        return f"{self.nom} ({self.document_type})"
+        return f"{self.nom} ({self.get_document_type_display()})"
+
+    def save(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
 
     @property
     def is_cartographie(self):
@@ -410,6 +430,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     objects = MessageManager.from_queryset(MessagQueryset)()
 
+    show_nested_diff_in_revision_list = False
+    show_deleted_state_in_revision_list = False
+    show_class_name_in_added_items = False
+
     @classproperty
     def _base_objects(self):
         return self.objects.get_base_queryset()
@@ -425,7 +449,9 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
         self._initial_is_deleted = self.is_deleted
 
     def __str__(self):
-        return f"Message de type {self.message_type}: {self.content[:150]}..."
+        if len(self.title) > 150:
+            return f"{self.message_type}: {self.title[:150]}…"
+        return f"{self.message_type}: {self.title}"
 
     def get_email_type_display(self) -> str:
         """Renvoie une version abrégée du type de message pour les emails."""
@@ -444,6 +470,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     @property
     def is_draft(self):
         return self.status == self.Status.BROUILLON
+
+    @property
+    def is_finalise(self):
+        return self.status == self.Status.FINALISE
 
     def _is_owner(self, contact):
         return self.sender == contact
@@ -515,6 +545,13 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     def _user_can_interact(self, user):
         return self._is_owner(user.agent.contact_set.get())
+
+    def save(self, *args, **kwargs):
+        if self.is_finalise:
+            with reversion.create_revision():
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
 
 @reversion.register()
@@ -601,7 +638,7 @@ class Departement(models.Model):
         return f"{self.numero} - {self.nom}"
 
 
-class BaseEtablissement(models.Model):
+class BaseEtablissement(WithLocalisableMixin, models.Model):
     siret = models.CharField(
         max_length=14,
         verbose_name="SIRET de l'établissement",
@@ -622,27 +659,6 @@ class BaseEtablissement(models.Model):
     enseigne_usuelle = models.CharField(max_length=100, verbose_name="Enseigne usuelle", blank=True)
 
     adresse_lieu_dit = models.CharField(max_length=100, verbose_name="Adresse ou lieu-dit", blank=True)
-    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
-    code_insee = models.CharField(
-        max_length=5,
-        blank=True,
-        verbose_name="Code INSEE de la commune",
-        validators=[
-            RegexValidator(
-                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
-                message="Le code INSEE doit être valide",
-                code="invalid_code_insee",
-            ),
-        ],
-    )
-    departement = models.ForeignKey(
-        Departement,
-        on_delete=models.PROTECT,
-        verbose_name="Département",
-        related_name="%(app_label)s_%(class)ss",
-        blank=True,
-        null=True,
-    )
     pays = CountryField(null=True)
 
     class Meta:
@@ -658,3 +674,14 @@ class BaseEtablissement(models.Model):
 class CustomRevisionMetaData(models.Model):
     revision = models.OneToOneField(Revision, on_delete=models.CASCADE)
     extra_data = models.JSONField()
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    action = models.CharField()
+    path = models.CharField()
+
+    def __str__(self):
+        return f"{self.ip} - {self.action}"

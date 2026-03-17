@@ -75,12 +75,9 @@
                                                             title="Consulter le détail du lieu {{lieu_initial.nom}}">Voir le détail</button>
                                                 </div>
                                             </div>
-                                            <p class="fr-card__desc">
-                                                Commune : {{ lieu_initial.commune|default:"nc." }} <br/>
-                                                {% if lieu_initial.departement %}
-                                                    Département : {{ lieu_initial.departement.nom }} ({{ lieu_initial.departement.numero }})
-                                                {% endif %}
-                                            </p>
+                                            <address class="fr-card__desc">
+                                                <p class="fr-card__detail fr-icon-map-pin-2-line">{{ lieu_initial.address_summary }}</p>
+                                            </address>
                                         </div>
                                     </div>
                                 </div>

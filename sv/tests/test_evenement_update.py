@@ -113,6 +113,7 @@ def test_update_evenement_adds_agent_and_structure_contacts(
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
 
     # Vérification de l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
     expect(
         page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
@@ -147,6 +148,7 @@ def test_update_evenement_multiple_times_adds_contacts_once(
     assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
 
     # Vérification de l'interface
+    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
     page.get_by_test_id("contacts").click()
     expect(
         page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
@@ -270,7 +272,7 @@ def test_fiche_detection_update_cant_forge_form_to_edit_rasff_europhyt(
 def test_edit_button_not_visible_if_evenement_cloture(live_server, page: Page):
     evenement = EvenementFactory(etat=Evenement.Etat.CLOTURE)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
     expect(page.get_by_role("link", name="Modifier l'événement")).not_to_be_visible()
 
 

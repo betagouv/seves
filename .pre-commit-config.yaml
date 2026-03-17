@@ -28,4 +28,4 @@ repos:
 - repo: https://github.com/biomejs/pre-commit
   rev: v2.4.4 # Use the sha / tag you want to point at
   hooks:
-    - id: biome-ci
+    - id: biome-check

@@ -169,7 +169,7 @@ def notify_export_is_ready(export: Export, object):
         message=f"""
 Bonjour,
 
-L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est : {export.file.url} .
+L'export CSV que vous avez demandé est prêt, voici le lien pour télécharger le fichier : {export.file.url} .
 
 Attention, le lien n'est valable que durant 1 heure.
 
@@ -177,7 +177,7 @@ Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide
         """,
         html_message=f"""
     <p>Bonjour,<br>
-    L'export CSV que vous avez demandé est prêt, le lien pour télécharger le fichier est&nbsp;: <a href="{export.file.url}">{export.file.url}</a>.</p>
+    L'export CSV que vous avez demandé est prêt, <a href="{export.file.url}">voici le lien pour télécharger le fichier</a>.
     <p>Attention, le lien n'est valable que durant 1 heure.</p>
     <p>Si vous rencontrez des difficultés, vous pouvez consulter notre centre d’aide ou nous en faire part à l’adresse email <a href="mailto:support@seves.beta.gouv.fr">support@seves.beta.gouv.fr</a>.</p>
         """,
@@ -247,4 +247,31 @@ def notify_object_cloture(object):
 
         {"<p>" + object.get_email_cloture_text_html() + "</p>" if hasattr(object, "get_email_cloture_text_html") else ""}
         """,
+    )
+
+
+def notify_document_upload(object, documents):
+    message = f"""
+Bonjour,
+Des documents ont été ajoutés à l’évènement : {object.get_long_email_display_name()}
+    """
+
+    html_message = f"""
+<p>Bonjour,<br>
+Des documents ont été ajoutés à l’évènement : <b>{object.get_long_email_display_name_as_html()}</b>
+<ul>"""
+
+    for document in documents:
+        message += f"\n-{document.created_by_structure} : {document.nom} [{document.get_document_type_display()}]"
+        html_message += (
+            f"<li>-{document.created_by_structure} : {document.nom} [{document.get_document_type_display()}]</li>"
+        )
+
+    html_message += "</ul></p>"
+    send_as_seves(
+        recipients=object.contacts.agents_only().filter(agent__structure__niveau2=MUS_STRUCTURE),
+        object=object,
+        subject=f" {object.get_short_email_display_name()} - Ajout de document",
+        message=message,
+        html_message=html_message,
     )

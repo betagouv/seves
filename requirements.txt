@@ -213,7 +213,7 @@ pytest-playwright==0.7.2
     # via -r requirements.in
 pytest-rerunfailures==16.1
     # via -r requirements.in
-pytest-split==0.10.0
+pytest-split==0.11.0
     # via -r requirements.in
 pytest-xdist==3.8.0
     # via -r requirements.in
@@ -284,7 +284,7 @@ virtualenv==20.36.1
     # via pre-commit
 wcwidth==0.2.13
     # via prompt-toolkit
-whitenoise==6.11.0
+whitenoise==6.12.0
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:

@@ -221,7 +221,7 @@ def test_users_from_ac_cant_see_update_visibilite_btn_if_evenement_is_cloture(
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
-    expect(page.get_by_role("button", name="Actions")).not_to_be_visible()
+    page.get_by_role("button", name="Actions").click()
     expect(page.get_by_text("Modifier la visibilité")).not_to_be_visible()
 
 

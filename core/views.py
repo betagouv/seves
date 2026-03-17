@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import FormView, UpdateView
 import requests
+import reversion
 from reversion.models import Version
 
 from core.diffs import CompareMixin, Diff, get_diff_from_comment_version
@@ -100,12 +101,17 @@ class DocumentDeleteView(GetFicheObjectMixin, UserPassesTestMixin, View):
         return self.document.content_object
 
     def test_func(self):
-        return self.get_fiche_object().can_delete_document(self.request.user)
+        self.fiche_object = self.get_fiche_object()
+        return self.fiche_object.can_delete_document(self.request.user)
 
     def post(self, request, *args, **kwargs):
         self.document.is_deleted = True
         self.document.deleted_by = self.request.user.agent
-        self.document.save()
+        with reversion.create_revision():
+            self.document.save()
+            reversion.add_to_revision(self.fiche_object)
+            reversion.set_user(self.request.user)
+
         messages.success(request, "Le document a été marqué comme supprimé.", extra_tags="core documents")
         return (
             safe_redirect(next_url + "#tabpanel-documents-panel")
@@ -137,9 +143,13 @@ class DocumentUpdateView(GetFicheObjectMixin, UserPassesTestMixin, WithFormError
         return self.get_fiche_object().get_absolute_url() + "#tabpanel-documents-panel"
 
     def form_valid(self, form):
-        response = super().form_valid(form)
+        with reversion.create_revision():
+            self.object = form.save()
+            reversion.add_to_revision(self.object.content_object)
+            reversion.set_user(self.request.user)
         messages.success(self.request, "Le document a bien été mis à jour.", extra_tags="core documents")
-        return response
+
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         super().form_invalid(form)
@@ -520,9 +530,8 @@ def sirene_api(request, siret: str):
 
 
 class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
-    compare_exclude = [
-        "date_derniere_mise_a_jour",
-    ]
+    compare_exclude = ["date_derniere_mise_a_jour", "is_infected", "deleted_by", "notification_sent"]
+    template_name = "reversion/version_list.html"
 
     def dispatch(self, request, *args, **kwargs):
         content_type = ContentType.objects.get(id=kwargs["content_type"])
@@ -533,12 +542,26 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         return self.object.can_user_access(self.request.user)
 
     def get_queryset(self):
-        return (
+        qs = (
             Version.objects.get_for_object(self.object)
             .select_related("revision", "revision__user__agent__structure")
             .order_by("-revision__date_created")
             .exclude(serialized_data={})
         )
+
+        obj_ct = ContentType.objects.get_for_model(self.object)
+        generic_models = [(Message, "messages"), (Document, "documents")]
+
+        for related_model, prefetch_name in generic_models:
+            related_qs = related_model.objects.filter(content_type=obj_ct, object_id=self.object.id)
+            for version in qs:
+                setattr(version._object_version.object, f"_prefetched_{prefetch_name}", related_qs)
+
+        if hasattr(self.object, "get_prefetch_for_revision_list_view"):
+            for name, prefetch in self.object.get_prefetch_for_revision_list_view():
+                for version in qs:
+                    setattr(version._object_version.object, name, prefetch)
+        return qs
 
     def get_initial_patch(self, versions):
         etat_value = json.loads(list(versions)[-1].serialized_data)[0]["fields"]["etat"]

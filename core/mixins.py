@@ -760,6 +760,7 @@ class AbstractMessageHandlingView(
         context = super().get_context_data(**kwargs)
         context["go_back_url"] = self.fiche_objet.get_absolute_url()
         context["message_status"] = Message.Status
+        context["fiche_objet"] = self.fiche_objet
         return context
 
     def get_success_url(self):
