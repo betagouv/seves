@@ -14,11 +14,7 @@
 {% endpartialdef %}
 
 {% partialdef option %}
-    <div
-        class="fr-treeselect__element"
-        data-controller="treeselect-element"
-        {% if parent_index %}data-parent-index="{{ parent_index }}"{% endif %}
-    >
+    <div class="fr-treeselect__element" data-controller="treeselect-element">
         {% partial input %}
     </div>
 {% endpartialdef %}
@@ -27,8 +23,6 @@
     <div
         class="fr-treeselect__group{% if widget.can_expand %} fr-accordion{% endif %}"
         data-controller="treeselect-group"
-        data-action="treeselect:visibility->treeselect-group#elementFiltered"
-        data-treeselect-group-treeselect-element-outlet="[data-parent-index='{{ widget.group_index }}']"
     >
         <div class="fr-treeselect__group-header">
             {% if not widget.can_expand %}
@@ -43,6 +37,7 @@
                     aria-expanded="false"
                     aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"
                     type="button"
+                    data-treeselect-group-target="accordionBtn"
                 >
                     {{ widget.group }}
                 </button>

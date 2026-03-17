@@ -440,7 +440,9 @@ class TreeselectPage:
 
     def _locate_group(self, name: str, container: Locator | None = None):
         container = container or self.container
-        group_header = container.locator(".fr-treeselect__group .fr-treeselect__group-header").filter(has_text=name)
+        group_header = (
+            container.locator(".fr-treeselect__group .fr-treeselect__group-header").filter(has_text=name).first
+        )
         group = group_header.locator("..")
         collapse = group.locator("> .fr-collapse")
         button = group_header.locator(".fr-treeselect__group-button")

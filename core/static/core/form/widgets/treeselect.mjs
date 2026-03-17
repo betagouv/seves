@@ -1,16 +1,41 @@
-import {applicationReady} from "Application"
+import {applicationReady, dsfrDisclosePromise} from "Application"
 import {Controller} from "Stimulus"
-import {debounce, search} from "Utils"
+import {search} from "Utils"
+
+const WIDGET_IDENTIFIER = "treeselect"
+const GROUP_IDENTIFIER = "treeselect-group"
+const MIN_SEARCH_LEN = 3
+
+let counter = 0
+
+class TreeselectGroupConnectable extends Controller {
+    connect() {
+        const enclosingGroup = this.element.parentElement.closest(
+            `[data-controller~="${WIDGET_IDENTIFIER}"], [data-controller~="${GROUP_IDENTIFIER}"]`,
+        )
+        if (enclosingGroup != null) {
+            this._childId = `${counter++}`
+            /** @type {TreeselectGroup | null} */
+            this._parentGroup =
+                this.application.getControllerForElementAndIdentifier(enclosingGroup, WIDGET_IDENTIFIER)
+                ?? this.application.getControllerForElementAndIdentifier(enclosingGroup, GROUP_IDENTIFIER)
+            this._parentGroup?.registerChild(this._childId, this)
+        }
+    }
+
+    disconnect() {
+        this._parentGroup?.unregisterChild(this._childId, this)
+    }
+}
 
 /**
  * *** Targets ***
  * @property {HTMLInputElement} inputTarget
  * *** Values ***
  * @property {Boolean} hiddenValue
- * @property {Number} minSearchLengthValue
  */
-class TreeselectElement extends Controller {
-    static values = {hidden: {type: Boolean, default: false}, minSearchLength: {type: Number, default: 3}}
+class TreeselectElement extends TreeselectGroupConnectable {
+    static values = {hidden: {type: Boolean, default: false}}
     static targets = ["input"]
 
     get labels() {
@@ -20,36 +45,37 @@ class TreeselectElement extends Controller {
         ]
     }
 
+    get isHidden() {
+        return this.hiddenValue
+    }
+
     initialize() {
         for (const it of this.element.querySelectorAll("input")) {
             it.setAttribute(`data-${this.identifier}-target`, "input")
         }
     }
 
-    hiddenValueChanged(hidden, previous) {
+    hiddenValueChanged(hidden) {
         if (hidden) {
             this.element.setAttribute("hidden", "hidden")
         } else {
             this.element.removeAttribute("hidden")
         }
-        if (previous !== undefined && hidden !== previous) {
-            this.dispatch("visibility", {detail: {hidden}, prefix: "treeselect"})
-        }
     }
 
     async search(value) {
-        if (value.length < this.minSearchLengthValue) {
+        if (value.length < MIN_SEARCH_LEN) {
             this.hiddenValue = false
-            return
+            return true
         }
-
         for (const label of this.labels) {
             if (search(label, value)) {
                 this.hiddenValue = false
-                return
+                return true
             }
         }
         this.hiddenValue = true
+        return false
     }
 }
 
@@ -57,117 +83,98 @@ class TreeselectElement extends Controller {
  * *** Targets ***
  * @property {HTMLElement[]} collapseTargets
  * @property {HTMLInputElement[]} inputTargets
+ * @property {HTMLInputElement[]} accordionBtnTargets
  * *** Values ***
  * @property {Boolean} hiddenValue
- * @property {Boolean} childrenFilteredValue
- * @property {Boolean} selfFilteredValue
- * *** Outlets ***
- * @property {TreeselectElement[]} treeselectElementOutlets
+ * @property {Boolean} hasChildrenMatchingValue
+ * @property {Boolean} selfMatchesSearchValue
  */
-class TreeselectGroup extends Controller {
-    static values = {selfFiltered: Boolean, childrenFiltered: Boolean}
-    static targets = ["input", "collapse"]
-    static outlets = ["treeselect-element"]
+class TreeselectGroup extends TreeselectGroupConnectable {
+    static values = {
+        hidden: {type: Boolean, default: false},
+        selfMatchesSearch: {type: Boolean, default: true},
+        hasChildrenMatching: {type: Boolean, default: true},
+    }
+    static targets = ["input", "accordionBtn", "collapse"]
 
     get labels() {
-        return this.inputTargets.flatMap(it => [
-            ...Array.from(it.labels).map(it => it.textContent.trim()),
-            it.ariaLabel?.trim() ?? "",
-        ])
+        const result = []
+        for (const it of this.inputTargets) {
+            result.push(...Array.from(it.labels).map(it => it.textContent.trim()))
+            result.push(it.ariaLabel?.trim() ?? "")
+        }
+        return result
     }
 
     initialize() {
+        this.children = new Map()
+
         for (const it of this.element.querySelectorAll("& > .fr-treeselect__group-header input")) {
             it.setAttribute(`data-${this.identifier}-target`, "input")
         }
-        this.refresh = debounce(this.refresh.bind(this), 150, {leading: true})
+    }
+
+    registerChild(id, child) {
+        this.children.set(id, child)
+    }
+
+    unregisterChild(id) {
+        this.children.delete(id)
     }
 
     async search(value) {
-        if (value.length < 3) {
-            this.selfFilteredValue = false
-            return
+        // We need to trigger search on the children anyway to always ensure proper visibility
+        const results = await Promise.all(this.children.values().map(it => it.search(value)))
+
+        // If search is less than MIN_SEARCH_LEN, resets the group: everything is visible, accordions are collapsed
+        if (value.length < MIN_SEARCH_LEN) {
+            this.hiddenValue = false
+            this.collapseTargets.forEach(it => dsfr(it).collapse.conceal())
+            return true
         }
 
+        // If there are results within children, open accordion
+        if (results.some(it => it)) {
+            this.hiddenValue = false
+            this.collapseTargets.forEach(it => dsfrDisclosePromise(dsfr(it).collapse))
+            return true
+        }
+
+        // Finally, search self
         for (const label of this.labels) {
             if (search(label, value)) {
-                this.selfFilteredValue = false
-                return
+                this.hiddenValue = false
+                return true
             }
         }
 
-        this.selfFilteredValue = true
+        this.hiddenValue = true
+        return false
     }
 
-    elementFiltered({detail: {hidden}}) {
-        if (!hidden) {
-            this.childrenFilteredValue = false
-            return
+    hiddenValueChanged(hidden) {
+        if (hidden) {
+            this.element.setAttribute("hidden", "hidden")
+        } else {
+            this.element.removeAttribute("hidden")
         }
-
-        for (const outlet of this.treeselectElementOutlets) {
-            if (!outlet.hiddenValue) {
-                this.childrenFilteredValue = false
-                return
-            }
-        }
-        this.childrenFilteredValue = true
-    }
-
-    selfFilteredValueChanged(hidden, previous) {
-        if (previous === undefined || hidden === previous) return
-        this.refresh()
-    }
-
-    childrenFilteredValueChanged(hidden, previous) {
-        if (previous === undefined || hidden === previous) return
-        this.refresh()
-    }
-
-    refresh() {
-        requestAnimationFrame(() => {
-            const hidden = this.childrenFilteredValue && this.selfFilteredValue
-            if (hidden) {
-                this.element.setAttribute("hidden", "hidden")
-            } else {
-                this.element.removeAttribute("hidden")
-                if (!this.childrenFilteredValue) {
-                    this.collapseTargets.forEach(it => dsfr(it).collapse.disclose())
-                } else {
-                    this.collapseTargets.forEach(it => dsfr(it).collapse.conceal())
-                }
-            }
-            this.dispatch("visibility", {detail: {hidden}, prefix: "treeselect"})
-        })
     }
 }
 
 /**
+ * *** Values ***
+ * @property {Number} minSearchLengthValue
  * *** Targets ***
  * @property {HTMLElement} bodyTarget
  * @property {HTMLButtonElement} buttonTarget
- * *** Outlets ***
- * @property {TreeselectElement[]} treeselectElementOutlets
- * @property {TreeselectGroup[]} treeselectGroupOutlets
  */
 class Treeselect extends Controller {
     static targets = ["body", "button"]
-    static outlets = ["treeselect-element", "treeselect-group"]
+    static values = {minSearchLength: {type: Number, default: 3}}
 
     initialize() {
         this.choices = new Map()
-        this.filter = debounce(
-            search => {
-                for (const it of this.treeselectElementOutlets) {
-                    it.search(search)
-                }
-                for (const it of this.treeselectGroupOutlets) {
-                    it.search(search)
-                }
-            },
-            300,
-            {leading: true},
-        )
+        this.children = new Map()
     }
 
     bodyTargetConnected(el) {
@@ -182,8 +189,16 @@ class Treeselect extends Controller {
         this.originalButtonLabel = el.textContent.trim()
     }
 
-    onSearch({detail: {search}}) {
-        this.filter(search.trim())
+    registerChild(id, child) {
+        this.children.set(id, child)
+    }
+
+    unregisterChild(id) {
+        this.children.delete(id)
+    }
+
+    async onSearch({detail: {search}}) {
+        await Promise.all(this.children.values().map(it => it.search(search)))
     }
 
     onChange({target}) {
@@ -206,7 +221,7 @@ class Treeselect extends Controller {
 }
 
 applicationReady.then(app => {
+    app.register(WIDGET_IDENTIFIER, Treeselect)
+    app.register(GROUP_IDENTIFIER, TreeselectGroup)
     app.register("treeselect-element", TreeselectElement)
-    app.register("treeselect-group", TreeselectGroup)
-    app.register("treeselect", Treeselect)
 })

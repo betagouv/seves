@@ -25,4 +25,17 @@ def generic_test_basic_behavior(url: str, page: Page, treeselect_container: Loca
     treeselect_page.untick_checkbox("Allergène - composition ou étiquetage", "Allergène - Fruits à coques", "Amande")
     expect(treeselect_page.main_button).to_have_text("Choisir dans la liste")
 
-    #
+    # Search correctly filters values and open accordions
+    treeselect_page.search("Virus de la gastroentérite aigüe (GEA)")
+    expect(page.get_by_text("Allergène - composition ou étiquetage").first).not_to_be_visible()
+    expect(page.get_by_text("Virus", exact=True).first).to_be_visible()
+    expect(
+        page.get_by_text(
+            "Virus de la gastroentérite aigüe (GEA) "
+            "(Calicivirus, Norovirus, Sapovirus, Rotavirus, Astrovirus, Adénovirus)"
+        ).first
+    ).to_be_visible()
+    expect(page.get_by_text("Virus de la gastroentérite aigüe (GEA) Norovirus").first).to_be_visible()
+    expect(page.get_by_text("Virus de la gastroentérite aigüe (GEA) Autres").first).to_be_visible()
+    treeselect_page.tick_checkbox("Virus", "Virus de la gastroentérite aigüe (GEA) Autres")
+    expect(treeselect_page.main_button).to_have_text("Virus de la gastroentérite aigüe (GEA) Autres")
