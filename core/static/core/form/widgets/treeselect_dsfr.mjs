@@ -19,7 +19,7 @@ const dsfrInitialized = new Promise((resolve, reject) => {
 dsfrInitialized.then(dsfr => {
     // Imports (kind of)
     const {
-        core: {Instance, DisclosureEvent},
+        core: {Instance, DisclosureEvent, CollapseSelector, Collapse},
         internals: {
             register,
             ns,
@@ -28,12 +28,12 @@ dsfrInitialized.then(dsfr => {
     } = dsfr
 
     const WIDGET_IDENTIFIER = ns("treeselect")
+    const MAIN_BUTTON = ns.selector("treeselect__button")
+    const MAIN_COLLAPSE = ns.selector("treeselect__collapse")
+    const GROUP_SELECTOR = ns.selector("treeselect__group")
     const WIDGET_WRAPPER_CLASS = `.${WIDGET_IDENTIFIER}__wrapper`
     const WIDGET_WRAPPER = `.${WIDGET_IDENTIFIER} > ${WIDGET_WRAPPER_CLASS}`
-    const WIDGET_DISCLOSURE_BTN = `.${WIDGET_IDENTIFIER}__button`
     const MAIN_DROPDOWN = `.${WIDGET_IDENTIFIER}__collapse`
-    const WIDGET_COLLAPSE_BUTTON = `${WIDGET_WRAPPER} > ${WIDGET_DISCLOSURE_BTN}`
-    const WIDGET_COLLAPSE = `${WIDGET_WRAPPER} > ${WIDGET_DISCLOSURE_BTN} + ${MAIN_DROPDOWN}`
     const WIDGET_GROUP = `${WIDGET_WRAPPER} .${WIDGET_IDENTIFIER}__group`
 
     /**
@@ -96,50 +96,6 @@ dsfrInitialized.then(dsfr => {
         }
     }
 
-    class TreeselectButton extends Instance {
-        static get instanceClassName() {
-            return "TreeselectButton"
-        }
-    }
-
-    class TreeselectGroup extends Instance {
-        static get instanceClassName() {
-            return "TreeselectGroup"
-        }
-
-        init() {
-            this._items = new Map()
-            this.initSelectableGroup()
-        }
-
-        initSelectableGroup() {
-            /** @type {HTMLElement} */
-            const label = this.element.node.querySelector("& > .fr-treeselect__group-header .fr-label[aria-controls]")
-            /** @type {HTMLElement} */
-            const collapse = this.element.node.querySelector(`& > .fr-collapse`)
-            if (label === null || collapse === null) return
-
-            const ariaControls = label.getAttribute("aria-controls")
-            const labelText = label.textContent.trim()
-
-            collapse.classList.remove("fr-collapse")
-            collapse.id = ariaControls
-            label.textContent = ""
-            label.removeAttribute("aria-controls")
-            label.parentElement.classList.add("fr-treeselect__group-selectable")
-            label.parentElement.querySelector("input").setAttribute("aria-label", labelText)
-            label.parentElement.insertAdjacentHTML(
-                "beforeend",
-                this.selectableGroupsAccordionButton(ariaControls, labelText),
-            )
-            requestAnimationFrame(() => collapse.classList.add("fr-collapse"))
-        }
-
-        selectableGroupsAccordionButton(ariaControls, textContent) {
-            return `<button type="button" class="fr-treeselect__group-button fr-accordion__btn" aria-expanded="false" aria-controls="${ariaControls}">${textContent}</button>`
-        }
-    }
-
     class Treeselect extends Instance {
         static SEARCH = ns.event("search")
 
@@ -147,45 +103,13 @@ dsfrInitialized.then(dsfr => {
             return "Treeselect"
         }
 
-        get button() {
-            try {
-                return this.getRegisteredInstances(TreeselectButton.instanceClassName)[0]
-            } catch (_) {
-                this.error(
-                    "Unable to locate the treeselect buttton; you're probably missing a "
-                        + `button${WIDGET_DISCLOSURE_BTN} inside ${WIDGET_WRAPPER_CLASS}`,
-                )
-                return null
-            }
-        }
-
         init() {
-            this.register(WIDGET_COLLAPSE_BUTTON, TreeselectButton)
             this.register(`${MAIN_DROPDOWN} > .${WIDGET_IDENTIFIER}__head > .fr-search-bar`, SearchBar)
-            this.register(WIDGET_GROUP, TreeselectGroup)
 
             this.addAscent(SearchBar.SEARCH, this.onSearch.bind(this))
             this.descend(SearchBar.RETRIEVE)
 
             this.listen(DisclosureEvent.DISCLOSE, this.onOpen.bind(this))
-
-            this.initDisclosureButton()
-        }
-
-        initDisclosureButton() {
-            const collapse = this.element.node.querySelector(WIDGET_COLLAPSE)
-            if (!collapse) return
-
-            if (collapse.id === "") {
-                collapse.id = uniqueId("fr-treeselect-subgroup")
-            }
-            const button = collapse.parentElement.querySelector(WIDGET_DISCLOSURE_BTN)
-
-            collapse.classList.remove("fr-collapse")
-            button.setAttribute("type", "button")
-            button.setAttribute("aria-controls", collapse.id)
-            button.setAttribute("aria-expanded", "false")
-            requestAnimationFrame(() => collapse.classList.add("fr-collapse"))
         }
 
         onSearch(value) {

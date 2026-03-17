@@ -1,7 +1,14 @@
-const collator = new Intl.Collator(navigator.language, {
-    usage: "search",
-    sensitivity: "base",
-})
+const collator = (() => {
+    const options = {
+        usage: "search",
+        sensitivity: "base",
+    }
+    try {
+        return new Intl.Collator(navigator.language, options)
+    } catch (_) {
+        return new Intl.Collator("fr", options)
+    }
+})()
 
 /**
  * Searches needle in haystack
@@ -27,21 +34,4 @@ function search(haystack, needle) {
     return false
 }
 
-function debounce(func, wait, {leading = false} = {}) {
-    let timeout = null
-
-    function cb(...args) {
-        func(...args)
-        timeout = null
-    }
-
-    return (...args) => {
-        if (leading === true && timeout == null) {
-            return cb(...args)
-        }
-        clearTimeout(timeout)
-        timeout = setTimeout(() => cb(...args), wait)
-    }
-}
-
-export {search, debounce}
+export {search}
