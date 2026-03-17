@@ -6,7 +6,7 @@
         <label
             class="fr-label"
             for="{{ widget.attrs.id }}"
-            {% if widget.group_index %}aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"{% endif %}
+            {% if parent_index %}aria-controls="fr-treeselect-subgroup-{{ parent_index }}"{% endif %}
         >
             {{ widget.label }}
         </label>
@@ -34,7 +34,7 @@
             {% if not widget.can_expand %}
                 <h3>{{ widget.group }}</h3>
             {% elif widget.group_option %}
-                {% with widget=widget.group_option %}
+                {% with widget=widget.group_option parent_index=widget.group_index %}
                     {% partial input %}
                 {% endwith %}
             {% else %}
@@ -56,13 +56,14 @@
             {% endif %}
         >
             {% for optgroup in widget.optgroups %}
-                {% include optgroup.template_name with widget=optgroup parent_index=widget.group_index %}
+                {% include optgroup.template_name with widget=optgroup %}
             {% endfor %}
         </div>
     </div>
 {% endpartialdef %}
 
 <div
+    id="fr-treeselect-{{ widget.attrs.id }}"
     class="fr-treeselect"
     data-controller="treeselect"
     data-action="dsfr.search->treeselect#onSearch"
@@ -70,7 +71,9 @@
     data-treeselect-treeselect-group-outlet="[data-controller='treeselect-group']"
 >
     <div class="fr-treeselect__wrapper">
-        <button class="fr-treeselect__button" type="button" data-treeselect-target="button">Choisir dans la liste</button>
+        <button class="fr-treeselect__button" data-treeselect-target="button">
+            Choisir dans la liste
+        </button>
         <div class="fr-treeselect__collapse">
             {% if widget.has_search_bar %}
                 <div class="fr-treeselect__head">
