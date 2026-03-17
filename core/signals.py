@@ -2,7 +2,7 @@ import logging
 
 from celery.exceptions import OperationalError
 from django.conf import settings
-from django.contrib.auth.signals import user_logged_in, user_login_failed
+from django.contrib.auth.signals import user_logged_in
 from django.db import transaction
 from django.db.models.signals import post_migrate, post_save, pre_delete, pre_save
 from django.dispatch import receiver
@@ -117,8 +117,3 @@ def fin_suivi_removed(sender, instance, **kwargs):
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
     AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login success")
-
-
-@receiver(user_login_failed)
-def log_user_login_failed(sender, request, user, **kwargs):
-    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login failed")
