@@ -23,7 +23,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def template_name(self):
         return (
             "core/form/widgets/treeselect.html#group"
-            if self.group_value
+            if self.group_label
             else "core/form/widgets/treeselect.html#nogroup"
         )
 
@@ -47,25 +47,25 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def choices(self, value):
         self._choices = deepcopy(value)
 
-    def __init__(self, parent: "TreeselectCheckbox", value, choices):
+    def __init__(self, parent: "TreeselectCheckbox", label, choices):
         self.parent = parent
-        self.group_value = value
+        self.group_label = label
         super().__init__(self.parent.attrs, choices)
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context.update(context.pop("widget"))
-        context["group"] = self.group_value
+        context["group"] = self.group_label
         context["group_index"] = self.parent.get_next_id()
         context["can_expand"] = self.choices.get("__can_expand__", True)
         context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
         if "__self__" in self.choices:
-            group_label = self.choices["__self__"]
+            group_value = self.choices["__self__"]
             context["group_option"] = self.create_option(
                 name,
-                self.group_value,
-                group_label,
-                str(self.group_value) in value,
+                group_value,
+                self.group_label,
+                str(self.group_label) in value,
                 self.parent.get_next_id(),
                 None,
                 attrs,
