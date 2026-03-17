@@ -14,7 +14,7 @@ from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_mo
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
-from core.widgets import Treeselect
+from core.widgets import Treeselect, TreeselectGroup
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
@@ -448,10 +448,12 @@ class InvestigationTiacFormNewTreeslect(InvestigationTiacForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["selected_hazard"].choices = {
-            "Dangers les plus courants": {"__can_expand__": False, **{it.value: str(it) for it in DANGERS_COURANTS}},
-            "Liste complète des dangers": {"__can_expand__": False, **{it.value: it.label for it in CategorieDanger}},
-        }
+        self.fields["selected_hazard"].choices = (
+            TreeselectGroup(
+                value=None, label="Dangers les plus courants", choices=[(it.value, str(it)) for it in DANGERS_COURANTS]
+            ),
+            TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+        )
 
 
 class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):

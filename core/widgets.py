@@ -1,14 +1,24 @@
 from copy import deepcopy
+import dataclasses
 import itertools
 import re
-from typing import Collection, Iterable, Literal, Mapping
+from typing import Any, Collection, Iterable, Literal, Mapping
 
+from django.db.models import Choices
 from django.forms import Media, widgets
+from django.utils.choices import normalize_choices
 
 from core.form_mixins import js_module
 
 
-class TreeselectGroup(widgets.ChoiceWidget):
+@dataclasses.dataclass
+class TreeselectGroup:
+    value: Any
+    label: str
+    choices: Choices | Iterable[tuple[Any, str]]
+
+
+class TreeselectGroupWidget(widgets.ChoiceWidget):
     template_name = "core/form/widgets/treeselect.html#group"
 
     @property
@@ -58,16 +68,16 @@ class TreeselectGroup(widgets.ChoiceWidget):
 
     def optgroups(self, name, value, attrs=None):
         has_selected = False
-        for option_value, option_label in self.choices.items():
-            if self._is_dunder(option_value):
+        for option_label, option_value in self.choices.items():
+            if self._is_dunder(option_label):
                 continue
-            if isinstance(option_label, Mapping):
-                yield TreeselectGroup(self.parent, option_value, option_label).get_context(name, value, attrs)
+            if isinstance(option_value, Mapping):
+                yield TreeselectGroupWidget(self.parent, option_label, option_value).get_context(name, value, attrs)
             else:
-                selected = (not has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
+                selected = (not has_selected or self.parent.allow_multiple_selected) and str(option_label) in value
                 has_selected |= selected
                 yield self.create_option(
-                    name, option_value, option_label, selected, self.parent.get_next_id(), subindex=None, attrs=attrs
+                    name, option_label, option_value, selected, self.parent.get_next_id(), subindex=None, attrs=attrs
                 )
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
@@ -98,7 +108,7 @@ class Treeselect(widgets.ChoiceWidget):
 
     @choices.setter
     def choices(self, value):
-        self._choices = self._normalize_choices(value)
+        self._choices = self._choices_as_dict(value)
 
     @property
     def media(self):
@@ -141,7 +151,7 @@ class Treeselect(widgets.ChoiceWidget):
 
     def optgroups(self, name, value, attrs=None):
         for option_value, option_label in self.choices.items():
-            yield TreeselectGroup(self, option_value, option_label).get_context(name, value, attrs)
+            yield TreeselectGroupWidget(self, option_value, option_label).get_context(name, value, attrs)
 
     def create_option(
         self,
@@ -153,20 +163,27 @@ class Treeselect(widgets.ChoiceWidget):
         subindex=None,
         attrs=None,
     ):
-        return TreeselectGroup(self, value, choices=(label,)).create_option(
+        return TreeselectGroupWidget(self, value, choices=(label,)).create_option(
             name, value, label, selected, index, subindex, attrs
         )
 
-    def _normalize_choices(self, choices) -> dict:
+    def _choices_as_dict(self, choices) -> dict:
         result = {}
 
-        for value, categorised_label in choices:
+        for item in choices:
+            if isinstance(item, TreeselectGroup):
+                result[item.label] = self._choices_as_dict(normalize_choices(item.choices))
+                if item.value is None:
+                    result[item.label]["__can_expand__"] = False
+                else:
+                    result[item.label]["__self__"] = item.value
+                continue
+
+            value, categorised_label = item
             if isinstance(categorised_label, str):
                 *categories, label = re.split(rf"\s*{self.category_separator}\s*", categorised_label)
             elif isinstance(categorised_label, Collection):
-                if isinstance(categorised_label, Mapping):
-                    categorised_label = categorised_label.items()
-                result[value] = self._normalize_choices(categorised_label)
+                result[value] = self._choices_as_dict(categorised_label)
                 continue
             else:
                 categories, label = [], categorised_label
@@ -180,5 +197,5 @@ class Treeselect(widgets.ChoiceWidget):
                     new_dict = {"__self__": curr_dict[part]}
                     curr_dict[part] = new_dict
                 curr_dict = curr_dict[part]
-            curr_dict[value] = label
+            curr_dict[label] = value
         return result

@@ -418,6 +418,10 @@ class TreeselectPage:
     def options_container(self):
         return self.treeselect.locator(".fr-treeselect__body").first
 
+    @property
+    def search_bar(self):
+        return self.treeselect.locator(".fr-treeselect__head .fr-search-bar input").first
+
     def __init__(self, page: Page, container: Locator):
         self.page = page
         self.container = container
@@ -477,3 +481,6 @@ class TreeselectPage:
         *groups, checkbox_label = names
         group = self.open_groups(*groups)
         group.get_by_label(checkbox_label, exact=True).set_checked(False, force=True)
+
+    def search(self, term):
+        self.search_bar.fill(term)
