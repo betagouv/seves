@@ -17,8 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function setupCategorieProduit() {
+        const selectedValueEl = document.getElementById("id_categorie_produit")
+
+        if (selectedValueEl === null) {
+            // Prevent old Treeselect init on FF
+            return
+        }
+
         const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
-        const selectedValue = document.getElementById("id_categorie_produit").value
+        const selectedValue = selectedValueEl.value
         const treeselect = new Treeselect({
             parentHtmlContainer: document.getElementById("categorie-produit"),
             value: selectedValue,

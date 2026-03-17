@@ -31,8 +31,15 @@ function handleNoticeDangerDisplay(options, value) {
 }
 
 function setupCategorieDanger() {
+    const selectedValueEl = document.getElementById("id_categorie_danger")
+
+    if (selectedValueEl === null) {
+        // Prevent old Treeselect init on FF
+        return
+    }
+
     const options = JSON.parse(document.getElementById("categorie-danger-data").textContent)
-    const selectedValue = document.getElementById("id_categorie_danger").value
+    const selectedValue = selectedValueEl.value
     const treeselect = new Treeselect({
         parentHtmlContainer: document.getElementById("categorie-danger"),
         value: selectedValue,
