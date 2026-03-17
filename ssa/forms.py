@@ -2,7 +2,7 @@ import json
 
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
-from django.forms import Media
+from django.forms import ChoiceField, Media
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
@@ -12,6 +12,7 @@ from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithCommonContextVars, WithEtatMixin
 from core.models import Contact
+from core.widgets import TreeselectGroup, TreeselectRadio
 from ssa.constants import (
     CategorieDanger,
     CategorieProduit,
@@ -31,6 +32,7 @@ from ssa.models import (
 )
 from ssa.models.evenement_produit import EvenementProduitReadOnly, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
+from tiac.constants import DANGERS_COURANTS
 
 
 class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
@@ -216,6 +218,24 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
                 },
             )
         }
+
+
+class EvenementProduitTreeselectForm(EvenementProduitForm):
+    categorie_produit = ChoiceField(required=False, choices=CategorieProduit, widget=TreeselectRadio)
+    categorie_danger = ChoiceField(
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectRadio(
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers les plus courants",
+                    choices=[(it.value, it.uncategorized_label) for it in DANGERS_COURANTS],
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+            )
+        ),
+    )
 
 
 class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):

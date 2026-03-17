@@ -1,4 +1,5 @@
 {% extends "ssa/base.html" %}
+{% load waffle_tags %}
 {% load static %}
 {% load render_field dsfr_tags %}
 {% block extrahead %}
@@ -96,8 +97,17 @@
                             <div>
                                 <label>Catégorie de produit</label>
                                 <div id="categorie-produit"></div>
-                                <div class="fr-mt-2w">
-                                    {{ form.categorie_produit  }}
+                                <div>
+                                    {% flag "new_treeselect" %}
+                                        <div class="fr-mb-2w">
+                                            {{ form.categorie_produit  }}
+                                        </div>
+                                    {% else %}
+                                        <div class="fr-mt-2w">
+                                            {{ form.categorie_produit  }}
+                                        </div>
+                                    {% endflag %}
+
                                     <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
                                         {% dsfr_notice title="__content__" %}
                                     </div>
