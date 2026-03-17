@@ -9,6 +9,10 @@
 	    "size": "2XL"
 	  },
 	  {
+		"command": "*/10 * * * * python manage.py send_document_emails_batch",
+	    "size": "2XL"
+	  },
+	  {
 		"command": "0 5 * * * ./bin/backup_db.sh",
 	    "size": "2XL"
 	  },
