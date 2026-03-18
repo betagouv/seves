@@ -115,7 +115,7 @@ def test_export_data_values():
         evenement.statut_reglementaire.libelle,
         evenement.numero_europhyt,
         evenement.numero_rasff,
-        fiche_detection.date_creation.strftime("%d/%m/%Y %Hh%M"),
+        fiche_detection.date_creation.strftime("%d/%m/%Y %H:%M"),
         str(fiche_detection.createur),
         str(fiche_detection.statut_evenement),
         str(fiche_detection.contexte),

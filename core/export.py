@@ -42,7 +42,7 @@ class BaseExport:
                 if isinstance(value, list):
                     return ",".join(value) if value else None
                 if isinstance(value, datetime):
-                    return value.strftime("%d/%m/%Y %Hh%M")
+                    return value.strftime("%d/%m/%Y %H:%M")
                 if isinstance(value, date):
                     return value.strftime("%d/%m/%Y")
                 if isinstance(value, Departement):
