@@ -468,7 +468,7 @@ class InvestigationTiac(
 
     @property
     def communes_display(self):
-        return ", ".join([e.commune for e in self.etablissements.all() if e.commune])
+        return ", ".join([e.commune_and_cp for e in self.etablissements.all()])
 
     @property
     def raisons_sociales_display(self):

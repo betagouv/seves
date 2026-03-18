@@ -20,6 +20,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_state",
     "id",
     "code_insee",
+    "code_postal",
     "investigation_cas_humain_id",
     "departement_id",
 ]

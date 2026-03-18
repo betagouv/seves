@@ -582,7 +582,7 @@ class InvestigationTiacDetailView(
         ]
         context["etablissements"] = self.get_object().etablissements.all()
         context["raisons_sociales"] = [e.raison_sociale for e in context["etablissements"]]
-        context["communes"] = [e.commune for e in context["etablissements"] if e.commune]
+        context["communes"] = [e.commune_and_cp for e in context["etablissements"]]
         context["dates_repas"] = [r.datetime_repas for r in self.get_object().repas.all() if r.datetime_repas]
         return context
 

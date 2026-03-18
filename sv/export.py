@@ -28,7 +28,7 @@ class FicheDetectionExport(BaseExport):
     lieux_fields = [
         ("nom", "Nom"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),
-        ("commune", "Commune"),
+        ("commune_and_cp", "Commune"),
         ("site_inspection", "Site d'inspection"),
         ("wgs84_longitude", "Longitude WGS84"),
         ("wgs84_latitude", "Latitude WGS84"),
