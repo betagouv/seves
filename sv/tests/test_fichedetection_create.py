@@ -1027,3 +1027,15 @@ def test_can_clone_prelevement_from_existing(
     form_elements.publish_btn.click()
 
     assert prelevements.count() == 2
+
+
+@pytest.mark.django_db
+def test_fiche_detection_organisme_nuisible_are_sorted(live_server, page: Page, choice_js_get_all_values):
+    OrganismeNuisible.objects.all().delete()
+    OrganismeNuisibleFactory(libelle_court="Zallard")
+    OrganismeNuisibleFactory(libelle_court="Allard")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    assert choice_js_get_all_values(page, "#organisme-nuisible") == [
+        "Allard",
+        "Zallard",
+    ]
