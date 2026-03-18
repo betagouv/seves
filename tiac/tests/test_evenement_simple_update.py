@@ -48,3 +48,15 @@ def test_evenement_simple_update_has_locking_protection(
     ).to_be_visible()
     page.keyboard.press("Escape")
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+
+def test_update_evenement_simple_updates_last_updated_field(live_server, page):
+    evenement = EvenementSimpleFactory()
+    initial_last_update = evenement.last_updated
+    update_page = EvenementSimpleEditFormPage(page, live_server.url, evenement)
+    update_page.navigate()
+    update_page.contenu.fill("Test")
+    update_page.submit()
+    expect(update_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.last_updated > initial_last_update

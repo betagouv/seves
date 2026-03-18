@@ -166,7 +166,7 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def last_updated(self):
-        return datetime.now()
+        return timezone.now()
 
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
