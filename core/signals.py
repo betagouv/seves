@@ -1,12 +1,14 @@
 import logging
 
 from celery.exceptions import OperationalError
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from django.db import transaction
 from django.db.models.signals import post_migrate, post_save, pre_delete, pre_save
 from django.dispatch import receiver
 import reversion
+from reversion.signals import post_revision_commit
 
 from core.models import AuditLog, CustomRevisionMetaData, Document, FinSuiviContact, LienLibre, Message
 
@@ -117,3 +119,13 @@ def fin_suivi_removed(sender, instance, **kwargs):
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
     AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login success")
+
+
+@receiver(post_revision_commit)
+def update_last_revision(sender, revision, versions, **kwargs):
+    for v in versions:
+        model = apps.get_model(v.content_type.app_label, v.content_type.model)
+        if getattr(model, "_update_last_updated_on_revision", False):
+            instance = model._base_manager.get(pk=v.object_id)
+            instance.last_updated = revision.date_created
+            instance.save(update_fields=["last_updated"])

@@ -412,3 +412,14 @@ def test_evenement_produit_update_has_locking_protection(
     ).to_be_visible()
     page.keyboard.press("Escape")
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+
+def test_evenement_produit_updates_last_updated_field(live_server, page):
+    evenement = EvenementProduitFactory()
+    initial_last_update = evenement.last_updated
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.description.fill("Test")
+    update_page.publish()
+    evenement.refresh_from_db()
+    assert evenement.last_updated > initial_last_update

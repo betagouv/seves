@@ -329,3 +329,15 @@ def test_investigation_tiac_update_has_locking_protection(
     ).to_be_visible()
     page.keyboard.press("Escape")
     page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
+
+
+def test_update_investigation_tiac_updates_last_updated_field(live_server, page):
+    evenement = InvestigationTiacFactory()
+    initial_last_update = evenement.last_updated
+    update_page = InvestigationTiacEditPage(page, live_server.url, evenement)
+    update_page.navigate()
+    update_page.contenu.fill("Test")
+    update_page.submit()
+    update_page.page.wait_for_url(f"**{evenement.numero_evenement}**")
+    evenement.refresh_from_db()
+    assert evenement.last_updated > initial_last_update
