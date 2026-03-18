@@ -109,6 +109,7 @@ COMMON_FIELDS_TO_EXCLUDE = [
     "_state",
     "id",
     "departement_id",
+    "code_postal",
     "investigation_id",
     "evenement_simple_id",
 ]

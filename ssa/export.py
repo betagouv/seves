@@ -48,7 +48,7 @@ class SsaExport(BaseExport):
         ("raison_sociale", "Raison sociale"),
         ("enseigne_usuelle", "Enseigne usuelle"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),
-        ("commune", "Commune"),
+        ("commune_and_cp", "Commune"),
         ("departement", "Département"),
         ("pays", "Pays établissement"),
         ("type_exploitant", "Type d'exploitant"),

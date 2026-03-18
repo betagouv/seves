@@ -139,13 +139,18 @@ class WithLocalisableMixin(models.Model):
 
     @property
     def address_summary(self):
-        value = "nc."
-        if self.commune:
-            code_postal = f" ({self.code_postal})" if self.code_postal else ""
-            value = f"{self.commune}{code_postal}"
+        value = self.commune_and_cp or "nc."
         if self.departement:
             departement_numero = "" if self.code_postal else f" - {self.departement.numero}"
             value += f" | {departement_numero}{self.departement.nom}"
+        return value
+
+    @property
+    def commune_and_cp(self):
+        value = ""
+        if self.commune:
+            code_postal = f" ({self.code_postal})" if self.code_postal else ""
+            value = f"{self.commune}{code_postal}"
         return value
 
     class Meta:

@@ -8,15 +8,6 @@ from tiac.factories import EtablissementFactory, EvenementSimpleFactory, Investi
 from ..models import EvenementSimple
 from .pages import EvenementSimpleEditFormPage
 
-FIELD_TO_EXCLUDE_ETABLISSEMENT = [
-    "_prefetched_objects_cache",
-    "_state",
-    "id",
-    "code_insee",
-    "evenement_simple_id",
-    "siret",
-]
-
 
 def test_can_modify_evenement_simple(
     live_server, mocked_authentification_user, page: Page, faker, ensure_departements, assert_models_are_equal
@@ -60,5 +51,5 @@ def test_can_modify_evenement_simple(
     assert_models_are_equal(
         actual_third,
         expected_third,
-        to_exclude=("_state", "id", "evenement_simple_id", "departement_id", "code_insee", "siret"),
+        to_exclude=("_state", "id", "evenement_simple_id", "departement_id", "code_insee", "code_postal", "siret"),
     )
