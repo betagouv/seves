@@ -5,10 +5,6 @@ body {
 .evenements__list-table {
     border-collapse: collapse;
 }
-.evenements__table-header {
-    background-color: var(--background-default-grey);
-    border-bottom: 1px solid var(--background-alt-grey);
-}
 .evenements__list-row {
     background-image: none;
 }
