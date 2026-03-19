@@ -1,3 +1,4 @@
+import {escapeHTML} from "Application"
 import {setUpAddressChoices} from "BanAutocomplete"
 import {setUpSiretChoices} from "siret"
 import {setUpCommuneChoices} from "/static/core/commune.js"
@@ -20,16 +21,13 @@ function deleteLieu(event) {
 
 function displayLieuxCards() {
     const lieuListElement = document.getElementById("lieux-list")
-    const lieuTemplateElement = document.getElementById("lieu-carte")
+    const lieuTpl = document.getElementById("lieu-carte-tpl").innerHTML
     lieuListElement.innerHTML = ""
     if (document.lieuxCards.length === 0) {
-        lieuListElement.innerHTML = "Aucun lieu."
+        lieuListElement.innerText = "Aucun lieu."
     }
 
     document.lieuxCards.forEach(card => {
-        const clone = lieuTemplateElement.cloneNode(true)
-        clone.classList.remove("fr-hidden")
-        clone.querySelector(".lieu-nom").textContent = card.nom
         let departement = (card.departement || null) ?? ""
         let lieuCommune = card.commune
         if (card.codePostal || null) {
@@ -40,24 +38,37 @@ function displayLieuxCards() {
             lieuCommune += ` | ${departement}`
         }
 
-        clone.querySelector(".lieu-commune").innerHTML =
-            `<p class="fr-card__detail fr-icon-map-pin-2-line">${lieuCommune}</p>`
-        clone.querySelector(".lieu-delete-btn").setAttribute("data-id", card.id)
-        clone.querySelector(".lieu-delete-btn").setAttribute("aria-describedby", `tooltip-delete-lieu-${card.id}`)
-        clone.querySelector(".delete-tooltip").setAttribute("id", `tooltip-delete-lieu-${card.id}`)
-        clone.querySelector(".lieu-edit-btn").setAttribute("aria-controls", `modal-add-lieu-${card.id}`)
-        clone.querySelector(".lieu-edit-btn").setAttribute("aria-describedby", `tooltip-lieu-${card.id}`)
-        clone.querySelector(".edit-tooltip").setAttribute("id", `tooltip-lieu-${card.id}`)
-        clone.querySelector(".lieu-delete-btn").addEventListener("click", event => {
-            const lieuLinkedToPrelevement = document.prelevementCards.some(prelevement => prelevement.lieu === card.nom)
-            if (lieuLinkedToPrelevement === true) {
-                dsfr(document.getElementById("fr-modal-suppression-lieu")).modal.disclose()
-            } else {
-                document.getElementById("delete-lieu-confirm-btn").setAttribute("data-id", event.target.dataset.id)
-                dsfr(document.getElementById("modal-delete-lieu-confirmation")).modal.disclose()
-            }
-        })
-        lieuListElement.appendChild(clone)
+        const lieuMarkup =
+            lieuCommune.trim() !== ""
+                ? `<p class="fr-card__detail fr-icon-map-pin-2-line">${escapeHTML(lieuCommune)}</p>`
+                : ""
+
+        const supplyChainPositionMarkup =
+            card.supplyChainPosition.trim() !== ""
+                ? `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-4v">${card.supplyChainPosition}</p>`
+                : ""
+
+        const newCard = lieuTpl
+            .replaceAll("__nom__", escapeHTML(card.nom))
+            .replaceAll("__lieu__", lieuMarkup)
+            .replaceAll("__suply_chain_position__", supplyChainPositionMarkup)
+            .replaceAll("__card_id__", card.id)
+
+        lieuListElement.insertAdjacentHTML("beforeend", newCard)
+
+        for (const it of lieuListElement.querySelectorAll(".lieu-delete-btn")) {
+            it.addEventListener("click", event => {
+                const lieuLinkedToPrelevement = document.prelevementCards.some(
+                    prelevement => prelevement.lieu === card.nom,
+                )
+                if (lieuLinkedToPrelevement === true) {
+                    dsfr(document.getElementById("fr-modal-suppression-lieu")).modal.disclose()
+                } else {
+                    document.getElementById("delete-lieu-confirm-btn").setAttribute("data-id", event.target.dataset.id)
+                    dsfr(document.getElementById("modal-delete-lieu-confirmation")).modal.disclose()
+                }
+            })
+        }
     })
     showOrHidePrelevementUI()
 }
@@ -94,6 +105,10 @@ function handleHasNotImplemented(modal) {
 function buildLieuCardFromModal(element) {
     /** @type {HTMLSelectElement} */
     const dptSelect = element.querySelector("[id$=departement]")
+    const supplyChainPositionEl = element.querySelector('[id$="position_chaine_distribution_etablissement"]')
+    const supplyChainPosition =
+        (supplyChainPositionEl?.selectedIndex ?? -1 > 0) ? supplyChainPositionEl.selectedOptions[0].label : ""
+
     return {
         id: element.dataset.id,
         nom: element.querySelector(`[id^="id_lieux-"][id$="-nom"]`).value,
@@ -103,6 +118,7 @@ function buildLieuCardFromModal(element) {
                 ? dptSelect.selectedOptions[0].textContent
                 : "",
         codePostal: element.querySelector(`[id^="id_lieux-"][id$="-code_postal"]`)?.value ?? "",
+        supplyChainPosition,
     }
 }
 

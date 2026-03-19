@@ -7,13 +7,6 @@
 .descripteur-label {
     font-weight: var(--field-label-font-weight);
 }
-.lieu-initial {
-    margin-bottom: 1rem;
-}
-.prelevement__type {
-    font-weight: var(--field-label-font-weight);
-    color: var(--text-title-blue-france);
-}
 .stretch-column {
     align-self: stretch;
 }

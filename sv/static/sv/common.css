@@ -19,3 +19,10 @@
     -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
     mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
 }
+
+.prelevement-other-infos .prelevement-other-info {
+    margin: 0;
+}
+.prelevement-other-infos .prelevement-other-info:first-child {
+    margin-top: 0.75rem;
+}

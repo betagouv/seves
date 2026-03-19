@@ -188,7 +188,7 @@ def test_add_lieu_to_list(
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
     expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
 
 
 def test_added_lieu_content_in_list(
@@ -205,8 +205,8 @@ def test_added_lieu_content_in_list(
         page.locator("#lieux-list").get_by_text(re.compile(f".*{re.escape('Lille (59000)')}.*"), exact=True)
     ).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("Lille")
-    expect(page.get_by_role("button", name="Modifier le lieu")).to_be_visible()
-    expect(page.get_by_role("button", name="Supprimer le lieu")).to_be_visible()
+    expect(page.get_by_test_id("lieu-edit-btn")).to_be_visible()
+    expect(page.get_by_test_id("lieu-edit-btn")).to_be_visible()
 
 
 def test_add_two_lieux_to_list(
@@ -227,7 +227,7 @@ def test_add_two_lieux_to_list(
     expect(page.locator("#lieux").get_by_text("test lieu 2", exact=True)).to_be_visible()
     expect(page.locator("#lieux")).to_contain_text("a")
     expect(page.locator("#lieux")).to_contain_text("b")
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 2
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 2
 
 
 # Modifier un lieu
@@ -242,7 +242,7 @@ def test_edit_lieu_button_show_form_in_modal(
     """Test que le bouton Modifier le lieu affiche le formulaire de modification dans une modal"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
 
     expect(page.get_by_role("dialog")).to_be_visible()
 
@@ -256,7 +256,7 @@ def test_edit_lieu_modal_title_and_actions_btn(
     """Test que le titre de la modal de modification d'un lieu est bien 'Modifier le lieu'"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
 
     expect(page.get_by_role("heading", name="Modifier le lieu")).to_be_visible()
     expect(lieu_form_elements.title).to_have_text("Modifier le lieu")
@@ -273,7 +273,7 @@ def test_edit_lieu_form_with_only_nom_lieu(
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
 
     expect(lieu_form_elements.nom_input).to_have_value("test lieu")
     expect(lieu_form_elements.adresse_input).to_be_empty()
@@ -293,7 +293,7 @@ def test_edit_lieu_form_have_all_fields(
     """Test que le formulaire de modification d'un lieu contient bien les champs attendus et que ceux-ci sont pré-remplis avec les valeurs du lieu à modifier."""
     _add_new_lieu(page, form_elements, lieu_form_elements)
     # modification du lieu
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
 
     expect(lieu_form_elements.close_btn).to_be_visible()
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
@@ -337,7 +337,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     _add_new_lieu(page, form_elements, lieu_form_elements, extra_str=" 2", extra_int=2)
 
     # vérification des valeurs du premier lieu
-    page.get_by_role("button", name="Modifier le lieu").first.click()
+    page.get_by_test_id("lieu-edit-btn").first.click()
     expect(lieu_form_elements.nom_input).to_have_value("nom lieu")
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
@@ -348,7 +348,7 @@ def test_edit_lieu_form_have_all_fields_with_multiple_lieux(
     page.get_by_role("button", name="Fermer").click()
 
     # vérification des valeurs du deuxième lieu
-    page.get_by_role("button", name="Modifier le lieu").nth(1).click()
+    page.get_by_test_id("lieu-edit-btn").nth(1).click()
     expect(lieu_form_elements.nom_input).to_have_value("nom lieu 2")
     expect(lieu_form_elements.adresse_input).to_have_value("une adresse 2")
     expect(lieu_form_elements.commune_hidden_input).to_have_value("Lille")
@@ -370,7 +370,7 @@ def test_add_lieu_form_is_empty_after_edit(
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
     # modification du lieu
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, "une adresse modifiée")
     lieu_form_elements.force_commune()
@@ -399,7 +399,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_close_btn_without_sav
     je dois trouver le formulaire d’ajout d’un lieu vide"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     page.get_by_role("button", name="Fermer").click()
     form_elements.add_lieu_btn.click()
 
@@ -416,7 +416,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_cancel_btn_without_sa
     je dois trouver le formulaire d’ajout d’un lieu vide"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     page.get_by_label("Modifier le lieu").get_by_role("link", name="Annuler").click()
     form_elements.add_lieu_btn.click()
 
@@ -433,7 +433,7 @@ def test_add_lieu_form_is_empty_after_close_edit_form_with_esc_key_without_save(
     je dois trouver le formulaire d’ajout d’un lieu vide"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     page.keyboard.press("Escape")
     form_elements.add_lieu_btn.click()
 
@@ -452,7 +452,7 @@ def test_delete_lieu_button_show_confirmation_modal(
     """Test qu'une modal de confirmation est affichée lors de la suppression d'un lieu liée à aucun prélèvement"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Supprimer le lieu").click()
+    page.get_by_test_id("lieu-delete-btn").click()
 
     expect(page.get_by_role("dialog")).to_be_visible()
 
@@ -466,11 +466,11 @@ def test_delete_lieu_from_list(
     """Test que le lieu est bien supprimée de la liste des lieux après confirmation"""
     _add_new_lieu(page, form_elements, lieu_form_elements)
 
-    page.get_by_role("button", name="Supprimer le lieu").click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("nom lieu")
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 0
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 0
 
 
 def test_delete_lieu_from_list_with_multiple_lieux(
@@ -491,14 +491,14 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     lieu_form_elements.save_btn.click()
 
     # suppression du premier lieu
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("lorem")
     expect(page.locator("#lieux")).to_contain_text("ipsum")
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "1", "nom": "ipsum"}
+        {"commune": "", "departement": "", "codePostal": "", "id": "1", "nom": "ipsum", "supplyChainPosition": ""}
     ]
 
 
@@ -520,14 +520,14 @@ def test_delete_correct_lieu(
     lieu_form_elements.nom_input.fill("ipsum")
     lieu_form_elements.save_btn.click()
 
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
     page.locator(".fr-btn--close").locator("visible=true").click()
-    page.get_by_role("button", name="Supprimer le lieu").nth(1).click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("lieu-delete-btn").nth(1).click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     expect(page.locator("#lieux")).not_to_contain_text("ipsum")
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
 
     cards = page.evaluate("document.lieuxCards")
     assert len(cards) == 1
@@ -560,14 +560,14 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     prelevement_form_elements.save_btn.click()
 
     # suppression du lieu
-    page.get_by_role("button", name="Supprimer le lieu").click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
 
     expect(page.get_by_role("dialog")).to_be_visible()
     page.get_by_role("button", name="Fermer").click()
     expect(page.locator("#lieux")).to_contain_text("lorem")
-    assert len(page.locator("#lieux-list").locator(".lieu-initial").all()) == 1
+    assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "0", "nom": "lorem"}
+        {"commune": "", "departement": "", "codePostal": "", "id": "0", "nom": "lorem", "supplyChainPosition": ""}
     ]
 
 
@@ -607,8 +607,8 @@ def test_info_message_in_prelevement_bloc_should_be_visible_without_locations(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.save_btn.click()
-    page.get_by_role("button", name="Supprimer le lieu").click()
-    page.get_by_role("dialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     expect(page.locator("#no-lieux-text")).to_be_visible()
 
