@@ -86,12 +86,6 @@ main {
     display: flex;
     justify-content: space-between;
 }
-#lieux .lieu-edit-btn,
-#lieux .lieu-delete-btn,
-#lieux .lieu-commune {
-    margin-bottom: 0;
-}
-
 #modal-add-edit-lieu-title,
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
@@ -129,13 +123,6 @@ main {
     flex: 0.55;
     margin-right: 0.5rem;
 }
-
-.lieu-initial,
-.prelevement {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background-color: #e3e3fd;
-}
 .etablissement-fields {
     display: none;
 }
@@ -172,10 +159,6 @@ main {
     margin-bottom: 0.5rem;
     font-weight: bold;
     color: #000091;
-}
-#prelevements .prelevement-edit-btn,
-#prelevements .prelevement-delete-btn {
-    margin-bottom: 0;
 }
 .site-inspection,
 .prelevement-lieu {

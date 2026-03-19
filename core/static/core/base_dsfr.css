@@ -26,16 +26,27 @@
 }
 
 /* Enbables using Remix icons with DSFR styles */
+.fr-icon-ri[class*=" ri-"],
+.fr-icon-ri[class^="ri-"] {
+    /* Revert font-family to DSFR's default, we only want remixicon on :before or :after */
+    font-family: Marianne, arial, sans-serif !important;
+}
+
 .fr-icon-ri[class*=" ri-"]:after,
 .fr-icon-ri[class*=" ri-"]:before,
 .fr-icon-ri[class^="ri-"]:after,
 .fr-icon-ri[class^="ri-"]:before {
     align-self: baseline;
+    /* biome-ignore lint/a11y/useGenericFontNames: remixicon */
+    font-family: "remixicon" !important;
     font-size: var(--icon-size);
     background-color: transparent;
 }
 
-.fr-header .fr-nav__list {
+.fr-icon-ri[class*=" ri-"]:after,
+.fr-icon-ri[class*=" ri-"]:before,
+.fr-icon-ri[class^="ri-"]:after,
+.fr-icon-ri[class^="ri-"]:before .fr-header .fr-nav__list {
     margin: 0;
 }
 
@@ -77,6 +88,10 @@
 
 .fr-flex--align-normal {
     align-items: normal !important;
+}
+
+.fr-flex--align-stretch {
+    align-items: stretch !important;
 }
 
 .fr-flex--space-between {

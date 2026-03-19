@@ -330,6 +330,16 @@ class LieuFormDomElements:
     def position_etablissement_input(self) -> Locator:
         return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
 
+    def set_supply_chain(self, name):
+        # Using set_checked(True, force=True) because Playwright tests that checkbox isn't obscured as part of
+        # actionability tests except DSFR's design obscures it by label's ::before for design. Not much we can do…
+        self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').locator("visible=true").set_checked(
+            True, force=True
+        )
+        self.page.locator('[id^="id_lieux-"][id$="position_chaine_distribution_etablissement"]').locator(
+            "visible=true"
+        ).select_option(name)
+
 
 class PrelevementFormDomElements:
     """Classe contenant les éléments du DOM de la modal de création/modification d'un prélèvement"""
