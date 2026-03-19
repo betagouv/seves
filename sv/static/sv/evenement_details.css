@@ -19,6 +19,7 @@
     justify-content: flex-end;
     width: min(40%, 440px);
     min-width: 440px;
+    margin-bottom: 0.5rem;
     margin-left: auto;
 }
 .fr-btn--delete {
