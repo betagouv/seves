@@ -46,7 +46,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==44.0.1
+cryptography==46.0.5
     # via
     #   josepy
     #   mozilla-django-oidc
@@ -192,7 +192,7 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyopenssl==25.0.0
+pyopenssl==26.0.0
     # via josepy
 pytest==9.0.2
     # via
