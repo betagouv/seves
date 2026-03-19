@@ -17,6 +17,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
     services:
       postgres:
         image: postgres:latest
