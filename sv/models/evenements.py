@@ -28,7 +28,7 @@ from .fiches_zone_delimitee import FicheZoneDelimitee
 from .models_mixins import WithDerniereMiseAJourMixin
 
 
-@reversion.register()
+@reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee"])
 class Evenement(
     AllowACNotificationMixin,
     WithVisibiliteMixin,
