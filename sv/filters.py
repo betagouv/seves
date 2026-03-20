@@ -27,7 +27,7 @@ class EvenementFilter(
     )
     organisme_nuisible = django_filters.ModelChoiceFilter(
         label="Organisme",
-        queryset=OrganismeNuisible.objects.all(),
+        queryset=OrganismeNuisible.objects.all().order_by("libelle_court"),
         empty_label=settings.SELECT_EMPTY_CHOICE,
         method="filter_organisme_nuisible",
     )
