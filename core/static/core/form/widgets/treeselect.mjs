@@ -177,12 +177,13 @@ class Treeselect extends Controller {
         this.children = new Map()
     }
 
-    bodyTargetConnected(el) {
-        for (const /**@type {HTMLInputElement} */ it of el.querySelectorAll("input")) {
-            const actions = [`change->${this.identifier}#onChange`, it.dataset.action || ""]
-            it.dataset.action = actions.join(" ").trim()
-            requestAnimationFrame(() => it.dispatchEvent(new Event("change")))
-        }
+    connect() {
+        new Promise(resolve => {
+            for (const it of this.element.querySelectorAll("input:checked")) {
+                this.onChange({target: it})
+            }
+            resolve()
+        })
     }
 
     buttonTargetConnected(el) {

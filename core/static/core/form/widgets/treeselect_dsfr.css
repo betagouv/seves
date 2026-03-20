@@ -14,13 +14,16 @@
     display: inline-flex;
     flex-direction: row;
     width: 100%;
-    padding: 0.5rem 1rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
     font-size: 1rem;
+    font-weight: 400;
     line-height: 1.5rem;
     color: var(--text-default-grey);
     text-align: left;
     appearance: none;
-    background-color: var(--background-contrast-grey);
+    /* Setting !important here to avoid .fr-accordion__btn to hijack style */
+    background-color: var(--background-contrast-grey) !important;
     background-image: none;
     background-repeat: no-repeat;
     background-position: calc(100% - 1rem) 50%;
@@ -31,11 +34,12 @@
 
 .fr-treeselect__button::after {
     --icon-size: 1rem;
-    display: inline-block;
+    position: absolute;
+    right: 0.75rem;
     flex: 0 0 auto;
     width: var(--icon-size);
     height: var(--icon-size);
-    margin: auto 0 auto auto;
+    margin: auto 0 auto min(1.5rem, auto);
     vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
     content: "";
     background-color: currentColor;
@@ -48,8 +52,11 @@
     --collapse-max-height: 24rem;
     --children-gap: 1rem;
     position: absolute;
-    z-index: 1;
+    z-index: calc(var(--ground) + 750);
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    overflow: hidden;
     background-color: var(--background-overlap-grey);
     filter: drop-shadow(var(--overlap-shadow));
 }
@@ -61,9 +68,8 @@
 }
 
 .fr-treeselect__collapse > .fr-treeselect__body {
-    flex-grow: 1;
     padding: var(--children-gap);
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .fr-treeselect__body .fr-collapse {
@@ -78,6 +84,7 @@
 .fr-treeselect__group-header > .fr-treeselect__group-selectable {
     display: flex;
     flex-direction: row;
+    margin: 0;
 }
 
 .fr-treeselect__group-header > .fr-treeselect__group-selectable > .fr-label {

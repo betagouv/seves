@@ -1,17 +1,17 @@
+from copy import copy
 from functools import cached_property
-import json
 import re
 
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
-from django.forms import Media
+from django.forms import Field, Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, MultiModelChoiceField, SEVESChoiceField
 from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_module
-from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
+from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm, SetMultipleChoiceField
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
 from core.widgets import Treeselect, TreeselectGroup
@@ -223,6 +223,11 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
         }
 
 
+class SuspicionConclusionSelectedHazardField(SetMultipleChoiceField):
+    def valid_value(self, value):
+        return True
+
+
 class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     SuspicionConclusion = SuspicionConclusion
     CategorieDanger = CategorieDanger
@@ -300,12 +305,27 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     precisions = forms.CharField(
         widget=forms.TextInput(attrs={"disabled": True}), required=False, label="Précisions", help_text="Type d'analyse"
     )
-    agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
+    agents_confirmes_ars = SetMultipleChoiceField(
+        required=False,
+        choices=CategorieDanger,
+        widget=Treeselect(
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers les plus courants",
+                    choices=[(it.value, str(it)) for it in DANGERS_COURANTS],
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+            ),
+        ),
+    )
 
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
     )
-    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
+    selected_hazard = SuspicionConclusionSelectedHazardField(
+        label="Dangers retenus", choices=(), required=False, widget=Treeselect
+    )
 
     class Meta:
         model = InvestigationTiac
@@ -323,7 +343,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "nb_dead_persons",
             "datetime_first_symptoms",
             "datetime_last_symptoms",
-            "danger_syndromiques_suspectes_display",
             "danger_syndromiques_suspectes",
             "analyses_sur_les_malades",
             "precisions",
@@ -346,23 +365,42 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             js=(
                 js_module("ssa/free_links.mjs"),
                 js_module("tiac/etiologie.mjs"),
-                js_module("tiac/agents_pathogene.mjs"),
                 js_module("tiac/tiac_conclusion.mjs"),
                 js_module("tiac/ars_informee.mjs"),
             ),
         )
 
     @cached_property
-    def common_danger(self):
-        return DANGERS_COURANTS
-
-    @cached_property
-    def selected_hazard_confirmed_choices(self):
-        return json.dumps(self.CategorieDanger.build_options())
+    def selected_hazard_empty(self):
+        field = copy(self.fields["selected_hazard"])
+        field.disabled = True
+        return Field.get_bound_field(field, self, "selected_hazard")
 
     @cached_property
     def selected_hazard_suspected_choices(self):
-        return json.dumps([{"name": label, "value": value} for value, label in DangersSyndromiques.choices_short_names])
+        field = copy(self.fields["selected_hazard"])
+        field.disabled = False
+        field.widget = Treeselect(attrs=field.widget.attrs.copy(), category_separator=None)
+        field.choices = DangersSyndromiques
+        return Field.get_bound_field(field, self, "selected_hazard")
+
+    @cached_property
+    def selected_hazard_confirmed_choices(self):
+        field = copy(self.fields["selected_hazard"])
+        field.disabled = False
+        field.choices = CategorieDanger
+        field.widget = Treeselect(
+            attrs=field.widget.attrs.copy(),
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers les plus courants",
+                    choices=[(it.value, str(it)) for it in DANGERS_COURANTS],
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+            ),
+        )
+        return Field.get_bound_field(field, self, "selected_hazard")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -443,19 +481,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         )
 
 
-class InvestigationTiacFormNewTreeslect(InvestigationTiacForm):
-    selected_hazard = forms.MultipleChoiceField(label="Dangers retenus", widget=Treeselect)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["selected_hazard"].choices = (
-            TreeselectGroup(
-                value=None, label="Dangers les plus courants", choices=[(it.value, str(it)) for it in DANGERS_COURANTS]
-            ),
-            TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
-        )
-
-
 class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/repas_suspect.html"
 
@@ -517,7 +542,7 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
     type_aliment = forms.ChoiceField(
         label="Type d'aliment suspecté", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
     )
-    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
+    categorie_produit = SetMultipleChoiceField(required=False, choices=CategorieProduit, widget=Treeselect)
     description_composition = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
         label="Description de la composition de l'aliment",
@@ -536,9 +561,11 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         label="Motif de suspicion de l'aliment",
     )
 
-    @cached_property
-    def categorie_produit_json(self):
-        return json.dumps(CategorieProduit.build_options())
+    def clean_categorie_produit(self):
+        result = self.cleaned_data.get("categorie_produit")
+        if isinstance(result, list):
+            return ",".join(list(sorted(set(result))))
+        return result
 
     class Meta:
         model = AlimentSuspect
@@ -565,15 +592,19 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.Select,
     )
 
-    categorie_danger = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
-
-    @cached_property
-    def categorie_danger_json(self):
-        return json.dumps(CategorieDanger.build_options())
-
-    @cached_property
-    def common_danger(self):
-        return DANGERS_COURANTS
+    categorie_danger = SetMultipleChoiceField(
+        choices=CategorieDanger,
+        widget=Treeselect(
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers les plus courants",
+                    choices=[(it.value, str(it)) for it in DANGERS_COURANTS],
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+            ),
+        ),
+    )
 
     class Meta:
         model = AnalyseAlimentaire

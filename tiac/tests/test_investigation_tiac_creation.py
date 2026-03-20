@@ -10,7 +10,6 @@ import pytest
 from core.constants import MUS_STRUCTURE
 from core.factories import DepartementFactory
 from core.models import Contact, Departement, LienLibre
-from core.tests.generic_tests.treeselect import generic_test_basic_behavior
 from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -104,7 +103,7 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.fill_context_block(input_data)
 
     for danger in input_data.agents_confirmes_ars:
-        creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
+        creation_page.agent_pathogene_treeselect.tick_checkbox(*CategorieDanger(danger).splitted_label)
 
     creation_page.fill_conlusion(input_data)
 
@@ -671,10 +670,3 @@ def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authenti
     investigation = InvestigationTiac.objects.get()
     assert investigation.notify_ars is True
     assert investigation.modalites_declaration == ModaliteDeclarationEvenement.OTHER
-
-
-def test_basic_behavior(live_server, page: Page):
-    treeselect_container = page.locator("#fr-treeselect-id_selected_hazard")
-    generic_test_basic_behavior(
-        f"{live_server.url}{reverse('tiac:investigation-tiac-creation')}", page, treeselect_container
-    )

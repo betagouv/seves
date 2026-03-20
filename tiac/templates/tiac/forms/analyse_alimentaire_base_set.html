@@ -8,7 +8,6 @@
         data-analyse-alimentaire-form-form-prefix-value="{{ form.prefix }}"
         data-analyse-alimentaire-form-should-immediately-show-value="{{ should_immediately_show|default:False}}"
         data-analyse-alimentaire-form-categorie-danger-value="{{ form.categorie_danger_json }}"
-        data-action="dsfr.conceal->analyse-alimentaire-form#onCloseForm"
     >
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
@@ -17,6 +16,7 @@
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-analyse-alimentaire-form-target="dialog"
+            data-action="dsfr.conceal->analyse-alimentaire-form#onCloseForm:self"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">

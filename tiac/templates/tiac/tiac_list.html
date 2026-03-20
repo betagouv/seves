@@ -4,16 +4,13 @@
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
-    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}
-    <form id="search-form" method="get" data-controller="search-form">
+    <form id="search-form" method="get" data-controller="search-form", data-search-form-target="form">
         {% include "tiac/_tiac_more_filters.html" %}
         <div class="fr-p-4v evenements_liste__header">
             <div class="evenements_liste__header--title">
@@ -35,13 +32,8 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-                <div class="fr-mb-2w fr-px-1w">
-                    <div class="fr-select-group" id="danger-retenu">
-                        <label class="fr-label">Dangers retenus</label>
-                        {% dsfr_form_field filter.form.selected_hazard|set_data:"search-form-target:selectedHazardInput" %}
-                        <div data-search-form-target="selectedHazardContainer"></div>
-                        <div data-search-form-target="jsonConfigSelectedHazard" class="fr-hidden">{{ selected_hazard_data|safe }}</div>
-                    </div>
+                <div id="danger-retenu" class="fr-mb-2w fr-px-1w">
+                    {% dsfr_form_field filter.form.selected_hazard %}
                 </div>
                 <div class="fr-mb-2w fr-px-1w">
                     {% dsfr_form_field filter.form.full_text_search  %}

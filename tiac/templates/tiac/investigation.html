@@ -1,11 +1,9 @@
 {% extends "tiac/base.html" %}
-{% load dsfr_tags widget_tweaks static render_field_with_inline_label partials waffle_tags %}
+{% load dsfr_tags widget_tweaks static render_field_with_inline_label partials %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation_base.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 
 {% block content %}
@@ -166,34 +164,20 @@
                 {{ aliment_formset }}
                 {{ analyse_alimentaire_formset }}
             </fieldset>
-            <fieldset class="fr-fieldset form-fieldset fr-mt-4v form-fieldset" data-controller="agents-pathogene" id="agents-pathogene">
-                <div data-agents-pathogene-target="jsonConfig" class="fr-hidden">{{ categorie_danger_data|safe }}</div>
-                <div class="fieldset-header">
-                    <legend class="fr-fieldset__legend fr-h3">Agents pathogènes confirmés par l'ARS</legend>
-                </div>
-                <span class="fr-hint-text fr-mb-1w">Confirmation obtenue par examen clinique ou analytique des malades</span>
-                {% dsfr_form_field form.agents_confirmes_ars|set_data:"agents-pathogene-target:categorieDangerInput" %}
-                <div data-agents-pathogene-target="categorieDangerContainer"></div>
-
-                <template data-agents-pathogene-target="categorieDangerHeader">
-                    <div class="categorie-danger-header">
-                        <div class="fr-ml-1v">Dangers les plus courants</div>
-                        {% for danger in danger_plus_courant %}
-                            <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
-                                <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
-                                <label class="treeselect-list__item-label shortcut" for="shortcut_{{ forloop.counter0 }}">{{ danger }}</label>
-                            </div>
-                        {% endfor %}
-                        <div class="fr-ml-1v">Liste complète des dangers</div>
-                    </div>
-                </template>
+            <fieldset
+                id="agents-pathogene"
+                class="fr-fieldset form-fieldset fr-mt-4v"
+            >
+                <legend id="agents-pathogene-legend" class="fr-fieldset__legend fr-h3">
+                    Agents pathogènes confirmés par l'ARS
+                    <span class="fr-hint-text fr-mb-1w">Confirmation obtenue par examen clinique ou analytique des malades</span>
+                </legend>
+                {% dsfr_form_field form.agents_confirmes_ars %}
             </fieldset>
             <fieldset
                 class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
                 data-controller="conclusion-form"
                 data-conclusion-form-suspicion-conclusion-choices-value="{{ form.SuspicionConclusion.as_json }}"
-                data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
-                data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
             >
                 <legend class="fr-h3 fr-fieldset__legend">Conclusion</legend>
 
@@ -213,42 +197,21 @@
                 <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
                     <div class="fr-col-6 needs-required">
                         {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
-                        {% flag "new_treeselect" %}
-                            {% dsfr_form_field form.selected_hazard %}
-                        {% else %}
-                            <div id="selected_hazard-treeselect" class="fr-input-group">
-                                {{ form.selected_hazard.label_tag }}
-                                <div
-                                    data-conclusion-form-target="selectedHazardTreeselect"
-                                    data-action="input->conclusion-form#onTreeselectInput update-dom->conclusion-form#onUpdateDom"
-                                ></div>
-                                {{ form.selected_hazard|set_data:"conclusion-form-target:selectedHazardTreeselectInput" }}
-                                <template data-conclusion-form-target="selectedHazardTreeselectHeader">
-                                    <div class="categorie-danger-header">
-                                        <div class="fr-ml-1v">Dangers les plus courants</div>
-                                        {% for danger in form.common_danger %}
-                                            <div
-                                                class="treeselect-list__item"
-                                                level="0"
-                                                group="false"
-                                                data-action="mousedown->conclusion-form#onShortcut:prevent:stop"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    id="shortcut_{{ forloop.counter0 }}"
-                                                    class="treeselect-list__item-checkbox-container"
-                                                >
-                                                <label
-                                                    class="treeselect-list__item-label shortcut"
-                                                    for="shortcut_{{ forloop.counter0 }}"
-                                                >{{ danger }}</label>
-                                            </div>
-                                        {% endfor %}
-                                        <div class="fr-ml-1v">Liste complète des dangers</div>
-                                    </div>
-                                </template>
-                            </div>
-                        {% endflag %}
+                        <fieldset
+                            data-conclusion-form-target="selectedHazarContainer"
+                            data-testid="suspicion-conclusion"
+                        >
+                            {% dsfr_form_field form.selected_hazard_empty %}
+                        </fieldset>
+                        <template data-conclusion-form-target="selectedHazarEmptySelectionTpl">
+                            {% dsfr_form_field form.selected_hazard_empty %}
+                        </template>
+                        <template data-conclusion-form-target="selectedHazarConfirmedTpl">
+                            {% dsfr_form_field form.selected_hazard_confirmed_choices %}
+                        </template>
+                        <template data-conclusion-form-target="selectedHazarSuspectedTpl">
+                            {% dsfr_form_field form.selected_hazard_suspected_choices %}
+                        </template>
                     </div>
                     <div class="fr-col-6 conclusion-comment">
                         {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
@@ -259,7 +222,7 @@
                         {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas" %}
                     </div>
                     <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment"  %}
+                        {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment" %}
                     </div>
                 </div>
             </fieldset>

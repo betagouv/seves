@@ -25,15 +25,9 @@ import {collectFormValues} from "Forms"
  * @property {boolean} shouldImmediatelyShowValue
  */
 class AlimentFormController extends BaseFormInModal {
-    static targets = ["categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
-    static values = {
-        shouldImmediatelyShow: {type: Boolean, default: false},
-        categorieDanger: Array,
-        customHeaderAdded: {type: Boolean, default: false},
-    }
+    static values = {shouldImmediatelyShow: {type: Boolean, default: false}}
 
     connect() {
-        this.setupcategorieDanger()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -55,81 +49,10 @@ class AlimentFormController extends BaseFormInModal {
         dsfr(this.dialogTarget).modal.conceal()
     }
 
-    setupcategorieDanger() {
-        this.treeselect = new Treeselect({
-            ...tsDefaultOptions,
-            parentHtmlContainer: this.categorieDangerContainerTarget,
-            value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
-            options: this.categorieDangerValue,
-            isSingleSelect: false,
-            isIndependentNodes: true,
-            openCallback: this.treeselectOpenCallback.bind(this),
-            placeholder: "Chercher ou choisir dans la liste",
-            searchCallback: item => {
-                if (item.length === 0) {
-                    showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                } else {
-                    hideHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                }
-            },
-        })
-        this.treeselect.srcElement.addEventListener("update-dom", () => {
-            patchItems(this.treeselect.srcElement)
-        })
-        this.treeselect.srcElement.addEventListener("input", e => {
-            if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
-                    checkbox.checked = false
-                })
-            } else {
-                this.categorieDangerInputTarget.value = e.detail.join("||")
-            }
-        })
-        this.treeselect.srcElement.querySelector(".treeselect-input").classList.add("fr-input")
-    }
-
-    onShortcut(event) {
-        const label = event.target.getElementsByTagName("label")[0]
-        const value = label.textContent.trim()
-        const checkbox = this.categorieDangerContainerTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
-        checkbox.checked = !checkbox.checked
-
-        const valuesToSet = this.treeselect.value
-        if (checkbox.checked) {
-            valuesToSet.push(value)
-        } else {
-            valuesToSet.pop(value)
-        }
-
-        this.treeselect.updateValue(valuesToSet)
-        this.categorieDangerInputTarget.value = valuesToSet.join("||")
-        let text = ""
-        if (valuesToSet.length === 1) {
-            text = valuesToSet[0]
-        } else {
-            text = `${valuesToSet.length} ${this.treeselect.tagsCountText}`
-        }
-        this.categorieDangerContainerTarget.querySelector(".treeselect-input__tags-count").innerText = text
-    }
-
     onCloseForm() {
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()
-    }
-
-    treeselectOpenCallback() {
-        patchItems(this.treeselect.srcElement)
-        if (this.customHeaderAddedValue) {
-            showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-            return
-        }
-        const list = this.categorieDangerContainerTarget.querySelector(".treeselect-list")
-        if (list) {
-            const fragment = this.categorieDangerHeaderTarget.content.cloneNode(true)
-            list.prepend(fragment)
-            this.customHeaderAddedValue = true
-        }
     }
 
     /** @param {AnalyseAlimentaireData} analyse */
@@ -158,7 +81,7 @@ class AlimentFormController extends BaseFormInModal {
                         </h3>
                         <div class="fr-card__desc">
                             <p class="fr-mb-4v">${analyse.etat_prelevement}</p>
-                            ${this.optionalText(analyse.categorie_danger, this.renderBadges(analyse.categorie_danger.split("||")))}
+                            ${this.optionalText(analyse.categorie_danger, this.renderBadges(analyse.categorie_danger))}
                         </div>
                     </div>
                     <div class="fr-card__footer">

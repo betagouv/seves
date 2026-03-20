@@ -96,80 +96,6 @@ dsfrInitialized.then(dsfr => {
         }
     }
 
-    class TreeselectCollapse extends Collapse {
-        static get instanceClassName() {
-            return "TreeselectCollapse"
-        }
-
-        constructor() {
-            super()
-            this._selector = MAIN_COLLAPSE
-            this.disclosuresGroupInstanceClassName = undefined
-            this.modifier = `${CollapseSelector.COLLAPSE}--${this.type.id}`
-        }
-
-        init() {
-            if (this.id.trim() === "") {
-                this.id = uniqueId("fr-treeselect-main")
-            }
-            this.node.id = this.id
-            const buttton = this.element.parent.node.querySelector(MAIN_BUTTON)
-            buttton?.setAttribute("aria-controls", this.id)
-            buttton?.setAttribute("type", "button")
-            buttton?.setAttribute("aria-expanded", "false")
-            this.node.classList.add(ns("collapse"))
-            super.init()
-        }
-    }
-
-    class TreeselectGroupCollapse extends Collapse {
-        static get instanceClassName() {
-            return "TreeselectGroupCollapse"
-        }
-
-        init() {
-            /** @type {HTMLElement} */
-            const label = this.element.parent.node.querySelector(
-                `& > .fr-treeselect__group-header .fr-label[aria-controls~="${this.id}"]`,
-            )
-
-            if (label !== null) {
-                const labelText = label.textContent.trim()
-
-                label.innerHTML = `<span class="fr-sr-only">${label.textContent}</span>`
-                label.removeAttribute("aria-controls")
-                label.parentElement.classList.add("fr-treeselect__group-selectable")
-                label.parentElement.insertAdjacentHTML(
-                    "beforeend",
-                    this.selectableGroupsAccordionButton(this.id, labelText),
-                )
-            }
-            super.init()
-        }
-
-        selectableGroupsAccordionButton(ariaControls, textContent) {
-            return `<button type="button" class="fr-treeselect__group-button fr-accordion__btn" aria-expanded="false" aria-controls="${ariaControls}">
-                <span class="fr-sr-only">Ouvrir la catégorie </span>${textContent}
-            </button>`
-        }
-    }
-
-    class TreeselectGroup extends Instance {
-        static get instanceClassName() {
-            return "TreeselectGroup"
-        }
-
-        init() {
-            this.register(
-                [
-                    `${MAIN_DROPDOWN} ${GROUP_SELECTOR} > .fr-collapse`,
-                    `${MAIN_DROPDOWN} ${GROUP_SELECTOR} *:not(${GROUP_SELECTOR}) > .fr-collapse`,
-                ].join(","),
-                TreeselectGroupCollapse,
-            )
-        }
-    }
-
     class Treeselect extends Instance {
         static SEARCH = ns.event("search")
 
@@ -184,9 +110,6 @@ dsfrInitialized.then(dsfr => {
             this.descend(SearchBar.RETRIEVE)
 
             this.listen(DisclosureEvent.DISCLOSE, this.onOpen.bind(this))
-
-            this.register(`.${WIDGET_IDENTIFIER} ${MAIN_COLLAPSE}`, TreeselectCollapse)
-            this.register(WIDGET_GROUP, TreeselectGroup)
         }
 
         onSearch(value) {

@@ -59,7 +59,7 @@ def generic_test_can_filter_by_fin_de_suivi(live_server, page: Page, factory, ur
 
     page.goto(f"{live_server.url}{url}")
     page.locator("#id_etat").select_option("Fin de suivi", force=True)
-    page.get_by_text("Rechercher", exact=True).click(force=True)
+    page.get_by_role("button", name="Rechercher", exact=True).click(force=True)
 
     expect(page.get_by_role("cell", name=str(obj_1.numero))).not_to_be_visible()
     expect(page.get_by_role("cell", name=str(obj_2.numero))).not_to_be_visible()

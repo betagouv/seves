@@ -3,7 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import CheckboxInput, HiddenInput, Media, TextInput
+from django.forms import CheckboxInput, Media, TextInput
 import django_filters
 from dsfr.forms import DsfrBaseForm
 
@@ -17,9 +17,12 @@ from core.filters_mixins import (
 )
 from core.form_mixins import js_module
 from core.models import LienLibre
-from ssa.filters import CharInFilter, WithEtablissementFilterMixin
+from core.widgets import Treeselect, TreeselectGroup
+from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.filters import ArrayMultipleChoiceFilter, WithEtablissementFilterMixin
 from tiac.constants import (
     DANGERS_COURANTS,
+    SELECTED_HAZARD_CHOICES,
     DangersSyndromiques,
     EvenementFollowUp,
     SuspicionConclusion,
@@ -84,11 +87,21 @@ class TiacFilter(
         choices=SuspicionConclusion.choices,
         empty_label=settings.SELECT_EMPTY_CHOICE,
     )
-    selected_hazard = CharInFilter(
+
+    selected_hazard = ArrayMultipleChoiceFilter(
         label="Dangers retenus",
         field_name="selected_hazard",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=SELECTED_HAZARD_CHOICES,
+        widget=Treeselect(
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers syndromiques",
+                    choices=DangersSyndromiques.choices_short_names,
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers alimentaires", choices=CategorieDanger),
+            ),
+        ),
     )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
@@ -131,30 +144,35 @@ class TiacFilter(
         label="Danger syndromique suspecté",
         method="filter_danger_syndromiques_suspectes",
     )
-    agents_pathogenes = CharInFilter(
+
+    agents_pathogenes = ArrayMultipleChoiceFilter(
         label="Agent pathogène confirmé par l'ARS",
         field_name="agents_confirmes_ars",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=CategorieDanger,
+        widget=Treeselect,
     )
-    analyse_categorie_danger = CharInFilter(
+
+    analyse_categorie_danger = ArrayMultipleChoiceFilter(
         label="Analyse - Danger détecté",
         field_name="analyses_alimentaires__categorie_danger",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=CategorieDanger,
+        widget=Treeselect,
     )
+
     type_aliment = django_filters.ChoiceFilter(
         choices=TypeAliment,
         label="Aliment - Type d'aliment",
         empty_label=settings.SELECT_EMPTY_CHOICE,
         field_name="aliments__type_aliment",
     )
-    aliment_categorie_produit = CharInFilter(
+
+    aliment_categorie_produit = ArrayMultipleChoiceFilter(
         label="Aliment - Catégorie de produit",
         field_name="aliments__categorie_produit",
-        lookup_expr="in",
-        widget=HiddenInput,
+        choices=CategorieProduit,
+        widget=Treeselect,
     )
+
     nb_personnes_repas = django_filters.CharFilter(
         field_name="repas__nombre_participant",
         lookup_expr="contains",
