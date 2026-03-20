@@ -157,6 +157,7 @@ function displayPrelevementsCards() {
 }
 
 function populateLieuSelect(element) {
+    const currentValue = element.value
     element.innerHTML = ""
     document.lieuxCards.forEach(option => {
         const opt = document.createElement("option")
@@ -164,6 +165,7 @@ function populateLieuSelect(element) {
         opt.textContent = option.nom
         element.appendChild(opt)
     })
+    element.value = currentValue ? currentValue : element.options[0].value
 }
 
 function getNextAvailablePrelevementModal() {
