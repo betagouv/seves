@@ -1318,3 +1318,35 @@ def test_can_add_commune_to_existing_lieu(
 
     lieu.refresh_from_db()
     assert lieu.commune == "Lille"
+
+
+@pytest.mark.django_db
+def test_lieu_for_prelevement_is_correct_when_multiple_lieux(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    """Checks that when editing a Detection the lieu selected for a prelevement is the correct one and
+    not the first one of the list"""
+    lieu_1 = LieuFactory(nom="Lieu 1")
+    lieu_2 = LieuFactory(nom="Lieu 2", fiche_detection=lieu_1.fiche_detection)
+    LieuFactory(nom="Lieu 3", fiche_detection=lieu_1.fiche_detection)
+    prelevement = PrelevementFactory(lieu=lieu_2, is_officiel=False)
+
+    page.goto(f"{live_server.url}{lieu_1.fiche_detection.get_update_url()}")
+    expect(page.locator("#prelevements-list").get_by_text("Lieu 2", exact=True)).to_be_visible()
+
+    page.locator(".prelevement-edit-btn").locator("visible=true").click()
+    expect(prelevement_form_elements.lieu_input).to_have_value(lieu_2.nom)
+    prelevement_form_elements.numero_echantillon_input.fill("123")
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    page.wait_for_url("**sv/evenement/**")
+    page.get_by_title("Consulter le détail du prélèvement 123").click()
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-lieu")).to_have_text("Lieu 2")
+
+    prelevement.refresh_from_db()
+    assert prelevement.lieu == lieu_2
