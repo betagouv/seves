@@ -429,7 +429,10 @@ class AllowModificationMixin(WithEtatMixin):
         return not self.is_draft
 
     def can_be_modified(self, user):
-        return self.can_user_access(user) and not self.is_cloture
+        return (user.agent.structure.is_ac) or (self.can_user_access(user) and not self.is_cloture)
+
+    def display_warning_modification(self, user):
+        return user.agent.structure.is_ac and self.is_cloture
 
     class Meta:
         abstract = True

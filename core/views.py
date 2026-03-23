@@ -594,5 +594,16 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             if comment_diff:
                 context["patches"].append(comment_diff)
 
-        context["patches"] = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
+        patches = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
+        for i, diff in enumerate(patches):
+            if diff.new == WithEtatMixin.Etat.CLOTURE.label:
+                for d in patches[:i]:
+                    setattr(d, "muted_action", True)
+                    if d.comment:
+                        d.comment += " - Modifié après clôture"
+                    else:
+                        d.comment = "Modifié après clôture"
+                break
+
+        context["patches"] = patches
         return context

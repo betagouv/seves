@@ -2,7 +2,10 @@ from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import FinSuiviContact, LienLibre
-from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
+from core.tests.generic_tests.actions import (
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture,
+    generic_test_can_cloturer_evenement,
+)
 from seves.settings import SSA_GROUP
 from tiac.factories import EtablissementFactory, EvenementSimpleFactory
 from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
@@ -27,6 +30,13 @@ def test_can_delete_evenement_simple(live_server, page):
 def test_can_cloturer_evenement(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_can_cloturer_evenement(live_server, page, evenement, mocked_authentification_user, mailoutbox)
+
+
+def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocked_authentification_user):
+    evenement = EvenementSimpleFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture(
+        live_server, page, evenement, mocked_authentification_user
+    )
 
 
 def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentification_user):

@@ -132,6 +132,9 @@ class EvenementSimple(
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:evenement-simple-details", kwargs={"numero": numero})
 
+    def get_update_url(self):
+        return reverse("tiac:evenement-simple-edition", kwargs={"pk": self.pk})
+
     @property
     def latest_version(self):
         return (
@@ -369,6 +372,9 @@ class InvestigationTiac(
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
+
+    def get_update_url(self):
+        return reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.pk})
 
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm

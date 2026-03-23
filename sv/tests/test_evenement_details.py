@@ -281,7 +281,7 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Zone").click()
-    page.get_by_role("button", name="Modifier").click()
+    page.get_by_role("link", name="Modifier").click()
     page.get_by_role("button", name="Enregistrer").click()
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)

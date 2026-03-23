@@ -11,7 +11,11 @@
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-edit-visibilite"><span class="fr-icon-eye-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier la visibilité</a></li>
                 {% endif %}
                 {% if can_be_updated %}
-                    <li><a class="fr-translate__language fr-nav__link" href="{{ evenement.get_update_url}}" ><span class="fr-icon-edit-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Modifier l'événement</a></li>
+                    {% if display_warning_modification %}
+                        <li><button data-fr-opened="false" aria-controls="modal-warning-update" type="button" class="fr-translate__language fr-nav__link fr-icon-edit-fill fr-icon--sm">Modifier l'événement</button></li>
+                    {% else %}
+                        <li><a class="fr-translate__language fr-nav__link fr-icon-edit-fill fr-icon--sm" href="{{ evenement.get_update_url}}">Modifier l'événement</a></li>
+                    {% endif %}
                 {% endif %}
                 {%  if is_evenement_can_be_cloture %}
                     <li><a class="fr-translate__language fr-nav__link" href="#" data-fr-opened="false" aria-controls="fr-modal-cloturer-evenement"><span class="fr-icon-close-circle-fill fr-mr-2v fr-icon--sm" aria-hidden="true"></span>Clôturer l'événement</a></li>

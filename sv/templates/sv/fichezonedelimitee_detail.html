@@ -13,9 +13,12 @@
             {% include "sv/_delete_fichezonedelimitee_modal.html" %}
         {% endif %}
         {% if can_update_fiche_zone_delimitee %}
-            <button class="fr-btn fr-btn--secondary fr-mr-2w">
-                <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier la zone</span></a>
-            </button>
+            {% if display_warning_modification %}
+                {% include "core/modal_warning_update.html" with url=fiche.get_update_url suffix="-z" %}
+                <button data-fr-opened="false" aria-controls="modal-warning-update-z" type="button" class="fr-btn fr-btn--secondary fr-icon-edit-fill fr-btn--icon-left">Modifier la zone</button>
+            {% else %}
+                <a href="{{ fiche.get_update_url }}" class="fr-btn fr-btn--secondary fr-mr-2w fr-icon-edit-fill fr-btn--icon-left">Modifier la zone</a>
+            {% endif %}
         {% endif %}
     </div>
 </div>
