@@ -1,0 +1,30 @@
+.ql-indent-1 {
+    padding-left: 3em;
+}
+
+/* Variables cant be used in the following styles as they won't be included in the emails styles for notification */
+.background-color-green {
+    /* Equivalent of --background-contrast-success */
+    background-color: rgb(184, 254, 201);
+}
+.background-color-red {
+    /* Equivalent of --background-contrast-warning */
+    background-color: rgb(255, 233, 230);
+}
+.background-color-light-blue {
+    /* Equivalent of --background-contrast-info */
+    background-color: rgb(0, 99, 203);
+}
+
+.text-color-blue {
+    /* Equivalent of --text-active-blue-france */
+    color: rgb(0, 0, 145);
+}
+.text-color-red {
+    /* Equivalent of --text-default-error */
+    color: rgb(206, 5, 0);
+}
+.text-color-green {
+    /* Equivalent of --text-default-success */
+    color: rgb(24, 117, 60);
+}

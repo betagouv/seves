@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from bs4 import BeautifulSoup
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -11,6 +12,7 @@ from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
 from django.utils.functional import classproperty
+from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Revision
@@ -18,6 +20,7 @@ from reversion.models import Revision
 from core.constants import AC_STRUCTURE, BSV_STRUCTURE, MUS_STRUCTURE, SEVES_STRUCTURE
 from seves import settings
 
+from .html import filter_tags_and_attributes
 from .managers import (
     ContactManager,
     ContactQueryset,
@@ -474,6 +477,12 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     @property
     def is_finalise(self):
         return self.status == self.Status.FINALISE
+
+    @property
+    def safe_message_content(self):
+        soup = BeautifulSoup(self.content, "html.parser")
+        filter_tags_and_attributes(soup)
+        return mark_safe(str(soup))
 
     def _is_owner(self, contact):
         return self.sender == contact
