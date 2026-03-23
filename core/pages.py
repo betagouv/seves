@@ -232,6 +232,10 @@ class BaseMessagePage(BaseDocumentPage, ABC):
         return self.page.locator(f"{self.CONTENT_ID}")
 
     @property
+    def message_content_in_rich_text_editor(self):
+        return self.page.locator("#rich-text-editor .ql-editor")
+
+    @property
     def submit_button(self):
         return self.page.locator(self.container_id).get_by_test_id(self.SUBMIT_BTN_TEST_ID)
 

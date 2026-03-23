@@ -1,6 +1,10 @@
 {% extends 'core/base.html' %}
-{% load static %}
-
+{% load static waffle_tags %}
+{% block extrahead %}
+    {% flag "rich_text_editor" %}
+        <link rel="stylesheet" href="{% static 'core/message_detail.css' %}">
+    {% endflag %}
+{% endblock %}
 {% block content %}
     {% for document in message.documents.all %}
         {% if document.is_cartographie %}
@@ -73,7 +77,11 @@
                                     </div>
 
                                     <hr class="fr-hr-or fr-mt-2w">
-                                    {{ message.content|linebreaksbr }}
+                                    {% flag "rich_text_editor" %}
+                                        {{ message.safe_message_content }}
+                                    {% else %}
+                                        {{ message.content|linebreaksbr }}
+                                    {% endflag %}
                                 </div>
                             </div>
                             <div class="fr-col-4 white-container">

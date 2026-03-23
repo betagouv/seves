@@ -1,11 +1,19 @@
 {% extends 'core/base.html' %}
 {% load partials %}
-{% load static dsfr_tags widget_tweaks %}
+{% load static dsfr_tags widget_tweaks waffle_tags %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/message_page.css' %}">
+    {% flag "rich_text_editor" %}
+        <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'core/rich_text_editor.css' %}">
+    {% endflag %}
 {% endblock %}
 {% block scripts %}
     <script type="module" src="{% static 'core/message_form_page.mjs' %}"></script>
+
+    {% flag "rich_text_editor" %}
+        <script type="module" src="{% static 'core/rich_text_editor.mjs' %}"></script>
+    {% endflag %}
 {% endblock %}
 
 {% block content %}
@@ -49,13 +57,40 @@
                 {% csrf_token %}
                 <input type="hidden" name="id" value="{{ form.instance.pk }}">
                 <div class="white-container">
-                    {% for field in form %}
-                        <div class="fr-fieldset__element">
-                            {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
-                                {% dsfr_form_field field|set_data:data_target %}
-                            {% endwith %}
+                    {% flag "rich_text_editor" %}
+                        <div data-controller="rich-text-editor">
+                            {% for field in form %}
+                                {% if field.name == "content" %}
+                                    <div class="fr-fieldset__element fr-hidden">
+                                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                            {% dsfr_form_field field|set_data:data_target|set_data:"rich-text-editor-target:textarea" %}
+                                        {% endwith %}
+                                    </div>
+                                {% else %}
+                                    <div class="fr-fieldset__element">
+                                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                            {% dsfr_form_field field|set_data:data_target %}
+                                        {% endwith %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            <div class="fr-fieldset__element">
+                                <label for="rich-text-editor" class="fr-label required-field fr-mb-2v">
+                                    Message<span class="fr-sr-only fr-required-marker">*</span>
+                                </label>
+                                <div data-rich-text-editor-target="container" id="rich-text-editor"></div>
+                            </div>
+
                         </div>
-                    {% endfor %}
+                    {% else %}
+                        {% for field in form %}
+                            <div class="fr-fieldset__element">
+                                {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                    {% dsfr_form_field field|set_data:data_target %}
+                                {% endwith %}
+                            </div>
+                        {% endfor %}
+                    {% endflag %}
                 </div>
 
                 <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
