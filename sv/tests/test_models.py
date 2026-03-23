@@ -431,7 +431,7 @@ def test_fiche_detection_latest_revision():
     )
 
     latest_version = fiche_detection.latest_version
-    new_structure, _ = StructurePreleveuse.objects.get_or_create(nom="SEMAE")
+    new_structure, _ = StructurePreleveuse.objects.get_or_create(nom="SocFrance")
     prelevement.structure_preleveuse = new_structure
     prelevement.save()
     del fiche_detection.latest_version
@@ -445,7 +445,7 @@ def test_fiche_detection_latest_revision():
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
     assert (
         fiche_detection.latest_version.revision.comment
-        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SEMAE' a été supprimé de la fiche"
+        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SocFrance' a été supprimé de la fiche"
     )
 
     latest_version = fiche_detection.latest_version
