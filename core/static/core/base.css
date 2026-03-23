@@ -272,3 +272,9 @@ fieldset {
     margin-right: auto;
     margin-left: auto;
 }
+
+.muted-action,
+.muted-action .history-added,
+.muted-action .history-removed {
+    color: var(--text-disabled-grey);
+}

@@ -45,8 +45,16 @@ def test_can_view_evenement_simple_history(live_server, page, mus_contact):
         )
     )
 
-    expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été ajouté à la fiche", exact=True)).to_be_visible()
-    expect(page.get_by_text(f"Le lien '{str(other_evenement)}' a été supprimé à la fiche", exact=True)).to_be_visible()
+    expect(
+        page.get_by_text(
+            f"Le lien '{str(other_evenement)}' a été ajouté à la fiche - Modifié après clôture", exact=True
+        )
+    ).to_be_visible()
+    expect(
+        page.get_by_text(
+            f"Le lien '{str(other_evenement)}' a été supprimé à la fiche - Modifié après clôture", exact=True
+        )
+    ).to_be_visible()
     expect(page.get_by_text("Structure Test")).to_have_count(
         len(
             [

@@ -30,6 +30,10 @@
                     {% include "core/_details_toogle.html" with pk=evenement.pk %}
                 {% endif %}
 
+                {% if display_warning_modification %}
+                    {% include "core/modal_warning_update.html" with url=object.get_update_url %}
+                {% endif %}
+
                 <ul class="fr-btns-group fr-btns-group--inline-md">
                     {% if can_publish %}
                         <li>
@@ -154,9 +158,16 @@
                                         {% include "sv/_delete_fiche_modal.html" with prefix="detection" content_type=fiche_detection_content_type object_pk=fichedetection.pk %}
                                     {% endif %}
                                     {% if can_update_fiche_detection %}
-                                        <button class="fr-btn fr-btn--secondary">
-                                            <a href="{% url 'sv:fiche-detection-modification' fichedetection.pk %}">Modifier la détection</a>
-                                        </button>
+                                        {% if display_warning_modification %}
+                                            {% with suffix="-d-"|add:fichedetection.numero %}
+                                                {% include "core/modal_warning_update.html" with url=fichedetection.get_update_url suffix=suffix %}
+                                                <button data-fr-opened="false" aria-controls="modal-warning-update{{ suffix }}" type="button" class="fr-btn fr-btn--secondary">Modifier la détection</button>
+                                            {% endwith %}
+                                        {% else %}
+                                            <button class="fr-btn fr-btn--secondary">
+                                                <a href="{{ fichedetection.get_update_url }}">Modifier la détection</a>
+                                            </button>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             {% endfor %}

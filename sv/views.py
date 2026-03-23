@@ -132,6 +132,7 @@ class EvenementDetailView(
             "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
             "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
             "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
+            "display_warning_modification": self.get_object().display_warning_modification(user),
         }
 
     def get_context_data(self, **kwargs):

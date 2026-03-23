@@ -179,7 +179,10 @@ class Evenement(
         return not self.is_cloture and self.can_user_access(user)
 
     def can_be_updated(self, user):
-        return self._user_can_interact(user)
+        return self._user_can_interact(user) or (not self.is_draft and user.agent.structure.is_mus_or_bsv)
+
+    def display_warning_modification(self, user):
+        return user.agent.structure.is_ac and self.is_cloture
 
     def can_add_fiche_detection(self, user):
         return self._user_can_interact(user)
@@ -188,13 +191,13 @@ class Evenement(
         return not self.is_cloture
 
     def can_update_fiche_detection(self, user):
-        return self._user_can_interact(user)
+        return self.can_be_updated(user)
 
     def can_delete_fiche_zone_delimitee(self, user):
         return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_deleted(user)
 
     def can_update_fiche_zone_delimitee(self, user):
-        return False if not self.fiche_zone_delimitee else self.fiche_zone_delimitee.can_be_updated(user)
+        return False if not self.fiche_zone_delimitee else self.can_be_updated(user)
 
     def can_add_fiche_zone_delimitee(self, user):
         return self._user_can_interact(user)

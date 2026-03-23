@@ -260,7 +260,7 @@ class EvenementProduit(
         return [str(o) for o in objects if not o.is_deleted]
 
     def can_be_updated(self, user):
-        return self._user_can_interact(user)
+        return self.can_be_modified(user)
 
     def can_be_downloaded(self, user):
         return self._user_can_interact(user)

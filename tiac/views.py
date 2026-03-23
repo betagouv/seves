@@ -216,6 +216,7 @@ class EvenementSimpleDetailView(
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
+        context["display_warning_modification"] = self.get_object().display_warning_modification(self.request.user)
         context["can_be_transfered"] = self.get_object().can_be_transfered(self.request.user)
         context["can_be_changed_in_investigation"] = self.get_object().can_be_changed_in_investigation(
             self.request.user
@@ -576,6 +577,7 @@ class InvestigationTiacDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
+        context["display_warning_modification"] = self.get_object().display_warning_modification(self.request.user)
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["dangers"] = [
             d.to_dict() for d in DangersSyndromiques.as_list() if d.value in self.object.danger_syndromiques_suspectes
