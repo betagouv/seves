@@ -4,7 +4,7 @@ STRUCTURES_PRELEVEUSES = [
     "Délégataire",
     "DSF",
     "SIVEP",
-    "SEMAE",
+    "SocFrance",
     "FAM",
     "CTIFL",
     STRUCTURE_EXPLOITANT,
