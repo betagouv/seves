@@ -1,5 +1,6 @@
 from playwright.sync_api import Page
 import pytest
+from waffle.testutils import override_flag
 
 from core.factories import ContactStructureFactory, MessageFactory
 from core.models import Message
@@ -7,6 +8,7 @@ from core.pages import UpdateMessagePage
 from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document,
     generic_test_can_add_and_see_message_in_new_tab_without_document,
+    generic_test_can_add_and_see_message_with_rich_text_editor,
     generic_test_can_add_and_see_message_without_document,
     generic_test_can_add_and_see_note_in_new_tab_without_document,
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
@@ -35,6 +37,12 @@ from ssa.models import EvenementInvestigationCasHumain
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
     evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
+
+
+@override_flag("rich_text_editor", active=True)
+def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement)
 
 
 def test_can_add_and_see_message_in_new_tab_without_document(

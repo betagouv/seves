@@ -8,6 +8,7 @@ from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
 
+from bs4 import BeautifulSoup
 from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
@@ -46,6 +47,7 @@ from core.models import (
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from .filters import DocumentFilter, MessageFilter
 from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
+from .html import html_to_simple_text
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 
@@ -813,10 +815,7 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
         sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
 
         for message in messages:
-            text = message.content.split("\n")
-            rich_text = RichText()
-            for i, line in enumerate(text):
-                rich_text.add(line)
+            rich_text = RichText(html_to_simple_text(BeautifulSoup(message.content, "html.parser")))
             message.rt_content = rich_text
 
         context = {

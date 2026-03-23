@@ -25,6 +25,7 @@ django-reversion-compare
 docxtpl
 docxcompose3
 django-dirtyfields
+beautifulsoup4
 # Dev
 djhtml
 django-debug-toolbar
