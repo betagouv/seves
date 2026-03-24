@@ -611,16 +611,16 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     expected_title = f"{settings.REPLY_PREFIX} {message.title}"
     expected_content = "Ma réponse"
     expected_recipients = [contact_sender_structure]
-    expected_copies = [contact]
 
     assert reply.title == expected_title, f"{reply.title=!r} != {expected_title=!r}"
     assert reply.content == expected_content, f"{reply.content=!r} != {expected_content=!r}"
     assert list(reply.recipients.all()) == expected_recipients, (
         f"{list(reply.recipients.all())=!r} != {expected_recipients=!r}"
     )
-    assert list(reply.recipients_copy.all()) == expected_copies, (
-        f"{list(reply.recipients_copy.all())=!r} != {expected_copies=!r}"
-    )
+    recipients = reply.recipients_copy.all()
+    assert len(recipients) == 2
+    assert contact in recipients
+    assert sender in recipients
 
 
 def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(

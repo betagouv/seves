@@ -231,6 +231,8 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
                         }
                     }
                 )
+                if reply_message.sender:
+                    kwargs["initial"]["recipients_copy"] = reply_message.sender
         return kwargs
 
     def get_context_data(self, **kwargs):
