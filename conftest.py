@@ -30,7 +30,7 @@ def page(page: Page, request):
     timeout = 4_000
     with contextlib.suppress(TypeError, ValueError):
         timeout = int(os.getenv("PLAYWRIGHT_TIMEOUT"))
-    page.set_default_navigation_timeout(timeout)
+    page.set_default_navigation_timeout(10_000)
     page.set_default_timeout(timeout)
 
     _original_goto = page.goto
