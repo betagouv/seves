@@ -211,6 +211,12 @@ def test_export_evenements_from_ui(live_server, mocked_authentification_user, pa
     assert mail.subject == "[Sèves] Votre export est prêt"
 
 
+def test_cant_export_evenement_when_no_results_in_list(live_server, mocked_authentification_user, page):
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    expect(search_page.page.get_by_role("button", name="Extraire", exact=True)).not_to_be_visible()
+
+
 @pytest.mark.django_db
 def test_export_investigation_cas_humain_simple_case(mailoutbox):
     evenement = InvestigationCasHumainFactory()
