@@ -169,3 +169,4 @@ package-lock.json
 # Exclude assets from tests
 **/test-results/
 /test.csv
+subdoc_detection.docx
