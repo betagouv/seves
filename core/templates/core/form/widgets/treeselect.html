@@ -1,77 +1,102 @@
+{% load set_context_var %}
 {% load partials %}
 
 {% partialdef input %}
-    <div class="fr-{{ widget.type }}-group">
+    <div class="fr-{{ widget.type }}-group{% if parent_index %} fr-treeselect__group-selectable{% endif %}">
+        {% set_context_var widget.attrs "data-action" "change->treeselect#onChange" %}
         {% include "django/forms/widgets/input.html" %}
         <label
             class="fr-label"
             for="{{ widget.attrs.id }}"
-            {% if widget.group_index %}aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"{% endif %}
+            {% if parent_index %}{% endif %}
         >
-            {{ widget.label }}
+            {% if parent_index %}
+                <span class="fr-sr-only">{{ widget.label }}</span>
+            {% else %}
+                {{ widget.label }}
+            {% endif %}
         </label>
+        {% if parent_index %}
+            <button
+                type="button"
+                class="fr-treeselect__group-button fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="{{ widget.aria_controls_prefix }}-{{ parent_index }}"
+            >
+                <span class="fr-sr-only">Ouvrir la catégorie </span>{{ widget.label }}
+            </button>
+        {% endif %}
     </div>
 {% endpartialdef %}
 
 {% partialdef option %}
-    <div
-        class="fr-treeselect__element"
-        data-controller="treeselect-element"
-        {% if parent_index %}data-parent-index="{{ parent_index }}"{% endif %}
-    >
+    <div class="fr-treeselect__element" data-controller="treeselect-element">
         {% partial input %}
     </div>
+{% endpartialdef %}
+
+{% partialdef nogroup %}
+    {% for optgroup in widget.optgroups %}
+        {% include optgroup.template_name with widget=optgroup %}
+    {% endfor %}
 {% endpartialdef %}
 
 {% partialdef group %}
     <div
         class="fr-treeselect__group{% if widget.can_expand %} fr-accordion{% endif %}"
         data-controller="treeselect-group"
-        data-action="treeselect:visibility->treeselect-group#elementFiltered"
-        data-treeselect-group-treeselect-element-outlet="[data-parent-index='{{ widget.group_index }}']"
     >
         <div class="fr-treeselect__group-header">
             {% if not widget.can_expand %}
                 <h3>{{ widget.group }}</h3>
             {% elif widget.group_option %}
-                {% with widget=widget.group_option %}
+                {% with widget=widget.group_option parent_index=widget.group_index %}
                     {% partial input %}
                 {% endwith %}
             {% else %}
                 <button
                     class="fr-treeselect__group-button fr-accordion__btn"
                     aria-expanded="false"
-                    aria-controls="fr-treeselect-subgroup-{{ widget.group_index }}"
+                    aria-controls="{{ widget.aria_controls_prefix }}-{{ widget.group_index }}"
                     type="button"
+                    data-treeselect-group-target="accordionBtn"
                 >
                     {{ widget.group }}
                 </button>
             {% endif %}
         </div>
         <div
-            id="fr-treeselect-subgroup-{{ widget.group_index }}"
+            id="{{ widget.aria_controls_prefix }}-{{ widget.group_index }}"
             {% if widget.can_expand %}
                 class="fr-collapse"
                 data-treeselect-group-target="collapse"
             {% endif %}
         >
             {% for optgroup in widget.optgroups %}
-                {% include optgroup.template_name with widget=optgroup parent_index=widget.group_index %}
+                {% include optgroup.template_name with widget=optgroup %}
             {% endfor %}
         </div>
     </div>
 {% endpartialdef %}
 
 <div
+    id="fr-treeselect-{{ widget.attrs.id }}"
     class="fr-treeselect"
     data-controller="treeselect"
     data-action="dsfr.search->treeselect#onSearch"
-    data-treeselect-treeselect-element-outlet="[data-controller='treeselect-element']"
-    data-treeselect-treeselect-group-outlet="[data-controller='treeselect-group']"
 >
     <div class="fr-treeselect__wrapper">
-        <button class="fr-treeselect__button" type="button" data-treeselect-target="button">Choisir dans la liste</button>
-        <div class="fr-treeselect__collapse">
+        <button
+            class="fr-treeselect__button fr-accordion__btn"
+            type="button"
+            data-treeselect-target="button"
+            {% if widget.attrs.disabled %}disabled{% endif %}
+            aria-controls="fr-treeselect__collapse-{{ widget.attrs.id }}"
+            aria-expanded="false"
+        >
+            Choisir dans la liste
+        </button>
+        <div id="fr-treeselect__collapse-{{ widget.attrs.id }}" class="fr-treeselect__collapse fr-collapse">
             {% if widget.has_search_bar %}
                 <div class="fr-treeselect__head">
                     <div class="fr-search-bar" role="search">

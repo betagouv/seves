@@ -609,9 +609,13 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
 
     @enum_property
     def uncategorized_label(self):
-        if not hasattr(self, "_uncategorized_label_"):
-            self._uncategorized_label_ = re.split(r"\s*>\s*", self.label)[-1]
-        return self._uncategorized_label_
+        return self.splitted_label[-1]
+
+    @enum_property
+    def splitted_label(self):
+        if not hasattr(self, "_splitted_label_"):
+            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
+        return self._splitted_label_
 
 
 class CategorieProduit(WithChoicesToJS, models.TextChoices):
@@ -1757,6 +1761,16 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
     PRODUIT_INDETERMINE = "Produit indéterminé", "Produit indéterminé > Produit indéterminé"
     ENVIRONNEMENT_SURFACE = "Environnement", "Environnement > Environnement de production - surface"
     ENVIRONNEMENT_ZONE = "Environnement zone", "Environnement > Zone - terrain"
+
+    @enum_property
+    def uncategorized_label(self):
+        return self.splitted_label[-1]
+
+    @enum_property
+    def splitted_label(self):
+        if not hasattr(self, "_splitted_label_"):
+            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
+        return self._splitted_label_
 
 
 class TypeEvenement(models.TextChoices):

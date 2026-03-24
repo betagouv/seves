@@ -8,7 +8,6 @@
         data-aliment-form-form-prefix-value="{{ form.prefix }}"
         data-aliment-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
         data-aliment-form-categorie-produit-value="{{ form.categorie_produit_json }}"
-        data-action="dsfr.conceal->aliment-form#onCloseForm"
     >
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog
@@ -17,6 +16,7 @@
             role="alertdialog"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-aliment-form-target="dialog"
+            data-action="dsfr.conceal->aliment-form#onCloseForm:self"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">

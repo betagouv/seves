@@ -27,6 +27,11 @@ from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 User = get_user_model()
 
 
+class SetMultipleChoiceField(forms.MultipleChoiceField):
+    def to_python(self, value):
+        return list(sorted(set(super().to_python(value))))
+
+
 class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
     nom = forms.CharField(
         label="Intitulé du document",

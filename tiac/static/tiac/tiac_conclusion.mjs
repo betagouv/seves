@@ -1,164 +1,46 @@
 import {applicationReady} from "Application"
 import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
-import {Controller} from "Stimulus"
+import {Controller, defaultSchema} from "Stimulus"
 
 /**
- * @property {Object.<string, {value: string, label: string}>} suspicionConclusionChoicesValue
  * @property {string} suspicionConclusionValue
- * @property {Object[]} selectedHazardConfirmedChoicesValue
- * @property {Object[]} selectedHazardSuspectedChoicesValue
  * @property {string} selectedHazardIdValue
  * @property {boolean} selectedHazardTreeselectInitializedValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
- * @property {HTMLDivElement} selectedHazardTreeselectTarget
- * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
- * @property {HTMLTemplateElement} selectedHazardTreeselectHeaderTarget
+ * @property {HTMLFieldSetElement} selectedHazarContainerTarget
+ * @property {HTMLTemplateElement} selectedHazarEmptySelectionTplTarget
+ * @property {HTMLTemplateElement} selectedHazarConfirmedTplTarget
+ * @property {HTMLTemplateElement} selectedHazarSuspectedTplTarget
  */
 class ConclusionFormController extends Controller {
     static targets = [
         "suspicionConclusion",
         "conclusionRepas",
         "conclusionAliment",
-        "selectedHazardTreeselect",
-        "selectedHazardTreeselectInput",
-        "selectedHazardTreeselectHeader",
+        "selectedHazarContainer",
+        "selectedHazarEmptySelectionTpl",
+        "selectedHazarConfirmedTpl",
+        "selectedHazarSuspectedTpl",
     ]
-    static values = {
-        suspicionConclusionChoices: Object,
-        suspicionConclusion: String,
-        selectedHazardConfirmedChoices: Array,
-        selectedHazardSuspectedChoices: Array,
-        selectedHazardTreeselectInitialized: {type: Boolean, default: false},
-    }
-
-    /** @param {HTMLSelectElement} el */
-    selectedHazardTreeselectTargetConnected(el) {
-        this.treeselect = new Treeselect({
-            ...tsDefaultOptions,
-            parentHtmlContainer: el,
-            value: [],
-            options: [],
-            isSingleSelect: false,
-            isIndependentNodes: true,
-            openCallback: this.treeselectOpenCallback.bind(this),
-            searchCallback: item => {
-                if (item.length === 0) {
-                    showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                } else {
-                    hideHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                }
-            },
-        })
-        patchItems(this.treeselect.srcElement)
-        if (this.suspicionConclusionValue !== "") {
-            this.suspicionConclusionValueChanged(this.suspicionConclusionChoicesValue)
-        }
-    }
-
-    selectedHazardTreeselectTargetDiconnected() {
-        this.treeselect.destroy()
-        this.treeselect = undefined
-    }
+    static values = {suspicionConclusion: String}
 
     suspicionConclusionTargetConnected(el) {
         el.dispatchEvent(new Event("change"))
     }
 
-    onUpdateDom() {
-        if (this.treeselect === undefined) return
-        patchItems(this.treeselect.srcElement)
-    }
-
-    onTreeselectInput({detail}) {
-        if (detail.length === 0) {
-            this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
-                checkbox.checked = false
-            })
-        } else {
-            this.selectedHazardTreeselectInputTarget.value = detail.join("||")
-        }
-    }
-
-    treeselectOpenCallback() {
-        if (this.suspicionConclusionValue === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
-            patchItems(this.treeselect.srcElement)
-            if (this.treeselect.srcElement.querySelectorAll(".categorie-danger-header").length !== 0) {
-                showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                return
-            }
-            const list = this.selectedHazardTreeselectTarget.querySelector(".treeselect-list")
-            if (list) {
-                const fragment = this.selectedHazardTreeselectHeaderTarget.content.cloneNode(true)
-                list.prepend(fragment)
-                this.customHeaderAddedValue = true
-            }
-        }
-    }
-
-    onShortcut({target}) {
-        const label = target.getElementsByTagName("label")[0]
-        const value = label.textContent.trim()
-        const checkbox = this.selectedHazardTreeselectTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
-        checkbox.checked = !checkbox.checked
-
-        const valuesToSet = this.treeselect.value
-        if (checkbox.checked) {
-            valuesToSet.push(value)
-        } else {
-            valuesToSet.pop(value)
-        }
-
-        this.treeselect.updateValue(valuesToSet)
-        this.selectedHazardTreeselectInputTarget.value = valuesToSet.join("||")
-        let text = ""
-        if (valuesToSet.length === 1) {
-            text = valuesToSet[0]
-        } else {
-            text = `${valuesToSet.length} ${this.treeselect.tagsCountText}`
-        }
-        this.selectedHazardTreeselectTarget.querySelector(".treeselect-input__tags-count").innerText = text
-    }
-
     suspicionConclusionValueChanged(value) {
-        if (this.treeselect === undefined) return
-
         this.conclusionRepasTarget.disabled = false
         this.conclusionAlimentTarget.disabled = false
-        if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
-            this.treeselect.disabled = false
-            this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse"
-            this.selectedHazardTreeselectInputTarget.required = true
-            this.treeselect.options = this.selectedHazardConfirmedChoicesValue
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
-            this.treeselect.disabled = false
-            this.treeselect.placeholder = "Choisir dans la liste parmi les dangers syndromiques"
-            this.selectedHazardTreeselectInputTarget.required = true
-            this.treeselect.options = this.selectedHazardSuspectedChoicesValue
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.DISCARDED.value) {
-            this.treeselect.options = []
-            this.treeselect.placeholder = "Choisir dans la liste"
-            this.treeselect.disabled = true
-            this.conclusionRepasTarget.value = ""
-            this.conclusionRepasTarget.disabled = true
-            this.conclusionAlimentTarget.value = ""
-            this.conclusionAlimentTarget.disabled = true
-            this.selectedHazardTreeselectInputTarget.required = false
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.UNKNOWN.value) {
-            this.treeselect.options = []
-            this.treeselect.placeholder = "Choisir dans la liste"
-            this.treeselect.disabled = true
-            this.selectedHazardTreeselectInputTarget.required = false
-            this.treeselect.mount()
-        }
-
-        if (this.selectedHazardTreeselectInitializedValue) {
-            this.treeselect.updateValue("")
-        } else {
-            this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
-            this.selectedHazardTreeselectInitializedValue = true
+        switch (value) {
+            case "CONFIRMED":
+                this.selectedHazarContainerTarget.innerHTML = this.selectedHazarConfirmedTplTarget.innerHTML
+                break
+            case "SUSPECTED":
+                this.selectedHazarContainerTarget.innerHTML = this.selectedHazarSuspectedTplTarget.innerHTML
+                break
+            default:
+                this.selectedHazarContainerTarget.innerHTML = this.selectedHazarEmptySelectionTplTarget.innerHTML
+                break
         }
     }
 

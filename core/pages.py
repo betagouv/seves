@@ -1,14 +1,42 @@
 import abc
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+import functools
 from pathlib import Path
 from typing import Generator
 
 from django.conf import settings
-from playwright.sync_api import Locator, Page, expect
+from playwright.sync_api import Error as PlaywrightError, Locator, Page, expect
 import pytest
 
 from core.models import Agent, Structure
+
+
+def playwright_repeatable(maybe_func=None, timeout=None, retries=10):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            error = None
+            old_timeout = expect._timeout
+            new_timeout = timeout or (old_timeout or 5_000 / retries)
+            for i in range(retries):
+                try:
+                    expect.set_options(timeout=new_timeout)
+                    func(*args, **kwargs)
+                    break
+                except PlaywrightError as e:
+                    if error is not None:
+                        e.__cause__ = error
+                        error = e
+                    continue
+                finally:
+                    expect.set_options(timeout=old_timeout)
+            if error:
+                raise error
+
+        return wrapper
+
+    return decorator(maybe_func) if callable(maybe_func) else decorator
 
 
 class BaseDocumentPage(ABC):
@@ -397,3 +425,123 @@ class WithContactsPage:
         ).to_be_visible()
         expect(self.page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
         self.page.get_by_test_id(f"contact-delete-{contact.id}").click()
+
+
+class TreeselectPage:
+    @property
+    def treeselect(self):
+        return self.container.locator(
+            "xpath=descendant-or-self::*[contains(concat(' ',normalize-space(@class),' '),' fr-treeselect ')]"
+        ).first
+
+    @property
+    def main_button(self):
+        return self.treeselect.locator(".fr-treeselect__button").first
+
+    @property
+    def main_dropdown(self):
+        return self.treeselect.locator(".fr-treeselect__collapse").first
+
+    @property
+    def options_container(self):
+        return self.treeselect.locator(".fr-treeselect__body").first
+
+    @property
+    def search_bar(self):
+        return self.treeselect.locator(".fr-treeselect__head .fr-search-bar input").first
+
+    def __init__(self, page: Page, container: Locator):
+        self.page = page
+        self.container = container
+
+    @playwright_repeatable
+    def open_treeselect(self):
+        if self.options_container.is_visible():
+            return
+        self.main_button.click()
+        expect(self.options_container).to_be_visible()
+
+    @playwright_repeatable
+    def close_treeselect(self):
+        if not self.options_container.is_visible():
+            return
+        self.main_button.click()
+        expect(self.options_container).not_to_be_visible()
+
+    @contextmanager
+    def opened_treeselect(self):
+        self.open_treeselect()
+        yield
+        self.close_treeselect()
+
+    def _locate_group(self, name: str, container: Locator | None = None):
+        container = container or self.container
+        group_header = (
+            container.locator(".fr-treeselect__group .fr-treeselect__group-header").filter(has_text=name).first
+        )
+        group = group_header.locator("..")
+        collapse = group.locator("> .fr-collapse")
+        button = group_header.locator(".fr-treeselect__group-button")
+        return group, button, collapse
+
+    def open_group(self, name: str, container: Locator | None = None):
+        self.open_treeselect()
+
+        group, button, collapse = self._locate_group(name, container)
+
+        @playwright_repeatable
+        def do_open():
+            button.click()
+            expect(collapse).to_be_visible()
+
+        if not collapse.is_visible():
+            do_open()
+
+        return group
+
+    def open_groups(self, *names: str) -> Locator:
+        group = None
+        for name in names:
+            group = self.open_group(name, group)
+        # If `names` is an empty liste because check box is top-level, just return the main dropdown
+        return group or self.main_dropdown
+
+    def close_group(self, name: str, container: Locator | None = None):
+        self.open_treeselect()
+
+        group, button, collapse = self._locate_group(name, container)
+
+        @playwright_repeatable
+        def do_close():
+            button.click()
+            expect(collapse).not_to_be_visible()
+
+        if collapse.is_visible():
+            do_close()
+
+        return group or self.container
+
+    def tick_checkbox(self, *names: str, exact=True):
+        with self.opened_treeselect():
+            *groups, checkbox_label = names
+            group = self.open_groups(*groups)
+
+            @playwright_repeatable
+            def tick_checkbox():
+                group.get_by_label(checkbox_label, exact=exact).first.set_checked(True, force=True)
+
+            tick_checkbox()
+
+    def untick_checkbox(self, *names: str):
+        with self.opened_treeselect():
+            *groups, checkbox_label = names
+            group = self.open_groups(*groups)
+
+            @playwright_repeatable
+            def untick_checkbox():
+                group.get_by_label(checkbox_label, exact=True).set_checked(False, force=True)
+
+            untick_checkbox()
+
+    def search(self, term):
+        self.search_bar.fill(term)

@@ -1,7 +1,14 @@
-const collator = new Intl.Collator(navigator.language, {
-    usage: "search",
-    sensitivity: "base",
-})
+const collator = (() => {
+    const options = {
+        usage: "search",
+        sensitivity: "base",
+    }
+    try {
+        return new Intl.Collator(navigator.language, options)
+    } catch (_) {
+        return new Intl.Collator("fr", options)
+    }
+})()
 
 /**
  * Searches needle in haystack

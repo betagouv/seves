@@ -103,7 +103,7 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.fill_context_block(input_data)
 
     for danger in input_data.agents_confirmes_ars:
-        creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
+        creation_page.agent_pathogene_treeselect.tick_checkbox(*CategorieDanger(danger).splitted_label)
 
     creation_page.fill_conlusion(input_data)
 

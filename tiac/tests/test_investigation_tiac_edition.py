@@ -5,6 +5,7 @@ import pytest
 from core.constants import MUS_STRUCTURE
 from core.factories import ContactAgentFactory
 from core.models import Contact, LienLibre
+from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import (
@@ -272,9 +273,7 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
     creation_page = InvestigationTiacEditPage(page, live_server.url, investigation=investigation)
     creation_page.navigate()
     creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
-    creation_page._set_treeselect_option(
-        "selected_hazard-treeselect", "Allergène - composition ou étiquetage > Allergène - Arachide"
-    )
+    creation_page.suspicion_conclusion_treeselect.tick_checkbox(*CategorieDanger.ALLERGENE_ARACHIDE.splitted_label)
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.get()

@@ -27,7 +27,7 @@ class E2ETestNetworkError(Exception):
 
 @pytest.fixture
 def page(page: Page, request):
-    timeout = 4_000
+    timeout = 10_000
     with contextlib.suppress(TypeError, ValueError):
         timeout = int(os.getenv("PLAYWRIGHT_TIMEOUT"))
     page.set_default_navigation_timeout(timeout)

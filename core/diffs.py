@@ -5,6 +5,7 @@ import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
@@ -207,6 +208,11 @@ class CompareObject(InitialCompareObject):
         # Get the related model of the current field:
         related_model = self.field.field.model
         return self.get_many_to_something(ids, related_model, is_reverse=True)
+
+    def __eq__(self, other):
+        if isinstance(self.field, ArrayField):
+            return set(self.value) == set(other.value)
+        return super().__eq__(other)
 
 
 class CompareObjects(InitialCompareObjects):

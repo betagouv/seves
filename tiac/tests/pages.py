@@ -4,9 +4,11 @@ from urllib.parse import quote
 
 from django.template.defaultfilters import striptags
 from django.urls import reverse
+from django.utils.html import strip_tags
 from playwright.sync_api import Locator, Page, expect
 
-from ssa.constants import CategorieDanger
+from core.pages import TreeselectPage, playwright_repeatable
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from tiac.models import (
@@ -108,7 +110,7 @@ class WithEtablissementMixin:
         self.close_etablissement_modal()
 
 
-class WithAnalyseAlimentaireMixin(WithTreeSelect):
+class WithAnalyseAlimentaireMixin:
     def get_analyse_alimentaire_card(self, index):
         return self.page.locator(".analyse-card").nth(index)
 
@@ -120,18 +122,22 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
     def fill_analyse_alimentaire(self, modal: Locator, analyse: AnalyseAlimentaire):
         modal.locator('[id$="reference_prelevement"]').fill(analyse.reference_prelevement)
         modal.locator('[id$="etat_prelevement"]').select_option(analyse.etat_prelevement)
-        modal.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
+
+        treeselect = TreeselectPage(modal, modal.locator('[id$="categorie_danger"]'))
         for categorie_danger in analyse.categorie_danger:
-            self._set_treeselect_option("categorie-danger", CategorieDanger(categorie_danger).label)
+            treeselect.tick_checkbox(*CategorieDanger(categorie_danger).splitted_label)
+        treeselect.close_treeselect()
+
         modal.locator('[id$="comments"]').fill(analyse.comments)
         modal.locator('[id$="reference_souche"]').fill(analyse.reference_souche)
         modal.locator(f"[id$='sent_to_lnr_cnr'] input[type='radio'][value='{str(analyse.sent_to_lnr_cnr)}']").check(
             force=True
         )
 
+    @playwright_repeatable
     def close_analyse_alimentaire_modal(self):
         self.current_modal.locator(".save-btn").click()
-        self.current_modal.wait_for(state="hidden", timeout=2_000)
+        expect(self.current_modal).not_to_be_visible()
 
     def add_analyse_alimentaire(self, analyse: AnalyseAlimentaire):
         modal = self.open_analyse_alimentaire_modal()
@@ -299,7 +305,8 @@ class EvenementListPage(WithTreeSelect):
         choice_js_fill_from_element(self.page, element, value, value)
 
     def submit_search(self):
-        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+        self.page.locator("#search-form").get_by_role("button", name="Rechercher", exact=True).click()
+        self.page.wait_for_url(f"**{reverse('tiac:evenement-liste')}?*")
 
     def submit_export(self):
         return self.page.get_by_role("button", name="Extraire", exact=True).click()
@@ -402,24 +409,22 @@ class EvenementListPage(WithTreeSelect):
         choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
 
     def select_hazard(self, label):
-        self._set_treeselect_option("danger-retenu", label)
+        TreeselectPage(self.page, self.page.locator("#search-form #danger-retenu")).tick_checkbox(label)
 
     def set_agents_pathogenes_from_shortcut(self, label):
-        container = self.page.locator("#id_agents_pathogenes").locator("..")
-        container.locator(".treeselect-input__edit").click()
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".shortcut", has_text=label).locator("..").click()
+        TreeselectPage(self.page, self.page.get_by_test_id("agents-pathogenes")).tick_checkbox(
+            *CategorieDanger(label).splitted_label
+        )
 
-    def set_analyse_danger_from_shortcut(self, label):
-        container = self.page.locator("#id_analyse_categorie_danger").locator("..")
-        container.locator(".treeselect-input__edit").click()
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".shortcut", has_text=label).locator("..").click()
+    def set_analyse_danger_from_shortcut(self, label: CategorieDanger):
+        TreeselectPage(self.page, self.page.get_by_test_id("analyse-categorie-danger")).tick_checkbox(
+            *CategorieDanger(label).splitted_label
+        )
 
     def set_categorie_produit(self, aliment):
-        label = aliment.get_categorie_produit_display()
-        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", label)
+        TreeselectPage(self.page, self.page.get_by_test_id("aliment-categorie-produit")).tick_checkbox(
+            *CategorieProduit(aliment.categorie_produit).splitted_label
+        )
 
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin):
@@ -512,7 +517,7 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin):
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
 
 
-class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
+class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -537,6 +542,8 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self.suspicion_conclusion_treeselect = TreeselectPage(page, self.page.get_by_test_id("suspicion-conclusion"))
+        self.agent_pathogene_treeselect = TreeselectPage(page, self.page.locator("#agents-pathogene"))
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
 
@@ -585,15 +592,8 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.datetime_first_symptoms.fill(obj.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
         self.datetime_last_symptoms.fill(obj.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
 
-    def add_agent_pathogene_confirme(self, label):
-        self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("agents-pathogene", label)
-
     def add_agent_pathogene_confirme_via_shortcut(self, label):
-        container = self.page.locator("#agents-pathogene")
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".treeselect-input__edit").click()
-        container.locator(".shortcut", has_text=label).locator("..").click()
+        self.agent_pathogene_treeselect.tick_checkbox(label)
 
     @property
     def current_modal(self):
@@ -631,9 +631,11 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
-        self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
-        self.current_modal.get_by_label("Matière première").click(force=True)
+        TreeselectPage(self.page, self.page.locator("#categorie-produit")).tick_checkbox(
+            *CategorieProduit(aliment.categorie_produit).splitted_label
+        )
+
+        self.current_modal.get_by_label("Matière première").filter(visible=True).click(force=True)
 
         for field in ["denomination", "description_produit"]:
             self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))
@@ -728,10 +730,12 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
         if input_data.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
             for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", CategorieDanger(item).label)
+                self.suspicion_conclusion_treeselect.tick_checkbox(*CategorieDanger(item).splitted_label)
         elif input_data.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
             for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
+                self.suspicion_conclusion_treeselect.tick_checkbox(
+                    strip_tags(DangersSyndromiques(item).name_display), exact=False
+                )
 
         self.conclusion_comment.fill(input_data.conclusion_comment)
 

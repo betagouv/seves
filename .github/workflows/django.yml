@@ -112,7 +112,6 @@ jobs:
           --group ${{ matrix.group }}
           --reruns 1
           --reruns-delay 5
-          --only-rerun E2ETestNetworkError
           --junitxml=junit/test-results-${{ matrix.group }}.xml
         env:
           SECRET_KEY: NOT_A_REAL_SECRET

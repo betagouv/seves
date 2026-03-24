@@ -1,6 +1,7 @@
 allowed_patterns:
 - 'class[^:]*:'  # Allow python classes
 - '(from|import)[\w\s\.]+'  # Allow python imports
+- 'def \w+(.*)'  # Allow python function def
 - '(models\.)?ForeignKey\(.+\)?'
 - 'ValidationError\(.+\)?'
 - 'Object.keys\(.+\)?'

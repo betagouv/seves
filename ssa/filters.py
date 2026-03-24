@@ -2,9 +2,11 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from django.db.models import Q
+from django.db.models.constants import LOOKUP_SEP
 from django.forms import CheckboxInput, TextInput
 from django_countries import Countries
 import django_filters
+from django_filters.conf import settings as django_filters_settings
 from django_filters.filters import BaseInFilter, CharFilter
 from queryset_sequence import QuerySetSequence
 
@@ -30,6 +32,21 @@ class CharInFilter(CharFilter):
     def filter(self, qs, value):
         if isinstance(value, str):
             value = [v.strip() for v in value.split("||") if v.strip()]
+        return super().filter(qs, value)
+
+
+class ArrayMultipleChoiceFilter(django_filters.MultipleChoiceFilter):
+    def get_filter_predicate(self, v):
+        name = self.field_name
+        if name and self.lookup_expr != django_filters_settings.DEFAULT_LOOKUP_EXPR:
+            name = LOOKUP_SEP.join([name, self.lookup_expr])
+        try:
+            return {name: getattr(v, self.field.to_field_name)}
+        except (AttributeError, TypeError):
+            name = LOOKUP_SEP.join([name, "icontains"])
+            return {name: v}
+
+    def filter(self, qs, value):
         return super().filter(qs, value)
 
 
