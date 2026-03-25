@@ -674,12 +674,13 @@ def test_create_fiche_detection_with_lieu_using_siret(
 ):
     ensure_departements("Paris")
     call_count = {"count": 0}
+    siret = "12007901700030"
 
     def handle(route):
         data = {
             "etablissements": [
                 {
-                    "siret": "12007901700030",
+                    "siret": siret,
                     "uniteLegale": {
                         "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
                         "prenom1UniteLegale": None,
@@ -722,6 +723,9 @@ def test_create_fiche_detection_with_lieu_using_siret(
         "#header-search-0 .fr-select .choices__list--single",
         "120 079 017",
         "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
+        check_selection=lambda: expect(
+            page.locator('#lieu-form [name$="siret_etablissement"]').locator("visible=true")
+        ).to_have_value(siret),
     )
     assert call_count["count"] == 1
 
