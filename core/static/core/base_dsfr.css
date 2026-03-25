@@ -17,6 +17,7 @@
 }
 
 .fr-header__body-row .fr-btns-group .fr-btn {
+    padding: 0.5rem 1rem !important;
     margin-top: auto;
     margin-bottom: auto;
 }

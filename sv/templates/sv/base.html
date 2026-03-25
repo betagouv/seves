@@ -8,7 +8,7 @@
             href="{% url 'sv:fiche-detection-creation' %}"
         >Créer une fiche</a>
     </li>
-    <li class="{% block highlight_menu_evenements %}{% endblock %}">
-        <a class="fr-btn" href="{% url 'sv:evenement-liste' %}">Évènements</a>
+    <li>
+        <a class="fr-btn {% block highlight_menu_evenements %}{% endblock %}" href="{% url 'sv:evenement-liste' %}">Évènements</a>
     </li>
 {% endblock product_nav %}
