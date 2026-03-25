@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from unittest import mock
 
 from django.conf import settings
 from django.urls import reverse
@@ -453,6 +454,7 @@ def test_add_lieu_with_name_only_and_save(
 
 
 @pytest.mark.django_db
+@mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
@@ -479,6 +481,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
 
 
 @pytest.mark.django_db
+@mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
