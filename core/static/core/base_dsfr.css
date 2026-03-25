@@ -10,6 +10,7 @@
 
 .fr-header__tools-links .fr-btn--header-blue {
     --hover: var(--background-action-high-blue-france-hover);
+    --active: var(--background-action-high-blue-france-hover);
     padding: 0.5rem 1rem !important;
     margin-right: 1rem !important;
     color: var(--text-inverted-blue-france);
