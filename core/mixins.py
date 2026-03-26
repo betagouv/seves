@@ -895,7 +895,7 @@ class WithExportHeterogeneousQuerysetMixin:
             serialized_queryset_sequence = [Export.from_queryset(queryset)]
 
         task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
-        self.get_export_task().delay(task.id)
+        self.get_export_task().delay_on_commit(task.id)
         messages.success(
             request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
         )
