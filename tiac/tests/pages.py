@@ -202,7 +202,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.submit("Enregistrer le brouillon")
 
     def submit(self, btn_txt="Enregistrer"):
-        self.page.get_by_role("button", name=btn_txt).click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_role("button", name=btn_txt).click()
         redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
         self.page.wait_for_url(f"**{redirect}")
 
@@ -214,7 +214,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
     def publish(self):
-        self.page.locator("#submit_publish").click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
 
     def get_detail_modal_content(self, index):
         self.get_etablissement_card(index).locator(".detail-display").click()
@@ -711,11 +711,13 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit(self, btn_label="Enregistrer"):
-        self.page.locator("button#submit_publish").first.click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).first.click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):

@@ -1,5 +1,6 @@
 
 {% extends 'sv/base.html' %}
+{% load partials %}
 {% load widget_tweaks %}
 
 {% load static %}
@@ -28,6 +29,11 @@
         <form action="{% if is_creation %}{% url 'sv:fiche-detection-creation' %}{% else %}{% url 'sv:fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
             {% csrf_token %}
             {{ form.latest_version }}
+            {% if request.GET.evenement %}
+                <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
+            {% elif form.instance.evenement %}
+                <input type="hidden" name="evenement" value="{{ form.instance.evenement.pk }}">
+            {% endif %}
 
             <div id="fiche-detection-form-header">
                 <div>
@@ -40,20 +46,16 @@
                     </h1>
                 </div>
 
-                <p>
-                    {% if request.GET.evenement %}
-                        <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
-                    {% elif form.instance.evenement %}
-                        <input type="hidden" name="evenement" value="{{ form.instance.evenement.pk }}">
-                    {% endif %}
-
-                    <a id="cancel-link" href="#" class="fr-link fr-mr-3w">Annuler</a>
-                    {% if is_creation %}
-                        <input type="submit" value="Enregistrer" class="fr-btn">
-                    {% else %}
-                        <input type="submit" name="action" value="Enregistrer les modifications" data-action="enregistrer-modifications" class="fr-btn" data-testid="fiche-detection-save-btn">
-                    {% endif %}
-                </p>
+                <section>
+                    {% partialdef form_btns inline %}
+                        <a id="cancel-link" href="#" class="fr-link fr-mr-3w">Annuler</a>
+                        {% if is_creation %}
+                            <input type="submit" value="Enregistrer" class="fr-btn">
+                        {% else %}
+                            <input type="submit" name="action" value="Enregistrer les modifications" data-action="enregistrer-modifications" class="fr-btn" data-testid="fiche-detection-save-btn">
+                        {% endif %}
+                    {% endpartialdef %}
+                </section>
             </div>
 
             <div id="fiche-detection-form">
@@ -191,6 +193,13 @@
                     </div>
                 </div>
             </div>
+
+            <section
+                class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
+                data-testid="bottom-action-btns"
+            >
+                {% partial form_btns %}
+            </section>
         </form>
 
         {% include "sv/_fichedetection_form__lieu_card.html" %}

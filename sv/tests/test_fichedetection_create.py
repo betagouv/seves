@@ -169,7 +169,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_label("Mesures de consignation").fill("test mesures consignation")
     page.get_by_label("Mesures phytosanitaires").fill("test mesures phyto")
     page.get_by_label("Mesures de surveillance spécifique").fill("test mesures surveillance")
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
 
@@ -471,7 +471,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
 
@@ -554,7 +554,7 @@ def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    page.get_by_role("button", name="Enregistrer").dblclick()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").dblclick()
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1
 
@@ -630,7 +630,7 @@ def test_can_add_fiche_detection_from_existing_evenement(live_server, page: Page
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("link", name="Ajouter une détection").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     page.wait_for_timeout(600)
     assert FicheDetection.objects.count() == 1
@@ -749,7 +749,7 @@ def test_fiche_detection_without_organisme_nuisible_shows_error(
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     validation_message = page.locator("#id_organisme_nuisible").evaluate("el => el.validationMessage")
     assert validation_message in ["Please select an item in the list.", "Sélectionnez un élément dans la liste."]
@@ -770,7 +770,7 @@ def test_can_create_evenement_if_last_evenement_is_deleted(
         organisme_nuisible.libelle_court,
     )
     form_elements.statut_reglementaire_input.select_option(statut_reglementaire.libelle)
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     assert Evenement.objects.last().numero == f"{datetime.now().year}.2"
 
