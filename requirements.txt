@@ -6,7 +6,7 @@
 #
 amqp==5.3.1
     # via kombu
-asgiref==3.8.1
+asgiref==3.11.1
     # via
     #   django
     #   django-countries
@@ -59,12 +59,11 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==5.2.11
+django==6.0.3
     # via
     #   -r requirements.in
     #   dj-importmap
     #   django-crispy-forms
-    #   django-csp
     #   django-debug-toolbar
     #   django-dirtyfields
     #   django-dsfr
@@ -74,7 +73,6 @@ django==5.2.11
     #   django-reversion
     #   django-reversion-compare
     #   django-storages
-    #   django-template-partials
     #   django-waffle
     #   mozilla-django-oidc
     #   sentry-sdk
@@ -82,8 +80,6 @@ django-countries==8.2.0
     # via -r requirements.in
 django-crispy-forms==2.4
     # via django-dsfr
-django-csp==4.0
-    # via -r requirements.in
 django-debug-toolbar==6.2.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
@@ -105,8 +101,6 @@ django-reversion==6.1.0
 django-reversion-compare==0.19.2
     # via -r requirements.in
 django-storages[s3]==1.14.6
-    # via -r requirements.in
-django-template-partials==25.3
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
@@ -167,7 +161,6 @@ nodeenv==1.8.0
     # via pre-commit
 packaging==24.0
     # via
-    #   django-csp
     #   gunicorn
     #   kombu
     #   pytest

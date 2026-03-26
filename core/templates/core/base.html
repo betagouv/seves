@@ -1,4 +1,3 @@
-{% load partials dsfr_tags %}
 {% load static importmap dsfr_tags groups waffle_tags %}
 
 <!doctype html>
@@ -8,7 +7,7 @@
         <meta name="format-detection" content="telephone=no">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <meta name="siret-api-endpoint" content="{{ siret_api_endpoint }}">
-        {% importmap nonce=request.csp_nonce %}
+        {% importmap nonce=csp_nonce %}
         {% dsfr_css %}
         <link rel="stylesheet" href="{% static 'dsfr/dist/utility/icons/icons.min.css' %}">
         {% dsfr_favicon %}
@@ -168,7 +167,7 @@
             Accessibilité : non conforme
         </div>
 
-        {% dsfr_js nonce=request.csp_nonce %}
+        {% dsfr_js nonce=csp_nonce %}
         <script type="text/javascript" src="{% static 'core/base.js' %}"></script>
         {% if media %}{% for tag in media.render_js %}{{ tag }}{% endfor %}{% endif %}
         {# Kept for compatibility for now #}
