@@ -30,7 +30,7 @@ def test_can_cloturer_investigation_cas_humain(live_server, page: Page, mocked_a
 def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page: Page, mocked_authentification_user):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_ac_can_update_fiche_even_when_state_is_cloture(
-        live_server, page, evenement, mocked_authentification_user
+        live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_description"
     )
 
 

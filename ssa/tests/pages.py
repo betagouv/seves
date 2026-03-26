@@ -567,7 +567,7 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self._submit(self.page.locator('button[value="draft"]'), wait_for=wait_for)
 
     def publish(self, *, wait_for=None):
-        self._submit(self.page.locator('button[value="publish"]'), wait_for=wait_for)
+        self._submit(self.page.locator("#submit_publish"), wait_for=wait_for)
 
     def display_and_get_categorie_danger(self):
         result = self.page.locator("#categorie-danger")

@@ -35,7 +35,7 @@ def test_can_cloturer_evenement(live_server, page: Page, mocked_authentification
 def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocked_authentification_user):
     evenement = EvenementSimpleFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_ac_can_update_fiche_even_when_state_is_cloture(
-        live_server, page, evenement, mocked_authentification_user
+        live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_contenu"
     )
 
 

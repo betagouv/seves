@@ -27,13 +27,15 @@
                                 Enregistrer le brouillon
                             </button>
                         {% endif %}
-                        <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-                            {% if form.instance.pk and not form.instance.is_draft %}
+                        {% if form.instance.pk and not form.instance.is_draft %}
+                            <button id="submit_publish" type="submit" class="fr-btn">
                                 Enregistrer
-                            {% else %}
+                            </button>
+                        {% else %}
+                            <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
                                 Publier
-                            {% endif %}
-                        </button>
+                            </button>
+                        {% endif %}
                     {% endblock %}
                 </div>
             </div>
