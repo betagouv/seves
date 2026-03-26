@@ -5,8 +5,6 @@ document.documentElement.addEventListener("dsfr.ready", () => {
     const rappelPart3Container = document.getElementById("rappel-3")
     const rappelContainer = [rappelPart1Container, rappelPart2Container, rappelPart3Container]
     const addRappelConsoBtn = document.getElementById("rappel-submit")
-    const submitDraftBtn = document.getElementById("submit_draft")
-    const submitPublishBtn = document.getElementById("submit_publish")
     const toNextInput = document.querySelectorAll(".to-next-input")
 
     function addRappelConso() {
@@ -86,10 +84,9 @@ document.documentElement.addEventListener("dsfr.ready", () => {
     })
 
     rappelContainer.forEach(input => input.addEventListener("input", handleDisabledRappelConsoBtn))
-    if (submitDraftBtn) {
-        submitDraftBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
+    for (const it of document.querySelectorAll(".form-action-btn")) {
+        it.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     }
-    submitPublishBtn.addEventListener("click", addNumeroRappelConsoToHiddenFieldAndSubmit)
     toNextInput.forEach(element => element.addEventListener("keyup", () => goToNextIfNeeded(element)))
     initExistingRappelConso()
 })

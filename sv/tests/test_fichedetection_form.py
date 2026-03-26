@@ -654,7 +654,7 @@ def test_return_to_correct_detection_after_creation_or_update(live_server, page:
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}?detection={detection_2.pk}")
 
     page.get_by_role("link", name=action_name).click()
-    page.get_by_role("link", name="Annuler").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("link", name="Annuler").click()
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))

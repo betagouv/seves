@@ -40,11 +40,11 @@ class FicheDetectionFormDomElements:
 
     @property
     def save_update_btn(self) -> Locator:
-        return self.page.get_by_test_id("fiche-detection-save-btn")
+        return self.page.get_by_test_id("bottom-action-btns").get_by_test_id("fiche-detection-save-btn")
 
     @property
     def publish_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Enregistrer")
+        return self.page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer")
 
     @property
     def add_lieu_btn(self) -> Locator:
@@ -480,7 +480,9 @@ class FicheZoneDelimiteeFormPage:
         # Boutons
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
         self.publish_btn = page.get_by_role("button", name="Publier", exact=True)
-        self.save_changes_btn = page.get_by_role("button", name="Enregistrer les modifications", exact=True)
+        self.save_changes_btn = page.get_by_test_id("bottom-action-btns").get_by_role(
+            "button", name="Enregistrer les modifications", exact=True
+        )
 
     def _select_unite_rayon_zone_tampon(self, unite: FicheZoneDelimitee.UnitesRayon):
         match unite:

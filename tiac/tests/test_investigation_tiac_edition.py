@@ -317,7 +317,7 @@ def test_investigation_tiac_update_has_locking_protection(
     evenement.contenu = "CCC"
     evenement.save()
 
-    update_page.page.locator("button#submit_publish").first.click()
+    update_page.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
     update_page.page.wait_for_url("**edition**")
 
     evenement.refresh_from_db()

@@ -20,7 +20,7 @@ def test_evenement_history_content(live_server, page, form_elements: FicheDetect
         organisme_nuisible.libelle_court,
     )
     page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     evenement = Evenement.objects.get()
     detection = evenement.detections.get()

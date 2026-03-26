@@ -54,7 +54,7 @@ def test_can_delete_fiche_detection_and_create_new_one_after(live_server, page):
     expect(page.get_by_role("link", name=str(fiche_detection.numero))).not_to_be_visible()
 
     page.get_by_role("link", name="Ajouter une détection").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
     assert FicheDetection.objects.count() == 1
 
 

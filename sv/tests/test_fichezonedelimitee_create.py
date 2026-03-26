@@ -14,7 +14,7 @@ def test_can_go_back_to_event_from_fiche_zone_form(live_server, page: Page, choi
     evenement = EvenementFactory()
     form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
     form_page.goto_create_form_page(live_server, evenement)
-    form_page.page.get_by_role("link", name="Annuler").click()
+    form_page.page.get_by_test_id("bottom-action-btns").get_by_role("link", name="Annuler").click()
 
     assert form_page.page.url == f"{live_server.url}{evenement.get_absolute_url()}"
 
