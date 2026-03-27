@@ -20,6 +20,7 @@ from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import FormView
 from django.views.generic.base import ContextMixin
 from django.views.generic.detail import DetailView
@@ -364,6 +365,8 @@ class WithEtatMixin(models.Model):
 
     def publish(self):
         self.etat = self.Etat.EN_COURS
+        if hasattr(self, "date_publication"):
+            self.date_publication = timezone.now()
         self.save()
 
     @property

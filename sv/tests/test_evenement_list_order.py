@@ -82,16 +82,16 @@ def test_order_by_organisme_nuisible(
     ],
     ids=["asc", "desc"],
 )
-def test_order_by_date_creation(
+def test_order_by_date_publication(
     live_server, page: Page, url_builder_for_list_ordering, assert_events_order, direction, expected_order
 ):
     evenements = {
-        "evenement_1": EvenementFactory(date_creation=timezone.make_aware(datetime(2023, 1, 1))),
-        "evenement_2": EvenementFactory(date_creation=timezone.make_aware(datetime(2023, 3, 1))),
-        "evenement_3": EvenementFactory(date_creation=timezone.make_aware(datetime(2023, 2, 1))),
+        "evenement_1": EvenementFactory(date_publication=datetime(2023, 1, 1)),
+        "evenement_2": EvenementFactory(date_publication=datetime(2023, 3, 1)),
+        "evenement_3": EvenementFactory(date_publication=datetime(2023, 2, 1)),
     }
-    page.goto(url_builder_for_list_ordering("creation", direction, "sv:evenement-liste"))
-    page.get_by_role("link", name="Création").click()
+    page.goto(url_builder_for_list_ordering("publication", direction, "sv:evenement-liste"))
+    page.get_by_role("link", name="Publication").click()
     assert_events_order(page, evenements, expected_order)
 
 

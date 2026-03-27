@@ -1,9 +1,9 @@
 from django.db.models import Q
-from django.forms.widgets import DateInput
 import django_filters
 
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
+    WithDatePublicationFilterMixin,
     WithEtatFilterMixin,
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
@@ -20,6 +20,7 @@ class EvenementFilter(
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
     WithEtatFilterMixin,
+    WithDatePublicationFilterMixin,
     django_filters.FilterSet,
 ):
     region = django_filters.ModelChoiceFilter(
@@ -30,15 +31,6 @@ class EvenementFilter(
         queryset=OrganismeNuisible.objects.all().order_by("libelle_court"),
         empty_label=settings.SELECT_EMPTY_CHOICE,
         method="filter_organisme_nuisible",
-    )
-    start_date = django_filters.DateFilter(
-        field_name="date_creation__date",
-        lookup_expr="gte",
-        label="Période du",
-        widget=DateInput(attrs={"type": "date"}),
-    )
-    end_date = django_filters.DateFilter(
-        field_name="date_creation__date", lookup_expr="lte", label="Au", widget=DateInput(attrs={"type": "date"})
     )
 
     class Meta:

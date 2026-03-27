@@ -385,7 +385,7 @@ class EvenementProduitListPage(WithTreeSelect):
     def numero_cell(self, line_index=1):
         return self._cell_content(line_index, 1)
 
-    def date_creation_cell(self, line_index=1):
+    def date_publication_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
     def date_maj_cell(self, line_index=1):

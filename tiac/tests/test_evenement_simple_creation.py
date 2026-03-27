@@ -71,7 +71,15 @@ def test_can_create_evenement_simple_with_all_fields(
     assert_models_are_equal(
         input_data,
         evenement,
-        to_exclude=["id", "_state", "numero_annee", "numero_evenement", "date_creation", "last_updated"],
+        to_exclude=[
+            "id",
+            "_state",
+            "numero_annee",
+            "numero_evenement",
+            "date_creation",
+            "date_publication",
+            "last_updated",
+        ],
     )
     assert LienLibre.objects.count() == 3
 
@@ -105,6 +113,7 @@ def test_can_publish_evenement_simple(live_server, mocked_authentification_user,
     assert evenement_simple.contenu == input_data.contenu
     assert evenement_simple.numero is not None
     assert evenement_simple.is_draft is False
+    assert evenement_simple.date_publication is not None
 
 
 def test_can_create_etablissement_with_sirene_autocomplete(

@@ -74,6 +74,7 @@ def test_can_create_investigation_cas_humain_with_all_fields(
             "numero_annee",
             "numero_evenement",
             "date_creation",
+            "date_publication",
             "numero_rasff",
             "last_updated",
             "id",
@@ -93,6 +94,7 @@ def test_can_publish_investigation_cas_humain(live_server, mocked_authentificati
     assert investigation_cas_humain.description == input_data.description
     assert investigation_cas_humain.numero is not None
     assert investigation_cas_humain.is_draft is False
+    assert investigation_cas_humain.date_publication is not None
 
 
 def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):

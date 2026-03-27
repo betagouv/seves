@@ -24,6 +24,7 @@ class TiacExport(BaseExport):
         ("etat", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
+        ("date_publication", "Date de publication"),
         ("date_reception", "Date de réception"),
         ("evenement_origin", "Signalement déclaré par"),
         ("modalites_declaration", "Modalités de déclaration"),

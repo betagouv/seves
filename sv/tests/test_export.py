@@ -23,6 +23,7 @@ def test_export_headers_content():
         "Numéro Europhyt",
         "Numéro RASFF",
         "Date de création",
+        "Date de publication",
         "Structure créatrice",
         "Statut de l'événement",
         "Contexte",
@@ -84,7 +85,7 @@ def test_export_headers_content():
 
 
 @pytest.mark.django_db
-def test_export_data_values():
+def test_export_data_values(force_utc):
     stream = StringIO()
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
@@ -116,6 +117,7 @@ def test_export_data_values():
         evenement.numero_europhyt,
         evenement.numero_rasff,
         fiche_detection.date_creation.strftime("%d/%m/%Y %H:%M"),
+        fiche_detection.evenement.date_publication.strftime("%d/%m/%Y %H:%M"),
         str(fiche_detection.createur),
         str(fiche_detection.statut_evenement),
         str(fiche_detection.contexte),

@@ -120,6 +120,7 @@ def test_can_create_investigation_tiac_with_all_fields(
             "numero_annee",
             "numero_evenement",
             "date_creation",
+            "date_publication",
             "analyses_sur_les_malades",
             "precisions",
             "last_updated",

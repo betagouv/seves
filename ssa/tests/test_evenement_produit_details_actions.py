@@ -60,6 +60,7 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
 
     evenement.refresh_from_db()
     assert evenement.etat == EvenementProduit.Etat.EN_COURS
+    assert evenement.date_publication is not None
     expect(page.get_by_text("En cours", exact=True)).to_be_visible()
     expect(page.get_by_text("Événement produit publié avec succès")).to_be_visible()
 

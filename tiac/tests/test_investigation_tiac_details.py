@@ -28,6 +28,9 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     expect(
         details_page.context_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
     ).to_be_visible()
+    expect(
+        details_page.context_block.get_by_text(evenement.date_publication.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()
     expect(details_page.modalite.get_by_text(evenement.get_modalites_declaration_display(), exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text(evenement.contenu, exact=True)).to_be_visible()

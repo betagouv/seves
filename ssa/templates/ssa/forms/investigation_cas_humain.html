@@ -25,6 +25,19 @@
                     </div>
                 </div>
                 <div class="fr-fieldset__element">
+                    <div id="date-publication" class="fr-input-group">
+                        <label class="fr-label" for="date-publication-input">Date de publication</label>
+                        {% now 'Y-m-d' as now %}
+                        <input
+                            type="date"
+                            id="date-publication-input"
+                            class="fr-input"
+                            value="{{ form.instance.date_publication|date:"Y-m-d"|default:now }}"
+                            disabled
+                        >
+                    </div>
+                </div>
+                <div class="fr-fieldset__element">
                     {% dsfr_form_field form.date_reception %}
                 </div>
                 {% if form.numero_rasff %}

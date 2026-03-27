@@ -68,7 +68,7 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
     search_page.navigate()
 
     assert search_page.numero_cell().text_content() == evenement.numero
-    assert search_page.date_creation_cell().text_content() == evenement.date_creation.strftime("%d/%m/%Y")
+    assert search_page.date_publication_cell().text_content() == evenement.date_publication.strftime("%d/%m/%Y")
     assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert search_page.description_cell().inner_text() == evenement.description
     assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
@@ -193,10 +193,10 @@ def test_list_can_filter_by_common_source(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
 
-def test_list_can_filter_by_date_creation(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(date_creation="2024-06-18", numero_annee=2025, numero_evenement=3)
-    EvenementProduitFactory(date_creation="2024-06-19", numero_annee=2025, numero_evenement=2)
-    EvenementProduitFactory(date_creation="2024-06-22", numero_annee=2025, numero_evenement=1)
+def test_list_can_filter_by_date_publication(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(date_publication="2024-06-18", numero_annee=2025, numero_evenement=3)
+    EvenementProduitFactory(date_publication="2024-06-19", numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(date_publication="2024-06-22", numero_annee=2025, numero_evenement=1)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -209,9 +209,9 @@ def test_list_can_filter_by_date_creation(live_server, mocked_authentification_u
     expect(search_page.page.get_by_text("2025.3")).not_to_be_visible()
 
 
-def test_list_can_filter_by_date_creation_same_day(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(date_creation="2024-06-18T10:00:00", numero_annee=2025, numero_evenement=3)
-    EvenementProduitFactory(date_creation="2024-06-19T10:00:00", numero_annee=2025, numero_evenement=2)
+def test_list_can_filter_by_date_publication_same_day(live_server, mocked_authentification_user, page: Page):
+    EvenementProduitFactory(date_publication="2024-06-18T10:00:00", numero_annee=2025, numero_evenement=3)
+    EvenementProduitFactory(date_publication="2024-06-19T10:00:00", numero_annee=2025, numero_evenement=2)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()

@@ -156,7 +156,7 @@ class WithFilteredListMixin(WithOrderingMixin):
             "ac_notified": "is_ac_notified",
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "organisme": "organisme_nuisible__libelle_court",
-            "creation": "date_creation",
+            "publication": "date_publication",
             "maj": "date_derniere_mise_a_jour_globale",
             "createur": "createur__libelle",
             "etat": "etat",

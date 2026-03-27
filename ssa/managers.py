@@ -55,7 +55,7 @@ class EvenementProduitQueryset(EvenementBaseQueryset):
             "description",
             "categorie_danger",
             "type_evenement",
-            "date_creation",
+            "date_publication",
             "etat",
             "categorie_produit",
             "last_updated",

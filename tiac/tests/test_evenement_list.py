@@ -90,11 +90,11 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
     expect(search_page.page.get_by_text("2024.2")).not_to_be_visible()
 
 
-def test_list_can_filter_by_date_creation(live_server, mocked_authentification_user, page: Page):
-    EvenementSimpleFactory(date_creation="2024-06-18", numero_annee=2025, numero_evenement=3)
-    InvestigationTiacFactory(date_creation="2024-06-19", numero_annee=2025, numero_evenement=2)
-    EvenementSimpleFactory(date_creation="2024-06-22", numero_annee=2025, numero_evenement=1)
-    InvestigationTiacFactory(date_creation="2024-06-03", numero_annee=2025, numero_evenement=4)
+def test_list_can_filter_by_date_publication(live_server, mocked_authentification_user, page: Page):
+    EvenementSimpleFactory(date_publication="2024-06-18", numero_annee=2025, numero_evenement=3)
+    InvestigationTiacFactory(date_publication="2024-06-19", numero_annee=2025, numero_evenement=2)
+    EvenementSimpleFactory(date_publication="2024-06-22", numero_annee=2025, numero_evenement=1)
+    InvestigationTiacFactory(date_publication="2024-06-03", numero_annee=2025, numero_evenement=4)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()

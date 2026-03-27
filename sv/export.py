@@ -14,6 +14,7 @@ class FicheDetectionExport(BaseExport):
         ("evenement__numero_europhyt", "Numéro Europhyt"),
         ("evenement__numero_rasff", "Numéro RASFF"),
         ("date_creation", "Date de création"),
+        ("evenement__date_publication", "Date de publication"),
         ("createur", "Structure créatrice"),
         ("statut_evenement", "Statut de l'événement"),
         ("contexte", "Contexte"),
