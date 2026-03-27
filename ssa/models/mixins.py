@@ -19,6 +19,7 @@ def build_combined_options(*enums, sorted_results=False):
 class WithEvenementInformationMixin(models.Model):
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
     date_reception = models.DateField(verbose_name="Date de réception")
     numero_rasff = models.CharField(max_length=255, verbose_name="N° RASFF/AAC", blank=True)
 

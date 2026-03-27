@@ -328,6 +328,7 @@ def test_can_publish_evenement(live_server, page: Page):
     expect(publish_btn).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.is_published is True
+    assert evenement.date_publication is not None
 
 
 @pytest.mark.django_db
@@ -398,6 +399,7 @@ def test_can_publish_and_notifier_ac(live_server, page: Page, mailoutbox):
     evenement.refresh_from_db()
     assert evenement.is_published is True
     assert evenement.is_ac_notified is True
+    assert evenement.date_publication is not None
     assert len(mailoutbox) == 1
 
 

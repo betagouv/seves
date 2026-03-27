@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.urls import resolve
 from django.urls.base import reverse
+from django.utils import timezone
 from django.utils.timezone import localdate
 from playwright.sync_api import Error as PlaywrightError, Page, expect
 import pytest
@@ -399,3 +400,9 @@ def mus_contact():
     if contact:
         return contact
     return ContactStructureFactory(structure=structure)
+
+
+@pytest.fixture
+def force_utc(settings):
+    settings.TIME_ZONE = "UTC"
+    timezone.activate("UTC")

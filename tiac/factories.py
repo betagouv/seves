@@ -65,6 +65,7 @@ class BaseTiacFactory(DjangoModelFactory):
         abstract = True
 
     date_creation = factory.Faker("date_this_decade")
+    date_publication = factory.Faker("date_time_this_decade")
     numero_annee = factory.Faker("year")
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
@@ -88,6 +89,19 @@ class BaseTiacFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        value = kwargs.get("date_publication")
+        if isinstance(value, str):
+            try:
+                kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%d"))
+            except ValueError:
+                kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S"))
+        else:
+            kwargs["date_publication"] = timezone.make_aware(value)
+
+        return super()._adjust_kwargs(**kwargs)
 
     @factory.lazy_attribute
     def date_reception(self):

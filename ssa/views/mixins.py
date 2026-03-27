@@ -14,7 +14,7 @@ class WithFilteredListMixin(WithOrderingMixin):
         return {
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "last_update": "last_updated",
-            "creation": "date_creation",
+            "publication": "date_publication",
             "createur": "createur__libelle",
             "etat": "etat",
             "liens": "nb_liens_libre",

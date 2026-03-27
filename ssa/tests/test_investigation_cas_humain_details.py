@@ -1,3 +1,7 @@
+from zoneinfo import ZoneInfo
+
+from django.conf import settings
+from django.utils import formats, timezone
 from playwright.sync_api import Page, expect
 
 from core.mixins import WithEtatMixin
@@ -5,6 +9,12 @@ from core.models import AuditLog
 from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
+
+
+def get_date_formated(date):
+    local_timezone = ZoneInfo(settings.TIME_ZONE)
+    local_date = timezone.localtime(date, local_timezone)
+    return formats.date_format(local_date, "j F Y")
 
 
 def test_investigation_cas_humain_detail_page_content(live_server, page: Page):
@@ -17,6 +27,13 @@ def test_investigation_cas_humain_detail_page_content(live_server, page: Page):
     assert "Dernière mise à jour" in details_page.last_modification.text_content()
 
     expect(details_page.information_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
+    expect(
+        details_page.information_block.get_by_text(get_date_formated(evenement.date_creation), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.information_block.get_by_text(get_date_formated(evenement.date_publication), exact=True)
+    ).to_be_visible()
+
     expect(details_page.information_block.get_by_text(evenement.numero_rasff, exact=True)).to_be_visible()
     type_evenement = details_page.information_block.get_by_text("Investigation de cas humain", exact=True)
     expect(type_evenement).to_be_visible()

@@ -39,7 +39,7 @@ def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocke
     )
 
 
-def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentification_user):
+def test_can_publish_evenement_simple(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementSimpleFactory()
 
     details_page = EvenementSimpleDetailsPage(page, live_server.url)
@@ -48,6 +48,7 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
 
     evenement.refresh_from_db()
     assert evenement.etat == EvenementSimple.Etat.EN_COURS
+    assert evenement.date_publication is not None
     expect(page.get_by_text("En cours", exact=True)).to_be_visible()
     expect(page.get_by_text("Événement simple publié avec succès")).to_be_visible()
 

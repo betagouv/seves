@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
 
 @dataclasses.dataclass
 class EvenementDisplay:
-    date_creation: datetime
+    date_publication: datetime
     last_update: datetime
     numero: str
     createur: "Structure"
@@ -35,7 +35,7 @@ class EvenementDisplay:
         etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
 
         return EvenementDisplay(
-            date_creation=evenement.date_creation,
+            date_publication=evenement.date_publication,
             numero=evenement.numero,
             createur=evenement.createur,
             description=evenement.description,

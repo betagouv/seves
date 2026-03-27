@@ -9,7 +9,7 @@ from dsfr.forms import DsfrBaseForm
 
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
-    WithDateCreationFilterMixin,
+    WithDatePublicationFilterMixin,
     WithDateReceptionFilterMixin,
     WithEtatFilterMixin,
     WithNumeroFilterMixin,
@@ -63,7 +63,7 @@ class TiacFilterForm(DsfrBaseForm):
 
 class TiacFilter(
     WithNumeroFilterMixin,
-    WithDateCreationFilterMixin,
+    WithDatePublicationFilterMixin,
     WithDateReceptionFilterMixin,
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,
