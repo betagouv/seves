@@ -6,15 +6,18 @@
 <dialog aria-labelledby="modal-add-edit-lieu-title-{{ id }}" id="modal-add-lieu-{{ id }}" data-id={{ id }} class="fr-modal" role="dialog" data-fr-concealing-backdrop="false">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
-            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6" id="lieu-form">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8" id="lieu-form">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
                         <button class="fr-btn--close fr-btn" type="button" aria-controls="modal-add-edit-lieu-{{ id }}" >Fermer</button>
                     </div>
                     <div class="fr-modal__content">
                         <div>
-                            <h1 id="modal-add-edit-lieu-title-{{ id }}"
-                                class="fr-modal__title">Ajouter un lieu
+                            <h1
+                                id="modal-add-edit-lieu-title-{{ id }}"
+                                class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg"
+                            >
+                                Ajouter un lieu
                             </h1>
                             {% if delete %}
                                 <p class="fr-hidden">{{ form.DELETE }}</p>
