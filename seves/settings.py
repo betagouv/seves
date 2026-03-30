@@ -262,7 +262,8 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 FILTERS_EMPTY_CHOICE_LABEL = "Choisir dans la liste"
 
 BYPASS_ANTIVIRUS = env("BYPASS_ANTIVIRUS", default=False)
-CLAMAV_CONFIG_FILE = env("CLAMAV_CONFIG_FILE", default="/etc/clamav/clamd.conf")
+ANTIVIRUS_URL = env("ANTIVIRUS_URL", default=None)
+ANTIVIRUS_TOKEN = env("ANTIVIRUS_TOKEN", default=None)
 
 CELERY_TASK_ALWAYS_EAGER = env("CELERY_TASK_ALWAYS_EAGER", default=False)
 if not CELERY_TASK_ALWAYS_EAGER:

@@ -125,11 +125,6 @@ En local il est possible de désactiver ce comportement avec la variable d'envir
 
 Cette même variable est utilisée dans les tests pour que le fichier soit disponible immédiatement sur l'objet concerné.
 
-Si vous souhaitez réaliser les analyses antivirus en local il faut:
-- Vérifier que `BYPASS_ANTIVIRUS` est bien à `False`
-- Installer clamav : [instructions pour linux](https://docs.clamav.net/manual/Installing.html#installing-with-a-package-manager) . Attention a bien installer le daemon `clamav-daemon`.
-- Lancer la commande `scan_documents` pour analyser les documents et mettre à jour leur statut en base.
-
 # Travailler avec les taches Celery en local
 
 Si vous souhaitez exécuter les taches directement lors de la création sans passer par le broker et le worker
