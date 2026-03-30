@@ -42,7 +42,7 @@ class StatutEvenement(models.Model):
         return self.libelle
 
 
-@reversion.register()
+@reversion.register(follow=["lieux"])
 class FicheDetection(
     AllowsSoftDeleteMixin,
     WithDerniereMiseAJourMixin,
@@ -126,45 +126,20 @@ class FicheDetection(
         from . import FicheZoneDelimitee
 
         if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
-            with transaction.atomic():
-                with reversion.create_revision():
-                    reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en hors zone infestée")
-                    reversion.add_to_revision(self.hors_zone_infestee)
-                FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.hors_zone_infestee.id)
+            FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.hors_zone_infestee.id)
         elif self._original_state["hors_zone_infestee"] and self.hors_zone_infestee_id is None:
             with transaction.atomic():
                 fiche_zone_delimitee = FicheZoneDelimitee.objects.get(pk=self._original_state["hors_zone_infestee"])
-                with reversion.create_revision():
-                    reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée en hors zone infestée")
-                    reversion.add_to_revision(fiche_zone_delimitee)
                 FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(fiche_zone_delimitee.id)
 
-    def _handle_zone_infestee_change(self):
-        from . import ZoneInfestee
-
-        if self.zone_infestee_id and self._original_state["zone_infestee"] is None:
-            with reversion.create_revision():
-                reversion.set_comment(f"La fiche détection '{self.pk}' a été ajoutée en zone infestée")
-                reversion.add_to_revision(self.zone_infestee)
-        elif self._original_state["zone_infestee"] and self.zone_infestee_id is None:
-            with reversion.create_revision():
-                reversion.set_comment(f"La fiche détection '{self.pk}' a été retirée de la zone infestée")
-                reversion.add_to_revision(ZoneInfestee.objects.get(pk=self._original_state["zone_infestee"]))
-
     def save(self, *args, **kwargs):
-        need_revision = True
         if self.hors_zone_infestee_id != self._original_state["hors_zone_infestee"]:
             self._handle_hors_zone_infestee_change()
             self._save(*args, **kwargs)
-            need_revision = False
         if self.zone_infestee_id != self._original_state["zone_infestee"]:
-            self._handle_zone_infestee_change()
             self._save(*args, **kwargs)
-            need_revision = False
-
-        if need_revision:
-            with reversion.create_revision():
-                self._save(*args, **kwargs)
+        with reversion.create_revision():
+            self._save(*args, **kwargs)
 
     def get_absolute_url(self):
         return self.evenement.get_absolute_url()

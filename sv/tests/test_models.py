@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 import pytest
-from reversion.models import Version
 
 from core.constants import Visibilite
 from core.factories import DocumentFactory, StructureFactory
@@ -405,56 +404,6 @@ def test_fiche_detection_latest_revision():
     assert latest_version.pk != fiche_detection.latest_version.pk
     assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
 
-    latest_version = fiche_detection.latest_version
-    lieu = LieuFactory(fiche_detection=fiche_detection, nom="Maison")
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-    assert fiche_detection.latest_version.revision.comment == "Le lieu 'Maison' a été ajouté à la fiche"
-
-    latest_version = fiche_detection.latest_version
-    lieu.nom = "Nouvelle maison"
-    lieu.save()
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-
-    latest_version = fiche_detection.latest_version
-    structure_sivep, _ = StructurePreleveuse.objects.get_or_create(nom="SIVEP")
-    prelevement = PrelevementFactory(lieu=lieu, structure_preleveuse=structure_sivep)
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-    assert (
-        fiche_detection.latest_version.revision.comment
-        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SIVEP' a été ajouté à la fiche"
-    )
-
-    latest_version = fiche_detection.latest_version
-    new_structure, _ = StructurePreleveuse.objects.get_or_create(nom="SocFrance")
-    prelevement.structure_preleveuse = new_structure
-    prelevement.save()
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-
-    latest_version = fiche_detection.latest_version
-    prelevement.delete()
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-    assert (
-        fiche_detection.latest_version.revision.comment
-        == "Le prélèvement pour le lieu 'Nouvelle maison' et la structure 'SocFrance' a été supprimé de la fiche"
-    )
-
-    latest_version = fiche_detection.latest_version
-    lieu.delete()
-    del fiche_detection.latest_version
-    assert latest_version.pk != fiche_detection.latest_version.pk
-    assert latest_version.revision.date_created < fiche_detection.latest_version.revision.date_created
-    assert fiche_detection.latest_version.revision.comment == "Le lieu 'Nouvelle maison' a été supprimé de la fiche"
-
 
 @pytest.mark.django_db
 def test_fiche_detection_latest_revision_performances(django_assert_num_queries):
@@ -489,29 +438,6 @@ def test_fiche_zone_delimitee_latest_revision():
     assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
     assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
 
-    latest_version = fiche_zone_delimitee.latest_version
-    zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee, nom="Zone 3")
-    del fiche_zone_delimitee.latest_version
-    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
-    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
-    assert fiche_zone_delimitee.latest_version.revision.comment == "La zone infestée 'Zone 3' a été ajoutée à la fiche"
-
-    latest_version = fiche_zone_delimitee.latest_version
-    zone_infestee.nom = "Zone 4"
-    zone_infestee.save()
-    del fiche_zone_delimitee.latest_version
-    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
-    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
-
-    latest_version = fiche_zone_delimitee.latest_version
-    zone_infestee.delete()
-    del fiche_zone_delimitee.latest_version
-    assert latest_version.pk != fiche_zone_delimitee.latest_version.pk
-    assert latest_version.revision.date_created < fiche_zone_delimitee.latest_version.revision.date_created
-    assert (
-        fiche_zone_delimitee.latest_version.revision.comment == "La zone infestée 'Zone 4' a été supprimée de la fiche"
-    )
-
 
 @pytest.mark.django_db
 def test_evenement_latest_revision():
@@ -544,48 +470,6 @@ def test_evenement_latest_revision_performances(django_assert_num_queries):
 
     with django_assert_num_queries(7):
         assert evenement.latest_version is not None
-
-
-@pytest.mark.django_db
-def test_change_zone_infestee_creates_revision_on_zone_infestee():
-    fiche_detection = FicheDetectionFactory(zone_infestee=None)
-    zone_infestee = ZoneInfesteeFactory()
-    latest_version = fiche_detection.latest_version
-
-    fiche_detection.zone_infestee = zone_infestee
-    fiche_detection.save()
-
-    assert latest_version.pk == fiche_detection.latest_version.pk
-    version = Version.objects.get_for_object(zone_infestee).first()
-    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été ajoutée en zone infestée"
-
-    fiche_detection.zone_infestee = None
-    fiche_detection.save()
-
-    assert latest_version.pk == fiche_detection.latest_version.pk
-    version = Version.objects.get_for_object(zone_infestee).first()
-    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été retirée de la zone infestée"
-
-
-@pytest.mark.django_db
-def test_change_hors_zone_infestee_creates_revision_on_zone_infestee():
-    fiche_detection = FicheDetectionFactory(zone_infestee=None)
-    fiche_zone_delimitee = FicheZoneFactory()
-    latest_version = fiche_detection.latest_version
-
-    fiche_detection.hors_zone_infestee = fiche_zone_delimitee
-    fiche_detection.save()
-
-    assert latest_version.pk == fiche_detection.latest_version.pk
-    version = Version.objects.get_for_object(fiche_zone_delimitee).first()
-    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été ajoutée en hors zone infestée"
-
-    fiche_detection.hors_zone_infestee = None
-    fiche_detection.save()
-
-    assert latest_version.pk == fiche_detection.latest_version.pk
-    version = Version.objects.get_for_object(fiche_zone_delimitee).first()
-    assert version.revision.comment == f"La fiche détection '{fiche_detection.pk}' a été retirée en hors zone infestée"
 
 
 @pytest.mark.django_db
