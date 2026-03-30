@@ -16,6 +16,8 @@ from core.model_mixins import (
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
+    WithLastUpdatedDatetime,
+    update_last_updated_on_revision,
 )
 from core.models import LienLibre
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -126,6 +128,7 @@ class QuantificationUnite(models.TextChoices):
         ]
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementProduit(
     SsaBaseEvenementModel,
@@ -143,6 +146,7 @@ class EvenementProduit(
     WithFreeLinkIdsMixin,
     EmailableObjectMixin,
     DirtyFieldsMixin,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     # WithEvenementInformationMixin
@@ -256,7 +260,7 @@ class EvenementProduit(
         return [str(o) for o in objects if not o.is_deleted]
 
     def can_be_updated(self, user):
-        return self._user_can_interact(user)
+        return self.can_be_modified(user)
 
     def can_be_downloaded(self, user):
         return self._user_can_interact(user)

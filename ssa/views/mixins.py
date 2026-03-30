@@ -13,6 +13,7 @@ class WithFilteredListMixin(WithOrderingMixin):
     def get_ordering_fields(self):
         return {
             "numero_evenement": ("numero_annee", "numero_evenement"),
+            "last_update": "last_updated",
             "creation": "date_creation",
             "createur": "createur__libelle",
             "etat": "etat",
@@ -20,7 +21,7 @@ class WithFilteredListMixin(WithOrderingMixin):
         }
 
     def get_default_order_by(self):
-        return "numero_evenement"
+        return "last_update"
 
     def get_raw_queryset(self):
         user = self.request.user

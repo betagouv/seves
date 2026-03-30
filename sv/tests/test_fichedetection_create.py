@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from unittest import mock
 
 from django.conf import settings
 from django.urls import reverse
@@ -453,6 +454,7 @@ def test_add_lieu_with_name_only_and_save(
 
 
 @pytest.mark.django_db
+@mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_pre_selected(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
@@ -479,6 +481,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
 
 
 @pytest.mark.django_db
+@mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
 ):
@@ -977,6 +980,39 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     assert lieu.pays_etablissement == "FR"
 
 
+def test_add_lieu_with_supply_chain(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    choice_js_fill,
+    lieu_form_elements: LieuFormDomElements,
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+    supply_chain_position = PositionChaineDistributionFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.click()
+    lieu_form_elements.nom_input.fill("Chez moi")
+    lieu_form_elements.set_supply_chain(supply_chain_position.libelle)
+
+    lieu_form_elements.save_btn.click()
+
+    expect(page.locator("#lieux")).to_contain_text(supply_chain_position.libelle)
+
+    form_elements.publish_btn.click()
+
+    page.wait_for_timeout(600)
+
+    fiche = FicheDetection.objects.get()
+    lieu = fiche.lieux.get()
+    assert lieu.position_chaine_distribution_etablissement.libelle == supply_chain_position.libelle
+
+
 @pytest.mark.django_db
 def test_prelevement_espece_echantillon_is_preserved_in_template(
     live_server,
@@ -989,7 +1025,7 @@ def test_prelevement_espece_echantillon_is_preserved_in_template(
     prelevement = detection.lieux.first().prelevements.first()
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
-    page.get_by_role("button", name="Modifier le prélèvement").click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
 
     assert prelevement_form_elements.espece_echantillon_input.input_value() == f"{prelevement.espece_echantillon.pk}"
     assert prelevement.espece_echantillon.libelle in prelevement_form_elements.espece_echantillon_choices.inner_text()
@@ -1009,7 +1045,7 @@ def test_can_clone_prelevement_from_existing(
     assert prelevements.count() == 1
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
-    page.get_by_role("button", name="Dupliquer le prélèvement").click()
+    page.get_by_test_id("prelevement-diplicate-btn").click()
     prelevement = prelevements.first()
     assert (
         prelevement_form_elements.numero_rapport_inspection_input.input_value() == prelevement.numero_rapport_inspection
@@ -1027,3 +1063,15 @@ def test_can_clone_prelevement_from_existing(
     form_elements.publish_btn.click()
 
     assert prelevements.count() == 2
+
+
+@pytest.mark.django_db
+def test_fiche_detection_organisme_nuisible_are_sorted(live_server, page: Page, choice_js_get_all_values):
+    OrganismeNuisible.objects.all().delete()
+    OrganismeNuisibleFactory(libelle_court="Zallard")
+    OrganismeNuisibleFactory(libelle_court="Allard")
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    assert choice_js_get_all_values(page, "#organisme-nuisible") == [
+        "Allard",
+        "Zallard",
+    ]

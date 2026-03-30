@@ -53,7 +53,7 @@
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
                 <table class="evenements__list-table">
                     <thead>
-                        <tr class="evenements__table-header">
+                        <tr>
                             <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='ac_notified' display_name='Notifié AC' %}</th>
                             <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
                             <th scope="col" class="fr-col-3">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
@@ -122,10 +122,10 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                        <tbody>
-                        </table>
-                        {% include "core/_pagination.html" %}
-                    </div>
+                    </tbody>
+                </table>
+                {% include "core/_pagination.html" %}
+            </div>
         {% endif %}
     </div>
 {% endblock %}

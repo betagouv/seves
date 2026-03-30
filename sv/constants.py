@@ -4,7 +4,7 @@ STRUCTURES_PRELEVEUSES = [
     "Délégataire",
     "DSF",
     "SIVEP",
-    "SEMAE",
+    "SocFrance",
     "FAM",
     "CTIFL",
     STRUCTURE_EXPLOITANT,
@@ -20,6 +20,8 @@ STATUTS_REGLEMENTAIRES = {
     "ORNQ": "organisme réglementé non quarantaine",
     "OTR": "organisme temporairement réglementé",
     "OE": "organisme émergent",
+    "NR": "non réglementé",
+    "END": "en cours de détermination",
 }
 
 CONTEXTES = [
@@ -36,10 +38,7 @@ CONTEXTES = [
 
 KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
     "OQ": [
-        "XYLEFM",
         "POCZSH",
-        "XYLOCH",
-        "PSDMS2",
         "HETDPA",
         "RALSSL",
         "HETDRO",
@@ -55,32 +54,17 @@ KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES = {
         "SCITDO",
         "DACULA",
         "MELGMY",
-        "XIPHRI",
-        "1BCTRG",
         "CORBFL",
-        "PHYPAE",
-        "PHYTRA",
-        "1BEGOG",
-        "ALECCT",
-        "LIBEAM",
         "DRAERO",
         "ELSIAU",
-        "BLMOV0",
-        "GIBBCI",
+        "XYLBAF",
+        "XYLBFE",
     ],
-    "OQZP": ["BNYVV0", "RHYCFE"],
-    "OQP": [
-        "GUIGCI",
-        "DACUDO",
-        "POPIJA",
-        "DACUZO",
-        "BURSXY",
-        "ANOLCN",
-        "XYLEFA",
-        "TOBRFV",
-        "1POMAG",
-    ],
-    "OE": ["TOUMPA", "XYLBAF", "XYLBFE", "SCITGI", "TOFBV0", "ALECCA", "STEHHA"],
+    "OQZP": [],
+    "OQP": ["GUIGCI", "DACUDO", "POPIJA", "DACUZO", "BURSXY", "ANOLCN", "XYLEFA", "XYLEFM"],
+    "OE": ["TOFBV0"],
+    "OTR": ["POCZSH", "XYLOCH", "TOUMPA"],
+    "NR": ["ALECCA"],
 }
 
 KNOWN_OEPPS = [oepp for oepp_list in KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES.values() for oepp in oepp_list]

@@ -1,6 +1,5 @@
 import datetime
 import io
-import json
 import os
 
 from django.contrib import messages
@@ -10,7 +9,7 @@ from django.db import transaction
 from django.forms import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
 
@@ -35,10 +34,9 @@ from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import Etablissement, EvenementProduit
 
-from ..constants import CategorieDanger, CategorieProduit, TypeEvenement
-from ..display import EvenementDisplay
+from ..constants import TypeEvenement
 from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
-from .mixins import EvenementProduitValuesMixin, WithFilteredListMixin
+from .mixins import EvenementProduitValuesMixin
 
 
 class EvenementProduitCreateView(
@@ -143,6 +141,7 @@ class EvenementProduitDetailView(
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["can_be_updated"] = self.get_object().can_be_updated(self.request.user)
+        context["display_warning_modification"] = self.get_object().display_warning_modification(self.request.user)
         context["can_be_downloaded"] = self.get_object().can_be_downloaded(self.request.user)
         return context
 
@@ -233,23 +232,6 @@ class EvenementUpdateView(
 
         messages.success(self.request, "L'événement produit a bien été modifié.")
         return HttpResponseRedirect(self.get_success_url())
-
-
-class EvenementsListView(WithFilteredListMixin, ListView):
-    template_name = "ssa/evenements_list.html"
-    model = EvenementProduit
-    paginate_by = 100
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["filter"] = self.filter
-        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
-
-        context["total_object_count"] = self.get_raw_queryset().count()
-        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
-
-        return context
 
 
 class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):

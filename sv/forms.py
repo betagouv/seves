@@ -228,6 +228,10 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 
         self.fields["laboratoire"].widget.form_instance = self
 
+        if self.instance and self.instance.pk:
+            self.fields["lieu"].queryset = self.instance.lieu.fiche_detection.lieux.all()
+            self.initial["lieu"] = self.instance.lieu.nom
+
         for field_name, choices in cached_choices.items():
             if choices is not None and field_name in self.fields:
                 self.fields[field_name].choices = choices
@@ -283,7 +287,7 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
         label="Statut réglementaire", queryset=StatutReglementaire.objects.all(), required=True
     )
     organisme_nuisible = forms.ModelChoiceField(
-        label="Organisme nuisible", queryset=OrganismeNuisible.objects.all(), required=True
+        label="Organisme nuisible", queryset=OrganismeNuisible.objects.none(), required=True
     )
 
     class Meta:
@@ -308,6 +312,7 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self.fields["date_premier_signalement"].widget.attrs["max"] = datetime.date.today().isoformat()
+        self.fields["organisme_nuisible"].queryset = OrganismeNuisible.objects.all().order_by("libelle_court")
 
         if (kwargs.get("data") and kwargs.get("data").get("evenement")) or (
             self.instance.pk and self.instance.evenement

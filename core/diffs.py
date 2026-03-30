@@ -53,6 +53,8 @@ class Diff:
             return "Fil de suivi"
         if field == "is_deleted":
             return "Supprimé"
+        if field == "FicheDetection":
+            return "Fiche détection"
         return field
 
     def __init__(self, field, old, new, revision=None, comment=""):
@@ -208,12 +210,17 @@ class CompareObject(InitialCompareObject):
         related_model = self.field.field.model
         return self.get_many_to_something(ids, related_model, is_reverse=True)
 
+    def _to_string_OneToOneField(self):
+        return self._obj_repr(self.get_related())
+
 
 class CompareObjects(InitialCompareObjects):
     def __init__(self, field, field_name, obj, version1, version2, is_reversed):
         self.field = field
         self.field_name = field_name
         self.obj = obj
+        self.version1 = version1
+        self.version2 = version2
 
         # is a related field (ForeignKey, ManyToManyField etc.)
         self.is_related = getattr(self.field, "related_model", None) is not None
@@ -234,6 +241,7 @@ class CompareObjects(InitialCompareObjects):
         self.M2O_CHANGE_INFO = None
         self.M2M_CHANGE_INFO = None
         self.GENERIC_RELATION_CHANGE_INFO = None
+        self.ONE_TO_ONE_CHANGE_INFO = None
 
     def get_generic_relation_change_info(self):
         if self.GENERIC_RELATION_CHANGE_INFO is not None:
@@ -245,10 +253,64 @@ class CompareObjects(InitialCompareObjects):
         self.GENERIC_RELATION_CHANGE_INFO = self.get_m2s_change_info(version_1_data, version_2_data)
         return self.GENERIC_RELATION_CHANGE_INFO
 
+    def get_related_version_from_parent(self, parent_version, field):
+        field_attname = getattr(field, "attname", field.name)
+        related_id = parent_version.field_dict.get(field_attname)
+
+        if not related_id:
+            return None
+
+        related_version = Version.objects.filter(
+            revision=parent_version.revision,
+            object_id=related_id,
+            content_type__model=field.related_model._meta.model_name,
+        ).first()
+
+        return related_version
+
+    def get_one_to_one_change_info(self):
+        """
+        Similar to the other get_XXX_info for OneToOne, we keep the same API even if we know some keys will be empty
+        """
+        if self.ONE_TO_ONE_CHANGE_INFO is not None:
+            return self.ONE_TO_ONE_CHANGE_INFO
+        changed_items = []
+        removed_items = []
+        added_items = []
+        same_items = []
+
+        version1 = self.get_related_version_from_parent(self.version1, self.field)
+        version2 = self.get_related_version_from_parent(self.version2, self.field)
+
+        if version1 and version2:
+            if version1.serialized_data == version2.serialized_data:
+                same_items.append(version1)
+            else:
+                changed_items.append((version1, version2))
+        elif version1 and not version2:
+            removed_items.append(version1)
+        elif not version1 and version2:
+            added_items.append(version2)
+
+        self.ONE_TO_ONE_CHANGE_INFO = {
+            "changed_items": changed_items,
+            "removed_items": removed_items,
+            "added_items": added_items,
+            "same_items": same_items,
+            "same_missing_objects": [],
+            "removed_missing_objects": [],
+            "added_missing_objects": [],
+            "deleted_items": [],
+        }
+
+        return self.ONE_TO_ONE_CHANGE_INFO
+
     def changed(self) -> bool:
         info = None
         if isinstance(self.field, GenericRelation):
             info = self.get_generic_relation_change_info()
+        elif isinstance(self.field, (models.OneToOneField, models.OneToOneRel)):
+            info = self.get_one_to_one_change_info()
         else:
             if hasattr(self.field, "get_internal_type") and self.field.get_internal_type() == "ManyToManyField":
                 info = self.get_m2m_change_info()
@@ -302,8 +364,11 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                 self.reverse_fields.append(f.remote_field)
             if isinstance(field, GenericRelation) and f not in fields:
                 self.reverse_fields.append(field)
+            if isinstance(field, models.OneToOneField) and f not in fields:
+                self.reverse_fields.append(field)
 
         fields += self.reverse_fields
+        fields = set(fields)
 
         has_unfollowed_fields = False
 
@@ -335,6 +400,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
             if is_reversed:
                 if isinstance(field, GenericRelation):
                     change = obj_compare.get_generic_relation_change_info()
+                elif isinstance(field, models.OneToOneField):
+                    change = obj_compare.get_one_to_one_change_info()
                 else:
                     change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:

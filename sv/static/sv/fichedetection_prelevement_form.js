@@ -1,5 +1,22 @@
+import {escapeHTML} from "Application"
 import choicesDefaults from "choicesDefaults"
 
+/**
+ * @typedef PrelevementData
+ * @type {object}
+ * @property {string} id
+ * @property {string} type
+ * @property {string} structure
+ * @property {string} lieu
+ * @property {string} officiel
+ * @property {string} resultat
+ * @property {Date|null} datePrelevement
+ * @property {string|null} numeroEchantillon
+ * @property {string|null} especeEchantillon
+ * @property {string|null} laboratoire
+ */
+
+/** @type {PrelevementData[]} */
 document.prelevementCards = []
 const modalHTMLContent = {}
 
@@ -75,50 +92,72 @@ function deletePrelevement(event) {
 
 function displayPrelevementsCards() {
     const prelevementListElement = document.getElementById("prelevements-list")
-    const prelevementTemplateElement = document.getElementById("prelevement-carte")
+    const prelevementTemplateElement = document.getElementById("prelevement-carte-tpl")
     prelevementListElement.innerHTML = ""
-    document.prelevementCards.forEach(card => {
-        const clone = prelevementTemplateElement.cloneNode(true)
-        clone.classList.remove("fr-hidden")
-        clone.querySelector(".prelevement-nom").textContent = card.structure
-        clone.querySelector(".prelevement-lieu").textContent = `Lieu·:·${card.lieu}`
-        clone.querySelector(".prelevement-type").textContent = `${card.officiel} | ${card.resultat}`
-        clone.querySelector(".prelevement-delete-btn").setAttribute("data-id", card.id)
-        clone
-            .querySelector(".prelevement-delete-btn")
-            .setAttribute("aria-describedby", `tooltip-delete-prelevement-${card.id}`)
-        clone.querySelector(".delete-tooltip").setAttribute("id", `tooltip-delete-prelevement-${card.id}`)
-        clone
-            .querySelector(".prelevement-edit-btn")
-            .setAttribute("aria-controls", `modal-add-edit-prelevement-${card.id}`)
-        clone.querySelector(".prelevement-edit-btn").setAttribute("aria-describedby", `tooltip-prelevement-${card.id}`)
-        clone.querySelector(".edit-tooltip").setAttribute("id", `tooltip-prelevement-${card.id}`)
-        clone.querySelector(".prelevement-delete-btn").addEventListener("click", event => {
-            dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
-            document.getElementById("delete-prelevement-confirm-btn").setAttribute("data-id", event.target.dataset.id)
-        })
-        if (card.type === "premiere_intention") {
-            if (clone.querySelector(".prelevement-duplicate-btn") === null) {
-                clone
-                    .querySelector("#action-btns")
-                    .insertAdjacentHTML("beforeend", document.querySelector("#prelevement-duplicate-btn-tpl").innerHTML)
-            }
 
-            const el = clone.querySelector(".prelevement-copy-btn")
-            el.setAttribute("data-id", card.id)
-            el.setAttribute("aria-describedby", `tooltip-duplicate-prelevement-${card.id}`)
-            el.setAttribute("aria-controls", `modal-duplicate-prelevement-${card.id}`)
-            el.addEventListener("click", duplicatePrelevement)
-            clone.querySelector(".duplicate-tooltip").setAttribute("id", `tooltip-duplicate-prelevement-${card.id}`)
-        } else {
-            clone.querySelectorAll(".prelevement-duplicate-btn").forEach(it => it.remove())
+    document.prelevementCards.forEach(card => {
+        const datePrelevementHtml =
+            card.datePrelevement !== null
+                ? `<p class="fr-card__detail fr-icon-calendar-2-line fr-mb-3v">
+                        ${card.datePrelevement.toLocaleDateString("fr")}
+                    </p>`
+                : ""
+
+        const otherInfos = [
+            ["Numéro de l’échantillon", card.numeroEchantillon],
+            ["Espèce", card.especeEchantillon],
+            ["Laboratoire", card.laboratoire],
+        ]
+            .map(([label, value]) =>
+                value !== null ? `<p class="prelevement-other-info">${label} : ${value}</p>` : "",
+            )
+            .join("")
+            .trim()
+
+        const labels = [card.officiel, card.resultat]
+            .map(it => `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-3v fr-mr-2v">${it}</p>`)
+            .join("")
+
+        const moreBtns =
+            card.type === "premiere_intention"
+                ? document.querySelector("#prelevement-duplicate-btn-tpl").innerHTML.replaceAll("__card_id__", card.id)
+                : ""
+
+        const html = prelevementTemplateElement.innerHTML
+            .replaceAll("__card_id__", escapeHTML(card.id))
+            .replaceAll("__nom__", escapeHTML(card.structure))
+            .replaceAll("__date_prelevement__", datePrelevementHtml)
+            .replaceAll("__lieu__", card.lieu)
+            .replaceAll("__other_infos__", otherInfos)
+            .replaceAll("__labels__", labels)
+            .replaceAll("__more_btns__", moreBtns)
+
+        prelevementListElement.insertAdjacentHTML("beforeend", html)
+
+        const deleteBtns = prelevementListElement.querySelectorAll(
+            `#prelevements-list .prelevement-delete-btn[data-id="${card.id}"]`,
+        )
+        for (const it of deleteBtns) {
+            it.addEventListener("click", event => {
+                dsfr(document.getElementById("modal-delete-prelevement-confirmation")).modal.disclose()
+                document
+                    .getElementById("delete-prelevement-confirm-btn")
+                    .setAttribute("data-id", event.target.dataset.id)
+            })
         }
-        prelevementListElement.appendChild(clone)
+
+        const duplicateBtns = prelevementListElement.querySelectorAll(
+            `#prelevements-list .prelevement-copy-btn[data-id="${card.id}"]`,
+        )
+        for (const it of duplicateBtns) {
+            it.addEventListener("click", duplicatePrelevement)
+        }
     })
     showOrHidePrelevementUI()
 }
 
 function populateLieuSelect(element) {
+    const currentValue = element.value
     element.innerHTML = ""
     document.lieuxCards.forEach(option => {
         const opt = document.createElement("option")
@@ -126,6 +165,7 @@ function populateLieuSelect(element) {
         opt.textContent = option.nom
         element.appendChild(opt)
     })
+    element.value = currentValue ? currentValue : element.options[0].value
 }
 
 function getNextAvailablePrelevementModal() {
@@ -154,6 +194,13 @@ function buildPrelevementCardFromModal(element) {
     const officielElement = element.querySelector(`[id^="id_prelevements-"][id$="-is_officiel"]`)
     const resultatElement = element.querySelector(`input[name*="-resultat"]:checked`)
     const resultats = JSON.parse(document.getElementById("prelevement-resultats").textContent)
+    const datePrelevement = element.querySelector('[name$="date_prelevement"]').valueAsDate
+    const numeroEchantillon = element.querySelector('[name$="numero_echantillon"]').value
+    let especeEchantillon = element.querySelector('[name$="espece_echantillon"]').selectedOptions[0]
+    especeEchantillon =
+        especeEchantillon !== undefined && especeEchantillon.value !== "" ? especeEchantillon.label : null
+    const laboratoireOption = element.querySelector('[name$="laboratoire"]').selectedOptions[0] || null
+
     return {
         id: element.dataset.id,
         type: typeElement.value,
@@ -161,6 +208,10 @@ function buildPrelevementCardFromModal(element) {
         lieu: lieuElement.options[lieuElement.selectedIndex].text,
         officiel: officielElement.checked === true ? "Prélèvement officiel" : "Prélèvement non officiel",
         resultat: resultats[resultatElement.value].toUpperCase(),
+        datePrelevement,
+        numeroEchantillon: numeroEchantillon.length > 0 ? numeroEchantillon : null,
+        especeEchantillon,
+        laboratoire: laboratoireOption?.value !== "" ? laboratoireOption.label : null,
     }
 }
 

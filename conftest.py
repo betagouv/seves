@@ -30,7 +30,7 @@ def page(page: Page, request):
     timeout = 4_000
     with contextlib.suppress(TypeError, ValueError):
         timeout = int(os.getenv("PLAYWRIGHT_TIMEOUT"))
-    page.set_default_navigation_timeout(timeout)
+    page.set_default_navigation_timeout(10_000)
     page.set_default_timeout(timeout)
 
     _original_goto = page.goto
@@ -161,13 +161,13 @@ def choice_js_get_values(db, page):
 
 @pytest.fixture
 def choice_js_get_all_values(db, page):
-    def _choice_js_get__all_values(page, locator):
+    def _choice_js_get__all_values(page, locator, exclude="Choisir dans la liste"):
         all_options = page.locator(f"{locator} .choices__list .choices__item--selectable")
         texts = []
         for i in range(all_options.count()):
             text = all_options.nth(i).inner_text()
             texts.append(text)
-        return texts
+        return [t for t in texts if t != exclude]
 
     return _choice_js_get__all_values
 

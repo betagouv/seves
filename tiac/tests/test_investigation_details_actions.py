@@ -1,6 +1,9 @@
 from playwright.sync_api import expect
 
-from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
+from core.tests.generic_tests.actions import (
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture,
+    generic_test_can_cloturer_evenement,
+)
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import InvestigationTiac
 
@@ -24,6 +27,13 @@ def test_can_cloturer_evenement(live_server, page, mocked_authentification_user,
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_cloturer_evenement(
         live_server, page, evenement, mocked_authentification_user, mailoutbox, nav_name="Clôturer l'investigation"
+    )
+
+
+def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture(
+        live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_contenu"
     )
 
 

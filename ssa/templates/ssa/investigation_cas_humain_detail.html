@@ -12,9 +12,6 @@
   <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
 {% endblock %}
 
-{% block aside %}
-  {% include "core/_document_warning_modal.html" %}
-{% endblock aside %}
 
 
 {% block content %}
@@ -33,6 +30,9 @@
         {% endif %}
         {% if is_evenement_can_be_cloture %}
           {% include "core/_cloturer_modal.html" with evenement=object %}
+        {% endif %}
+        {% if display_warning_modification %}
+          {% include "core/modal_warning_update.html" with url=object.get_update_url %}
         {% endif %}
 
         <div class="details-top-row--actions">

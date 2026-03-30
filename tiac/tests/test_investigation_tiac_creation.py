@@ -122,6 +122,7 @@ def test_can_create_investigation_tiac_with_all_fields(
             "date_creation",
             "analyses_sur_les_malades",
             "precisions",
+            "last_updated",
         ],
         ignore_array_order=True,
     )

@@ -1,3 +1,5 @@
+import re
+
 from playwright.sync_api import expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
@@ -32,3 +34,27 @@ def generic_test_can_cloturer_evenement(
     mail = mailoutbox[0]
     assert set(mail.to) == {other_contact.email}
     assert "Clôture de l’évènement" in mail.subject
+
+
+def generic_test_ac_can_update_fiche_even_when_state_is_cloture(
+    live_server, page, object, mocked_authentification_user, field_to_edit
+):
+    ac_structure = Structure.objects.create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    ContactStructureFactory(structure=ac_structure)
+    object.etat = WithEtatMixin.Etat.CLOTURE
+    object.save()
+
+    mocked_authentification_user.agent.structure = ac_structure
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("button", name="Modifier l'événement").click()
+    expect(page.get_by_text("Modification d'une fiche clôturée", exact=True)).to_be_visible()
+    page.get_by_role("link", name="Poursuivre la modification").click()
+    page.wait_for_url(re.compile(r".*(modification|edition).*"))
+
+    page.locator(field_to_edit).fill("Test")
+    page.get_by_role("button", name="Enregistrer").first.click()
+    expect(page.get_by_text(f"Événement {object.numero}", exact=True)).to_be_visible()
+
+    object.refresh_from_db()
+    assert object.etat == WithEtatMixin.Etat.CLOTURE

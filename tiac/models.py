@@ -19,6 +19,8 @@ from core.model_mixins import (
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
+    WithLastUpdatedDatetime,
+    update_last_updated_on_revision,
 )
 from core.models import BaseEtablissement, Departement, Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -84,6 +86,7 @@ class BaseTiacModel(models.Model):
         ]
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class EvenementSimple(
     AllowsSoftDeleteMixin,
@@ -97,6 +100,7 @@ class EvenementSimple(
     WithMessageUrlsMixin,
     EmailNotificationMixin,
     BaseTiacModel,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
@@ -127,6 +131,9 @@ class EvenementSimple(
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:evenement-simple-details", kwargs={"numero": numero})
+
+    def get_update_url(self):
+        return reverse("tiac:evenement-simple-edition", kwargs={"pk": self.pk})
 
     @property
     def latest_version(self):
@@ -276,6 +283,7 @@ class Analyses(models.TextChoices):
     INCONNU = "ne sait pas", "Ne sait pas"
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "etablissements"])
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
@@ -289,6 +297,7 @@ class InvestigationTiac(
     EmailNotificationMixin,
     BaseTiacModel,
     DirtyFieldsMixin,
+    WithLastUpdatedDatetime,
     models.Model,
 ):
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
@@ -363,6 +372,9 @@ class InvestigationTiac(
     def get_absolute_url(self):
         numero = f"{self.numero_annee}.{self.numero_evenement}"
         return reverse("tiac:investigation-tiac-details", kwargs={"numero": numero})
+
+    def get_update_url(self):
+        return reverse("tiac:investigation-tiac-edition", kwargs={"pk": self.pk})
 
     def get_crdi_form(self):
         from ssa.forms import CompteRenduDemandeInterventionForm
@@ -462,7 +474,7 @@ class InvestigationTiac(
 
     @property
     def communes_display(self):
-        return ", ".join([e.commune for e in self.etablissements.all() if e.commune])
+        return ", ".join([e.commune_and_cp for e in self.etablissements.all()])
 
     @property
     def raisons_sociales_display(self):

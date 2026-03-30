@@ -219,6 +219,18 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
     expect(page.get_by_role("cell", name=organisme_2.libelle_court)).not_to_be_visible()
 
 
+def test_search_filter_for_organisme_nuisible_is_ordered(live_server, page: Page, choice_js_get_all_values):
+    OrganismeNuisible.objects.all().delete()
+    OrganismeNuisibleFactory(libelle_court="Zegodacus")
+    OrganismeNuisibleFactory(libelle_court="Aleurocanthus")
+
+    page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
+    assert choice_js_get_all_values(page, '.fr-fieldset__element:has(label[for="id_organisme_nuisible"])') == [
+        "Aleurocanthus",
+        "Zegodacus",
+    ]
+
+
 def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: Page, choice_js_fill):
     organisme = OrganismeNuisibleFactory(libelle_court="Xylella fastidiosa")
     evenement_1 = EvenementFactory(organisme_nuisible=organisme)

@@ -25,7 +25,7 @@
                                 </thead>
                                 <tbody>
                                     {% for patch in patches %}
-                                        <tr>
+                                        <tr {% if patch.muted_action %}class="muted-action"{% endif %}>
                                             <td class="fr-cell--multiline">{{ patch.agent }}</td>
                                             <td class="fr-cell--multiline">{{ patch.structure }}</td>
                                             <td class="fr-cell--multiline">{{ patch.date_created }}</td>

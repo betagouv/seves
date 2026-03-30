@@ -388,17 +388,20 @@ class EvenementProduitListPage(WithTreeSelect):
     def date_creation_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
-    def description_cell(self, line_index=1):
+    def date_maj_cell(self, line_index=1):
         return self._cell_content(line_index, 3)
 
-    def type_evenement_cell(self, line_index=1):
-        return self._cell_content(line_index, 6)
+    def description_cell(self, line_index=1):
+        return self._cell_content(line_index, 4)
 
-    def createur_cell(self, line_index=1):
+    def type_evenement_cell(self, line_index=1):
         return self._cell_content(line_index, 7)
 
-    def etat_cell(self, line_index=1):
+    def createur_cell(self, line_index=1):
         return self._cell_content(line_index, 8)
+
+    def etat_cell(self, line_index=1):
+        return self._cell_content(line_index, 9)
 
     @property
     def annee_field(self):
@@ -564,7 +567,7 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self._submit(self.page.locator('button[value="draft"]'), wait_for=wait_for)
 
     def publish(self, *, wait_for=None):
-        self._submit(self.page.locator('button[value="publish"]'), wait_for=wait_for)
+        self._submit(self.page.locator("#submit_publish"), wait_for=wait_for)
 
     def display_and_get_categorie_danger(self):
         result = self.page.locator("#categorie-danger")

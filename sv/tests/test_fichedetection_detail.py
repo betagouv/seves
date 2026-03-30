@@ -9,7 +9,8 @@ def test_lieu_details(live_server, page):
     lieu = LieuFactory(is_etablissement=True)
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
     page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
-    expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
+
+    expect(page.locator("dialog").locator("visible=true").get_by_role("heading", name=lieu.nom)).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Adresse ou lieu-dit")).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Commune")).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Code INSEE")).to_be_visible()
@@ -50,7 +51,8 @@ def test_lieu_details_second_lieu(live_server, page):
     _, lieu2 = LieuFactory.create_batch(2)
     page.goto(f"{live_server.url}{lieu2.fiche_detection.get_absolute_url()}")
     page.get_by_title(f"Consulter le détail du lieu {lieu2.nom}").click()
-    expect(page.get_by_role("heading", name=lieu2.nom)).to_be_visible()
+
+    expect(page.locator("dialog").locator("visible=true").get_by_role("heading", name=lieu2.nom)).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-adresse")).to_contain_text(lieu2.adresse_lieu_dit)
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-commune")).to_contain_text(lieu2.commune)
     expect(page.get_by_test_id(f"lieu-{lieu2.pk}-code-insee")).to_contain_text(lieu2.code_insee)
@@ -76,7 +78,7 @@ def test_lieu_details_of_second_detection_when_first_detection_has_lieu(live_ser
     page.get_by_role("tab", name=fiche_detection_2.numero_detection).click()
     page.wait_for_timeout(4000)
     page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
-    expect(page.get_by_role("heading", name=lieu.nom)).to_be_visible()
+    expect(page.locator(".fr-modal--opened").get_by_role("heading", name=lieu.nom)).to_be_visible()
     expect(page.locator(".fr-modal--opened")).to_contain_text(lieu.adresse_lieu_dit)
     expect(page.locator(".fr-modal--opened")).to_contain_text(lieu.commune)
     expect(page.locator(".fr-modal--opened")).to_contain_text(lieu.code_insee)
@@ -105,10 +107,10 @@ def test_prelevement_card(live_server, page):
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_absolute_url()}")
 
     expect(page.locator(".prelevement").get_by_text(prelevement.numero_echantillon)).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text(prelevement.lieu.nom)).to_be_visible()
+    expect(page.locator(".prelevement").get_by_text(prelevement.espece_echantillon.libelle)).to_be_visible()
+    expect(page.locator(".prelevement").get_by_text(prelevement.laboratoire.nom)).to_be_visible()
     expect(page.locator(".prelevement").get_by_text(prelevement.get_resultat_display())).to_be_visible()
     expect(page.locator(".prelevement").get_by_text("Prélèvement non officiel")).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text("DÉTECTÉ")).to_be_visible()
 
 
 def test_prelevement_non_officiel_details_with_no_data(live_server, page):

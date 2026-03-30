@@ -1690,11 +1690,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_court": "Ralstonia solanacearum",
     },
     {
-        "code_oepp": "PSDMS2",
-        "libelle_long": "Ralstonia solanacearum race 2 (no longer in use) (maladie de Moko du bananier)",
-        "libelle_court": "Ralstonia solanacearum race 2",
-    },
-    {
         "code_oepp": "RALSSC",
         "libelle_long": "Ralstonia syzygii subsp. celebesensis",
         "libelle_court": "Ralstonia syzygii subsp. celebesensis",

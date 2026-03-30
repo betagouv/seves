@@ -37,7 +37,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         str(evenement.numero),
         "Brouillon",
         str(evenement.createur),
-        evenement.date_creation.strftime("%d/%m/%Y %Hh%M"),
+        evenement.date_creation.strftime("%d/%m/%Y %H:%M"),
         evenement.date_reception.strftime("%d/%m/%Y"),
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),
@@ -155,7 +155,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.raison_sociale,
         etablissement_1.enseigne_usuelle,
         etablissement_1.adresse_lieu_dit,
-        etablissement_1.commune,
+        etablissement_1.commune_and_cp,
         str(etablissement_1.departement),
         str(etablissement_1.pays.name),
         etablissement_1.type_exploitant,
@@ -170,7 +170,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.raison_sociale,
         etablissement_2.enseigne_usuelle,
         etablissement_2.adresse_lieu_dit,
-        etablissement_2.commune,
+        etablissement_2.commune_and_cp,
         str(etablissement_2.departement),
         str(etablissement_2.pays.name),
         etablissement_2.type_exploitant,
@@ -211,6 +211,12 @@ def test_export_evenements_from_ui(live_server, mocked_authentification_user, pa
     assert mail.subject == "[Sèves] Votre export est prêt"
 
 
+def test_cant_export_evenement_when_no_results_in_list(live_server, mocked_authentification_user, page):
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    expect(search_page.page.get_by_role("button", name="Extraire", exact=True)).not_to_be_visible()
+
+
 @pytest.mark.django_db
 def test_export_investigation_cas_humain_simple_case(mailoutbox):
     evenement = InvestigationCasHumainFactory()
@@ -235,7 +241,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
         str(evenement.numero),
         "Brouillon",
         str(evenement.createur),
-        evenement.date_creation.strftime("%d/%m/%Y %Hh%M"),
+        evenement.date_creation.strftime("%d/%m/%Y %H:%M"),
         evenement.date_reception.strftime("%d/%m/%Y"),
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),

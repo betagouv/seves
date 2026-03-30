@@ -46,7 +46,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==44.0.1
+cryptography==46.0.5
     # via
     #   josepy
     #   mozilla-django-oidc
@@ -128,7 +128,7 @@ filelock==3.20.3
     # via virtualenv
 greenlet==3.1.1
     # via playwright
-gunicorn==23.0.0
+gunicorn==25.1.0
     # via -r requirements.in
 identify==2.5.35
     # via pre-commit
@@ -192,9 +192,9 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyopenssl==25.0.0
+pyopenssl==26.0.0
     # via josepy
-pytest==8.4.2
+pytest==9.0.2
     # via
     #   pytest-base-url
     #   pytest-django
@@ -207,7 +207,7 @@ pytest-base-url==2.1.0
     # via pytest-playwright
 pytest-django==4.12.0
     # via -r requirements.in
-pytest-env==1.2.0
+pytest-env==1.6.0
     # via -r requirements.in
 pytest-playwright==0.7.2
     # via -r requirements.in
@@ -225,13 +225,15 @@ python-docx==1.2.0
     # via
     #   docxcompose3
     #   docxtpl
+python-dotenv==1.2.2
+    # via pytest-env
 python-magic==0.4.27
     # via -r requirements.in
 python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.2.1
+redis==7.3.0
     # via -r requirements.in
 requests==2.32.4
     # via
@@ -243,11 +245,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.4
+ruff==0.15.7
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.53.0
+sentry-sdk[django]==2.55.0
     # via -r requirements.in
 six==1.16.0
     # via

@@ -10,7 +10,9 @@ from reversion.models import Version
 
 from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
+from core.mixins import WithEtatMixin
 from core.models import AuditLog, Contact, Structure
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from seves import settings
 from sv.factories import (
     EvenementFactory,
@@ -21,50 +23,13 @@ from sv.factories import (
     PrelevementFactory,
     ZoneInfesteeFactory,
 )
-from sv.models import Etat, Evenement, FicheDetection, FicheZoneDelimitee, Prelevement
+from sv.models import Etat, Evenement, FicheDetection, Prelevement
 
 
 def get_date_formated(date_derniere_mise_a_jour):
     local_timezone = ZoneInfo(settings.TIME_ZONE)
     local_date = timezone.localtime(date_derniere_mise_a_jour, local_timezone)
     return formats.date_format(local_date, "j F Y H:i")
-
-
-@pytest.fixture
-def assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(page: Page):
-    """Fixture pour vérifier que la date de dernière mise à jour de la fiche zone est correctement affichée."""
-
-    def _assert_fiche_zone_derniere_mise_a_jour_visible(fiche_zone_delimitee: FicheZoneDelimitee):
-        last_update_text = (
-            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.evenement.date_derniere_mise_a_jour)}"
-        )
-        expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
-
-        last_update_text = (
-            f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
-        )
-        page.get_by_role("tab", name="Zone").click()
-        expect(page.get_by_label("Zone", exact=True).get_by_text(last_update_text)).to_be_visible()
-
-    return _assert_fiche_zone_derniere_mise_a_jour_visible
-
-
-@pytest.fixture
-def assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(page: Page):
-    """Fixture pour vérifier que la date de dernière mise à jour de la fiche détection est correctement affichée."""
-
-    def _assert_fiche_detection_derniere_mise_a_jour_visible(fiche_detection: FicheDetection):
-        last_update_text = (
-            f"Dernière mise à jour le {get_date_formated(fiche_detection.evenement.date_derniere_mise_a_jour)}"
-        )
-        expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
-
-        page.get_by_role("tab", name="Détection").click()
-        page.get_by_role("tab", name=fiche_detection.numero_detection).click()
-        last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
-        expect(page.locator("#tabpanel-detection-panel").get_by_text(last_update_text)).to_be_visible()
-
-    return _assert_fiche_detection_derniere_mise_a_jour_visible
 
 
 def test_can_add_zone(live_server, page: Page):
@@ -279,7 +244,7 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Zone").click()
-    page.get_by_role("button", name="Modifier").click()
+    page.get_by_role("link", name="Modifier").click()
     page.get_by_role("button", name="Enregistrer").click()
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
@@ -470,19 +435,17 @@ def test_date_derniere_mise_a_jour_after_evenement_update(live_server, page: Pag
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_fiche_detection_creation(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_fiche_detection_creation(live_server, page: Page):
     evenement = EvenementFactory()
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_fiche_detection_update(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_fiche_detection_update(live_server, page: Page):
     fiche_detection = FicheDetectionFactory()
     date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
 
@@ -492,13 +455,12 @@ def test_date_derniere_mise_a_jour_after_fiche_detection_update(
     fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_lieu_creation(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_lieu_creation(live_server, page: Page):
     fiche_detection = FicheDetectionFactory()
     date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
 
@@ -507,13 +469,12 @@ def test_date_derniere_mise_a_jour_after_lieu_creation(
     fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_lieu_update(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_lieu_update(live_server, page: Page):
     lieu = LieuFactory()
     date_derniere_mise_a_jour = lieu.fiche_detection.date_derniere_mise_a_jour
 
@@ -523,13 +484,12 @@ def test_date_derniere_mise_a_jour_after_lieu_update(
     lieu.fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < lieu.fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{lieu.fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(lieu.fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(lieu.fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_lieu_delete(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_lieu_delete(live_server, page: Page):
     lieu = LieuFactory()
     date_derniere_mise_a_jour = lieu.fiche_detection.date_derniere_mise_a_jour
 
@@ -538,13 +498,12 @@ def test_date_derniere_mise_a_jour_after_lieu_delete(
     lieu.fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < lieu.fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{lieu.fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(lieu.fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(lieu.fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_prelevement_creation(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_prelevement_creation(live_server, page: Page):
     fiche_detection = FicheDetectionFactory()
     date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
 
@@ -553,13 +512,12 @@ def test_date_derniere_mise_a_jour_after_prelevement_creation(
     fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_prelevement_update(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_prelevement_update(live_server, page: Page):
     prelevement = PrelevementFactory()
     fiche_detection = prelevement.lieu.fiche_detection
     date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
@@ -572,13 +530,12 @@ def test_date_derniere_mise_a_jour_after_prelevement_update(
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
     assert Version.objects.get_for_object(fiche_detection).first().id == version.id
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_prelevement_delete(
-    live_server, page: Page, assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_prelevement_delete(live_server, page: Page):
     prelevement = PrelevementFactory()
     fiche_detection = prelevement.lieu.fiche_detection
     date_derniere_mise_a_jour = fiche_detection.date_derniere_mise_a_jour
@@ -588,12 +545,14 @@ def test_date_derniere_mise_a_jour_after_prelevement_delete(
     fiche_detection.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_detection.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{fiche_detection.evenement.get_absolute_url()}")
-    assert_fiche_detection_derniere_mise_a_jour_is_visible_and_updated(fiche_detection)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
 def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_creation(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+    live_server,
+    page: Page,
 ):
     evenement = EvenementFactory()
 
@@ -603,12 +562,15 @@ def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_creation(
 
     assert fiche_zone_delimitee.date_derniere_mise_a_jour is not None
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
 def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_update(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
+    live_server,
+    page: Page,
 ):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
@@ -619,7 +581,9 @@ def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_update(
 
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
@@ -638,9 +602,7 @@ def test_date_derniere_mise_a_jour_after_fiche_zone_delimitee_delete(live_server
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_zone_infestee_creation(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_zone_infestee_creation(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     date_derniere_mise_a_jour = fiche_zone_delimitee.date_derniere_mise_a_jour
@@ -650,13 +612,13 @@ def test_date_derniere_mise_a_jour_after_zone_infestee_creation(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_zone_infestee_update(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_zone_infestee_update(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
@@ -668,13 +630,12 @@ def test_date_derniere_mise_a_jour_after_zone_infestee_update(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_zone_infestee_delete(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_zone_infestee_delete(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
@@ -685,13 +646,12 @@ def test_date_derniere_mise_a_jour_after_zone_infestee_delete(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_add_detection_in_hors_zone_delimitee(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_add_detection_in_hors_zone_delimitee(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection = FicheDetectionFactory(evenement=evenement)
@@ -703,13 +663,12 @@ def test_date_derniere_mise_a_jour_after_add_detection_in_hors_zone_delimitee(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_delete_detection_in_hors_zone_delimitee(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_delete_detection_in_hors_zone_delimitee(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     fiche_detection = FicheDetectionFactory(evenement=evenement, hors_zone_infestee=fiche_zone_delimitee)
@@ -721,13 +680,12 @@ def test_date_derniere_mise_a_jour_after_delete_detection_in_hors_zone_delimitee
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_add_detection_in_zone_infestee(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_add_detection_in_zone_infestee(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
@@ -740,13 +698,12 @@ def test_date_derniere_mise_a_jour_after_add_detection_in_zone_infestee(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 @pytest.mark.django_db
-def test_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee(
-    live_server, page: Page, assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated
-):
+def test_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee(live_server, page: Page):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
     zone_infestee = ZoneInfesteeFactory(fiche_zone_delimitee=evenement.fiche_zone_delimitee)
@@ -759,7 +716,8 @@ def test_date_derniere_mise_a_jour_after_delete_detection_in_zone_infestee(
     fiche_zone_delimitee.refresh_from_db()
     assert date_derniere_mise_a_jour < fiche_zone_delimitee.date_derniere_mise_a_jour
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    assert_fiche_zone_derniere_mise_a_jour_is_visible_and_updated(fiche_zone_delimitee)
+    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_zone_delimitee.date_derniere_mise_a_jour)}"
+    expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
 def test_can_download_document(live_server, page):
@@ -773,3 +731,9 @@ def test_can_download_document(live_server, page):
 
     download = download_info.value
     assert download.suggested_filename == f"evenement_{evenement.numero}.docx"
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)

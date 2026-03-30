@@ -2,22 +2,20 @@
 {% load remove_trailing_zero %}
 
 <div class="fiche-header">
-    <div>
-        {% include "sv/_latest_revision.html" with latest_version=fiche.latest_version content_type_pk=fiche_zone_content_type.pk object_pk=fiche.pk %}
-    </div>
-    <div class="fiche-action">
-        {% if can_delete_fiche_zone_delimitee %}
-            <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
-                Supprimer la zone
-            </button>
-            {% include "sv/_delete_fichezonedelimitee_modal.html" %}
+    {% if can_delete_fiche_zone_delimitee %}
+        <button class="fr-btn fr-btn--delete fr-mr-2w" data-fr-opened="false" aria-controls="fr-modal-delete-zone-{{ fiche.pk }}">
+            Supprimer la zone
+        </button>
+        {% include "sv/_delete_fichezonedelimitee_modal.html" %}
+    {% endif %}
+    {% if can_update_fiche_zone_delimitee %}
+        {% if display_warning_modification %}
+            {% include "core/modal_warning_update.html" with url=fiche.get_update_url suffix="-z" %}
+            <button data-fr-opened="false" aria-controls="modal-warning-update-z" type="button" class="fr-btn fr-btn--secondary fr-icon-edit-fill fr-btn--icon-left">Modifier la zone</button>
+        {% else %}
+            <a href="{{ fiche.get_update_url }}" class="fr-btn fr-btn--secondary fr-mr-2w fr-icon-edit-fill fr-btn--icon-left">Modifier la zone</a>
         {% endif %}
-        {% if can_update_fiche_zone_delimitee %}
-            <button class="fr-btn fr-btn--secondary fr-mr-2w">
-                <a href="{{ fiche.get_update_url }}"><span class="fr-icon-edit-fill">Modifier la zone</span></a>
-            </button>
-        {% endif %}
-    </div>
+    {% endif %}
 </div>
 
 <div id="commentaire-detections-hors-zone" class="fr-grid-row fr-grid-row--gutters">

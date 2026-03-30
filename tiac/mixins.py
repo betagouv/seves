@@ -10,12 +10,13 @@ class WithFilteredListMixin(WithOrderingMixin):
         return {
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "createur": "createur__libelle",
+            "last_update": "last_updated",
             "date_reception": "date_reception",
             "etat": "etat",
         }
 
     def get_default_order_by(self):
-        return "numero_evenement"
+        return "last_update"
 
     @property
     def get_raw_queryset(self):

@@ -176,6 +176,7 @@ class InvestigationCasHumainDetailView(
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["can_be_modified"] = self.get_object().can_be_modified(self.request.user)
+        context["display_warning_modification"] = self.get_object().display_warning_modification(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         return context
 

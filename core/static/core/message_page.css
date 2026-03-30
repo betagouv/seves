@@ -11,3 +11,9 @@
         order: -1;
     }
 }
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    /* Must be over 750 which is the z-index of the header/banner in the DSFR */
+    z-index: 800 !important;
+}

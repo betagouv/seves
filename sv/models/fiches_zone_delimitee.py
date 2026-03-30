@@ -71,7 +71,7 @@ class FicheZoneDelimitee(WithDerniereMiseAJourMixin, models.Model):
         return self.evenement._user_can_interact(user)
 
     def can_be_updated(self, user):
-        return self.evenement._user_can_interact(user)
+        return self.evenement.can_be_updated(user)
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():

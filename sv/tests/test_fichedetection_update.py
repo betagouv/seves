@@ -105,7 +105,7 @@ def test_fiche_detection_update_lieu_modal_content(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
     # modification du lieu
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
 
     expect(lieu_form_elements.close_btn).to_be_visible()
     expect(lieu_form_elements.close_btn).to_have_text("Fermer")
@@ -354,7 +354,7 @@ def test_update_lieu(
     )
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
@@ -413,9 +413,9 @@ def test_update_two_lieux(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     for index, new_lieu in enumerate(new_lieux):
         if index == 0:
-            page.get_by_role("button", name="Modifier le lieu").first.click()
+            page.get_by_role("button", name="Modifier").first.click()
         else:
-            page.get_by_role("button", name="Modifier le lieu").nth(index).click()
+            page.get_by_role("button", name="Modifier").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
         lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
         if index == 0:
@@ -493,8 +493,8 @@ def test_delete_lieu(
     fiche_detection = FicheDetectionFactory(with_lieu=True)
     lieu_id = fiche_detection.lieux.first().id
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("button", name="Supprimer", exact=True).click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
@@ -516,11 +516,11 @@ def test_delete_lieu_with_prelevement(
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
 
-    page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
-    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("prelevement-delete-btn").click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("button", name="Supprimer", exact=True).click()
+    page.get_by_test_id("lieu-delete-btn").click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -555,10 +555,10 @@ def test_delete_multiple_lieux(
     fiche_detection = FicheDetectionFactory(with_lieu=True)
     LieuFactory(fiche_detection=fiche_detection)
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("button", name="Supprimer", exact=True).click()
-    page.get_by_role("button", name="Supprimer le lieu").first.click()
-    page.get_by_role("button", name="Supprimer", exact=True).click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
+    page.get_by_test_id("lieu-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
@@ -575,7 +575,7 @@ def test_commune_display_in_card_and_edit_modal(live_server, page: Page):
         page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*"), exact=True)
     ).to_be_visible()
 
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     expect(page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*Remove item")))
 
 
@@ -813,7 +813,7 @@ def test_update_prelevement(
     new_prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=new_lieu, is_officiel=False)
 
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveuse.id))
     prelevement_form_elements.numero_echantillon_input.fill(new_prelevement.numero_echantillon)
@@ -864,7 +864,7 @@ def test_update_multiple_prelevements(
         expect(
             page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
         ).to_have_count(0)
-        page.locator(".prelevement-edit-btn").nth(index).click()
+        page.get_by_test_id("prelevement-update-btn").nth(index).click()
         expect(
             page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
         ).to_have_count(1)
@@ -915,8 +915,8 @@ def test_delete_prelevement(live_server, page: Page, form_elements: FicheDetecti
     prelevement = PrelevementFactory()
 
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
-    page.locator("ul").filter(has_text="Supprimer le prélèvement").get_by_role("button").nth(1).click()
-    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("prelevement-delete-btn").click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
@@ -932,12 +932,12 @@ def test_delete_multiple_prelevements(live_server, page: Page, form_elements: Fi
 
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     # Supprime le premier prélèvement
-    page.locator(".prelevement-delete-btn").first.click()
-    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("prelevement-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
 
     # Supprime le deuxième prélèvement
-    page.locator(".prelevement-delete-btn").first.click()
-    page.locator("#modal-delete-prelevement-confirmation").get_by_role("button", name="Supprimer").click()
+    page.get_by_test_id("prelevement-delete-btn").first.click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
 
@@ -955,7 +955,7 @@ def test_can_edit_and_save_lieu_with_name_only(
     Lieu.objects.create(fiche_detection=fiche, nom="Chez moi")
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi mis à jour")
     lieu_form_elements.save_btn.click()
@@ -980,7 +980,7 @@ def test_cant_pick_inactive_labo_in_prelevement(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 0
 
 
@@ -999,7 +999,7 @@ def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.commentaire_input.fill("AAA")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 1
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
@@ -1019,7 +1019,7 @@ def test_cant_pick_inactive_structure_in_prelevement(
     fiche_detection = FicheDetectionFactory(with_prelevement=True)
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 0
 
 
@@ -1038,7 +1038,7 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.commentaire_input.fill("AAA")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
     prelevement_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
@@ -1273,7 +1273,7 @@ def test_update_prelevement_from_officiel_to_non_officiel_empties_numero_RI(
 ):
     prelevement = PrelevementFactory(is_officiel=True, numero_rapport_inspection="12-123456")
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
-    page.locator("ul").filter(has_text="Modifier le prélèvement").get_by_role("button").first.click()
+    page.get_by_test_id("prelevement-update-btn").first.click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
 
     expect(prelevement_form_elements.numero_rapport_inspection_input).to_have_value("")
@@ -1311,10 +1311,42 @@ def test_can_add_commune_to_existing_lieu(
 ):
     lieu = LieuFactory(commune="")
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
-    page.get_by_role("button", name="Modifier le lieu").click()
+    page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.force_commune()
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
 
     lieu.refresh_from_db()
     assert lieu.commune == "Lille"
+
+
+@pytest.mark.django_db
+def test_lieu_for_prelevement_is_correct_when_multiple_lieux(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    choice_js_fill,
+):
+    """Checks that when editing a Detection the lieu selected for a prelevement is the correct one and
+    not the first one of the list"""
+    lieu_1 = LieuFactory(nom="Lieu 1")
+    lieu_2 = LieuFactory(nom="Lieu 2", fiche_detection=lieu_1.fiche_detection)
+    LieuFactory(nom="Lieu 3", fiche_detection=lieu_1.fiche_detection)
+    prelevement = PrelevementFactory(lieu=lieu_2, is_officiel=False)
+
+    page.goto(f"{live_server.url}{lieu_1.fiche_detection.get_update_url()}")
+    expect(page.locator("#prelevements-list").get_by_text("Lieu 2", exact=True)).to_be_visible()
+
+    page.locator(".prelevement-edit-btn").locator("visible=true").click()
+    expect(prelevement_form_elements.lieu_input).to_have_value(lieu_2.nom)
+    prelevement_form_elements.numero_echantillon_input.fill("123")
+    prelevement_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    page.wait_for_url("**sv/evenement/**")
+    page.get_by_title("Consulter le détail du prélèvement 123").click()
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-lieu")).to_have_text("Lieu 2")
+
+    prelevement.refresh_from_db()
+    assert prelevement.lieu == lieu_2

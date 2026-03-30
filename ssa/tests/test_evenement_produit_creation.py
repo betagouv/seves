@@ -19,6 +19,7 @@ FIELD_TO_EXCLUDE_ETABLISSEMENT = [
     "_state",
     "id",
     "code_insee",
+    "code_postal",
     "evenement_produit_id",
     "departement_id",
 ]
@@ -81,6 +82,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
         "numero_evenement",
         "date_creation",
         "numero_rasff",
+        "last_updated",
         "id",
     ]
     evenement_produit_data = {k: v for k, v in evenement_produit.__dict__.items() if k not in fields_to_exclude}
@@ -653,8 +655,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     evenement = EvenementProduitFactory.build()
 
     mock_requests_get.return_value.text = "mocked content"
-    mock_csv_reader.return_value = None
-    call_count = {"count": 0}
+    mock_csv_reader.return_value = iter([])
+    call_count = {"count": 0, "count_communes": 0}
 
     def handle_insee_siret(route):
         data = {
@@ -699,14 +701,11 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle_insee_siret)
 
     def handle_insee_commune(route):
-        data = {"nom": "Paris 20e Arrondissement", "code": "75120"}
+        data = {"nom": "Paris 15e Arrondissement", "code": "75115", "departement": {"code": "75", "nom": "Paris"}}
         route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
-        call_count["count"] += 1
+        call_count["count_communes"] += 1
 
-    page.route(
-        "https://geo.api.gouv.fr/communes/.+",
-        handle_insee_commune,
-    )
+    page.route("https://geo.api.gouv.fr/communes/75115?fields=departement", handle_insee_commune)
 
     creation_page = EvenementProduitFormPage(page, live_server.url)
 
@@ -726,6 +725,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     )
     departement = page.locator(".fr-modal__content").locator("visible=true").locator('[id$="-departement"]')
     expect(departement).to_have_value("75")
+    assert call_count["count_communes"] == 1
+    assert call_count["count"] == 1
 
 
 def test_can_create_evenement_produit_using_shortcut_on_categorie_danger(

@@ -22,6 +22,7 @@ from django.views.generic import (
     UpdateView,
 )
 from docxtpl import DocxTemplate
+import reversion
 from reversion.models import Version
 
 from core.audit import audit_log
@@ -132,6 +133,7 @@ class EvenementDetailView(
             "can_delete_fiche_zone_delimitee": self.get_object().can_delete_fiche_zone_delimitee(user),
             "can_update_fiche_zone_delimitee": self.get_object().can_update_fiche_zone_delimitee(user),
             "can_add_fiche_zone_delimitee": self.get_object().can_add_fiche_zone_delimitee(user),
+            "display_warning_modification": self.get_object().display_warning_modification(user),
         }
 
     def get_context_data(self, **kwargs):
@@ -282,7 +284,11 @@ class FicheDetectionCreateView(
 
             self.object = form.save(commit=False)
             self.object.evenement = evenement
-            self.object.save()
+
+            with reversion.create_revision():
+                self.object.save()
+                reversion.add_to_revision(self.object.evenement)
+                reversion.set_user(self.request.user)
 
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
@@ -545,7 +551,11 @@ class FicheZoneDelimiteeCreateView(MediaDefiningMixin, WithFormErrorsAsMessagesM
         self.object = form.save()
 
         evenement.fiche_zone_delimitee = self.object
-        evenement.save()
+
+        with reversion.create_revision():
+            evenement.save()
+            reversion.add_to_revision(evenement)
+            reversion.set_user(self.request.user)
 
         self.formset.instance = self.object
         self.formset.save()
@@ -651,11 +661,14 @@ class FicheZoneDelimiteeUpdateView(
         return self.form_valid(form, formset)
 
     def form_valid(self, form, formset):
-        with transaction.atomic():
-            self.object = form.save()
-            formset.instance = self.object
-            formset.save()
-            self.add_user_contacts(self.object.evenement)
+        with reversion.create_revision():
+            with transaction.atomic():
+                self.object = form.save()
+                formset.instance = self.object
+                formset.save()
+                self.add_user_contacts(self.object.evenement)
+                reversion.add_to_revision(self.object.evenement)
+                reversion.set_user(self.request.user)
 
         messages.success(self.request, "La fiche zone délimitée a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())

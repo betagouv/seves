@@ -1,6 +1,9 @@
 from playwright.sync_api import Page, expect
 
-from core.tests.generic_tests.actions import generic_test_can_cloturer_evenement
+from core.tests.generic_tests.actions import (
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture,
+    generic_test_can_cloturer_evenement,
+)
 from ssa.factories import InvestigationCasHumainFactory
 from ssa.models import EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainDetailsPage
@@ -22,6 +25,13 @@ def test_can_delete_investigation_cas_humain(live_server, page):
 def test_can_cloturer_investigation_cas_humain(live_server, page: Page, mocked_authentification_user, mailoutbox):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_cloturer_evenement(live_server, page, evenement, mocked_authentification_user, mailoutbox)
+
+
+def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_ac_can_update_fiche_even_when_state_is_cloture(
+        live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_description"
+    )
 
 
 def test_can_cloturer_investigation_cas_humain_if_last_remaining_structure(

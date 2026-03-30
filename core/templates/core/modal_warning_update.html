@@ -1,0 +1,27 @@
+<dialog id="modal-warning-update{{ suffix }}" class="fr-modal" aria-labelledby="warning-update-modal-title" aria-modal="true">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button aria-controls="modal-warning-update" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h2 id="warning-update-modal-title" class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                            Modification d'une fiche clôturée
+                        </h2>
+                        <p>
+                            Vous êtes sur le point de modifier une fiche déjà clôturée. Cette action est possible pour les utilisateurs de l’administration centrale.<br/>
+                            Toute modification peut avoir un impact sur les valorisations déjà réalisées (statistiques, tableaux de bord, exports).<br/>
+                            Merci de vérifier que cette modification est nécessaire avant de poursuivre.<br/>
+                        </p>
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                            <a href="{{ url }}" class="fr-btn" >Poursuivre la modification</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

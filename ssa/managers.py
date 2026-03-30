@@ -58,6 +58,7 @@ class EvenementProduitQueryset(EvenementBaseQueryset):
             "date_creation",
             "etat",
             "categorie_produit",
+            "last_updated",
         )
 
 
@@ -94,6 +95,7 @@ class InvestigationCasHumainQueryset(EvenementBaseQueryset):
             "categorie_danger",
             "date_creation",
             "etat",
+            "last_updated",
         )
 
 

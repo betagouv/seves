@@ -1,7 +1,9 @@
 from django.utils.formats import localize
 from playwright.sync_api import Page, expect
 
+from core.mixins import WithEtatMixin
 from core.models import AuditLog, LienLibre
+from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
 from tiac.factories import EtablissementFactory, EvenementSimpleFactory
 from tiac.models import Etablissement, EvenementSimple
 from tiac.tests.pages import EvenementSimpleDetailsPage
@@ -63,3 +65,9 @@ def test_evenement_simple_detail_page_content_etablissement(
     ).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.evaluation, exact=True)).to_be_visible()
     expect(details_page.etablissement_modal.get_by_text(etablissement.commentaire, exact=True)).to_be_visible()
+
+
+def test_bloc_commun_nb_items(live_server, page: Page):
+    evenement = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_bloc_commun_nb_items(live_server, page, evenement)

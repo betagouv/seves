@@ -1,21 +1,23 @@
 .fiche-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: 1.5rem;
 }
 
-.fiche-action {
-    display: flex;
-}
-
-.fiche-action .fr-translate__btn {
+.fiche-header .fr-translate__btn {
     min-height: 2.5rem;
     padding: 0.5rem 1rem;
     line-height: 1.5rem;
 }
 
-.fiche-action .fr-translate .fr-translate__btn::before {
+.fiche-header .fr-translate .fr-translate__btn::before {
     -webkit-mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
     mask-image: url(/static/dsfr/dist/icons/system/add-line.svg);
+}
+
+.prelevement-other-infos .prelevement-other-info {
+    margin: 0;
+}
+.prelevement-other-infos .prelevement-other-info:first-child {
+    margin-top: 0.75rem;
 }

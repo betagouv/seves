@@ -239,6 +239,7 @@ class BaseEtablissementFactory(DjangoModelFactory):
 
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
+    code_postal = factory.Faker("zipcode")
     code_insee = factory.Faker("numerify", text="#####")
     departement = factory.SubFactory("core.factories.DepartementFactory")
     pays = FuzzyChoice([c.code for c in Countries()])

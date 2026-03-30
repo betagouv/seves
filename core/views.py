@@ -231,6 +231,8 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
                         }
                     }
                 )
+                if reply_message.sender:
+                    kwargs["initial"]["recipients_copy"] = reply_message.sender
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -530,7 +532,7 @@ def sirene_api(request, siret: str):
 
 
 class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
-    compare_exclude = ["date_derniere_mise_a_jour", "is_infected", "deleted_by", "notification_sent"]
+    compare_exclude = ["date_derniere_mise_a_jour", "is_infected", "deleted_by", "notification_sent", "last_updated"]
     template_name = "reversion/version_list.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -594,5 +596,16 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
             if comment_diff:
                 context["patches"].append(comment_diff)
 
-        context["patches"] = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
+        patches = sorted(context["patches"], key=lambda x: x.date_created, reverse=True)
+        for i, diff in enumerate(patches):
+            if diff.new == WithEtatMixin.Etat.CLOTURE.label:
+                for d in patches[:i]:
+                    setattr(d, "muted_action", True)
+                    if d.comment:
+                        d.comment += " - Modifié après clôture"
+                    else:
+                        d.comment = "Modifié après clôture"
+                break
+
+        context["patches"] = patches
         return context
