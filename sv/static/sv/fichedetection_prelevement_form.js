@@ -76,7 +76,6 @@ function duplicatePrelevement(evt) {
     // so we have not choice but to entirely clone the field here
     currentModal.querySelector("#espece-echantillon").innerHTML =
         elToClone.querySelector("#espece-echantillon").innerHTML
-    modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     populateLieuSelect(currentModal.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`))
     dataRequiredToRequired(currentModal)
     dsfr(currentModal).modal.disclose()
@@ -181,10 +180,14 @@ function getNextAvailablePrelevementModal() {
 function showAddPrelevementmodal(event) {
     event.preventDefault()
     const currentModal = getNextAvailablePrelevementModal()
-    modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     populateLieuSelect(currentModal.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`))
     dataRequiredToRequired(currentModal)
     dsfr(currentModal).modal.disclose()
+
+    document.querySelectorAll(".prelevement-save-btn").forEach(button => {
+        button.removeEventListener("click", savePrelevement)
+        button.addEventListener("click", savePrelevement)
+    })
 }
 
 function buildPrelevementCardFromModal(element) {
@@ -228,6 +231,8 @@ function savePrelevement(event) {
         return
     }
 
+    modalHTMLContent[modal.dataset.id] = saveValues(modal.querySelector("fieldset"))
+
     const data = buildPrelevementCardFromModal(modal)
     const index = document.prelevementCards.findIndex(element => element.id === data.id)
     if (index === -1) {
@@ -246,7 +251,7 @@ function saveModalWhenOpening(event) {
     populateLieuSelect(event.target.querySelector(`[id^="id_prelevements-"][id$="-lieu"]`))
     // On ne sauvegarde que si ce n'est pas déjà fait (cas de la modification)
     if (!modalHTMLContent[modalId]) {
-        modalHTMLContent[modalId] = event.target.querySelector(".fr-modal__content").innerHTML
+        modalHTMLContent[modalId] = saveValues(event.target.querySelector("fieldset"))
     }
 }
 
@@ -295,18 +300,28 @@ function handleModalClose(event) {
     const modalContent = modal.querySelector(".fr-modal__content")
     // Réinitialise le contenu
     if (modalContent && modalHTMLContent[modalId]) {
-        modalContent.innerHTML = modalHTMLContent[modalId]
+        for (const element of modal.querySelector("fieldset").elements) {
+            if (modalHTMLContent[modalId][element.name] !== undefined) {
+                element.value = modalHTMLContent[modalId][element.name]
+            }
+        }
     }
     dsfr(modal).modal.conceal()
+}
+
+/** @param {HTMLFieldSetElement} fieldset */
+function saveValues(fieldset) {
+    const result = {}
+    for (const el of fieldset.elements) {
+        result[el.name] = el.value
+    }
+    return result
 }
 
 ;(() => {
     showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
-    document
-        .querySelectorAll(".prelevement-save-btn")
-        .forEach(button => button.addEventListener("click", savePrelevement))
     document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document
         .querySelectorAll("select[id$=structure_preleveuse]")
