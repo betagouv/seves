@@ -57,7 +57,7 @@
     </div>
     {% include "core/_latest_revision.html" with latest_version=object.latest_version content_type_pk=content_type.pk object_pk=object.pk %}
 
-    <div class="white-container fr-hidden synthese-content">
+    <div class="white-container fr-hidden synthese-content" data-testid="synthese-content">
       {% include "tiac/_investigation_tiac_informations_synthese.html" %}
     </div>
 
