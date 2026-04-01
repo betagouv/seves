@@ -295,7 +295,7 @@ class BasicMessageForm(CommonMessageForm, DsfrBaseForm):
     def __init__(self, *args, sender, obj, **kwargs):
         super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.MESSAGE)
-        queryset = Contact.objects.with_structure_and_agent().can_be_emailed().select_related("agent__structure")
+        queryset = Contact.objects.select_related("agent__structure")
 
         if hasattr(obj, "limit_contacts_to_user_from_app"):
             queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()

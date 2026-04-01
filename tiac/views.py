@@ -224,6 +224,7 @@ class EvenementSimpleDetailView(
         context["content_type"] = ContentType.objects.get_for_model(self.get_object())
         context["transfer_form"] = EvenementSimpleTransferForm()
         context["etablissements"] = self.get_object().etablissements.all()
+        context["raisons_sociales"] = [e.raison_sociale for e in context["etablissements"]]
         context["communes"] = [e.commune_and_cp for e in context["etablissements"]]
         return context
 

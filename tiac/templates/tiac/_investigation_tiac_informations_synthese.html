@@ -39,7 +39,7 @@
                 </div>
             </div>
             <div class="fr-grid-row fr-grid-row--gutters">
-                <div class="fr-col-4 bold">Etablissement(s)</div>
+                <div class="fr-col-4 bold">Etablissement{{ raisons_sociales|length|pluralize }}</div>
                 <div class="fr-col-8">
                     {% if raisons_sociales|length == 0 %}
                         <span class="empty-value">Vide</span>
