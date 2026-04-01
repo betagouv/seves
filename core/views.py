@@ -545,6 +545,8 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         content_type = ContentType.objects.get(id=kwargs["content_type"])
         self.object = content_type.model_class().objects.get(pk=kwargs["pk"])
+        self.handled_qs = []
+        self.handled_revision_comments = []
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -554,7 +556,6 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         qs = (
             Version.objects.get_for_object(self.object)
             .select_related("revision", "revision__user__agent__structure")
-            .order_by("-revision__date_created")
             .exclude(serialized_data={})
         )
 
@@ -581,7 +582,6 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         return (
             Version.objects.get_for_object(self.object)
             .select_related("revision", "revision__user__agent__structure")
-            .order_by("-revision__date_created")
             .filter(serialized_data={})
         )
 
