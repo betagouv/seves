@@ -161,6 +161,17 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         return self.page.locator(".analyse-card").locator("visible=true").count()
 
 
+class WithSyntheseBlockMixin:
+    @property
+    def synthese_block(self):
+        return self.page.get_by_test_id("synthese-content")
+
+    def open_synthese(self):
+        self.page.locator('label[for="synthese-btn"]').click()
+        expect(self.page.locator("#synthese-btn")).to_be_checked()
+        expect(self.page.get_by_test_id("synthese-content")).to_be_visible()
+
+
 class EvenementSimpleFormPage(WithEtablissementMixin):
     fields = [
         "date_reception",
@@ -422,7 +433,7 @@ class EvenementListPage(WithTreeSelect):
         self._set_treeselect_option("categorie-produit", label)
 
 
-class EvenementSimpleDetailsPage(WithEtablissementMixin):
+class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -749,7 +760,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
