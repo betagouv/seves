@@ -1,0 +1,12 @@
+{% if not head %}
+    <span class="empty-value">Vide</span>
+{% else %}
+    {{ head }}
+    {% if rest %}
+        <p class="fr-tag" aria-describedby="{{ tooltip_id }}">et {{ rest|length }} autre{{ rest|length|pluralize }}</p>
+        <span class="fr-tooltip fr-placement" id="{{ tooltip_id }}" role="tooltip" aria-hidden="true">
+            {{ tooltip_prefix }}
+            {% for it in rest %}{{ it }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </span>
+    {% endif %}
+{% endif%}
