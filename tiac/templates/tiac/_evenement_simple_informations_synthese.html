@@ -25,8 +25,20 @@
             <div class="fr-col-7">{{ etablissement.raison_sociale }}</div>
           </div>
           <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Commune</div>
-            <div class="fr-col-7">{{ etablissement.commune|or_empty_value_tag }}</div>
+            <div class="fr-col-5 bold">Commune{{ communes|length|pluralize }}</div>
+            <div class="fr-col-7">
+              {% if communes|length == 0 %}
+                <span class="empty-value">Vide</span>
+              {% elif communes|length == 1 %}
+                {{ communes.0 }}
+              {% else %}
+                {{ communes.0 }}
+                {% with rest_length=communes|length|add:"-1" %}
+                  <p class="fr-tag" aria-describedby="message-tooltip-communes">et {{ rest_length }} autre{{ rest_length|pluralize }}</p>
+                {% endwith %}
+                <span class="fr-tooltip fr-placement" id="message-tooltip-communes" role="tooltip" aria-hidden="true">Autre communes : {{ communes|slice:"1:"|join:', ' }}</span>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>

@@ -166,3 +166,28 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
     generic_test_bloc_commun_nb_items(live_server, page, evenement)
+
+
+def test_evenement_produit_detail_page_synthese_content(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    EtablissementFactory.create_batch(2, investigation=evenement)
+
+    details_page = InvestigationTiacDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.open_synthese()
+
+    assert details_page.title.text_content() == f"Événement {evenement.numero}"
+    assert "Dernière mise à jour" in details_page.last_modification.text_content()
+
+    expect(details_page.synthese_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
+    expect(
+        details_page.synthese_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.synthese_block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+
+    for etablissement in evenement.etablissements.all():
+        expect(details_page.synthese_block).to_contain_text(etablissement.commune_and_cp)
+
+    assert AuditLog.objects.count() == 1
