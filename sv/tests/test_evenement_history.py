@@ -9,7 +9,9 @@ from sv.models import Evenement, FicheZoneDelimitee, StatutReglementaire
 from sv.tests.test_utils import FicheDetectionFormDomElements, FicheZoneDelimiteeFormPage
 
 
-def test_evenement_history_content(live_server, page, form_elements: FicheDetectionFormDomElements, choice_js_fill):
+def test_evenement_history_content(
+    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+):
     statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
     organisme_nuisible = OrganismeNuisibleFactory()
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
@@ -31,6 +33,18 @@ def test_evenement_history_content(live_server, page, form_elements: FicheDetect
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
     form_elements.commentaire_input.fill("My test comment")
+    form_elements.save_update_btn.click()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.save_btn.click()
+    form_elements.save_update_btn.click()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_test_id("lieu-edit-btn").click()
+    lieu_form_elements.nom_input.fill("Mon lieu 2")
+    lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
 
     initial_fiche_zone = FicheZoneFactory.build()
@@ -63,18 +77,36 @@ def test_evenement_history_content(live_server, page, form_elements: FicheDetect
             "Doe John",
             "Structure Test",
             mock.ANY,
-            "Fiche Zone Delimitée",
-            "Vide",
-            "Objet ajouté : FicheZoneDelimitee",
+            f"Fiche Détection ({detection.numero}) - Lieu (Mon Lieu) - Nom",
+            "Mon lieu",
+            "Mon lieu 2",
             "Vide",
         ],
         [
             "Doe John",
             "Structure Test",
             mock.ANY,
-            "Fiche Détection",
+            f"Fiche Détection ({detection.numero}) - Lieu",
             "Vide",
-            f"Objet ajouté : FicheDetection {detection.numero}",
+            "Objet ajouté : Lieu Mon lieu",
+            "Vide",
+        ],
+        [
+            "Doe John",
+            "Structure Test",
+            mock.ANY,
+            f"Fiche Détection ({detection.numero}) - Commentaire",
+            "Vide",
+            "My test comment",
+            "Vide",
+        ],
+        [
+            "Doe John",
+            "Structure Test",
+            mock.ANY,
+            "Fiche Zone Delimitée",
+            "Vide",
+            mock.ANY,
             "Vide",
         ],
         [

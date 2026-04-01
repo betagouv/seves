@@ -42,7 +42,7 @@ def validate_wgs84_latitude(value):
         raise ValidationError("La latitude doit être comprise entre -90° et +90°")
 
 
-@reversion.register()
+@reversion.register(follow=["prelevements"])
 class Lieu(WithLocalisableMixin, models.Model):
     class Meta:
         verbose_name = "Lieu"

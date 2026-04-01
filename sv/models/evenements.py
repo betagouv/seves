@@ -28,7 +28,7 @@ from .fiches_zone_delimitee import FicheZoneDelimitee
 from .models_mixins import WithDerniereMiseAJourMixin
 
 
-@reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee"])
+@reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee", "detections"])
 class Evenement(
     AllowACNotificationMixin,
     WithVisibiliteMixin,
@@ -240,3 +240,8 @@ class Evenement(
             Document.TypeDocument.TRANSPORT,
             Document.TypeDocument.TRACABILITE,
         ]
+
+    def get_prefetch_for_revision_list_view(self):
+        from sv.models import FicheDetection
+
+        return [("_prefetched_detections", FicheDetection.objects.filter(evenement=self))]
