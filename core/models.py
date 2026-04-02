@@ -26,6 +26,7 @@ from .managers import (
     ContactQueryset,
     DocumentManager,
     DocumentQueryset,
+    LienLibreManager,
     LienLibreQueryset,
     MessageManager,
     MessagQueryset,
@@ -573,7 +574,7 @@ class LienLibre(models.Model):
     object_id_2 = models.PositiveIntegerField()
     related_object_2 = GenericForeignKey("content_type_2", "object_id_2")
 
-    objects = LienLibreQueryset.as_manager()
+    objects = LienLibreManager.from_queryset(LienLibreQueryset)()
 
     class Meta:
         constraints = [

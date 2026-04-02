@@ -462,6 +462,8 @@ class WithFreeLinkIdsMixin:
         links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
         result = []
         for link in links:
+            if link.related_object_1.is_deleted is True or link.related_object_2.is_deleted is True:
+                continue
             if link.object_id_1 == self.id and link.content_type_1 == content_type:
                 result.append(
                     {"value": f"{link.content_type_2.pk}-{link.object_id_2}", "label": str(link.related_object_2)}

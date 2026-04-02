@@ -12,10 +12,13 @@ class AllowsSoftDeleteMixin(models.Model):
         return self.can_user_delete(user)
 
     def soft_delete(self, user):
+        from core.models import LienLibre
+
         if not self.can_be_deleted(user):
             raise PermissionDenied
         self.is_deleted = True
         self.save()
+        LienLibre.objects.delete_related_links(self)
 
     def get_soft_delete_success_message(self):
         return "L'objet a bien été supprimé"
