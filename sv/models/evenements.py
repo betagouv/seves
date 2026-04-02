@@ -19,7 +19,7 @@ from core.model_mixins import (
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
 )
-from core.models import Document, Structure
+from core.models import Document, LienLibre, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 
 from ..managers import EvenementManager
@@ -131,6 +131,7 @@ class Evenement(
                 detection.soft_delete(user)
             self.is_deleted = True
             self.save()
+            LienLibre.objects.delete_related_links(self)
 
     @property
     def latest_version(self):

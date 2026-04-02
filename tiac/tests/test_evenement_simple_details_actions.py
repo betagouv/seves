@@ -5,6 +5,8 @@ from core.models import FinSuiviContact, LienLibre
 from core.tests.generic_tests.actions import (
     generic_test_ac_can_update_fiche_even_when_state_is_cloture,
     generic_test_can_cloturer_evenement,
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object,
+    generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
 from seves.settings import SSA_GROUP
 from tiac.factories import EtablissementFactory, EvenementSimpleFactory
@@ -36,6 +38,22 @@ def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocke
     evenement = EvenementSimpleFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_ac_can_update_fiche_even_when_state_is_cloture(
         live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_contenu"
+    )
+
+
+def test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+    live_server, mocked_authentification_user, page
+):
+    evenement = EvenementSimpleFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+        live_server, page, evenement, field_name="contenu", other_object=EvenementSimpleFactory()
+    )
+
+
+def test_soft_delete_object_also_removes_existing_lien_libre(live_server, page):
+    evenement = EvenementSimpleFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_soft_delete_object_also_removes_existing_lien_libre(
+        live_server, page, evenement, other_object=EvenementSimpleFactory()
     )
 
 

@@ -5,7 +5,7 @@ from playwright.sync_api import expect
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactStructureFactory
 from core.mixins import WithEtatMixin
-from core.models import Structure
+from core.models import LienLibre, Structure
 
 
 def generic_test_can_cloturer_evenement(
@@ -58,3 +58,43 @@ def generic_test_ac_can_update_fiche_even_when_state_is_cloture(
 
     object.refresh_from_db()
     assert object.etat == WithEtatMixin.Etat.CLOTURE
+
+
+def generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+    live_server, page, object, field_name, other_object
+):
+    LienLibre.objects.create(related_object_1=object, related_object_2=other_object)
+    other_object.is_deleted = True
+    other_object.save()
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("link", name="Modifier l'événement").click()
+    page.wait_for_url(re.compile(r".*(modification|edition).*"))
+
+    page.locator(f"#id_{field_name}").fill("Test")
+    page.get_by_role("button", name="Enregistrer").first.click()
+    expect(page.get_by_text(f"Événement {object.numero}", exact=True)).to_be_visible()
+
+    object.refresh_from_db()
+    assert getattr(object, field_name) == "Test"
+
+
+def generic_test_soft_delete_object_also_removes_existing_lien_libre(live_server, page, object, other_object):
+    LienLibre.objects.create(related_object_1=object, related_object_2=other_object)
+    assert LienLibre.objects.count() == 1
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    expect(page.get_by_text(other_object.numero, exact=True)).to_be_visible()
+
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("link", name="Supprimer l'événement").click()
+    page.get_by_test_id("submit-delete-modal").click()
+
+    page.goto(f"{live_server.url}{other_object.get_absolute_url()}")
+    expect(page.get_by_text(f"Événement {other_object.numero}", exact=True)).to_be_visible()
+    expect(page.get_by_text(object.numero, exact=True)).not_to_be_visible()
+
+    object.refresh_from_db()
+    assert object.is_deleted is True
+    assert LienLibre.objects.count() == 0

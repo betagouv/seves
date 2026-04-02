@@ -128,6 +128,11 @@ class ContactQueryset(QuerySet):
         return self.order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
 
 
+class LienLibreManager(Manager):
+    def delete_related_links(self, object):
+        self.for_object(object).delete()
+
+
 class LienLibreQueryset(QuerySet):
     def for_object(self, obj):
         content_type = ContentType.objects.get_for_model(obj)
