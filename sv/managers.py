@@ -80,15 +80,22 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         query |= Q(hors_zone_infestee=instance) | Q(zone_infestee__fiche_zone_delimitee=instance)
         return self.filter(query)
 
-    def optimized_for_export(self):
+    def optimized_for_export(self, contact):
+        from sv.models import Evenement
+
+        evenement_qs = (
+            Evenement.objects.all()
+            .with_fin_de_suivi(contact)
+            .select_related(
+                "organisme_nuisible",
+                "statut_reglementaire",
+                "fiche_zone_delimitee",
+            )
+        )
         return self.select_related(
             "contexte",
             "createur",
-            "evenement",
             "statut_evenement",
-            "evenement__organisme_nuisible",
-            "evenement__statut_reglementaire",
-            "evenement__fiche_zone_delimitee",
         ).prefetch_related(
             "lieux",
             "lieux__departement",
@@ -98,6 +105,7 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
             "lieux__prelevements__espece_echantillon",
             "lieux__prelevements__matrice_prelevee",
             "lieux__prelevements__laboratoire",
+            Prefetch("evenement", queryset=evenement_qs),
         )
 
 
@@ -171,11 +179,6 @@ class EvenementQueryset(EvenementManagerMixin, models.QuerySet):
             "detections", queryset=FicheDetection.objects.filter(is_deleted=False).prefetch_related(lieux_prefetch)
         )
         return self.prefetch_related(detections_prefetch)
-
-    def with_fin_de_suivi(self, contact):
-        from .models import Evenement
-
-        return self._with_fin_de_suivi(contact, Evenement)
 
     def with_nb_fiches_detection(self):
         return self.annotate(

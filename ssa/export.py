@@ -14,7 +14,7 @@ class SsaExport(BaseExport):
     blank_value = "-"
     evenement_fields = [
         ("numero", "Numéro de fiche"),
-        ("etat", "État"),
+        ("get_readable_etat_for_csv", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
         ("date_publication", "Date de publication"),
@@ -82,19 +82,24 @@ class SsaExport(BaseExport):
 
     def get_queryset(self, task):
         querysets = []
+        contact = task.user.agent.structure.contact_set.get()
         for entry in task.queryset_sequence:
             model = apps.get_model(entry["model"])
             queryset = model.objects.filter(id__in=entry["ids"])
-            queryset = queryset.prefetch_related(
-                "etablissements",
-                "etablissements__departement",
-            ).select_related("createur")
+            queryset = (
+                queryset.prefetch_related(
+                    "etablissements",
+                    "etablissements__departement",
+                )
+                .select_related("createur")
+                .with_fin_de_suivi(contact)
+            )
             querysets.append(queryset)
 
         return QuerySetSequence(*querysets)
 
     def export(self, task_id):
-        task = Export.objects.get(id=task_id)
+        task = Export.objects.select_related("user__agent__structure").get(id=task_id)
         if task.task_done is True:
             return
 

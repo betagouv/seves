@@ -201,10 +201,10 @@ class EvenementManagerMixin:
         )
         return self.annotate(nb_liens_libre=Subquery(liens))
 
-    def _with_fin_de_suivi(self, contact, model_class):
+    def with_fin_de_suivi(self, contact):
         from .models import FinSuiviContact
 
-        content_type = ContentType.objects.get_for_model(model_class)
+        content_type = ContentType.objects.get_for_model(self.model)
         return self.annotate(
             has_fin_de_suivi=Exists(
                 FinSuiviContact.objects.filter(content_type=content_type, object_id=OuterRef("pk"), contact=contact)

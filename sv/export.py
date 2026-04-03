@@ -7,7 +7,7 @@ class FicheDetectionExport(BaseExport):
     fiche_detection_fields = [
         ("numero", "Numéro de fiche"),
         ("evenement__numero", "Num. événement"),
-        ("evenement__etat", "État de l’évènement"),
+        ("evenement__get_readable_etat_for_csv", "État de l’évènement"),
         ("evenement__organisme_nuisible__libelle_court", "Organisme nuisible"),
         ("evenement__organisme_nuisible__code_oepp", "Code OEPP"),
         ("evenement__statut_reglementaire__libelle", "Statut réglementaire"),

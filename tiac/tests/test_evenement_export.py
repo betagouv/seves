@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 
-from core.factories import ContactAgentFactory
-from core.models import Export
+from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.models import Export, FinSuiviContact
 from tiac.constants import SuspicionConclusion
 from tiac.export import TiacExport
 from tiac.factories import (
@@ -21,9 +21,10 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     evenement = EvenementSimpleFactory()
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(15):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -34,7 +35,7 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id, evenement_2.id, evenement_3.id]}]
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(15):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -47,9 +48,10 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     evenement = InvestigationTiacFactory()
     data = [{"model": "tiac.investigationtiac", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(22):
+    with django_assert_num_queries(21):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -61,7 +63,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     EtablissementFactory(investigation=evenement)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(26):
+    with django_assert_num_queries(25):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -141,3 +143,26 @@ def test_export_tiac_from_ui_with_only_investigation_tiac(
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert mail.subject == "[Sèves] Votre export est prêt"
+
+
+def test_export_etat_value_in_fin_de_suivi(live_server, mocked_authentification_user, page: Page, settings, mailoutbox):
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    evenement_1 = EvenementSimpleFactory()
+    evenement_2 = InvestigationTiacFactory()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    for evenement in (evenement_1, evenement_2):
+        evenement.contacts.add(contact)
+        FinSuiviContact.objects.create(
+            content_object=evenement,
+            contact=contact,
+        )
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.submit_export()
+
+    expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
+    task = Export.objects.get()
+    assert task.task_done is True
+    lines = task.file.read().decode("utf-8")
+    assert lines.count("Fin de suivi pour ma structure") == 2

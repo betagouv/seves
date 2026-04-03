@@ -21,9 +21,6 @@ class EvenementBaseQueryset(EvenementManagerMixin, models.QuerySet, abc.ABC):
 
         return self.filter(Q(createur=user.agent.structure) | ~Q(etat=WithEtatMixin.Etat.BROUILLON))
 
-    def with_fin_de_suivi(self, contact):
-        return self._with_fin_de_suivi(contact, self.model)
-
     def search(self, query):
         query_object = Q()
         for f in self.search_fields:
