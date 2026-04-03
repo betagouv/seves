@@ -422,7 +422,8 @@ class FicheDetectionExportView(WithFilteredListMixin, View):
     def get_queryset(self):
         # WithFilteredListMixin gives a list of Evenement and we need a list of detections for the export
         detections = [d.id for e in super().get_queryset() for d in e.detections.all()]
-        return FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+        contact = self.request.user.agent.structure.contact_set.get()
+        return FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
 
     def post(self, request):
         response = HttpResponse(content_type="text/csv")

@@ -423,6 +423,13 @@ class WithEtatMixin(models.Model):
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
+    @property
+    def get_readable_etat_for_csv(self):
+        readable_etat = self.get_etat_data_from_fin_de_suivi(self.has_fin_de_suivi)["readable_etat"]
+        if readable_etat == "Fin de suivi":
+            return "Fin de suivi pour ma structure"
+        return readable_etat
+
     def get_cloture_confirm_message(self):
         return "L'objet a bien été cloturé."
 
