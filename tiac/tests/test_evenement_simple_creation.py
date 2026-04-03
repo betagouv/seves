@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.constants import AC_STRUCTURE
 from core.models import Contact, Departement, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -79,6 +80,7 @@ def test_can_create_evenement_simple_with_all_fields(
             "date_creation",
             "date_publication",
             "last_updated",
+            "numero_rasff",
         ],
     )
     assert LienLibre.objects.count() == 3
@@ -232,3 +234,24 @@ def test_evenement_simple_follow_up_evement_produit_notice(live_server, mocked_a
             exact=True,
         )
     ).to_have_count(2)
+
+
+def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
+    structure = mocked_authentification_user.agent.structure
+    structure.niveau1 = AC_STRUCTURE
+    structure.save()
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.numero_rasff.fill("2024.2222")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementSimple.objects.get()
+    assert evenement.numero_rasff == "2024.2222"
+
+
+def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    expect(creation_page.numero_rasff).not_to_be_visible()

@@ -311,6 +311,25 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
+def test_can_filter_by_numero_rasff(live_server, mocked_authentification_user, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(numero_annee=2020, numero_rasff="111111")
+    to_be_found_2 = EvenementSimpleFactory(numero_annee=2021, numero_rasff="111111")
+    not_to_be_found_1 = EvenementSimpleFactory(numero_annee=2022, numero_rasff="5555")
+    not_to_be_found_2 = InvestigationTiacFactory(numero_annee=2023, numero_rasff="")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.numero_rasff.fill("111111")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
 def test_can_filter_by_numero_sivss(live_server, mocked_authentification_user, page: Page):
     to_be_found_1 = InvestigationTiacFactory(numero_annee=2020, numero_sivss="111111")
     not_to_be_found_1 = EvenementSimpleFactory(numero_annee=2021)

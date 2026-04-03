@@ -28,6 +28,7 @@ class TiacExport(BaseExport):
         ("date_reception", "Date de réception"),
         ("evenement_origin", "Signalement déclaré par"),
         ("modalites_declaration", "Modalités de déclaration"),
+        ("numero_rasff", "N° RASFF/AAC"),
         ("contenu", "Contenu du signalement"),
         ("notify_ars", "ARS informée"),
         ("will_trigger_inquiry", "Enquête auprès des cas"),

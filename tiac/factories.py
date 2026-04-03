@@ -70,6 +70,7 @@ class BaseTiacFactory(DjangoModelFactory):
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
     modalites_declaration = FuzzyChoice(ModaliteDeclarationEvenement.values)
+    numero_rasff = factory.Faker("bothify", text="####.####")
     contenu = factory.Faker("paragraph")
     notify_ars = factory.Faker("boolean")
 
