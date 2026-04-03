@@ -61,7 +61,7 @@
                                 <div class="fr-col-8">{{ form.structure_preleveuse }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
-                                <div class="fr-col-4">{{ form.date_prelevement.label_tag }}</div>
+                                <div class="fr-col-4 {% if not existing %}required-field{% endif %}">{{ form.date_prelevement.label_tag }}</div>
                                 <div class="fr-col-8">{{ form.date_prelevement }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="matrice-prelevee" >

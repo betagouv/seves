@@ -629,6 +629,7 @@ def test_prelevement_resultat_card(
     prelevement_form_elements = PrelevementFormDomElements(page)
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
     expect(page.locator("#prelevements-list")).to_contain_text("DÉTECTÉ")
@@ -669,6 +670,7 @@ def test_add_prelevement_en_attente_show_modal(
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.resultat_input(Prelevement.Resultat.EN_ATTENTE).click()
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.save_btn.click()
 
     expect(page.locator("#modal-add-edit-prelevement-0")).to_be_hidden(timeout=500)
