@@ -50,6 +50,11 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
+    numero_rasff = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
+        label="N° RASFF/AAC",
+    )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
         label="Signalement déclaré par",
@@ -70,6 +75,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             "date_reception",
             "evenement_origin",
             "modalites_declaration",
+            "numero_rasff",
             "contenu",
             "notify_ars",
             "nb_sick_persons",
@@ -93,6 +99,8 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_rasff")
         self._add_free_links()
 
     def save(self, commit=True):
@@ -234,6 +242,11 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         label="Date de réception",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
     )
+    numero_rasff = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
+        label="N° RASFF/AAC",
+    )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
         label="Signalement déclaré par",
@@ -314,6 +327,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "date_reception",
             "evenement_origin",
             "modalites_declaration",
+            "numero_rasff",
             "contenu",
             "notify_ars",
             "will_trigger_inquiry",
@@ -375,6 +389,8 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             self[field].field.queryset = (
                 queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
             )
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_rasff")
 
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")

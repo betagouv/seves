@@ -59,6 +59,9 @@
                         {% dsfr_form_field form.date_reception %}
                         {% dsfr_form_field form.evenement_origin|set_data:"ars-informee-target:origin"|set_data:"action:ars-informee#onOriginChanged" %}
                         {% dsfr_form_field form.modalites_declaration|dsfr_inline %}
+                        {% if form.numero_rasff %}
+                            {% dsfr_form_field form.numero_rasff %}
+                        {% endif %}
                     </div>
 
                     <div class="fr-col-12 fr-col-lg-4">

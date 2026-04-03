@@ -177,6 +177,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         "date_reception",
         "evenement_origin",
         "modalites_declaration",
+        "numero_rasff",
         "contenu",
         "notify_ars",
         "nb_sick_persons",
@@ -372,6 +373,10 @@ class EvenementListPage(WithTreeSelect):
         return self.page.locator("#id_etat")
 
     @property
+    def numero_rasff(self):
+        return self.page.locator("#id_numero_rasff")
+
+    @property
     def numero_sivss(self):
         return self.page.locator("#id_numero_sivss")
 
@@ -528,6 +533,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "date_reception",
         "evenement_origin",
         "modalites_declaration",
+        "numero_rasff",
         "contenu",
         "will_trigger_inquiry",
         "numero_sivss",

@@ -8,7 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.constants import MUS_STRUCTURE
+from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import DepartementFactory
 from core.models import Contact, Departement, LienLibre
 from ssa.constants import CategorieDanger
@@ -135,6 +135,7 @@ def test_can_create_investigation_tiac_with_all_fields(
             "_original_state",
             "numero_annee",
             "numero_evenement",
+            "numero_rasff",
             "date_creation",
             "date_publication",
             "analyses_sur_les_malades",
@@ -688,3 +689,24 @@ def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authenti
     investigation = InvestigationTiac.objects.get()
     assert investigation.notify_ars is True
     assert investigation.modalites_declaration == ModaliteDeclarationEvenement.OTHER
+
+
+def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
+    structure = mocked_authentification_user.agent.structure
+    structure.niveau1 = AC_STRUCTURE
+    structure.save()
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.numero_rasff.fill("2024.2222")
+    creation_page.submit_as_draft()
+
+    evenement = InvestigationTiac.objects.get()
+    assert evenement.numero_rasff == "2024.2222"
+
+
+def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    expect(creation_page.numero_rasff).not_to_be_visible()

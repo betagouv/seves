@@ -33,6 +33,7 @@ def test_investigation_tiac_detail_page_content(live_server, page: Page):
     ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()
     expect(details_page.modalite.get_by_text(evenement.get_modalites_declaration_display(), exact=True)).to_be_visible()
+    expect(details_page.modalite.get_by_text(evenement.numero_rasff, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text(evenement.contenu, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text(evenement.numero_sivss, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text("Investigation de TIAC", exact=True)).to_be_visible()
