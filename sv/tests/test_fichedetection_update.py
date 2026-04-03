@@ -626,35 +626,6 @@ def test_add_new_prelevement_non_officiel(
 
 
 @pytest.mark.django_db
-def test_add_new_prelevement_with_empty_date(
-    live_server,
-    page: Page,
-    form_elements: FicheDetectionFormDomElements,
-    prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
-    lieu_form_elements,
-):
-    fiche_detection = FicheDetectionFactory()
-    StructurePreleveuse.objects.get_or_create(nom="DSF")
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    form_elements.add_lieu_btn.click()
-    lieu_form_elements.nom_input.fill("Test")
-    lieu_form_elements.save_btn.click()
-    form_elements.add_prelevement_btn.click()
-    prelevement_form_elements.lieu_input.select_option("Test")
-    prelevement_form_elements.structure_input.select_option("DSF")
-    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
-    prelevement_form_elements.type_analyse_input("première intention").click()
-    prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
-
-    prelevement_from_db = Prelevement.objects.get()
-    assert prelevement_from_db.date_prelevement is None
-    assert prelevement_from_db.resultat == "detecte"
-
-
-@pytest.mark.django_db
 def test_add_new_prelevement_officiel(
     live_server,
     page: Page,
@@ -730,6 +701,7 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     prelevement_form_elements.structure_input.select_option(str(structure_sral.id))
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.prelevement_officiel_checkbox.click()
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.laboratoire_input.select_option(str(prelevement.laboratoire.id))
 

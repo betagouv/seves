@@ -533,6 +533,7 @@ def test_prelevements_are_always_linked_to_lieu(
         prelevement_form_elements.structure_input.select_option(str(structures[0].id))
         prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
         prelevement_form_elements.type_analyse_input("première intention").click()
+        prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
         prelevement_form_elements.save_btn.click()
     form_elements.publish_btn.click()
     page.wait_for_timeout(600)
