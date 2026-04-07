@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/evenement_simple.css' %}">
 {% endblock extrahead %}
+
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post" data-controller="evenement-simple-form">
         {% csrf_token %}
@@ -13,26 +14,27 @@
             <div class="evenement-produit-form-header fr-grid-row">
                 {% block title %}<h1 class="fr-col-6">Création d'un enregistrement simple</h1>{% endblock %}
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
-                    {% partialdef form_btns inline %}
+                    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline">
                         {% block buttons %}
-                            {% if form.instance and form.instance.is_draft %}
-                                <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
-                                    Enregistrer le brouillon
-                                </button>
-                            {% endif %}
-                            {% if form.instance.pk and not form.instance.is_draft %}
-                                <button type="submit" class="fr-btn form-action-btn" data-testid="submit-publish">
-                                    Enregistrer
-                                </button>
-                            {% else %}
-                                <button type="submit" name="action" value="publish" class="fr-btn" data-testid="submit-publish">
-                                    Publier
-                                </button>
-                            {% endif %}
+                            {% partialdef form_btns inline %}
+                                {% if form.instance and form.instance.is_draft %}
+                                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary">
+                                        Enregistrer le brouillon
+                                    </button>
+                                {% endif %}
+                                {% if form.instance.pk and not form.instance.is_draft %}
+                                    <button type="submit" class="fr-btn form-action-btn" data-testid="submit-publish">
+                                        Enregistrer
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action" value="publish" class="fr-btn" data-testid="submit-publish">
+                                        Publier
+                                    </button>
+                                {% endif %}
+                            {% endpartialdef %}
                         {% endblock %}
-                    {% endpartialdef %}
+                    </div>
                 </div>
-
             </div>
 
             {% if form.non_field_errors %}
@@ -92,7 +94,9 @@
                 class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
                 data-testid="bottom-action-btns"
             >
-                {% partial form_btns %}
+                {% block bottom_buttons %}
+                    {% partial form_btns %}
+                {% endblock %}
             </section>
         </main>
     </form>
