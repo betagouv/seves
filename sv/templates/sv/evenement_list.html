@@ -1,7 +1,5 @@
 {% extends 'sv/base.html' %}
-{% load static %}
-{% load etat_tags %}
-{% load render_field %}
+{% load and_more_ellipsis_tooltip etat_tags or_empty_value_tag render_field static %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
@@ -77,7 +75,7 @@
                                     <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
                                 </td>
                                 <td class="evenement__list-organisme">
-                                    {{ evenement.organisme_nuisible|default:"nc." }}
+                                    {{ evenement.organisme_nuisible|or_empty_value_tag }}
                                 </td>
                                 <td>
                                     {{ evenement.date_publication|date:"d/m/Y" }}
@@ -87,21 +85,7 @@
                                     {{ evenement.createur|truncatechars:30 }}
                                 </td>
                                 <td>
-                                    {% with evenement.communes_uniques|length as nb_communes %}
-                                        {% if nb_communes == 0 %}
-                                            nc.
-                                        {% endif %}
-                                        {% if nb_communes <= 3 %}
-                                            {% for commune in evenement.communes_uniques %}
-                                                {{ commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        {% else %}
-                                            {% for commune in evenement.communes_uniques|slice:":3" %}
-                                                {{ commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                            ... +{{ nb_communes|add:"-3" }}
-                                        {% endif %}
-                                    {% endwith %}
+                                    {% and_more_ellipsis_tooltip evenement.communes_uniques %}
                                 </td>
                                 <td>
                                     <span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
