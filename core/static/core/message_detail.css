@@ -3,28 +3,40 @@
 }
 
 /* Variables cant be used in the following styles as they won't be included in the emails styles for notification */
-.background-color-green {
-    /* Equivalent of --background-contrast-success */
-    background-color: rgb(184, 254, 201);
+.text-color-grey-925-125 {
+    color: #2a2a2a;
 }
-.background-color-red {
-    /* Equivalent of --background-contrast-warning */
-    background-color: rgb(255, 233, 230);
+.text-color-blue-france-sun-113-625 {
+    color: #000091;
 }
-.background-color-light-blue {
-    /* Equivalent of --background-contrast-info */
-    background-color: rgb(0, 99, 203);
+.text-color-blue-france-main-525 {
+    color: #6a6af4;
+}
+.text-color-success-425-625 {
+    color: #18753c;
+}
+.text-color-purple-glycine-main-494 {
+    color: #a558a0;
+}
+.text-color-error-425-625 {
+    color: #ce0500;
 }
 
-.text-color-blue {
-    /* Equivalent of --text-active-blue-france */
-    color: rgb(0, 0, 145);
+.background-color-yellow-tournesol-925-125 {
+    background-color: #fde39c;
 }
-.text-color-red {
-    /* Equivalent of --text-default-error */
-    color: rgb(206, 5, 0);
+.background-color-green-emeraude-950-100 {
+    background-color: #c3fad5;
 }
-.text-color-green {
-    /* Equivalent of --text-default-success */
-    color: rgb(24, 117, 60);
+.background-color-green-archipel-950-100 {
+    background-color: #c7f6fc;
+}
+.background-color-pink-macaron-925-125 {
+    background-color: #fddfda;
+}
+.background-color-purple-glycine-925-125 {
+    background-color: #fddbfa;
+}
+.background-color-blue-ecume-925-125 {
+    background-color: #dee5fd;
 }

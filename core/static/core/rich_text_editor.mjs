@@ -4,8 +4,22 @@ import {Controller} from "Stimulus"
 
 class RichTextEditorController extends Controller {
     static targets = ["textarea", "container"]
-    bgColors = ["#b8fec9", "#ffe9e6", "#0063cb"]
-    colors = ["#000091", "#ce0500", "#18753c"]
+    bgColors = [
+        "var(--yellow-tournesol-925-125)",
+        "var(--green-emeraude-950-100)",
+        "var(--green-archipel-950-100)",
+        "var(--pink-macaron-925-125)",
+        "var(--purple-glycine-925-125)",
+        "var(--blue-ecume-925-125)",
+    ]
+    colors = [
+        "var(--grey-925-125)",
+        "var(--blue-france-sun-113-625)",
+        "var(--blue-france-main-525)",
+        "var(--success-425-625)",
+        "var(--purple-glycine-main-494)",
+        "var(--error-425-625)",
+    ]
 
     connect() {
         const quill = new Quill(this.containerTarget, {
