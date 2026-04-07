@@ -17,6 +17,8 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
     copy = [c for c in copy if c != ""]
     css_path = Path(settings.BASE_DIR) / "core/static/core/message_detail.css"
     css_content = css_path.read_text()
+    css_path = Path(settings.BASE_DIR) / "core/static/core/message_colors.css"
+    css_content += css_path.read_text()
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={

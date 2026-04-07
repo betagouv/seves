@@ -22,7 +22,7 @@ from core.fields import (
     SEVESChoiceField,
 )
 from core.form_mixins import DSFRForm
-from core.html import filter_tags_and_attributes, inline_styles_to_classes, replace_ol_elements_with_ul
+from core.html import filter_tags_and_attributes, replace_ol_elements_with_ul
 from core.models import Contact, Departement, Document, Message, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 
@@ -279,7 +279,6 @@ class CommonMessageForm(forms.ModelForm):
 
     def clean_content(self):
         soup = BeautifulSoup(self.cleaned_data["content"], "html.parser")
-        inline_styles_to_classes(soup)
         filter_tags_and_attributes(soup)
         replace_ol_elements_with_ul(soup)
         return str(soup)

@@ -1,42 +1,12 @@
 .ql-indent-1 {
-    padding-left: 3em;
+    padding-left: 3rem;
 }
-
-/* Variables cant be used in the following styles as they won't be included in the emails styles for notification */
-.text-color-grey-925-125 {
-    color: #2a2a2a;
+.ql-indent-2 {
+    padding-left: 6rem;
 }
-.text-color-blue-france-sun-113-625 {
-    color: #000091;
+.ql-indent-3 {
+    padding-left: 9rem;
 }
-.text-color-blue-france-main-525 {
-    color: #6a6af4;
-}
-.text-color-success-425-625 {
-    color: #18753c;
-}
-.text-color-purple-glycine-main-494 {
-    color: #a558a0;
-}
-.text-color-error-425-625 {
-    color: #ce0500;
-}
-
-.background-color-yellow-tournesol-925-125 {
-    background-color: #fde39c;
-}
-.background-color-green-emeraude-950-100 {
-    background-color: #c3fad5;
-}
-.background-color-green-archipel-950-100 {
-    background-color: #c7f6fc;
-}
-.background-color-pink-macaron-925-125 {
-    background-color: #fddfda;
-}
-.background-color-purple-glycine-925-125 {
-    background-color: #fddbfa;
-}
-.background-color-blue-ecume-925-125 {
-    background-color: #dee5fd;
+.ql-indent-4 {
+    padding-left: 12rem;
 }
