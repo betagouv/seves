@@ -1,4 +1,4 @@
-{% load remove_trailing_zero %}
+{% load or_empty_value_tag remove_trailing_zero %}
 
 
 <div class="white-container fr-mt-4w">
@@ -9,7 +9,7 @@
             {% if fiche.rayon_zone_tampon %}
                 {{ fiche.rayon_zone_tampon|remove_trailing_zero }} {{ fiche.unite_rayon_zone_tampon }}
             {% else %}
-                nc.
+                {% empty_value_tag %}
             {% endif %}
         </div>
     </div>
@@ -19,7 +19,7 @@
             {% if fiche.surface_tampon_totale %}
                 {{ fiche.surface_tampon_totale|remove_trailing_zero }} {{ fiche.unite_surface_tampon_totale }}
             {% else %}
-                nc.
+                {% empty_value_tag %}
             {% endif %}
         </div>
     </div>

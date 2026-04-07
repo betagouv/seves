@@ -1,3 +1,4 @@
+{% load or_empty_value_tag %}
 <dialog aria-labelledby="fr-modal-title-modal-{{prelevement_index}}" role="dialog" id="fr-modal-prelevement-{{prelevement_index}}" class="fr-modal">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
@@ -24,15 +25,15 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">N° RI</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-rapport-inspection">{{prelevement.numero_rapport_inspection|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-rapport-inspection">{{prelevement.numero_rapport_inspection|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Laboratoire</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire">{{prelevement.laboratoire|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-laboratoire">{{prelevement.laboratoire|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">N° d'échantillon</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-echantillon">{{prelevement.numero_echantillon|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-numero-echantillon">{{prelevement.numero_echantillon|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Lieu</div>
@@ -40,31 +41,31 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Structure préleveuse</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-structure-preleveuse">{{prelevement.structure_preleveuse|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-structure-preleveuse">{{prelevement.structure_preleveuse|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Date de prélèvement</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-prelevement">{{prelevement.date_prelevement|date:"d/m/Y"|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-prelevement">{{prelevement.date_prelevement|date:"d/m/Y"|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Nature de l'objet</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-matrice-prelevee">{{prelevement.matrice_prelevee|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-matrice-prelevee">{{prelevement.matrice_prelevee|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Espèce de l'échantillon</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-espece-echantillon">{{prelevement.espece_echantillon|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-espece-echantillon">{{prelevement.espece_echantillon|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Code OEPP</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-code-oepp">{{prelevement.espece_echantillon.code_oepp|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-code-oepp">{{prelevement.espece_echantillon.code_oepp|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Date rapport d'analyse</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-rapport-analyse">{{prelevement.date_rapport_analyse|date:"d/m/Y"|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-date-rapport-analyse">{{prelevement.date_rapport_analyse|date:"d/m/Y"|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Conclusion</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|or_empty_value_tag}}</div>
                         </div>
                     </div>
                 </div>
