@@ -498,7 +498,15 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     expect(page.locator("#lieux")).to_contain_text("ipsum")
     assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "1", "nom": "ipsum", "supplyChainPosition": ""}
+        {
+            "commune": "",
+            "departement": "",
+            "codePostal": "",
+            "id": "1",
+            "nom": "ipsum",
+            "siteInspection": "",
+            "supplyChainPosition": "",
+        }
     ]
 
 
@@ -567,7 +575,15 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "0", "nom": "lorem", "supplyChainPosition": ""}
+        {
+            "commune": "",
+            "departement": "",
+            "codePostal": "",
+            "id": "0",
+            "nom": "lorem",
+            "siteInspection": "",
+            "supplyChainPosition": "",
+        }
     ]
 
 

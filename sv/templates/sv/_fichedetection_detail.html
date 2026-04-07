@@ -1,6 +1,4 @@
-{% load or_empty_value_tag %}
-{% load static %}
-{% load etat_tags %}
+{% load dsfr_tags etat_tags or_empty_value_tag static %}
 
 <div class="fiche-detail">
     <div class="fr-container--fluid">
@@ -77,11 +75,14 @@
                                         <div class="fr-card__desc">
                                             <section>
                                                 <address class="fr-card__detail fr-icon-map-pin-2-line">{{ lieu_initial.address_summary|or_empty_value_tag }}</address>
-                                                {% if lieu_initial.position_chaine_distribution_etablissement %}
-                                                    <p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-4v">
-                                                        {{ lieu_initial.position_chaine_distribution_etablissement }}
-                                                    </p>
-                                                {% endif %}
+                                                {% with extra_classes="fr-badge--info fr-badge--no-icon fr-mt-4v fr-mr-4v" %}
+                                                    {% if lieu_initial.site_inspection %}
+                                                        {% dsfr_badge label=lieu_initial.site_inspection extra_classes=extra_classes %}
+                                                    {% endif %}
+                                                    {% if lieu_initial.position_chaine_distribution_etablissement %}
+                                                        {% dsfr_badge label=lieu_initial.position_chaine_distribution_etablissement extra_classes=extra_classes %}
+                                                    {% endif %}
+                                                {% endwith %}
                                             </section>
 
                                             <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-btns-group--icon-left fr-mt-4v fr-mb-n4v">

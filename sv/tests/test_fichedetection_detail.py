@@ -198,7 +198,7 @@ def test_prelevement_details(live_server, page):
         prelevement.get_type_analyse_display()
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-is-officiel")).to_contain_text(
-        "oui" if prelevement.is_officiel else "non"
+        "Prélèvement officiel" if prelevement.is_officiel else "Prélèvement non officiel"
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-numero-rapport-inspection")).to_contain_text(
         prelevement.numero_rapport_inspection
