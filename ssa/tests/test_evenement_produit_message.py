@@ -22,6 +22,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_search_in_message_list,
     generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab,
     generic_test_can_send_draft_message_in_new_tab,
+    generic_test_can_send_draft_message_with_rich_text_editor,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
     generic_test_cant_see_drafts_from_other_users,
@@ -44,6 +45,14 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement_produit)
+
+
+@override_flag("rich_text_editor", active=True)
+def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, mocked_authentification_user):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_send_draft_message_with_rich_text_editor(
+        live_server, page, mocked_authentification_user, evenement_produit
+    )
 
 
 def test_can_add_and_see_message_in_new_tab_without_document(

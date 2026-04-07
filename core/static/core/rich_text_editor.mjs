@@ -4,36 +4,76 @@ import {Controller} from "Stimulus"
 
 class RichTextEditorController extends Controller {
     static targets = ["textarea", "container"]
-    bgColors = [
-        "var(--yellow-tournesol-925-125)",
-        "var(--green-emeraude-950-100)",
-        "var(--green-archipel-950-100)",
-        "var(--pink-macaron-925-125)",
-        "var(--purple-glycine-925-125)",
-        "var(--blue-ecume-925-125)",
-    ]
-    colors = [
-        "var(--grey-925-125)",
-        "var(--blue-france-sun-113-625)",
-        "var(--blue-france-main-525)",
-        "var(--success-425-625)",
-        "var(--purple-glycine-main-494)",
-        "var(--error-425-625)",
-    ]
+
+    TEXT_PREFIX = "text-color"
+    BACKGROUND_PREFIX = "background-color"
+
+    allowExistingClassesForColors(quill) {
+        quill.clipboard.addMatcher("SPAN", (node, delta) => {
+            node.classList.forEach(cls => {
+                if (cls.startsWith(this.TEXT_PREFIX)) {
+                    delta.ops.forEach(op => {
+                        if (op.insert) {
+                            op.attributes = op.attributes || {}
+                            op.attributes.color = cls.replace(`${this.TEXT_PREFIX}-`, "")
+                        }
+                    })
+                }
+            })
+            return delta
+        })
+
+        quill.clipboard.addMatcher("SPAN", (node, delta) => {
+            node.classList.forEach(cls => {
+                if (cls.startsWith(this.BACKGROUND_PREFIX)) {
+                    delta.ops.forEach(op => {
+                        if (op.insert) {
+                            op.attributes = op.attributes || {}
+                            op.attributes.background = cls.replace(`${this.BACKGROUND_PREFIX}-`, "")
+                        }
+                    })
+                }
+            })
+            return delta
+        })
+    }
+
+    addCustomColorsAsClasses() {
+        const Parchment = Quill.import("parchment")
+
+        const ColorClass = new Parchment.ClassAttributor("color", this.TEXT_PREFIX, {
+            scope: Parchment.Scope.INLINE,
+        })
+        Quill.register(ColorClass, true)
+
+        const BackgroundClass = new Parchment.ClassAttributor("background", this.BACKGROUND_PREFIX, {
+            scope: Parchment.Scope.INLINE,
+        })
+        Quill.register(BackgroundClass, true)
+    }
+
+    setBackgroundColorForPickers() {
+        this.element.querySelectorAll(".ql-picker-item").forEach(el => {
+            const value = el.dataset.value
+
+            if (value) {
+                el.style.backgroundColor = "var(--" + value + ")"
+            }
+        })
+    }
 
     connect() {
         const quill = new Quill(this.containerTarget, {
             theme: "snow",
             modules: {
-                toolbar: [
-                    [{header: [2, false]}],
-                    ["bold", "italic", "underline", "strike", {list: "bullet"}],
-                    [{indent: "-1"}, {indent: "+1"}],
-                    [{color: this.colors}, {background: this.bgColors}],
-                ],
+                toolbar: "#toolbar",
             },
         })
+        this.addCustomColorsAsClasses()
+        this.allowExistingClassesForColors(quill)
+        this.setBackgroundColorForPickers()
 
+        quill.clipboard.dangerouslyPasteHTML(this.textareaTarget.value)
         quill.on("text-change", () => {
             this.textareaTarget.value = quill.root.innerHTML
         })

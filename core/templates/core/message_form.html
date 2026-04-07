@@ -6,6 +6,7 @@
     {% flag "rich_text_editor" %}
         <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
         <link rel="stylesheet" href="{% static 'core/rich_text_editor.css' %}">
+        <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
     {% endflag %}
 {% endblock %}
 {% block scripts %}
@@ -78,9 +79,45 @@
                                 <label for="rich-text-editor" class="fr-label required-field fr-mb-2v">
                                     Message<span class="fr-sr-only fr-required-marker">*</span>
                                 </label>
+                                <div id="toolbar">
+                                    <span class="ql-formats">
+                                        <select class="ql-header">
+                                            <option value="2">Titre</option>
+                                            <option selected>Normal</option>
+                                        </select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                        <button class="ql-strike"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-indent" value="-1"></button>
+                                        <button class="ql-indent" value="+1"></button>
+                                    </span>
+
+                                    <span class="ql-formats">
+                                        <select class="ql-color">
+                                            <option value="grey-925-125"></option>
+                                            <option value="blue-france-sun-113-625"></option>
+                                            <option value="success-425-625"></option>
+                                            <option value="purple-glycine-main-494"></option>
+                                            <option value="error-425-625"></option>
+                                        </select>
+                                        <select class="ql-background">
+                                            <option value="yellow-tournesol-925-125"></option>
+                                            <option value="green-emeraude-950-100"></option>
+                                            <option value="green-archipel-950-100"></option>
+                                            <option value="pink-macaron-925-125"></option>
+                                            <option value="purple-glycine-925-125"></option>
+                                            <option value="blue-ecume-925-125"></option>
+                                        </select>
+                                    </span>
+                                </div>
                                 <div data-rich-text-editor-target="container" id="rich-text-editor"></div>
                             </div>
-
                         </div>
                     {% else %}
                         {% for field in form %}

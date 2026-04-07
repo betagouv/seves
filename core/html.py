@@ -1,41 +1,8 @@
-ALLOWED_TAGS = ["h2", "p", "ol", "li", "span", "strong", "br", "s", "em", "u"]
-ALLOWED_BG_COLORS = [
-    "yellow-tournesol-925-125",
-    "green-emeraude-950-100",
-    "green-archipel-950-100",
-    "pink-macaron-925-125",
-    "purple-glycine-925-125",
-    "blue-ecume-925-125",
-]
-ALLOWED_COLORS = [
-    "grey-925-125",
-    "blue-france-sun-113-625",
-    "blue-france-main-525",
-    "success-425-625",
-    "purple-glycine-main-494",
-    "error-425-625",
-]
+ALLOWED_TAGS = ["h2", "p", "ol", "li", "span", "strong", "br", "s", "em", "u", "ul"]
 
 
 def _get_style_value(style, selector):
     return style.split(selector)[-1].replace(";", "").strip()
-
-
-def inline_styles_to_classes(soup):
-    for element in soup.find_all(style=True):
-        classes = element.get("class", [])
-        styles = element["style"].split(";")
-        for style in styles:
-            style = style.strip()
-            if style.startswith("background-color:"):
-                for color in ALLOWED_BG_COLORS:
-                    if color in _get_style_value(style, "background-color:"):
-                        classes.append(f"background-color-{color}")
-            if style.startswith("color:"):
-                for color in ALLOWED_COLORS:
-                    if color in _get_style_value(style, "color:"):
-                        classes.append(f"text-color-{color}")
-        element["class"] = list(classes)
 
 
 def filter_tags_and_attributes(soup):
