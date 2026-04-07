@@ -1,4 +1,4 @@
-{% load or_empty_value_tag %}
+{% load dsfr_tags or_empty_value_tag %}
 
 <dialog aria-labelledby="fr-modal-title-modal-{{lieu_index}}" role="dialog" id="fr-modal-lieu-{{lieu_index}}" class="fr-modal">
     <div class="fr-container fr-container--fluid fr-container-md">
@@ -27,7 +27,13 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-4 descripteur-label">Site d'inspection</div>
-                            <div class="fr-col-6">{{lieu.site_inspection.nom|or_empty_value_tag}}</div>
+                            <div class="fr-col-6">
+                                {% if lieu.site_inspection.nom %}
+                                    {% dsfr_badge label=lieu.site_inspection.nom extra_classes="fr-badge--info fr-badge--no-icon" %}
+                                {% else %}
+                                    {% empty_value_tag %}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-4 descripteur-label">Code INSEE</div>
@@ -86,7 +92,13 @@
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
                                 <div class="fr-col-4 descripteur-label">Position</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">{{lieu.position_chaine_distribution_etablissement.libelle|or_empty_value_tag}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">
+                                    {% if lieu.position_chaine_distribution_etablissement.libelle %}
+                                        <span class="fr-badge fr-badge--info fr-badge--no-icon">{{ lieu.position_chaine_distribution_etablissement.libelle }}</span>
+                                    {% else %}
+                                        {% empty_value_tag %}
+                                    {% endif %}
+                                </div>
                             </div>
                         {% endif %}
                     </div>

@@ -19,8 +19,10 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Prélèvement officiel</div>
-                            <div class="fr-col-6 {% if prelevement.is_officiel %}fr-icon-check-line{% endif %}" data-testid="prelevement-{{prelevement_index}}-is-officiel">
-                                {{ prelevement.is_officiel|yesno:"oui,non" }}
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-is-officiel">
+                                <span class="fr-badge fr-badge--info fr-badge--no-icon">
+                                    {% if prelevement.is_officiel %}Prélèvement officiel{% else %}Prélèvement non officiel{% endif %}
+                                </span>
                             </div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
@@ -65,7 +67,9 @@
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-5 descripteur-label">Conclusion</div>
-                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">{{prelevement.get_resultat_display|or_empty_value_tag}}</div>
+                            <div class="fr-col-6" data-testid="prelevement-{{prelevement_index}}-resultat">
+                                <span class="fr-badge fr-badge--info fr-badge--no-icon">{{prelevement.get_resultat_display|or_empty_value_tag}}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
