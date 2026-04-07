@@ -72,6 +72,10 @@
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
+                        <div class="fr-input-group">
+                            <label class="fr-label" for="date-publication-input">Date de publication</label>
+                            <input type="text" id="date-publication-input" class="fr-input" value="{% if form.instance.date_publication %}{{ form.instance.date_publication|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                        </div>
                         {% dsfr_form_field form.date_reception %}
                         {% dsfr_form_field form.evenement_origin|set_data:"ars-informee-target:origin"|set_data:"action:ars-informee#onOriginChanged" %}
                         {% dsfr_inline_radio_field form.modalites_declaration %}
