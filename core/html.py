@@ -1,14 +1,20 @@
 ALLOWED_TAGS = ["h2", "p", "ol", "li", "span", "strong", "br", "s", "em", "u"]
-BG_COLOR_TO_CLASS = {
-    "rgb(184, 254, 201)": "background-color-green",
-    "rgb(255, 233, 230)": "background-color-red",
-    "rgb(0, 99, 203)": "background-color-light-blue",
-}
-TEXT_COLOR_TO_CLASS = {
-    "rgb(0, 0, 145)": "text-color-blue",
-    "rgb(206, 5, 0)": "text-color-red",
-    "rgb(24, 117, 60)": "text-color-green",
-}
+ALLOWED_BG_COLORS = [
+    "yellow-tournesol-925-125",
+    "green-emeraude-950-100",
+    "green-archipel-950-100",
+    "pink-macaron-925-125",
+    "purple-glycine-925-125",
+    "blue-ecume-925-125",
+]
+ALLOWED_COLORS = [
+    "grey-925-125",
+    "blue-france-sun-113-625",
+    "blue-france-main-525",
+    "success-425-625",
+    "purple-glycine-main-494",
+    "error-425-625",
+]
 
 
 def _get_style_value(style, selector):
@@ -22,13 +28,13 @@ def inline_styles_to_classes(soup):
         for style in styles:
             style = style.strip()
             if style.startswith("background-color:"):
-                bg_class = BG_COLOR_TO_CLASS.get(_get_style_value(style, "background-color:"))
-                if bg_class:
-                    classes.append(bg_class)
+                for color in ALLOWED_BG_COLORS:
+                    if color in _get_style_value(style, "background-color:"):
+                        classes.append(f"background-color-{color}")
             if style.startswith("color:"):
-                color_class = TEXT_COLOR_TO_CLASS.get(_get_style_value(style, "color:"))
-                if color_class:
-                    classes.append(color_class)
+                for color in ALLOWED_COLORS:
+                    if color in _get_style_value(style, "color:"):
+                        classes.append(f"text-color-{color}")
         element["class"] = list(classes)
 
 

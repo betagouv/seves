@@ -66,7 +66,7 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.page.wait_for_timeout(20000)
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert (
-        '<p><strong>My content </strong></p><p> with a line return<span class="text-color-blue">Text in color</span></p>'
+        '<p><strong>My content </strong></p><p> with a line return<span class="text-color-grey-925-125">Text in color</span></p>'
         in new_page.content()
     )
     assert object.messages.get().status == Message.Status.FINALISE
