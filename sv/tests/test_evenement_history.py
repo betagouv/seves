@@ -2,7 +2,6 @@ from unittest import mock
 
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from playwright.sync_api import expect
 
 from sv.factories import FicheZoneFactory, OrganismeNuisibleFactory
 from sv.models import Evenement, FicheZoneDelimitee, StatutReglementaire
@@ -119,13 +118,13 @@ def test_evenement_history_content(
             "Vide",
         ],
         ["Doe John", "Structure Test", mock.ANY, "Statut", "Vide", "Brouillon", "Vide"],
+        [],  # Header
     ]
 
-    expect(page.locator("table tr")).to_have_count(len(expected_rows) + 1)
-    rows = page.locator("table tr")
+    texts = []
+    for row in page.locator("table tr").all():
+        texts.append([t.strip() for t in row.locator("td").all_text_contents()])
 
-    for i, expected in enumerate(expected_rows, start=1):
-        texts = rows.nth(i).locator("td").all_text_contents()
-        for text, expected_value in zip(texts, expected):
-            if expected_value is not mock.ANY:
-                assert text.strip() == expected_value, f"In row {i} wanted {expected_value}, got {text}"
+    assert len(texts) == len(expected_rows)
+    for expected in expected_rows:
+        assert expected in texts, f"{expected} not found in {texts}"

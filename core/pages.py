@@ -135,7 +135,41 @@ class BaseDocumentPage(ABC):
             self.validate_document_modal()
 
 
-class BaseMessagePage(BaseDocumentPage, ABC):
+class ListOfMessagesPage:
+    def __init__(self, page: Page):
+        self.page = page
+
+    def message_sender_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
+
+    def message_recipient_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(3) a")
+
+    def message_title_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(4) a")
+
+    def message_type_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
+
+    def open_message(self, index=1) -> Page:
+        """Returns the new message page if page was opened in a new tab"""
+        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
+        if link.get_attribute("target") == "_blank":
+            with self.page.context.expect_page() as new_page_info:
+                link.click()
+            return new_page_info.value
+        else:
+            link.click()
+            self.page.wait_for_url("**/core/message/**/")
+            return self.page
+
+    def search_in_message_list(self, query):
+        self.page.locator("#id_full_text_search").fill(query)
+        self.page.locator(".fr-icon-search-line").click()
+        self.page.wait_for_load_state("load")
+
+
+class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     TITLE_ID = "#id_title"
     CONTENT_ID = "#id_content"
     DRAFT_BTN_TEST_ID = "draft-fildesuivi-add-submit"
@@ -249,30 +283,6 @@ class BaseMessagePage(BaseDocumentPage, ABC):
     def save_as_draft_message(self):
         self.save_as_draft_button.click()
 
-    def message_sender_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
-
-    def message_recipient_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(3) a")
-
-    def message_title_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(4) a")
-
-    def message_type_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
-
-    def open_message(self, index=1) -> Page:
-        """Returns the new message page if page was opened in a new tab"""
-        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
-        if link.get_attribute("target") == "_blank":
-            with self.page.context.expect_page() as new_page_info:
-                link.click()
-            return new_page_info.value
-        else:
-            link.click()
-            self.page.wait_for_url("**/core/message/**/")
-            return self.page
-
     def add_basic_message_content(self):
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
@@ -296,11 +306,6 @@ class BaseMessagePage(BaseDocumentPage, ABC):
     @property
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
-
-    def search_in_message_list(self, query):
-        self.page.locator("#id_full_text_search").fill(query)
-        self.page.locator(".fr-icon-search-line").click()
-        self.page.wait_for_load_state("load")
 
 
 class CreateMessagePage(BaseMessagePage):

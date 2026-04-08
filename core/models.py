@@ -29,10 +29,10 @@ from .managers import (
     LienLibreManager,
     LienLibreQueryset,
     MessageManager,
-    MessagQueryset,
+    MessageQueryset,
     StructureQueryset,
 )
-from .model_mixins import WithDocumentPermissionMixin, WithLocalisableMixin
+from .model_mixins import WithDocumentPermissionMixin, WithLastUpdatedDatetime, WithLocalisableMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
 from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
@@ -386,7 +386,7 @@ class Document(models.Model):
 
 
 @reversion.register()
-class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
+class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdatedDatetime, models.Model):
     MESSAGE = "message"
     NOTE = "note"
     POINT_DE_SITUATION = "point de situation"
@@ -418,6 +418,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
 
     sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages", null=True)
     sender_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="messages", null=False)
@@ -432,7 +433,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     historical_data = models.JSONField(default=dict, blank=True)
 
-    objects = MessageManager.from_queryset(MessagQueryset)()
+    objects = MessageManager.from_queryset(MessageQueryset)()
 
     show_nested_diff_in_revision_list = False
     show_deleted_state_in_revision_list = False
@@ -562,6 +563,12 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
                 super().save(*args, **kwargs)
         else:
             super().save(*args, **kwargs)
+
+    @property
+    def displayed_date(self):
+        if self.is_finalise:
+            return self.date_publication
+        return self.last_updated or self.date_creation
 
 
 @reversion.register()
