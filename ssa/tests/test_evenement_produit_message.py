@@ -29,6 +29,7 @@ from core.tests.generic_tests.messages import (
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
     generic_test_handle_document_validation_error,
+    generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
 )
@@ -122,6 +123,11 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_cant_see_drafts_from_other_users(live_server, page, evenement_produit)
+
+
+def test_message_ordering(live_server, page: Page, mocked_authentification_user):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement_produit)
 
 
 def test_can_update_draft_note_in_new_tab(

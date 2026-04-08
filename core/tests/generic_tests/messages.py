@@ -1,12 +1,14 @@
+from datetime import datetime
 from typing import Literal
 
 from django.conf import settings
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
 from core.models import Contact, FinSuiviContact, Message, Structure
-from core.pages import CreateMessagePage, UpdateMessagePage
+from core.pages import CreateMessagePage, ListOfMessagesPage, UpdateMessagePage
 
 
 def generic_test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill, object):
@@ -809,3 +811,63 @@ def generic_test_cant_see_messages_in_internal_state(live_server, page: Page, mo
     expect(page.locator("#tabpanel-messages-panel")).not_to_contain_text(msg1.title, use_inner_text=True)
     expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg2.title, use_inner_text=True)
     expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg3.title, use_inner_text=True)
+
+
+def generic_test_message_ordering(live_server, page: Page, mocked_authentification_user, object):
+    sender = mocked_authentification_user.agent.contact_set.get()
+    common_kwargs = {"content_object": object, "sender": sender}
+    finalise_oldest = MessageFactory(
+        title="finalisé le plus ancien",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    brouillon_older = MessageFactory(
+        title="Brouillon ancien",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    finalise_recent = MessageFactory(
+        title="finalisé récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    brouillon_newest = MessageFactory(
+        title="Brouillon le plus récent",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    finalise_newest = MessageFactory(
+        title="finalisé le plus récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    old_draft_updated_recently = MessageFactory(
+        title="Brouillon ancien mis à jour",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
+        last_updated=timezone.now(),
+        **common_kwargs,
+    )
+    old_draft_recently_published = MessageFactory(
+        title="Brouillon ancien mais envoyé récemment",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
+        date_publication=timezone.now(),
+        **common_kwargs,
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = ListOfMessagesPage(page)
+
+    assert message_page.message_title_in_table(1) == f"[BROUILLON] {old_draft_updated_recently.title}"
+    assert message_page.message_title_in_table(2) == f"[BROUILLON] {brouillon_newest.title}"
+    assert message_page.message_title_in_table(3) == f"[BROUILLON] {brouillon_older.title}"
+    assert message_page.message_title_in_table(4) == old_draft_recently_published.title
+    assert message_page.message_title_in_table(5) == finalise_newest.title
+    assert message_page.message_title_in_table(6) == finalise_recent.title
+    assert message_page.message_title_in_table(7) == finalise_oldest.title

@@ -1,11 +1,9 @@
-from datetime import datetime
 import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.utils import timezone
 from playwright.sync_api import Page, expect
 import pytest
 from waffle.testutils import override_flag
@@ -45,6 +43,7 @@ from core.tests.generic_tests.messages import (
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
     generic_test_handle_document_validation_error,
+    generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
 )
@@ -1010,57 +1009,9 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     assert len(mailoutbox) == 0
 
 
-def test_draft_messages_always_displayed_first_in_messages_list(live_server, page: Page, mocked_authentification_user):
-    """Test que les brouillons sont toujours affichés en premier dans la liste des messages,
-    triés par date décroissante, suivis des messages finalisés également triés par date décroissante"""
+def test_message_ordering(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
-    finalise_oldest = MessageFactory(
-        content_object=evenement,
-        title="finalisé le plus ancien",
-        status=Message.Status.FINALISE,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
-    )
-    brouillon_older = MessageFactory(
-        content_object=evenement,
-        title="Brouillon ancien",
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
-    )
-    finalise_recent = MessageFactory(
-        content_object=evenement,
-        title="finalisé récent",
-        status=Message.Status.FINALISE,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
-    )
-    brouillon_newest = MessageFactory(
-        content_object=evenement,
-        title="Brouillon le plus récent",
-        status=Message.Status.BROUILLON,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
-    )
-    finalise_newest = MessageFactory(
-        content_object=evenement,
-        title="finalisé le plus récent",
-        status=Message.Status.FINALISE,
-        sender=mocked_authentification_user.agent.contact_set.get(),
-        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
-    )
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-
-    expect(page.locator("#table-sm-row-key-1 td:nth-child(4) a")).to_contain_text(
-        f"[BROUILLON] {brouillon_newest.title}"
-    )
-    expect(page.locator("#table-sm-row-key-2 td:nth-child(4) a")).to_contain_text(
-        f"[BROUILLON] {brouillon_older.title}"
-    )
-    expect(page.locator("#table-sm-row-key-3 td:nth-child(4) a")).to_contain_text(finalise_newest.title)
-    expect(page.locator("#table-sm-row-key-4 td:nth-child(4) a")).to_contain_text(finalise_recent.title)
-    expect(page.locator("#table-sm-row-key-5 td:nth-child(4) a")).to_contain_text(finalise_oldest.title)
+    generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_can_update_draft_message_in_new_tab(
