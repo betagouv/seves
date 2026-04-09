@@ -1,4 +1,4 @@
-{% load or_empty_value_tag %}
+{% load and_more_ellipsis_tooltip or_empty_value_tag %}
 
 <div class="white-container fr-mt-2w">
     <h2 class="fr-h6">Conclusion</h2>
@@ -7,25 +7,12 @@
             <div class="bold">Conclusion de la suspicion de TIAC</div>
             {{ object.get_suspicion_conclusion_display|or_empty_value_tag }}
 
-            <div class="bold fr-mt-2w">Dangers retenus</div>
-            <div>
-                {% if object.short_conclusion_selected_hazard|length == 0 %}
-                    -
-                {% else %}
-                    {{ object.short_conclusion_selected_hazard.0 }}
-                {% endif %}
-                {% with rest=object.short_conclusion_selected_hazard|slice:"1:" aria_describedby="message-tooltip-dangers}" %}
-                    {% if rest %}
-                        <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
-                        <span
-                            class="fr-tooltip fr-placement"
-                            id="{{ aria_describedby }}"
-                            role="tooltip"
-                            aria-hidden="true"
-                        >Autres dangers : {{ rest|join:", " }}</span>
-                    {% endif %}
-                {% endwith %}
-            </div>
+            {% with selected_hazard_len=object.short_conclusion_selected_hazard %}
+                <div class="bold fr-mt-2w">Danger{{ selected_hazard_len|pluralize }} retenu{{ selected_hazard_len|pluralize }}</div>
+                <div>
+                    {% and_more_ellipsis_tooltip object.short_conclusion_selected_hazard %}
+                </div>
+            {% endwith %}
         </div>
         <div class="fr-col-6">
             <div class="bold">Commentaire</div>
