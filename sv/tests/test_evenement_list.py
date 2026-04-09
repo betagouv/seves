@@ -12,7 +12,7 @@ def test_commune_column_with_multiple_communes(live_server, page: Page):
     LieuFactory(fiche_detection=fiche, commune="Marseille")
 
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
-    expect(page.get_by_text("Paris et 2 autres Lyon, Marseille", exact=True)).to_be_visible()
+    expect(page.get_by_text("Paris, Lyon, Marseille", exact=True)).to_be_visible()
 
 
 def test_commune_column_with_some_empty_communes(live_server, page: Page):
@@ -22,8 +22,7 @@ def test_commune_column_with_some_empty_communes(live_server, page: Page):
     LieuFactory(fiche_detection=fiche, commune="")
 
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
-
-    expect(page.get_by_text("Paris et 1 autre Lyon", exact=True)).to_be_visible()
+    expect(page.get_by_text("Paris, Lyon", exact=True)).to_be_visible()
 
 
 def test_commune_column_with_empty_commune(live_server, page: Page):
@@ -48,7 +47,7 @@ def test_duplicate_commune_appears_only_once(live_server, page: Page):
 
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
 
-    expect(page.get_by_text("La Rochelle et 1 autre Bordeaux", exact=True)).to_be_visible()
+    expect(page.get_by_text("La Rochelle, Bordeaux", exact=True)).to_be_visible()
 
 
 def test_list_ordered_by_most_recent_date_derniere_modification(live_server, page: Page):
