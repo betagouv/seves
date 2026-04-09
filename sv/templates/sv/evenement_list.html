@@ -110,12 +110,23 @@
                                 <td>{{ evenement.nb_fiches_detection }}</td>
                                 <td>
                                     <div class="fr-checkbox-group">
-                                        {% if evenement.fiche_zone_delimitee %}
-                                            <input type="checkbox" checked>
-                                        {% else %}
-                                            <input type="checkbox" checked disabled>
-                                        {% endif %}
-                                        <label class="fr-label" ></label>
+                                        <input
+                                            type="checkbox"
+                                            checked
+                                            hidden
+                                            aria-hidden="true"
+                                            aria-label=""
+                                            {% if not evenement.fiche_zone_delimitee %}disabled{% endif %}
+                                        >
+                                        <label
+                                            class="fr-label"
+                                            role="image"
+                                            {% if evenement.fiche_zone_delimitee %}
+                                                aria-label="L'évènement « {{ evenement.numero }} » est lié à une fiche zone délimitée"
+                                            {% else %}
+                                                aria-label="L'évènement « {{ evenement.numero }} » n'est lié à aucune fiche zone délimitée"
+                                            {% endif %}
+                                        ></label>
                                     </div>
                                 </td>
                             </tr>
