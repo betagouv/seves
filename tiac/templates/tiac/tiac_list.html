@@ -1,5 +1,5 @@
 {% extends "tiac/base.html" %}
-{% load static etat_tags dsfr_tags widget_tweaks %}
+{% load and_more_ellipsis_tooltip static etat_tags dsfr_tags widget_tweaks %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
@@ -87,46 +87,11 @@
                                 <td>{{ evenement.createur }}</td>
                                 <td>{{ evenement.date_publication }}</td>
                                 <td>{{ evenement.last_update|date:"d/m/Y" }}</td>
-                                <td>{{ evenement.etablissement }}
-
-                                    {% if evenement.etablissements|length == 0 %}
-                                        -
-                                    {% else %}
-                                        {{ evenement.etablissements.0 }}
-                                    {% endif %}
-                                    {% with rest=evenement.etablissements|slice:"1:" aria_describedby=evenement.numero|strfmt:"message-tooltip-etablissement-{}" %}
-                                        {% if rest %}
-                                            <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
-                                            <span
-                                                class="fr-tooltip fr-placement"
-                                                id="{{ aria_describedby }}"
-                                                role="tooltip"
-                                                aria-hidden="true"
-                                            >Autres établissements : {{ rest|join:", " }}</span>
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
+                                <td>{% and_more_ellipsis_tooltip evenement.etablissements empty_type="table" %}</td>
                                 <td>{{ evenement.nb_sick_persons }}</td>
                                 <td>{{ evenement.type_evenement }}</td>
                                 <td>{{ evenement.conclusion }}</td>
-                                <td>
-                                    {% if evenement.danger_retenu|length == 0 %}
-                                        -
-                                    {% else %}
-                                        {{ evenement.danger_retenu.0 }}
-                                    {% endif %}
-                                    {% with rest=evenement.danger_retenu|slice:"1:" aria_describedby=evenement.numero|strfmt:"message-tooltip-dangers-{}" %}
-                                        {% if rest %}
-                                            <p class="fr-tag" aria-describedby="{{ aria_describedby }}">+{{ rest|length }}</p>
-                                            <span
-                                                class="fr-tooltip fr-placement"
-                                                id="{{ aria_describedby }}"
-                                                role="tooltip"
-                                                aria-hidden="true"
-                                            >Autres dangers : {{ rest|join:", " }}</span>
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
+                                <td>{% and_more_ellipsis_tooltip evenement.danger_retenu empty_type="table" %}</td>
                                 <td><span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span></td>
                             </tr>
                         {% endfor %}
