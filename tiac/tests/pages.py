@@ -161,6 +161,17 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         return self.page.locator(".analyse-card").locator("visible=true").count()
 
 
+class WithSyntheseBlockMixin:
+    @property
+    def synthese_block(self):
+        return self.page.get_by_test_id("synthese-content")
+
+    def open_synthese(self):
+        self.page.locator('label[for="synthese-btn"]').click()
+        expect(self.page.locator("#synthese-btn")).to_be_checked()
+        expect(self.page.get_by_test_id("synthese-content")).to_be_visible()
+
+
 class EvenementSimpleFormPage(WithEtablissementMixin):
     fields = [
         "date_reception",
@@ -202,7 +213,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         self.submit("Enregistrer le brouillon")
 
     def submit(self, btn_txt="Enregistrer"):
-        self.page.get_by_role("button", name=btn_txt).click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_role("button", name=btn_txt).click()
         redirect = reverse("tiac:evenement-simple-details", kwargs={"numero": "*"})
         self.page.wait_for_url(f"**{redirect}")
 
@@ -214,7 +225,7 @@ class EvenementSimpleFormPage(WithEtablissementMixin):
         return self.page.locator(".fr-modal__body").locator("visible=true")
 
     def publish(self):
-        self.page.locator("#submit_publish").click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
 
     def get_detail_modal_content(self, index):
         self.get_etablissement_card(index).locator(".detail-display").click()
@@ -422,7 +433,7 @@ class EvenementListPage(WithTreeSelect):
         self._set_treeselect_option("categorie-produit", label)
 
 
-class EvenementSimpleDetailsPage(WithEtablissementMixin):
+class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -711,11 +722,13 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
     def submit(self, btn_label="Enregistrer"):
-        self.page.locator("button#submit_publish").first.click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
-        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).first.click()
+        self.page.get_by_test_id("bottom-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de tiac : "):
@@ -747,7 +760,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url

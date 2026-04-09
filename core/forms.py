@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+from bs4 import BeautifulSoup
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -21,6 +22,7 @@ from core.fields import (
     SEVESChoiceField,
 )
 from core.form_mixins import DSFRForm
+from core.html import filter_tags_and_attributes, replace_ol_elements_with_ul
 from core.models import Contact, Departement, Document, Message, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
 
@@ -274,6 +276,12 @@ class CommonMessageForm(forms.ModelForm):
         index = next(i for i, (name, _) in enumerate(fields) if name == "title")
         fields.insert(index, new_field)
         self.fields = OrderedDict(fields)
+
+    def clean_content(self):
+        soup = BeautifulSoup(self.cleaned_data["content"], "html.parser")
+        filter_tags_and_attributes(soup)
+        replace_ol_elements_with_ul(soup)
+        return str(soup)
 
 
 class BasicMessageForm(CommonMessageForm, DsfrBaseForm):

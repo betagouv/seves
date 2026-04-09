@@ -6,7 +6,7 @@
         data-fr-concealing-backdrop="false">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
-            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
                         <button class="fr-btn--close fr-btn" type="button"
@@ -14,9 +14,12 @@
                         </button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1 id="title-modal-add-edit-prelevement-{{ id }}"
-                            class="fr-modal__title">Ajouter un prélèvement</h1>
-
+                        <h1
+                            id="title-modal-add-edit-prelevement-{{ id }}"
+                            class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg"
+                        >
+                            Ajouter un prélèvement
+                        </h1>
 
                         <div class="fr-container--fluid">
                             <div class="fr-grid-row fr-grid-row--gutters">
@@ -58,7 +61,7 @@
                                 <div class="fr-col-8">{{ form.structure_preleveuse }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
-                                <div class="fr-col-4">{{ form.date_prelevement.label_tag }}</div>
+                                <div class="fr-col-4 {% if not existing %}required-field{% endif %}">{{ form.date_prelevement.label_tag }}</div>
                                 <div class="fr-col-8">{{ form.date_prelevement }}</div>
                             </div>
                             <div class="fr-grid-row fr-grid-row--gutters" id="matrice-prelevee" >

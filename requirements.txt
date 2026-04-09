@@ -6,7 +6,7 @@
 #
 amqp==5.3.1
     # via kombu
-asgiref==3.8.1
+asgiref==3.11.1
     # via
     #   django
     #   django-countries
@@ -14,6 +14,8 @@ async-timeout==5.0.1
     # via -r requirements.in
 babel==2.17.0
     # via docxcompose3
+beautifulsoup4==4.14.3
+    # via -r requirements.in
 billiard==4.2.1
     # via celery
 boto3==1.34.134
@@ -22,7 +24,7 @@ botocore==1.34.134
     # via
     #   boto3
     #   s3transfer
-celery==5.6.2
+celery==5.6.3
     # via -r requirements.in
 certifi==2025.1.31
     # via
@@ -46,7 +48,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==46.0.5
+cryptography==46.0.6
     # via
     #   josepy
     #   mozilla-django-oidc
@@ -57,12 +59,11 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==5.2.11
+django==6.0.4
     # via
     #   -r requirements.in
     #   dj-importmap
     #   django-crispy-forms
-    #   django-csp
     #   django-debug-toolbar
     #   django-dirtyfields
     #   django-dsfr
@@ -72,7 +73,6 @@ django==5.2.11
     #   django-reversion
     #   django-reversion-compare
     #   django-storages
-    #   django-template-partials
     #   django-waffle
     #   mozilla-django-oidc
     #   sentry-sdk
@@ -80,9 +80,7 @@ django-countries==8.2.0
     # via -r requirements.in
 django-crispy-forms==2.4
     # via django-dsfr
-django-csp==4.0
-    # via -r requirements.in
-django-debug-toolbar==6.2.0
+django-debug-toolbar==6.3.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
@@ -104,13 +102,11 @@ django-reversion-compare==0.19.2
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
-django-template-partials==25.3
-    # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
 django-widget-tweaks==1.5.0
     # via django-dsfr
-djhtml==3.0.10
+djhtml==3.0.11
     # via -r requirements.in
 docxcompose3==1.4.5
     # via -r requirements.in
@@ -128,7 +124,7 @@ filelock==3.20.3
     # via virtualenv
 greenlet==3.1.1
     # via playwright
-gunicorn==25.1.0
+gunicorn==25.3.0
     # via -r requirements.in
 identify==2.5.35
     # via pre-commit
@@ -165,7 +161,6 @@ nodeenv==1.8.0
     # via pre-commit
 packaging==24.0
     # via
-    #   django-csp
     #   gunicorn
     #   kombu
     #   pytest
@@ -188,7 +183,7 @@ pycparser==2.22
     # via cffi
 pyee==13.0.0
     # via playwright
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   rich
@@ -233,9 +228,9 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.3.0
+redis==7.4.0
     # via -r requirements.in
-requests==2.32.4
+requests==2.33.0
     # via
     #   django-dsfr
     #   mozilla-django-oidc
@@ -245,16 +240,18 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.7
+ruff==0.15.9
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.55.0
+sentry-sdk[django]==2.57.0
     # via -r requirements.in
 six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
+soupsieve==2.8.3
+    # via beautifulsoup4
 sqlparse==0.5.4
     # via
     #   django
@@ -263,6 +260,7 @@ text-unidecode==1.3
     # via python-slugify
 typing-extensions==4.11.0
     # via
+    #   beautifulsoup4
     #   django-countries
     #   pyee
     #   python-docx

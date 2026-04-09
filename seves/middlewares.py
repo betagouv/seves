@@ -1,10 +1,10 @@
-from csp.constants import UNSAFE_INLINE
-from csp.middleware import CSPMiddleware
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.middleware.csp import ContentSecurityPolicyMiddleware
 from django.shortcuts import redirect
 from django.urls import resolve
+from django.utils.csp import CSP
 
 from core.constants import Domains
 
@@ -60,13 +60,12 @@ class HomeRedirectMiddleware:
         return self.get_response(request)
 
 
-class SevesCSPMiddleware(CSPMiddleware):
-    def get_policy_parts(self, request, response, report_only=False):
-        policy_parts = super().get_policy_parts(request, response, report_only)
-
+class SevesCSPMiddleware(ContentSecurityPolicyMiddleware):
+    def process_response(self, request, response):
         if settings.ADMIN_ENABLED and request.path_info.startswith(f"/{settings.ADMIN_URL}/post_office/email/"):
-            policy_parts.update = {
-                "style-src": UNSAFE_INLINE,
-            }
+            csp_config = dict(getattr(response, "_csp_config", settings.SECURE_CSP) or {})
+            csp_config.setdefault("style-src", [])
+            csp_config["style-src"] = (*csp_config["style-src"], CSP.UNSAFE_INLINE)
+            response._csp_config = csp_config
 
-        return policy_parts
+        return super().process_response(request, response)

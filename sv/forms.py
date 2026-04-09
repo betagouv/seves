@@ -227,10 +227,11 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         super().__init__(*args, **kwargs)
 
         self.fields["laboratoire"].widget.form_instance = self
-
         if self.instance and self.instance.pk:
             self.fields["lieu"].queryset = self.instance.lieu.fiche_detection.lieux.all()
             self.initial["lieu"] = self.instance.lieu.nom
+        else:
+            self.fields["date_prelevement"].required = True
 
         for field_name, choices in cached_choices.items():
             if choices is not None and field_name in self.fields:

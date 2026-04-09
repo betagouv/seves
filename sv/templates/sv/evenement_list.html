@@ -1,7 +1,5 @@
 {% extends 'sv/base.html' %}
-{% load static %}
-{% load etat_tags %}
-{% load render_field %}
+{% load etat_tags or_empty_value_tag render_field static %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
@@ -57,7 +55,7 @@
                             <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='ac_notified' display_name='Notifié AC' %}</th>
                             <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
                             <th scope="col" class="fr-col-3">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
-                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Création' %}</th>
+                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='publication' display_name='Publication' %}</th>
                             <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Dernière MAJ descripteurs' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
                             <th scope="col">Commune</th>
@@ -80,7 +78,7 @@
                                     {{ evenement.organisme_nuisible|default:"nc." }}
                                 </td>
                                 <td>
-                                    {{ evenement.date_creation|date:"d/m/Y" }}
+                                    {{ evenement.date_publication|date:"d/m/Y" }}
                                 </td>
                                 <td>{{ evenement.date_derniere_mise_a_jour_globale|date:"d/m/Y" }}</td>
                                 <td>
@@ -89,15 +87,15 @@
                                 <td>
                                     {% with evenement.communes_uniques|length as nb_communes %}
                                         {% if nb_communes == 0 %}
-                                            nc.
+                                            {% empty_value_tag %}
                                         {% endif %}
                                         {% if nb_communes <= 3 %}
                                             {% for commune in evenement.communes_uniques %}
-                                                {{ commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
+                                                {{ commune|or_empty_value_tag }}{% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                         {% else %}
                                             {% for commune in evenement.communes_uniques|slice:":3" %}
-                                                {{ commune|default:"nc." }}{% if not forloop.last %}, {% endif %}
+                                                {{ commune|or_empty_value_tag }}{% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                             ... +{{ nb_communes|add:"-3" }}
                                         {% endif %}

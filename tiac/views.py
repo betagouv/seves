@@ -582,9 +582,7 @@ class InvestigationTiacDetailView(
         context["dangers"] = [
             d.to_dict() for d in DangersSyndromiques.as_list() if d.value in self.object.danger_syndromiques_suspectes
         ]
-        context["etablissements"] = self.get_object().etablissements.all()
-        context["raisons_sociales"] = [e.raison_sociale for e in context["etablissements"]]
-        context["communes"] = [e.commune_and_cp for e in context["etablissements"]]
+        context["etablissements"] = list(self.get_object().etablissements.all())
         context["dates_repas"] = [r.datetime_repas for r in self.get_object().repas.all() if r.datetime_repas]
         return context
 

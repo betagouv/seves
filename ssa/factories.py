@@ -41,6 +41,7 @@ class EvenementProduitFactory(DjangoModelFactory):
 
     date_creation = factory.Faker("date_time_this_decade")
     date_reception = factory.Faker("date_this_decade")
+    date_publication = factory.Faker("date_time_this_decade")
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
     type_evenement = FuzzyChoice([choice[0] for choice in TypeEvenement.choices])
@@ -96,6 +97,15 @@ class EvenementProduitFactory(DjangoModelFactory):
         if isinstance(value, str):
             kwargs["date_reception"] = datetime.strptime(value, "%Y-%m-%d").date()
 
+        value = kwargs.get("date_publication")
+        if isinstance(value, str):
+            try:
+                kwargs["date_publication"] = timezone.make_aware(datetime.strptime(value, "%Y-%m-%d"))
+            except ValueError:
+                kwargs["date_publication"] = timezone.make_aware(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S"))
+        else:
+            kwargs["date_publication"] = timezone.make_aware(value)
+
         return super()._adjust_kwargs(**kwargs)
 
     @factory.lazy_attribute
@@ -149,6 +159,7 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
 
     date_creation = factory.Faker("date_time_this_decade")
     date_reception = factory.Faker("date_this_decade")
+    date_publication = factory.Faker("date_time_this_decade")
     numero_annee = factory.Faker("year")
     numero_rasff = factory.Faker("bothify", text="####.####")
     source = FuzzyChoice(SourceInvestigationCasHumain.values)
@@ -176,6 +187,13 @@ class InvestigationCasHumainFactory(DjangoModelFactory):
             else:
                 self.date_creation = extracted
             self.save()
+
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        value = kwargs.get("date_publication")
+        if value:
+            kwargs["date_publication"] = timezone.make_aware(value)
+        return super()._adjust_kwargs(**kwargs)
 
     @factory.sequence
     def numero_evenement(_):

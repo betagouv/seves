@@ -196,7 +196,7 @@ def test_fiche_detection_is_visible_and_selected_after_creation(live_server, pag
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("link", name="Ajouter une détection").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     new_detection = FicheDetection.objects.filter(evenement=evenement).exclude(pk=detection_existante.pk).get()
     expect(page.get_by_role("tab", name=f"{new_detection.numero}")).to_be_visible()
@@ -218,7 +218,7 @@ def test_fiche_detection_is_visible_and_selected_after_update(live_server, page)
     """)
 
     page.get_by_role("button", name="Modifier").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
@@ -231,7 +231,7 @@ def test_fiche_zone_is_visible_after_creation(live_server, page):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Zone").click()
     page.get_by_role("button", name="Ajouter une zone").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
     expect(page.get_by_text("Zone tampon")).to_be_visible()
@@ -245,7 +245,7 @@ def test_fiche_zone_is_visible_after_update(live_server, page):
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_role("tab", name="Zone").click()
     page.get_by_role("link", name="Modifier").click()
-    page.get_by_role("button", name="Enregistrer").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     expect(page.get_by_role("tab", name="Zone")).to_have_count(1)
     expect(page.get_by_text("Zone tampon")).to_be_visible()

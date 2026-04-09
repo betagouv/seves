@@ -37,6 +37,68 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     assert object.messages.get().status == Message.Status.FINALISE
 
 
+def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill, object):
+    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_message()
+    message_page.pick_recipient(active_contact, choice_js_fill)
+    expect(message_page.page.get_by_text(f"Ouvrir la fiche {object.numero}", exact=True)).to_be_visible()
+    expect(message_page.message_form_title).to_have_text("Nouveau message")
+
+    message_page.message_title.fill("Title of the message")
+    message_page.page.locator(".ql-bold").click()
+    message_page.message_content_in_rich_text_editor.type("My content \n with a line return\n")
+    message_page.page.locator(".ql-color.ql-picker.ql-color-picker").click()
+    message_page.page.locator(".ql-primary").first.click()
+    message_page.message_content_in_rich_text_editor.type("Text in color\n")
+    message_page.page.locator(".ql-list").click()
+    message_page.message_content_in_rich_text_editor.type("Item 1\n")
+    message_page.message_content_in_rich_text_editor.type("Item 2\n")
+
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == str(active_contact)
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Message"
+
+    new_page = message_page.open_message()
+    message_page.page.wait_for_timeout(20000)
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    assert (
+        '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-grey-925-125">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
+        in new_page.content()
+    )
+    assert object.messages.get().status == Message.Status.FINALISE
+
+
+def generic_test_can_send_draft_message_with_rich_text_editor(
+    live_server, page: Page, mocked_authentification_user, object
+):
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    object.contacts.add(contact)
+    MessageFactory(
+        content_object=object,
+        status=Message.Status.BROUILLON,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+        message_type=Message.MESSAGE,
+        content="<p><strong>My content </strong></p>",
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = UpdateMessagePage(page, "#message-form")
+    message_page.open_message()
+
+    message_page.submit_message()
+    expect(page.get_by_text("Le message a bien été ajouté.")).to_be_visible()
+    new_page = message_page.open_message()
+    assert "<p><strong>My content </strong></p>" in new_page.content()
+
+
 def generic_test_can_update_draft_message_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):

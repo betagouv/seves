@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/evenement_simple.css' %}">
 {% endblock extrahead %}
+
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post" data-controller="evenement-simple-form">
         {% csrf_token %}
@@ -13,24 +14,27 @@
             <div class="evenement-produit-form-header fr-grid-row">
                 {% block title %}<h1 class="fr-col-6">Création d'un enregistrement simple</h1>{% endblock %}
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
-                    {% block buttons %}
-                        {% if form.instance and form.instance.is_draft %}
-                            <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
-                                Enregistrer le brouillon
-                            </button>
-                        {% endif %}
-                        {% if form.instance.pk and not form.instance.is_draft %}
-                            <button id="submit_publish" type="submit" class="fr-btn">
-                                Enregistrer
-                            </button>
-                        {% else %}
-                            <button id="submit_publish" type="submit" name="action" value="publish" class="fr-btn">
-                                Publier
-                            </button>
-                        {% endif %}
-                    {% endblock %}
+                    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline">
+                        {% block buttons %}
+                            {% partialdef form_btns inline %}
+                                {% if form.instance and form.instance.is_draft %}
+                                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary">
+                                        Enregistrer le brouillon
+                                    </button>
+                                {% endif %}
+                                {% if form.instance.pk and not form.instance.is_draft %}
+                                    <button type="submit" class="fr-btn form-action-btn" data-testid="submit-publish">
+                                        Enregistrer
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action" value="publish" class="fr-btn" data-testid="submit-publish">
+                                        Publier
+                                    </button>
+                                {% endif %}
+                            {% endpartialdef %}
+                        {% endblock %}
+                    </div>
                 </div>
-
             </div>
 
             {% if form.non_field_errors %}
@@ -47,6 +51,10 @@
                         <div class="fr-input-group">
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                        </div>
+                        <div class="fr-input-group">
+                            <label class="fr-label" for="date-publication-input">Date de publication</label>
+                            <input type="text" id="date-publication-input" class="fr-input" value="{% if form.instance.date_publication %}{{ form.instance.date_publication|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
                         {% dsfr_form_field form.date_reception %}
                         {% dsfr_form_field form.evenement_origin|set_data:"ars-informee-target:origin"|set_data:"action:ars-informee#onOriginChanged" %}
@@ -81,6 +89,15 @@
                 <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>
                 {% include "ssa/_free_links_block.html" %}
             </fieldset>
+
+            <section
+                class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
+                data-testid="bottom-action-btns"
+            >
+                {% block bottom_buttons %}
+                    {% partial form_btns %}
+                {% endblock %}
+            </section>
         </main>
     </form>
 {% endblock %}

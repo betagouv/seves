@@ -98,6 +98,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
@@ -401,6 +402,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure

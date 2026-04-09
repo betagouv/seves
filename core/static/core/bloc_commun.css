@@ -33,6 +33,9 @@
 .document-deleted .fr-badge {
     background-color: var(--grey-950-100-active) !important;
 }
+.bloc-commun__panel--documents .fr-cell--multiline {
+    overflow-wrap: anywhere;
+}
 
 /* Bloc contacts */
 .contacts-count {

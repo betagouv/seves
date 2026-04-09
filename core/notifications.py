@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.conf import settings
 from post_office.mail import send
 from post_office.models import EmailTemplate
@@ -13,12 +15,21 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
     recipients = [r for r in recipients if r != ""]
     copy = [c.get_email_for_object(message_obj.content_object) for c in copy]
     copy = [c for c in copy if c != ""]
+    css_path = Path(settings.BASE_DIR) / "core/static/core/message_detail.css"
+    css_content = css_path.read_text()
+    css_path = Path(settings.BASE_DIR) / "core/static/core/message_colors.css"
+    css_content += css_path.read_text()
     template, _ = EmailTemplate.objects.update_or_create(
         name="seves_email_template",
         defaults={
             "subject": f"{settings.EMAIL_SUBJECT_PREFIX} {message_obj.content_object.get_email_subject()} - {message_obj.get_email_type_display()} de {message_obj.sender_structure}",
             "html_content": """
                 <!DOCTYPE html>
+                <head>
+                    <style>
+                        {{ css_content }}
+                    </style>
+                </head>
                 <html>
                 <div style="font-family: Arial, sans-serif;">
                     <p style="white-space: pre-wrap; line-height: 1.5; font-style: italic; margin-bottom: 20px;">Ce message concerne l’évènement : {{ evenement.get_long_email_display_name }}</p>
@@ -44,6 +55,7 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
             """,
         },
     )
+
     send(
         recipients=recipients,
         cc=copy,
@@ -53,6 +65,7 @@ def _send_message(recipients: list[Contact], copy: list[Contact], subject: str, 
             "message_obj": message_obj,
             "subject": subject,
             "content": content,
+            "css_content": css_content,
             "documents": message_obj.documents.all(),
             "evenement": message_obj.content_object,
             "fiche_url": f"{settings.ROOT_URL}{message_obj.content_object.get_absolute_url()}",
@@ -112,7 +125,7 @@ def notify_message(message_obj: Message):
     if message_obj.is_draft:
         return
     recipients, copy = [], []
-    content = message_obj.content
+    content = message_obj.safe_message_content
 
     match message_obj.message_type:
         case Message.MESSAGE:

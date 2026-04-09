@@ -3,6 +3,8 @@ from playwright.sync_api import Page, expect
 from core.tests.generic_tests.actions import (
     generic_test_ac_can_update_fiche_even_when_state_is_cloture,
     generic_test_can_cloturer_evenement,
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object,
+    generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -34,6 +36,20 @@ def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page: Page,
     )
 
 
+def test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(live_server, page):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+        live_server, page, evenement, field_name="description", other_object=EvenementProduitFactory()
+    )
+
+
+def test_soft_delete_object_also_removes_existing_lien_libre(live_server, page):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_soft_delete_object_also_removes_existing_lien_libre(
+        live_server, page, evenement, other_object=EvenementProduitFactory()
+    )
+
+
 def test_can_cloturer_evenement_produit_if_last_remaining_structure(
     live_server, page: Page, mocked_authentification_user, mus_contact
 ):
@@ -60,6 +76,7 @@ def test_can_publish_evenement_produit(live_server, page: Page, mocked_authentif
 
     evenement.refresh_from_db()
     assert evenement.etat == EvenementProduit.Etat.EN_COURS
+    assert evenement.date_publication is not None
     expect(page.get_by_text("En cours", exact=True)).to_be_visible()
     expect(page.get_by_text("Événement produit publié avec succès")).to_be_visible()
 

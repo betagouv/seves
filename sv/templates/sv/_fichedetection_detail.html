@@ -1,5 +1,4 @@
-{% load static %}
-{% load etat_tags %}
+{% load dsfr_tags etat_tags or_empty_value_tag static %}
 
 <div class="fiche-detail">
     <div class="fr-container--fluid">
@@ -24,7 +23,7 @@
                             <div class="fr-container--fluid">
                                 <div class="fr-grid-row">
                                     <p class="fr-col-6 descripteur-label">Statut</p>
-                                    <p class="fr-col-6">{{ fichedetection.statut_evenement|default:"nc." }}</p>
+                                    <p class="fr-col-6">{{ fichedetection.statut_evenement|or_empty_value_tag }}</p>
                                 </div>
                             </div>
                         </div>
@@ -40,13 +39,13 @@
                     <div class="fr-container--fluid">
                         <div class="fr-grid-row fr-grid-row--gutters">
                             <div class="fr-col-3 fr-col-lg-6 descripteur-label">Contexte</div>
-                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.contexte|default:"nc." }}</div>
+                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.contexte|or_empty_value_tag }}</div>
                             <div class="fr-col-3 fr-col-lg-6 descripteur-label">Date 1er signalement</div>
-                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.date_premier_signalement|default:"nc." }}</div>
+                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.date_premier_signalement|or_empty_value_tag }}</div>
                             <div class="fr-col-3 fr-col-lg-6 descripteur-label">Quantité de végétaux infestés</div>
-                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.vegetaux_infestes|default:"nc." }}</div>
+                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.vegetaux_infestes|or_empty_value_tag }}</div>
                             <div class="fr-col-3 fr-col-lg-6 descripteur-label">Commentaire</div>
-                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.commentaire|default:"nc." }}</div>
+                            <div class="fr-col-3 fr-col-lg-6">{{ fichedetection.commentaire|or_empty_value_tag }}</div>
                         </div>
                     </div>
                 </div>
@@ -75,12 +74,15 @@
                                         </div>
                                         <div class="fr-card__desc">
                                             <section>
-                                                <address class="fr-card__detail fr-icon-map-pin-2-line">{{ lieu_initial.address_summary }}</address>
-                                                {% if lieu_initial.position_chaine_distribution_etablissement %}
-                                                    <p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-4v">
-                                                        {{ lieu_initial.position_chaine_distribution_etablissement }}
-                                                    </p>
-                                                {% endif %}
+                                                <address class="fr-card__detail fr-icon-map-pin-2-line">{{ lieu_initial.address_summary|or_empty_value_tag }}</address>
+                                                {% with extra_classes="fr-badge--info fr-badge--no-icon fr-mt-4v fr-mr-4v" %}
+                                                    {% if lieu_initial.site_inspection %}
+                                                        {% dsfr_badge label=lieu_initial.site_inspection extra_classes=extra_classes %}
+                                                    {% endif %}
+                                                    {% if lieu_initial.position_chaine_distribution_etablissement %}
+                                                        {% dsfr_badge label=lieu_initial.position_chaine_distribution_etablissement extra_classes=extra_classes %}
+                                                    {% endif %}
+                                                {% endwith %}
                                             </section>
 
                                             <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-btns-group--icon-left fr-mt-4v fr-mb-n4v">
@@ -137,7 +139,7 @@
                                                     </p>
                                                 {% endif %}
                                                 <address class="fr-card__detail fr-icon-map-pin-2-line">
-                                                    {{ prelevement.lieu.address_summary }}
+                                                    {{ prelevement.lieu.nom }}
                                                 </address>
 
                                                 <section class="prelevement-other-infos">
@@ -201,19 +203,19 @@
             <div class="fr-grid-row fr-grid-row--gutters">
                 <div class="fr-col-6 fr-col-lg-3">
                     <p class="descripteur-label">Mesures conservatoires immédiates</p>
-                    <p>{{ fichedetection.mesures_conservatoires_immediates|default:"nc." }}</p>
+                    <p>{{ fichedetection.mesures_conservatoires_immediates|or_empty_value_tag }}</p>
                 </div>
                 <div class="fr-col-6 fr-col-lg-3">
                     <p class="descripteur-label">Mesures de consignation</p>
-                    <p>{{ fichedetection.mesures_consignation|default:"nc." }}</p>
+                    <p>{{ fichedetection.mesures_consignation|or_empty_value_tag }}</p>
                 </div>
                 <div class="fr-col-6 fr-col-lg-3">
                     <p class="descripteur-label">Mesures phytosanitaires</p>
-                    <p>{{ fichedetection.mesures_phytosanitaires|default:"nc." }}</p>
+                    <p>{{ fichedetection.mesures_phytosanitaires|or_empty_value_tag }}</p>
                 </div>
                 <div class="fr-col-6 fr-col-lg-3">
                     <p class="descripteur-label">Mesures de surveillance spécifique</p>
-                    <p>{{ fichedetection.mesures_surveillance_specifique|default:"nc." }}</p>
+                    <p>{{ fichedetection.mesures_surveillance_specifique|or_empty_value_tag }}</p>
                 </div>
             </div>
         </div>

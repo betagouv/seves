@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 from unittest import mock
@@ -76,6 +77,21 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
 
 
+def test_can_create_investigation_tiac_with_required_fields_only_and_publish(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = InvestigationTiacFactory.build()
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.date_creation.date() == datetime.date.today()
+    assert investigation.date_publication.date() == datetime.date.today()
+    assert investigation.etat == InvestigationTiac.Etat.EN_COURS
+
+
 def test_add_contacts_on_creation(live_server, mocked_authentification_user, page: Page):
     input_data = InvestigationTiacFactory.build(follow_up=InvestigationFollowUp.INVESTIGATION_DD)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -120,6 +136,7 @@ def test_can_create_investigation_tiac_with_all_fields(
             "numero_annee",
             "numero_evenement",
             "date_creation",
+            "date_publication",
             "analyses_sur_les_malades",
             "precisions",
             "last_updated",

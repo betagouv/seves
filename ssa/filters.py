@@ -10,7 +10,7 @@ from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
     WithAgentContactFilterMixin,
-    WithDateCreationFilterMixin,
+    WithDatePublicationFilterMixin,
     WithDateReceptionFilterMixin,
     WithEtatFilterMixin,
     WithNumeroFilterMixin,
@@ -80,7 +80,7 @@ class WithEtablissementFilterMixin(django_filters.FilterSet):
 
 class EvenementFilter(
     WithNumeroFilterMixin,
-    WithDateCreationFilterMixin,
+    WithDatePublicationFilterMixin,
     WithDateReceptionFilterMixin,
     WithStructureContactFilterMixin,
     WithAgentContactFilterMixin,

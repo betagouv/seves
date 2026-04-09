@@ -21,9 +21,10 @@ class TiacExport(BaseExport):
 
     evenement_fields = [
         ("numero", "Numéro de fiche"),
-        ("etat", "État"),
+        ("get_readable_etat_for_csv", "État"),
         ("createur", "Structure créatrice"),
         ("date_creation", "Date de création"),
+        ("date_publication", "Date de publication"),
         ("date_reception", "Date de réception"),
         ("evenement_origin", "Signalement déclaré par"),
         ("modalites_declaration", "Modalités de déclaration"),
@@ -143,18 +144,25 @@ class TiacExport(BaseExport):
                 continue
             model = apps.get_model(entry["model"])
             queryset = model.objects.filter(id__in=entry["ids"])
+            contact = task.user.agent.structure.contact_set.get()
             if model == InvestigationTiac:
-                queryset = queryset.prefetch_related(
-                    "etablissements",
-                    "etablissements__departement",
-                    "repas",
-                    "repas__departement",
-                    "aliments",
-                    "analyses_alimentaires",
-                ).select_related("createur")
+                queryset = (
+                    queryset.prefetch_related(
+                        "etablissements",
+                        "etablissements__departement",
+                        "repas",
+                        "repas__departement",
+                        "aliments",
+                        "analyses_alimentaires",
+                    )
+                    .select_related("createur")
+                    .with_fin_de_suivi(contact)
+                )
             else:
-                queryset = queryset.prefetch_related("etablissements", "etablissements__departement").select_related(
-                    "createur"
+                queryset = (
+                    queryset.prefetch_related("etablissements", "etablissements__departement")
+                    .select_related("createur")
+                    .with_fin_de_suivi(contact)
                 )
 
             querysets.append(queryset)
@@ -187,7 +195,7 @@ class TiacExport(BaseExport):
         return queryset, max_etablissement, max_repas, max_aliment, max_analyses
 
     def export(self, task_id):
-        task = Export.objects.get(id=task_id)
+        task = Export.objects.select_related("user__agent__structure").get(id=task_id)
         if task.task_done is True:
             return
 

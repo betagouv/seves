@@ -15,7 +15,7 @@ from tiac.factories import (
 from tiac.tests.pages import InvestigationTiacDetailsPage
 
 
-def test_evenement_produit_detail_page_content(live_server, page: Page):
+def test_investigation_tiac_detail_page_content(live_server, page: Page):
     evenement = InvestigationTiacFactory(nb_sick_persons=22, nb_sick_persons_to_hospital=44, nb_dead_persons=3)
 
     details_page = InvestigationTiacDetailsPage(page, live_server.url)
@@ -27,6 +27,9 @@ def test_evenement_produit_detail_page_content(live_server, page: Page):
     expect(details_page.context_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
     expect(
         details_page.context_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.context_block.get_by_text(evenement.date_publication.strftime("%d/%m/%Y"), exact=True)
     ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()
     expect(details_page.modalite.get_by_text(evenement.get_modalites_declaration_display(), exact=True)).to_be_visible()
@@ -80,7 +83,7 @@ def test_investigation_tiac_detail_page_content_etablissement(
     expect(details_page.current_modal.get_by_text(etablissement.commentaire, exact=True)).to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_aliment_cuisine(live_server, page: Page):
+def test_investigation_tiac_detail_page_content_aliment_cuisine(live_server, page: Page):
     evenement = InvestigationTiacFactory()
     aliment = AlimentSuspectFactory(investigation=evenement, cuisine=True)
 
@@ -99,7 +102,7 @@ def test_evenement_produit_detail_page_content_aliment_cuisine(live_server, page
     expect(details_page.current_modal.get_by_text(aliment.description_composition, exact=True)).to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_aliment_simple(live_server, page: Page):
+def test_investigation_tiac_detail_page_content_aliment_simple(live_server, page: Page):
     evenement = InvestigationTiacFactory()
     aliment = AlimentSuspectFactory(investigation=evenement, simple=True)
 
@@ -119,7 +122,7 @@ def test_evenement_produit_detail_page_content_aliment_simple(live_server, page:
     expect(details_page.current_modal.get_by_text(aliment.description_produit, exact=True)).to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_repas(live_server, page: Page):
+def test_investigation_tiac_detail_page_content_repas(live_server, page: Page):
     evenement = InvestigationTiacFactory()
     repas = RepasSuspectFactory(investigation=evenement)
 
@@ -140,7 +143,7 @@ def test_evenement_produit_detail_page_content_repas(live_server, page: Page):
     expect(details_page.current_modal.get_by_text(repas.nombre_participant, exact=True)).to_be_visible()
 
 
-def test_evenement_produit_detail_page_content_analyse_alimentaires(live_server, page: Page):
+def test_investigation_tiac_detail_page_content_analyse_alimentaires(live_server, page: Page):
     evenement = InvestigationTiacFactory()
     analyse = AnalyseAlimentaireFactory(investigation=evenement)
 
@@ -166,3 +169,23 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
     generic_test_bloc_commun_nb_items(live_server, page, evenement)
+
+
+def test_investigation_tiac_detail_page_synthese_content(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    EtablissementFactory.create_batch(2, investigation=evenement)
+
+    details_page = InvestigationTiacDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.open_synthese()
+
+    expect(details_page.synthese_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
+    expect(
+        details_page.synthese_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.synthese_block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+
+    for etablissement in evenement.etablissements.all():
+        expect(details_page.synthese_block).to_contain_text(etablissement.commune_and_cp)

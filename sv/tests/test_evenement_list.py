@@ -1,6 +1,7 @@
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.templatetags.or_empty_value_tag import EMPTY_PLACEHOLDER
 from sv.factories import EvenementFactory, FicheDetectionFactory, LieuFactory
 
 
@@ -29,13 +30,13 @@ def test_commune_column_with_empty_commune(live_server, page: Page):
     LieuFactory(fiche_detection=fiche, commune="")
 
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
-    expect(page.get_by_text("nc.", exact=True)).to_be_visible()
+    expect(page.get_by_text(EMPTY_PLACEHOLDER, exact=True)).to_be_visible()
 
 
 def test_commune_column_without_lieu(live_server, page: Page):
     FicheDetectionFactory()
     page.goto(f"{live_server}{reverse('sv:evenement-liste')}")
-    expect(page.get_by_text("nc.", exact=True)).to_be_visible()
+    expect(page.get_by_text(EMPTY_PLACEHOLDER, exact=True)).to_be_visible()
 
 
 def test_duplicate_commune_appears_only_once(live_server, page: Page):

@@ -160,7 +160,7 @@ class MessageFactory(DjangoModelFactory):
         model = Message
 
     message_type = FuzzyChoice([choice[0] for choice in Message.MESSAGE_TYPE_CHOICES])
-    title = factory.Faker("sentence", nb_words=10)
+    title = factory.Faker("sentence", nb_words=4)
     content = factory.Faker("paragraph")
 
     sender = factory.SubFactory(ContactAgentFactory)

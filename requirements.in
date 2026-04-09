@@ -1,4 +1,4 @@
-Django<6
+Django
 django-environ
 psycopg2-binary
 gunicorn
@@ -13,18 +13,17 @@ python-magic
 celery
 async_timeout
 redis
-django-csp
 django-countries
 whitenoise
 django-dsfr
 dj-importmap
-django-template-partials
 django-waffle
 django-querysetsequence
 django-reversion-compare
 docxtpl
 docxcompose3
 django-dirtyfields
+beautifulsoup4
 # Dev
 djhtml
 django-debug-toolbar

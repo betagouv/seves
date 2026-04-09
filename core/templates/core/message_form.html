@@ -1,11 +1,20 @@
 {% extends 'core/base.html' %}
-{% load partials %}
-{% load static dsfr_tags widget_tweaks %}
+{% load static dsfr_tags widget_tweaks waffle_tags %}
+
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/message_page.css' %}">
+    {% flag "rich_text_editor" %}
+        <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'core/rich_text_editor.css' %}">
+        <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
+    {% endflag %}
 {% endblock %}
 {% block scripts %}
     <script type="module" src="{% static 'core/message_form_page.mjs' %}"></script>
+
+    {% flag "rich_text_editor" %}
+        <script type="module" src="{% static 'core/rich_text_editor.mjs' %}"></script>
+    {% endflag %}
 {% endblock %}
 
 {% block content %}
@@ -49,13 +58,76 @@
                 {% csrf_token %}
                 <input type="hidden" name="id" value="{{ form.instance.pk }}">
                 <div class="white-container">
-                    {% for field in form %}
-                        <div class="fr-fieldset__element">
-                            {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
-                                {% dsfr_form_field field|set_data:data_target %}
-                            {% endwith %}
+                    {% flag "rich_text_editor" %}
+                        <div data-controller="rich-text-editor">
+                            {% for field in form %}
+                                {% if field.name == "content" %}
+                                    <div class="fr-fieldset__element fr-hidden">
+                                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                            {% dsfr_form_field field|set_data:data_target|set_data:"rich-text-editor-target:textarea" %}
+                                        {% endwith %}
+                                    </div>
+                                {% else %}
+                                    <div class="fr-fieldset__element">
+                                        {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                            {% dsfr_form_field field|set_data:data_target %}
+                                        {% endwith %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            <div class="fr-fieldset__element">
+                                <label for="rich-text-editor" class="fr-label required-field fr-mb-2v">
+                                    Message<span class="fr-sr-only fr-required-marker">*</span>
+                                </label>
+                                <div id="toolbar">
+                                    <span class="ql-formats">
+                                        <select class="ql-header">
+                                            <option value="2">Titre</option>
+                                            <option selected>Normal</option>
+                                        </select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                        <button class="ql-strike"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-indent" value="-1"></button>
+                                        <button class="ql-indent" value="+1"></button>
+                                    </span>
+
+                                    <span class="ql-formats">
+                                        <select class="ql-color">
+                                            <option value="grey-925-125"></option>
+                                            <option value="blue-france-sun-113-625"></option>
+                                            <option value="success-425-625"></option>
+                                            <option value="purple-glycine-main-494"></option>
+                                            <option value="error-425-625"></option>
+                                        </select>
+                                        <select class="ql-background">
+                                            <option value="yellow-tournesol-925-125"></option>
+                                            <option value="green-emeraude-950-100"></option>
+                                            <option value="green-archipel-950-100"></option>
+                                            <option value="pink-macaron-925-125"></option>
+                                            <option value="purple-glycine-925-125"></option>
+                                            <option value="blue-ecume-925-125"></option>
+                                        </select>
+                                    </span>
+                                </div>
+                                <div data-rich-text-editor-target="container" id="rich-text-editor"></div>
+                            </div>
                         </div>
-                    {% endfor %}
+                    {% else %}
+                        {% for field in form %}
+                            <div class="fr-fieldset__element">
+                                {% with data_target=field.name|strfmt:"message-form-target:{0}" %}
+                                    {% dsfr_form_field field|set_data:data_target %}
+                                {% endwith %}
+                            </div>
+                        {% endfor %}
+                    {% endflag %}
                 </div>
 
                 <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">

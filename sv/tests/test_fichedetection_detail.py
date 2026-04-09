@@ -1,5 +1,6 @@
 from playwright.sync_api import expect
 
+from core.templatetags.or_empty_value_tag import EMPTY_PLACEHOLDER
 from sv.factories import EvenementFactory, FicheDetectionFactory, LieuFactory, PrelevementFactory
 from sv.models import Prelevement
 
@@ -93,13 +94,13 @@ def test_lieu_details_with_no_data(live_server, page):
     lieu = LieuFactory.create_minimal()
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_absolute_url()}")
     page.get_by_title(f"Consulter le détail du lieu {lieu.nom}").click()
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-adresse")).to_contain_text("nc.")
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-adresse")).to_contain_text(EMPTY_PLACEHOLDER)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-commune")).to_contain_text(lieu.commune)
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-code-insee")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-departement")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-region")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text("nc.")
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-code-insee")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-departement")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-region")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text(EMPTY_PLACEHOLDER)
 
 
 def test_prelevement_card(live_server, page):
@@ -125,12 +126,12 @@ def test_prelevement_non_officiel_details_with_no_data(live_server, page):
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-structure-preleveuse")).to_contain_text(
         prelevement.structure_preleveuse.nom
     )
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-numero-echantillon")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-prelevement")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-matrice-prelevee")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-espece-echantillon")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-code-oepp")).to_contain_text("nc.")
-    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-rapport-analyse")).to_contain_text("nc.")
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-numero-echantillon")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-prelevement")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-matrice-prelevee")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-espece-echantillon")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-code-oepp")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-date-rapport-analyse")).to_contain_text(EMPTY_PLACEHOLDER)
 
 
 def test_prelevement_non_officiel_details_second_prelevement(live_server, page):
@@ -197,7 +198,7 @@ def test_prelevement_details(live_server, page):
         prelevement.get_type_analyse_display()
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-is-officiel")).to_contain_text(
-        "oui" if prelevement.is_officiel else "non"
+        "Prélèvement officiel" if prelevement.is_officiel else "Prélèvement non officiel"
     )
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-numero-rapport-inspection")).to_contain_text(
         prelevement.numero_rapport_inspection

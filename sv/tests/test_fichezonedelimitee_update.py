@@ -99,7 +99,9 @@ def test_update_can_delete_zone_infestee(live_server, page: Page, choice_js_fill
 
     page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
     page.get_by_role("alertdialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
-    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+    page.get_by_test_id("bottom-action-btns").get_by_role(
+        "button", name="Enregistrer les modifications", exact=True
+    ).click()
 
     assert ZoneInfestee.objects.get(id=to_keep.id).nom == "To keep"
     with pytest.raises(ZoneInfestee.DoesNotExist):
@@ -119,7 +121,9 @@ def test_update_can_add_and_delete_zone_infestee(live_server, page: Page, choice
 
     page.get_by_role("button", name="Supprimer la zone infestée").nth(1).click()
     page.get_by_role("alertdialog", name="Supprimer").get_by_role("button", name="Supprimer").click()
-    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+    page.get_by_test_id("bottom-action-btns").get_by_role(
+        "button", name="Enregistrer les modifications", exact=True
+    ).click()
 
     ZoneInfestee.objects.get(nom="To keep")
     with pytest.raises(ZoneInfestee.DoesNotExist):
@@ -295,7 +299,9 @@ def test_fiche_zone_update_has_locking_protection(
     fiche_zone.commentaire = "CCC"
     fiche_zone.save()
 
-    page.get_by_role("button", name="Enregistrer les modifications", exact=True).click()
+    page.get_by_test_id("bottom-action-btns").get_by_role(
+        "button", name="Enregistrer les modifications", exact=True
+    ).click()
     page.wait_for_timeout(600)
 
     fiche_zone.refresh_from_db()
@@ -443,7 +449,7 @@ def test_update_form_remove_from_detections_list_refresh_choices_for_other_lists
         str(detection_1.numero),
         str(detection_1.numero),
     )
-    page.locator("#save-btn").click()
+    page.get_by_test_id("bottom-action-btns").locator("#save-btn").click()
 
     detection_1.refresh_from_db()
     assert detection_1.zone_infestee is None

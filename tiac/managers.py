@@ -13,11 +13,6 @@ class EvenementSimpleQueryset(EvenementManagerMixin, models.QuerySet):
 
         return self.filter(Q(createur=user.agent.structure) | ~Q(etat=EvenementSimple.Etat.BROUILLON))
 
-    def with_fin_de_suivi(self, contact):
-        from .models import EvenementSimple
-
-        return self._with_fin_de_suivi(contact, EvenementSimple)
-
     def search(self, query):
         fields = [
             "contenu",
@@ -38,11 +33,6 @@ class InvestigationTiacQueryset(EvenementManagerMixin, models.QuerySet):
         from tiac.models import InvestigationTiac
 
         return self.filter(Q(createur=user.agent.structure) | ~Q(etat=InvestigationTiac.Etat.BROUILLON))
-
-    def with_fin_de_suivi(self, contact):
-        from .models import InvestigationTiac
-
-        return self._with_fin_de_suivi(contact, InvestigationTiac)
 
     def search(self, query):
         fields = [

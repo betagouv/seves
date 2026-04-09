@@ -43,15 +43,16 @@ function displayLieuxCards() {
                 ? `<p class="fr-card__detail fr-icon-map-pin-2-line">${escapeHTML(lieuCommune)}</p>`
                 : ""
 
-        const supplyChainPositionMarkup =
-            card.supplyChainPosition.trim() !== ""
-                ? `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-4v">${card.supplyChainPosition}</p>`
-                : ""
+        const labels = [card.siteInspection.trim(), card.supplyChainPosition.trim()]
+            .map(it =>
+                it !== "" ? `<p class="fr-badge fr-badge--info fr-badge--no-icon fr-mt-4v fr-mr-4v">${it}</p>` : "",
+            )
+            .join("")
 
         const newCard = lieuTpl
             .replaceAll("__nom__", escapeHTML(card.nom))
             .replaceAll("__lieu__", lieuMarkup)
-            .replaceAll("__suply_chain_position__", supplyChainPositionMarkup)
+            .replaceAll("__labels__", labels)
             .replaceAll("__card_id__", card.id)
 
         lieuListElement.insertAdjacentHTML("beforeend", newCard)
@@ -108,6 +109,8 @@ function buildLieuCardFromModal(element) {
     const supplyChainPositionEl = element.querySelector('[id$="position_chaine_distribution_etablissement"]')
     const supplyChainPosition =
         (supplyChainPositionEl?.selectedIndex ?? -1 > 0) ? supplyChainPositionEl.selectedOptions[0].label : ""
+    const siteInspectionEl = element.querySelector('[id$="site_inspection"]')
+    const siteInspection = (siteInspectionEl?.selectedIndex ?? -1 > 0) ? siteInspectionEl.selectedOptions[0].label : ""
 
     return {
         id: element.dataset.id,
@@ -119,6 +122,7 @@ function buildLieuCardFromModal(element) {
                 : "",
         codePostal: element.querySelector(`[id^="id_lieux-"][id$="-code_postal"]`)?.value ?? "",
         supplyChainPosition,
+        siteInspection,
     }
 }
 

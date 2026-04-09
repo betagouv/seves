@@ -163,6 +163,7 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
@@ -280,6 +281,7 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
     def save(self, commit=True):
         if self.data.get("action") == "publish":
             self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure

@@ -8,6 +8,7 @@ from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
 
+from bs4 import BeautifulSoup
 from celery.exceptions import OperationalError
 from django.conf import settings
 from django.contrib import messages
@@ -19,6 +20,7 @@ from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import FormView
 from django.views.generic.base import ContextMixin
 from django.views.generic.detail import DetailView
@@ -46,6 +48,7 @@ from core.models import (
 from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from .filters import DocumentFilter, MessageFilter
 from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
+from .html import html_to_simple_text
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
 
@@ -362,6 +365,8 @@ class WithEtatMixin(models.Model):
 
     def publish(self):
         self.etat = self.Etat.EN_COURS
+        if hasattr(self, "date_publication"):
+            self.date_publication = timezone.now()
         self.save()
 
     @property
@@ -418,6 +423,13 @@ class WithEtatMixin(models.Model):
             return {"etat": "fin de suivi", "readable_etat": "Fin de suivi"}
         return {"etat": self.etat, "readable_etat": self.get_etat_display()}
 
+    @property
+    def get_readable_etat_for_csv(self):
+        readable_etat = self.get_etat_data_from_fin_de_suivi(self.has_fin_de_suivi)["readable_etat"]
+        if readable_etat == "Fin de suivi":
+            return "Fin de suivi pour ma structure"
+        return readable_etat
+
     def get_cloture_confirm_message(self):
         return "L'objet a bien été cloturé."
 
@@ -457,6 +469,8 @@ class WithFreeLinkIdsMixin:
         links = LienLibre.objects.for_object(self).select_related("content_type_2", "content_type_1")
         result = []
         for link in links:
+            if link.related_object_1.is_deleted is True or link.related_object_2.is_deleted is True:
+                continue
             if link.object_id_1 == self.id and link.content_type_1 == content_type:
                 result.append(
                     {"value": f"{link.content_type_2.pk}-{link.object_id_2}", "label": str(link.related_object_2)}
@@ -816,10 +830,7 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
         sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
 
         for message in messages:
-            text = message.content.split("\n")
-            rich_text = RichText()
-            for i, line in enumerate(text):
-                rich_text.add(line)
+            rich_text = RichText(html_to_simple_text(BeautifulSoup(message.content, "html.parser")))
             message.rt_content = rich_text
 
         context = {

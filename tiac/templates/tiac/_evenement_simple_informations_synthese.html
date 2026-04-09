@@ -1,3 +1,4 @@
+{% load and_more_ellipsis_tooltip %}
 {% load or_empty_value_tag dsfr_tags %}
 <div class="fr-container--fluid">
   <div class="fr-grid-row fr-grid-row--gutters">
@@ -15,22 +16,28 @@
           <div class="fr-col-7 bold">Date de réception</div>
           <div class="fr-col-5">{{ object.date_reception|date:"d/m/Y"|or_empty_value_tag }}</div>
         </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-7 bold">Date de publication</div>
+          <div class="fr-col-5">{{ object.date_publication|date:"d/m/Y"|or_empty_value_tag }}</div>
+        </div>
       </div>
     </div>
-    {% with object.etablissements.first as etablissement %}
-      <div class="fr-col-3">
-        <div class="fr-container--fluid">
-          <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Établissement</div>
-            <div class="fr-col-7">{{ etablissement.raison_sociale }}</div>
+    <div class="fr-col-3">
+      <div class="fr-container--fluid">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Etablissement{{ etablissements|length|pluralize }}</div>
+          <div class="fr-col-7">
+            {% and_more_ellipsis_tooltip etablissements tooltip_prefix="Autre{plural} établissement{plural} :" field="raison_sociale"%}
           </div>
-          <div class="fr-grid-row fr-grid-row--gutters">
-            <div class="fr-col-5 bold">Commune</div>
-            <div class="fr-col-7">{{ etablissement.commune|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-5 bold">Commune{{ etablissements|length|pluralize }}</div>
+          <div class="fr-col-7">
+            {% and_more_ellipsis_tooltip etablissements tooltip_prefix="Autre{plural} commune{plural} :" field="commune_and_cp"%}
           </div>
         </div>
       </div>
-    {% endwith %}
+    </div>
     <div class="fr-col-3">
       <div class="fr-container--fluid">
         <div class="fr-grid-row fr-grid-row--gutters">

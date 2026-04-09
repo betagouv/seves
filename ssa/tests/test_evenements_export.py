@@ -4,22 +4,23 @@ from io import StringIO
 from playwright.sync_api import Page, expect
 import pytest
 
-from core.factories import ContactAgentFactory
-from core.models import Export, LienLibre
+from core.factories import ContactAgentFactory, ContactStructureFactory
+from core.models import Export, FinSuiviContact, LienLibre
 from ssa.export import SsaExport
 from ssa.factories import EtablissementFactory, EvenementProduitFactory, InvestigationCasHumainFactory
 from ssa.tests.pages import EvenementProduitListPage
 
-NB_QUERIES = 17
+NB_QUERIES = 16
 
 
 @pytest.mark.django_db
-def test_export_evenement_produit_simple_case(mailoutbox):
+def test_export_evenement_produit_simple_case(mailoutbox, force_utc):
     evenement = EvenementProduitFactory()
     other_evenement = EvenementProduitFactory(numero_annee=2024, numero_evenement=22)
     LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     SsaExport().export(task.id)
@@ -30,7 +31,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
     assert len(lines) == 3
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de publication","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -38,6 +39,7 @@ def test_export_evenement_produit_simple_case(mailoutbox):
         "Brouillon",
         str(evenement.createur),
         evenement.date_creation.strftime("%d/%m/%Y %H:%M"),
+        evenement.date_publication.strftime("%d/%m/%Y %H:%M"),
         evenement.date_reception.strftime("%d/%m/%Y"),
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),
@@ -89,6 +91,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
     evenement = EvenementProduitFactory()
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES - 1):
@@ -100,6 +103,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_objects(djang
     evenement_1, evenement_2, evenement_3 = EvenementProduitFactory.create_batch(3)
     data = [{"model": "ssa.evenementproduit", "ids": [evenement_1.pk, evenement_2.pk, evenement_3.pk]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 1):
@@ -114,6 +118,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     evenement = EtablissementFactory().evenement_produit
     data = [{"model": "ssa.evenementproduit", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 1):
@@ -126,6 +131,7 @@ def test_export_evenement_produit_performances_scales_on_number_of_etablissement
     EtablissementFactory(evenement_produit=evenement)
     EtablissementFactory(evenement_produit=evenement)
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     with django_assert_num_queries(NB_QUERIES + 1):
@@ -141,6 +147,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
     etablissement_2 = EtablissementFactory(evenement_produit=etablissement_1.evenement_produit)
     data = [{"model": "ssa.evenementproduit", "ids": [etablissement_1.evenement_produit.pk]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
     SsaExport().export(task.id)
 
@@ -161,7 +168,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_1.type_exploitant,
         etablissement_1.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[1])))[27:38]
+    assert expected_fields == next(csv.reader(StringIO(lines[1])))[28:39]
 
     expected_fields = [
         etablissement_2.siret,
@@ -176,7 +183,7 @@ def test_export_evenement_produit_content_etablissement(mailoutbox):
         etablissement_2.type_exploitant,
         etablissement_2.get_position_dossier_display(),
     ]
-    assert expected_fields == next(csv.reader(StringIO(lines[2])))[27:38]
+    assert expected_fields == next(csv.reader(StringIO(lines[2])))[28:39]
     assert lines[3] == ""
     assert len(lines) == 4
 
@@ -218,12 +225,13 @@ def test_cant_export_evenement_when_no_results_in_list(live_server, mocked_authe
 
 
 @pytest.mark.django_db
-def test_export_investigation_cas_humain_simple_case(mailoutbox):
+def test_export_investigation_cas_humain_simple_case(mailoutbox, force_utc):
     evenement = InvestigationCasHumainFactory()
     other_evenement = InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
     LienLibre.objects.create(related_object_1=other_evenement, related_object_2=evenement)
     data = [{"model": "ssa.evenementinvestigationcashumain", "ids": [evenement.id]}]
     contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
     SsaExport().export(task.id)
@@ -234,7 +242,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
     assert len(lines) == 3
     assert (
         lines[0]
-        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
+        == '"Numéro de fiche","État","Structure créatrice","Date de création","Date de publication","Date de réception","Numéro RASFF","Type d\'événement","Source","Inclut des aliments pour animaux","Description","Catégorie de produit","Dénomination","Marque","Lots, DLC/DDM","Description complémentaire","Température de conservation","Catégorie de danger","Précision danger","Quantification","Unité de quantification","Évaluation","Produit prêt a manger","Référence souches","Référence clusters","Actions engagées","Numéro de rappels conso","Numéros des objets liés","Numéro SIRET","Autre identifiant","Numéro d\'agrément","Raison sociale","Enseigne usuelle","Adresse ou lieu-dit","Commune","Département","Pays établissement","Type d\'exploitant","Position dans le dossier","Numéros d’inspection Resytal"\r'
     )
 
     expected_fields = [
@@ -242,6 +250,7 @@ def test_export_investigation_cas_humain_simple_case(mailoutbox):
         "Brouillon",
         str(evenement.createur),
         evenement.date_creation.strftime("%d/%m/%Y %H:%M"),
+        evenement.date_publication.strftime("%d/%m/%Y %H:%M"),
         evenement.date_reception.strftime("%d/%m/%Y"),
         evenement.numero_rasff,
         evenement.get_type_evenement_display(),
@@ -307,3 +316,26 @@ def test_export_get_email_even_in_fin_suivi(
     assert len(mailoutbox) == 1
     mail = mailoutbox[0]
     assert mail.subject == "[Sèves] Votre export est prêt"
+
+
+def test_export_etat_value_in_fin_de_suivi(live_server, mocked_authentification_user, page: Page, settings, mailoutbox):
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    evenement_1 = EvenementProduitFactory()
+    evenement_2 = InvestigationCasHumainFactory()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    for evenement in (evenement_1, evenement_2):
+        evenement.contacts.add(contact)
+        FinSuiviContact.objects.create(
+            content_object=evenement,
+            contact=contact,
+        )
+
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.submit_export()
+
+    expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
+    task = Export.objects.get()
+    assert task.task_done is True
+    lines = task.file.read().decode("utf-8")
+    assert lines.count("Fin de suivi pour ma structure") == 2

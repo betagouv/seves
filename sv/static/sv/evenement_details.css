@@ -41,10 +41,6 @@
     max-width: 200px !important;
 }
 
-.fr-menu__list {
-    background-color: var(--background-overlap-grey) !important;
-}
-
 .fr-tag.selected {
     color: var(--text-inverted-blue-france);
     background-color: var(--background-action-high-blue-france);

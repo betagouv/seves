@@ -19,7 +19,7 @@ from core.model_mixins import (
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
 )
-from core.models import Document, Structure
+from core.models import Document, LienLibre, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 
 from ..managers import EvenementManager
@@ -28,7 +28,7 @@ from .fiches_zone_delimitee import FicheZoneDelimitee
 from .models_mixins import WithDerniereMiseAJourMixin
 
 
-@reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee"])
+@reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee", "detections"])
 class Evenement(
     AllowACNotificationMixin,
     WithVisibiliteMixin,
@@ -60,6 +60,7 @@ class Evenement(
     )
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=9, verbose_name="Numéro RASFF", blank=True)
 
@@ -130,6 +131,7 @@ class Evenement(
                 detection.soft_delete(user)
             self.is_deleted = True
             self.save()
+            LienLibre.objects.delete_related_links(self)
 
     @property
     def latest_version(self):
@@ -238,3 +240,8 @@ class Evenement(
             Document.TypeDocument.TRANSPORT,
             Document.TypeDocument.TRACABILITE,
         ]
+
+    def get_prefetch_for_revision_list_view(self):
+        from sv.models import FicheDetection
+
+        return [("_prefetched_detections", FicheDetection.objects.filter(evenement=self))]

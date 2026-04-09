@@ -498,7 +498,15 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     expect(page.locator("#lieux")).to_contain_text("ipsum")
     assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "1", "nom": "ipsum", "supplyChainPosition": ""}
+        {
+            "commune": "",
+            "departement": "",
+            "codePostal": "",
+            "id": "1",
+            "nom": "ipsum",
+            "siteInspection": "",
+            "supplyChainPosition": "",
+        }
     ]
 
 
@@ -567,7 +575,15 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     expect(page.locator("#lieux")).to_contain_text("lorem")
     assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
     assert page.evaluate("document.lieuxCards") == [
-        {"commune": "", "departement": "", "codePostal": "", "id": "0", "nom": "lorem", "supplyChainPosition": ""}
+        {
+            "commune": "",
+            "departement": "",
+            "codePostal": "",
+            "id": "0",
+            "nom": "lorem",
+            "siteInspection": "",
+            "supplyChainPosition": "",
+        }
     ]
 
 
@@ -629,6 +645,7 @@ def test_prelevement_resultat_card(
     prelevement_form_elements = PrelevementFormDomElements(page)
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
     expect(page.locator("#prelevements-list")).to_contain_text("DÉTECTÉ")
@@ -654,7 +671,7 @@ def test_return_to_correct_detection_after_creation_or_update(live_server, page:
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}?detection={detection_2.pk}")
 
     page.get_by_role("link", name=action_name).click()
-    page.get_by_role("link", name="Annuler").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("link", name="Annuler").click()
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_have_class(re.compile(r"(^|\s)selected($|\s)"))
@@ -669,6 +686,7 @@ def test_add_prelevement_en_attente_show_modal(
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
     prelevement_form_elements.resultat_input(Prelevement.Resultat.EN_ATTENTE).click()
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
     prelevement_form_elements.save_btn.click()
 
     expect(page.locator("#modal-add-edit-prelevement-0")).to_be_hidden(timeout=500)

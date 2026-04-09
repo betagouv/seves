@@ -15,9 +15,9 @@ from pathlib import Path
 import tempfile
 from urllib.parse import urlparse
 
-from csp.constants import NONCE, SELF
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
+from django.utils.csp import CSP
 import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -57,7 +57,6 @@ if ADMIN_ENABLED:
 # Application definition
 
 INSTALLED_APPS = [
-    "template_partials",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
@@ -77,7 +76,6 @@ INSTALLED_APPS = [
     "django_filters",
     "post_office",
     "reversion",
-    "csp",
     "django_countries",
     "django.contrib.postgres",
     "reversion_compare",
@@ -112,6 +110,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.csp",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "seves.context_processors.common_settings",
@@ -263,7 +262,8 @@ SELECT_EMPTY_CHOICE = "Choisir dans la liste"
 FILTERS_EMPTY_CHOICE_LABEL = "Choisir dans la liste"
 
 BYPASS_ANTIVIRUS = env("BYPASS_ANTIVIRUS", default=False)
-CLAMAV_CONFIG_FILE = env("CLAMAV_CONFIG_FILE", default="/etc/clamav/clamd.conf")
+ANTIVIRUS_URL = env("ANTIVIRUS_URL", default=None)
+ANTIVIRUS_TOKEN = env("ANTIVIRUS_TOKEN", default=None)
 
 CELERY_TASK_ALWAYS_EAGER = env("CELERY_TASK_ALWAYS_EAGER", default=False)
 if not CELERY_TASK_ALWAYS_EAGER:
@@ -298,38 +298,36 @@ SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
-CONTENT_SECURITY_POLICY = {
-    "DIRECTIVES": {
-        "default-src": (SELF,),
-        "script-src": (SELF, NONCE, "cdn.jsdelivr.net"),
-        "style-src": (SELF, "cdn.jsdelivr.net"),
-        "font-src": (SELF, "cdn.jsdelivr.net"),
-        "img-src": (
-            SELF,
-            "data:",
-            "s3.rbx.io.cloud.ovh.net",
-            "s3.eu-west-par.io.cloud.ovh.net",
-        ),
-        "connect-src": (
-            SELF,
-            "geo.api.gouv.fr",
-            "api.insee.fr",
-            "data.economie.gouv.fr",
-            "api-adresse.data.gouv.fr",
-            "fichiers-publics.agriculture.gouv.fr",
-        ),
-    },
+SECURE_CSP = {
+    "default-src": (CSP.SELF,),
+    "script-src": (CSP.SELF, CSP.NONCE, "cdn.jsdelivr.net"),
+    "style-src": (CSP.SELF, "cdn.jsdelivr.net"),
+    "font-src": (CSP.SELF, "cdn.jsdelivr.net"),
+    "img-src": (
+        CSP.SELF,
+        "data:",
+        "s3.rbx.io.cloud.ovh.net",
+        "s3.eu-west-par.io.cloud.ovh.net",
+    ),
+    "connect-src": (
+        CSP.SELF,
+        "geo.api.gouv.fr",
+        "api.insee.fr",
+        "data.economie.gouv.fr",
+        "api-adresse.data.gouv.fr",
+        "fichiers-publics.agriculture.gouv.fr",
+    ),
 }
 
 if DEBUG:
-    CONTENT_SECURITY_POLICY["DIRECTIVES"]["img-src"] = (SELF, "data:", "127.0.0.1:9000")
+    SECURE_CSP["img-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
     SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)
     if SENTRY_REPORT_URL:
         query_param = f"sentry_environment={ENVIRONMENT}"
         last_token = f"?{query_param}" if urlparse(SENTRY_REPORT_URL).query else f"&{query_param}"
-        CONTENT_SECURITY_POLICY["DIRECTIVES"]["report-uri"] = f"{SENTRY_REPORT_URL}{last_token}"
+        SECURE_CSP["report-uri"] = f"{SENTRY_REPORT_URL}{last_token}"
 
 SIRENE_API_KEY = env("SIRENE_API_KEY", default="")
 SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-sirene/3.11/")

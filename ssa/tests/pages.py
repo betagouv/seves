@@ -258,10 +258,10 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         self.page.wait_for_url(f"**{wait_for}")
 
     def submit_as_draft(self, *, wait_for=None):
-        self._submit(self.page.locator("#submit_draft"), wait_for=wait_for)
+        self._submit(self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-draft"), wait_for=wait_for)
 
     def publish(self, *, wait_for=None):
-        self._submit(self.page.locator("#submit_publish"), wait_for=wait_for)
+        self._submit(self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish"), wait_for=wait_for)
 
     def add_rappel_conso(self, numero):
         p1, p2, p3 = numero.split("-")
@@ -385,7 +385,7 @@ class EvenementProduitListPage(WithTreeSelect):
     def numero_cell(self, line_index=1):
         return self._cell_content(line_index, 1)
 
-    def date_creation_cell(self, line_index=1):
+    def date_publication_cell(self, line_index=1):
         return self._cell_content(line_index, 2)
 
     def date_maj_cell(self, line_index=1):
@@ -564,10 +564,10 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self.page.wait_for_url(f"**{wait_for}**")
 
     def submit_as_draft(self, *, wait_for=None):
-        self._submit(self.page.locator('button[value="draft"]'), wait_for=wait_for)
+        self._submit(self.page.get_by_test_id("bottom-action-btns").locator('button[value="draft"]'), wait_for=wait_for)
 
     def publish(self, *, wait_for=None):
-        self._submit(self.page.locator("#submit_publish"), wait_for=wait_for)
+        self._submit(self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish"), wait_for=wait_for)
 
     def display_and_get_categorie_danger(self):
         result = self.page.locator("#categorie-danger")

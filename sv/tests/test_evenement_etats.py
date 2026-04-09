@@ -11,6 +11,8 @@ from core.models import Contact, FinSuiviContact
 from core.tests.generic_tests.actions import (
     generic_test_ac_can_update_fiche_even_when_state_is_cloture,
     generic_test_can_cloturer_evenement,
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object,
+    generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
 from sv.factories import EvenementFactory
 from sv.models import Evenement, Structure
@@ -34,6 +36,25 @@ def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page, mocke
     page.numero_europhyt = page.locator("#id_numero_europhyt")
     generic_test_ac_can_update_fiche_even_when_state_is_cloture(
         live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_numero_europhyt"
+    )
+
+
+def test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+    live_server, page, mocked_authentification_user
+):
+    ac_structure = Structure.objects.create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    ContactStructureFactory(structure=ac_structure)
+    mocked_authentification_user.agent.structure = ac_structure
+    evenement = EvenementFactory()
+    generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
+        live_server, page, evenement, field_name="numero_europhyt", other_object=EvenementFactory()
+    )
+
+
+def test_soft_delete_object_also_removes_existing_lien_libre(live_server, page):
+    evenement = EvenementFactory()
+    generic_test_soft_delete_object_also_removes_existing_lien_libre(
+        live_server, page, evenement, other_object=EvenementFactory()
     )
 
 
@@ -328,6 +349,7 @@ def test_can_publish_evenement(live_server, page: Page):
     expect(publish_btn).not_to_be_visible()
     evenement.refresh_from_db()
     assert evenement.is_published is True
+    assert evenement.date_publication is not None
 
 
 @pytest.mark.django_db
@@ -398,6 +420,7 @@ def test_can_publish_and_notifier_ac(live_server, page: Page, mailoutbox):
     evenement.refresh_from_db()
     assert evenement.is_published is True
     assert evenement.is_ac_notified is True
+    assert evenement.date_publication is not None
     assert len(mailoutbox) == 1
 
 

@@ -15,16 +15,18 @@
                 </h1>
             </div>
             <div class="fr-col fichezone_form__save-btn">
-                <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
-                {% if request.GET.evenement %}
-                    <a href="{{ evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
-                {% elif fiche.evenement %}
-                    <a href="{{ fiche.evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
-                {% endif %}
-                <input type="submit" form="fiche-zone-delimitee-form" id="save-btn" value="Enregistrer les modifications" class="fr-btn" >
+                {% partialdef form_btns inline %}
+                    {% if request.GET.evenement %}
+                        <a href="{{ evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                    {% elif fiche.evenement %}
+                        <a href="{{ fiche.evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                    {% endif %}
+                    <input type="submit" form="fiche-zone-delimitee-form" id="save-btn" value="Enregistrer les modifications" class="fr-btn" >
+                {% endpartialdef %}
             </div>
         </div>
 
+        <input type="hidden" name="evenement" value="{{ request.GET.evenement }}">
         {% csrf_token %}
         {{ form.latest_version }}
         <div id="risques-infos-commentaire-row" class="fr-grid-row fr-grid-row--gutters">
@@ -103,5 +105,12 @@
                 </div>
             </div>
         </div>
+
+        <section
+            class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
+            data-testid="bottom-action-btns"
+        >
+            {% partial form_btns %}
+        </section>
     </form>
 {% endblock %}

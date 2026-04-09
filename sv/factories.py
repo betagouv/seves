@@ -339,6 +339,16 @@ class EvenementFactory(DjangoModelFactory):
                 self.date_creation = extracted
             self.save()
 
+    @factory.post_generation
+    def date_publication(self, create, extracted, **kwargs):  # noqa: F811
+        if extracted and create:
+            if isinstance(extracted, str):
+                self.date_publication = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
+            else:
+                self.date_publication = extracted
+        else:
+            self.date_publication = Faker().date_time_this_decade()
+
     @factory.sequence
     def numero_evenement(n):
         return n + 1

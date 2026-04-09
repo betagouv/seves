@@ -1,47 +1,53 @@
+{% load dsfr_tags or_empty_value_tag %}
+
 <dialog aria-labelledby="fr-modal-title-modal-{{lieu_index}}" role="dialog" id="fr-modal-lieu-{{lieu_index}}" class="fr-modal">
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
-            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
                         <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-lieu-{{lieu_index}}">Fermer</button>
                     </div>
                     <div class="fr-modal__content">
-                        <div class="fr-grid-row fr-grid-row--center fr-mb-4w">
-                            <h1 id="fr-modal-title-modal-{{lieu_index}}">{{lieu.nom}}</h1>
+                        <div class="fr-grid-row fr-mb-4w">
+                            <h1
+                                id="fr-modal-title-modal-{{lieu_index}}"
+                                class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg"
+                            >
+                                {{lieu.nom}}
+                            </h1>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Adresse ou lieu-dit</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse">{{lieu.adresse_lieu_dit|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse">{{lieu.adresse_lieu_dit|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Commune</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-commune">{{lieu.commune|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-commune">{{lieu.commune|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Site d'inspection</div>
-                            <div class="fr-col-6">{{lieu.site_inspection.nom|default:"nc."}}</div>
+                            <div class="fr-col-6">
+                                {% if lieu.site_inspection.nom %}
+                                    {% dsfr_badge label=lieu.site_inspection.nom extra_classes="fr-badge--info fr-badge--no-icon" %}
+                                {% else %}
+                                    {% empty_value_tag %}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Code INSEE</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-insee">{{lieu.code_insee|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-insee">{{lieu.code_insee|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Département</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-departement">{{lieu.departement.nom|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-departement">{{lieu.departement.nom|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Région</div>
-                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-region">{{lieu.departement.region.nom|default:"nc."}}</div>
+                            <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-region">{{lieu.departement.region.nom|or_empty_value_tag}}</div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
-                            <div class="fr-col-offset-2"></div>
                             <div class="fr-col-4 descripteur-label">Coord. WGS84</div>
                             <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-wgs84">
                                 {% if lieu.wgs84_latitude and lieu.wgs84_longitude %}
@@ -50,51 +56,49 @@
                                         <div class="fr-col-7" data-testid="lieu-{{lieu_index}}-wgs84-longitude">{{lieu.wgs84_longitude}}</div>
                                     </div>
                                 {% else %}
-                                    nc.
+                                    {% empty_value_tag %}
                                 {% endif %}
                             </div>
                         </div>
                         {% if lieu.is_etablissement %}
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-10">
                                     Il s'agit d'un établissement
                                 </div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Raison sociale</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-raison-sociale-etablissement">{{lieu.raison_sociale_etablissement|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-raison-sociale-etablissement">{{lieu.raison_sociale_etablissement|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">N° SIRET</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-siret-etablissement">{{lieu.siret_etablissement|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-siret-etablissement">{{lieu.siret_etablissement|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Adresse</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse-etablissement">{{lieu.adresse_etablissement|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-adresse-etablissement">{{lieu.adresse_etablissement|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Pays</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-pays-etablissement">{{lieu.get_pays_etablissement_display|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-pays-etablissement">{{lieu.get_pays_etablissement_display|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Code INUPP</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-inupp-etablissement">{{lieu.code_inupp_etablissement|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-code-inupp-etablissement">{{lieu.code_inupp_etablissement|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Description de l’activité</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-activite-etablissement">{{lieu.activite_etablissement|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-activite-etablissement">{{lieu.activite_etablissement|or_empty_value_tag}}</div>
                             </div>
                             <div class="fr-grid-row fr-mb-2w">
-                                <div class="fr-col-offset-2"></div>
                                 <div class="fr-col-4 descripteur-label">Position</div>
-                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">{{lieu.position_chaine_distribution_etablissement.libelle|default:"nc."}}</div>
+                                <div class="fr-col-6" data-testid="lieu-{{lieu_index}}-position-etablissement">
+                                    {% if lieu.position_chaine_distribution_etablissement.libelle %}
+                                        <span class="fr-badge fr-badge--info fr-badge--no-icon">{{ lieu.position_chaine_distribution_etablissement.libelle }}</span>
+                                    {% else %}
+                                        {% empty_value_tag %}
+                                    {% endif %}
+                                </div>
                             </div>
                         {% endif %}
                     </div>

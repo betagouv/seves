@@ -6,13 +6,14 @@ from unittest import mock
 import pytest
 
 from core.constants import Visibilite
+from core.models import FinSuiviContact
 from sv.export import FicheDetectionExport
 from sv.factories import FicheDetectionFactory, FicheZoneFactory, LieuFactory, PrelevementFactory, ZoneInfesteeFactory
 from sv.models import Evenement, FicheDetection, StructurePreleveuse
 
 
 @pytest.mark.django_db
-def test_export_headers_content():
+def test_export_headers_content(mocked_authentification_user):
     expected_headers = [
         "Numéro de fiche",
         "Num. événement",
@@ -23,6 +24,7 @@ def test_export_headers_content():
         "Numéro Europhyt",
         "Numéro RASFF",
         "Date de création",
+        "Date de publication",
         "Structure créatrice",
         "Statut de l'événement",
         "Contexte",
@@ -75,7 +77,8 @@ def test_export_headers_content():
     )
 
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
     FicheDetectionExport().export(stream=stream, queryset=queryset)
     stream.seek(0)
     headers = next(csv.reader(stream))
@@ -84,7 +87,7 @@ def test_export_headers_content():
 
 
 @pytest.mark.django_db
-def test_export_data_values():
+def test_export_data_values(force_utc, mocked_authentification_user):
     stream = StringIO()
     mocked = datetime.datetime(2024, 8, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
@@ -100,7 +103,8 @@ def test_export_data_values():
     evenement = fiche_detection.evenement
 
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
     FicheDetectionExport().export(stream=stream, queryset=queryset)
     stream.seek(0)
     next(csv.reader(stream))  # Skip headers
@@ -116,6 +120,7 @@ def test_export_data_values():
         evenement.numero_europhyt,
         evenement.numero_rasff,
         fiche_detection.date_creation.strftime("%d/%m/%Y %H:%M"),
+        fiche_detection.evenement.date_publication.strftime("%d/%m/%Y %H:%M"),
         str(fiche_detection.createur),
         str(fiche_detection.statut_evenement),
         str(fiche_detection.contexte),
@@ -164,7 +169,7 @@ def test_export_data_values():
 
 
 @pytest.mark.django_db
-def test_export_fiche_detection_performance(django_assert_num_queries):
+def test_export_fiche_detection_performance(django_assert_num_queries, mocked_authentification_user):
     structure, _ = StructurePreleveuse.objects.get_or_create(nom="My structure")
 
     PrelevementFactory(
@@ -173,8 +178,9 @@ def test_export_fiche_detection_performance(django_assert_num_queries):
     )
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
-    with django_assert_num_queries(9):
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     PrelevementFactory.create_batch(
@@ -184,8 +190,8 @@ def test_export_fiche_detection_performance(django_assert_num_queries):
     )
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
-    with django_assert_num_queries(9):
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
 
@@ -197,12 +203,13 @@ def test_export_fiche_detection_performance(django_assert_num_queries):
         (lambda: FicheDetectionFactory.create_batch(2), 2),
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection(factory, expected_data_lines):
+def test_numbers_of_line_when_export_fiche_detection(factory, expected_data_lines, mocked_authentification_user):
     factory()
 
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
     FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
@@ -220,12 +227,15 @@ def test_numbers_of_line_when_export_fiche_detection(factory, expected_data_line
         (lambda: LieuFactory.create_batch(2), 2),
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection_with_lieu(factory, expected_data_lines):
+def test_numbers_of_line_when_export_fiche_detection_with_lieu(
+    factory, expected_data_lines, mocked_authentification_user
+):
     factory()
 
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
     FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
@@ -243,7 +253,9 @@ def test_numbers_of_line_when_export_fiche_detection_with_lieu(factory, expected
         (2, 3, 6),  # 2 lieux avec 3 prélèvements chacun = 6 lignes
     ],
 )
-def test_numbers_of_line_when_export_fiche_detection_with_prelevements(nb_lieu, nb_prelevement, expected_data_lines):
+def test_numbers_of_line_when_export_fiche_detection_with_prelevements(
+    nb_lieu, nb_prelevement, expected_data_lines, mocked_authentification_user
+):
     fiche = FicheDetectionFactory()
     for _ in range(nb_lieu):
         lieu = LieuFactory(fiche_detection=fiche)
@@ -251,7 +263,8 @@ def test_numbers_of_line_when_export_fiche_detection_with_prelevements(nb_lieu, 
 
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
-    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export()
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
     FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     stream.seek(0)
@@ -259,3 +272,23 @@ def test_numbers_of_line_when_export_fiche_detection_with_prelevements(nb_lieu, 
     next(reader)  # Skip headers
     data_lines = list(reader)
     assert len(data_lines) == expected_data_lines
+
+
+@pytest.mark.django_db
+def test_export_etat_value_in_fin_de_suivi(mocked_authentification_user):
+    stream = StringIO()
+    fiche_detection = FicheDetectionFactory()
+    evenement = fiche_detection.evenement
+    contact = mocked_authentification_user.agent.structure.contact_set.get()
+    evenement.contacts.add(contact)
+    FinSuiviContact.objects.create(
+        content_object=evenement,
+        contact=contact,
+    )
+    queryset = FicheDetection.objects.filter(id=fiche_detection.pk).optimized_for_export(contact=contact)
+    FicheDetectionExport().export(stream=stream, queryset=queryset)
+    stream.seek(0)
+    next(csv.reader(stream))  # Skip headers
+    data = next(csv.reader(stream))
+
+    assert "Fin de suivi pour ma structure" in data

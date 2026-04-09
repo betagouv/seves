@@ -81,6 +81,7 @@ def test_can_create_evenement_produit_with_all_fields(live_server, mocked_authen
         "numero_annee",
         "numero_evenement",
         "date_creation",
+        "date_publication",
         "numero_rasff",
         "last_updated",
         "id",
@@ -174,6 +175,7 @@ def test_can_publish_evenement_produit(live_server, mocked_authentification_user
     assert evenement_produit.description == input_data.description
     assert evenement_produit.numero is not None
     assert evenement_produit.is_draft is False
+    assert evenement_produit.date_publication is not None
 
 
 def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):

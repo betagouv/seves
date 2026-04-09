@@ -1,0 +1,13 @@
+.ql-editor {
+    min-height: 15em;
+}
+
+/* The editor uses ol even for un-organized lists, DSFR forces some numbers for the ol element that we don't want here */
+.ql-editor ol {
+    padding-inline-start: initial !important;
+    list-style: none !important;
+}
+
+.ql-editor ol > li::marker {
+    content: none;
+}

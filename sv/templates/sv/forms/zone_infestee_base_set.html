@@ -1,4 +1,4 @@
-{% load partials dsfr_tags widget_tweaks get_field_label %}
+{% load dsfr_tags widget_tweaks get_field_label %}
 
 {% partialdef formset-form %}
     <div
@@ -14,7 +14,7 @@
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
-                    <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
                         <div class="fr-modal__body">
                             <div class="fr-modal__header">
                                 <button
@@ -26,7 +26,7 @@
                                 </button>
                             </div>
                             <div class="fr-modal__content">
-                                <h1 id="fr-modal-delete-zi-confirmation-title" class="fr-modal__title">Supprimer</h1>
+                                <h1 id="fr-modal-delete-zi-confirmation-title" class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg">Supprimer</h1>
                                 <p>Souhaitez-vous réellement supprimer la zone infestée ?</p>
                                 <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
                                     <button

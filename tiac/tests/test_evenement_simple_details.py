@@ -23,6 +23,12 @@ def test_evenement_simple_detail_page_content(live_server, page: Page):
 
     expect(details_page.context_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
     expect(
+        details_page.context_block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
+        details_page.context_block.get_by_text(evenement.date_publication.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
         details_page.context_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
     ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()
@@ -71,3 +77,20 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
     generic_test_bloc_commun_nb_items(live_server, page, evenement)
+
+
+def test_evenement_simple_detail_page_synthese_content(live_server, page: Page):
+    evenement = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    EtablissementFactory.create_batch(2, evenement_simple=evenement)
+
+    details_page = EvenementSimpleDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.open_synthese()
+
+    expect(details_page.synthese_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
+    expect(
+        details_page.synthese_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+
+    for etablissement in evenement.etablissements.all():
+        expect(details_page.synthese_block).to_contain_text(etablissement.commune_and_cp)
