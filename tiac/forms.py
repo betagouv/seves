@@ -45,9 +45,16 @@ from tiac.models import (
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
-    date_reception = forms.DateTimeField(
+    date_reception = forms.DateField(
         label="Date de réception",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "type": "date",
+                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
+                "max": timezone.localtime(timezone.now()).date().isoformat(),
+            },
+        ),
     )
     numero_rasff = forms.CharField(
         required=False,
@@ -236,10 +243,17 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     CategorieDanger = CategorieDanger
     DangersSyndromiques = DangersSyndromiques
 
-    date_reception = forms.DateTimeField(
+    date_reception = forms.DateField(
         required=False,
         label="Date de réception",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "type": "date",
+                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
+                "max": timezone.localtime(timezone.now()).date().isoformat(),
+            },
+        ),
     )
     numero_rasff = forms.CharField(
         required=False,

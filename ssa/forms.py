@@ -34,9 +34,16 @@ from ssa.widgets import PositionDossierWidget
 
 
 class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
-    date_reception = forms.DateTimeField(
+    date_reception = forms.DateField(
         label="Date de réception",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "type": "date",
+                "value": timezone.localtime(timezone.now()).date().isoformat(),
+                "max": timezone.localtime(timezone.now()).date().isoformat(),
+            },
+        ),
     )
     numero_rasff = forms.CharField(
         required=False,
