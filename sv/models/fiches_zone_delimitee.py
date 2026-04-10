@@ -14,7 +14,7 @@ from sv.managers import FicheZoneManager
 from sv.models.models_mixins import WithDerniereMiseAJourMixin
 
 
-@reversion.register()
+@reversion.register(follow=["zones_infestees"])
 class FicheZoneDelimitee(WithDerniereMiseAJourMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
@@ -190,3 +190,6 @@ class ZoneInfestee(models.Model):
             with reversion.create_revision():
                 super().save(*args, **kwargs)
             FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.fiche_zone_delimitee.id)
+
+    def __str__(self):
+        return self.nom or "Zone infestée sans nom"
