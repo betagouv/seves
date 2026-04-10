@@ -465,17 +465,15 @@ class FicheZoneDelimiteeFormPage:
         )
 
         # Zones infestées
-        self.zone_infestee_nom_base_locator = "#id_zoneinfestee_set-{}-nom"
-        self.zone_infestee_caracteristique_principale_base_locator = (
-            "#id_zoneinfestee_set-{}-caracteristique_principale"
-        )
-        self.zone_infestee_rayon_base_locator = "#id_zoneinfestee_set-{}-rayon"
-        self.zone_infestee_rayon_unite_base_locator = "input[name='zoneinfestee_set-{}-unite_rayon'][value='{}']"
-        self.zone_infestee_surface_infestee_totale_base_locator = "#id_zoneinfestee_set-{}-surface_infestee_totale"
+        self.zone_infestee_nom_base_locator = "#id_zones_infestees-{}-nom"
+        self.zone_infestee_caracteristique_principale_base_locator = "#id_zones_infestees-{}-caracteristique_principale"
+        self.zone_infestee_rayon_base_locator = "#id_zones_infestees-{}-rayon"
+        self.zone_infestee_rayon_unite_base_locator = "input[name='zones_infestees-{}-unite_rayon'][value='{}']"
+        self.zone_infestee_surface_infestee_totale_base_locator = "#id_zones_infestees-{}-surface_infestee_totale"
         self.zone_infestee_surface_infestee_totale_unite_base_locator = (
-            "input[name='zoneinfestee_set-{}-unite_surface_infestee_totale'][value='{}']"
+            "input[name='zones_infestees-{}-unite_surface_infestee_totale'][value='{}']"
         )
-        self.zone_infestee_total_forms = self.page.locator('input[name="zoneinfestee_set-TOTAL_FORMS"]')
+        self.zone_infestee_total_forms = self.page.locator('input[name="zones_infestees-TOTAL_FORMS"]')
 
         # Boutons
         self.add_zone_infestee_btn = page.get_by_role("button", name="Ajouter une zone infestée")
@@ -745,7 +743,7 @@ class FicheZoneDelimiteeFormPage:
         expect(self.surface_tampon_totale).to_have_value(str(fiche_zone_delimitee.surface_tampon_totale))
         self._check_unite_surface_tampon_totale_checked(fiche_zone_delimitee.unite_surface_tampon_totale)
         self.check_detections_in_hors_zone_infestee(fiche_zone_delimitee.fichedetection_set.all())
-        self._check_zones_infestees(fiche_zone_delimitee.zoneinfestee_set.all())
+        self._check_zones_infestees(fiche_zone_delimitee.zones_infestees.all())
 
     def organisme_nuisible_is_autoselect(self, organisme_nuisible_libelle_expected: str):
         expect(self.organisme_nuisible).to_have_value(organisme_nuisible_libelle_expected)
@@ -775,7 +773,7 @@ class FicheZoneDelimiteeFormPage:
         locator = 'input[name="unite_surface_tampon_totale"]'
         unites_surface_tampon_totale = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
 
-        locator = 'input[name="zoneinfestee_set-0-unite_surface_infestee_totale"]'
+        locator = 'input[name="zones_infestees-0-unite_surface_infestee_totale"]'
         unites_surface_infestee_totale = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
 
         return unites_surface_tampon_totale == unites_surface_infestee_totale
@@ -784,7 +782,7 @@ class FicheZoneDelimiteeFormPage:
         locator = 'input[name="unite_rayon_zone_tampon"]'
         unites_rayon_zone_tampon = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
 
-        locator = 'input[name="zoneinfestee_set-0-unite_rayon"]'
+        locator = 'input[name="zones_infestees-0-unite_rayon"]'
         unites_unite_rayon_zoneinfestee = [btn.get_attribute("value") for btn in self.page.locator(locator).all()]
 
         return unites_rayon_zone_tampon == unites_unite_rayon_zoneinfestee
