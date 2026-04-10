@@ -47,7 +47,16 @@
 
                 <section>
                     {% partialdef form_btns inline %}
-                        <a id="cancel-link" href="#" class="fr-link fr-mr-3w">Annuler</a>
+                        {% if evenement %}
+                            {% if is_creation %}
+                                <a href="{{ evenement.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                            {% else %}
+                                <a href="{{ evenement.get_absolute_url }}?detection={{ form.instance.pk }}" class="fr-link fr-mr-3w">Annuler</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'sv:evenement-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
+                        {% endif %}
+
                         {% if is_creation %}
                             <input type="submit" value="Enregistrer" class="fr-btn">
                         {% else %}

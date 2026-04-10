@@ -511,7 +511,7 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
 
 
 class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
-    template_name = "tiac/investigation_modification.html"
+    template_name = "tiac/investigation.html"
 
     def form_valid(self, form):
         self.object_was_draft = form.instance.is_draft

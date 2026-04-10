@@ -2,14 +2,3 @@
 {% load dsfr_tags widget_tweaks static %}
 
 {% block title %}<h1 class="fr-col-6">Modification de l'événement {{ object.numero }}</h1>{% endblock %}
-
-{% block buttons %}
-    {% partialdef form_btns_edit inline %}
-        <a href="{% url 'tiac:evenement-liste' %}" class="fr-link">Annuler</a>
-        {% include "tiac/evenement_simple.html#form_btns" %}
-    {% endpartialdef %}
-{% endblock %}
-
-{% block bottom_buttons %}
-    {% partial form_btns_edit %}
-{% endblock %}
