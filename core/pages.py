@@ -337,6 +337,10 @@ class WithDocumentsPage(BaseDocumentPage):
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter des documents")
 
+    @property
+    def download_documents_zip(self):
+        return self.page.get_by_test_id("document-download-zip")
+
     def open_document_tab(self):
         if not self.page.locator(self.container_id).is_visible():
             self.page.get_by_test_id("documents").click()

@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Literal
+import zipfile
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -8,7 +9,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
-from core.models import Contact, FinSuiviContact, Message, Structure
+from core.models import Contact, Document, FinSuiviContact, Message, Structure
 from core.pages import CreateMessagePage, ListOfMessagesPage, UpdateMessagePage
 
 
@@ -892,3 +893,28 @@ def generic_test_can_preview_image_from_message_details(live_server, page: Page,
     new_page.locator(".fr-icon-eye-line").click()
     img = new_page.locator('img[src*="_test.png"]')
     expect(img).to_be_visible()
+
+
+def generic_test_can_download_zip_attachments_of_message(live_server, page: Page, object):
+    message = MessageFactory(content_object=object)
+    expected_1 = DocumentFactory(content_object=message)
+    expected_2 = DocumentFactory(content_object=message)
+    _not_expected_1 = DocumentFactory(content_object=MessageFactory(content_object=object))
+    _not_expected_2 = DocumentFactory(content_object=object)
+    _not_expected_3 = DocumentFactory(content_object=message, is_deleted=True)
+    not_expected_4 = DocumentFactory(content_object=message)
+    Document.objects.filter(pk=not_expected_4.pk).update(is_infected=True)
+
+    page.goto(f"{live_server.url}{message.get_absolute_url()}")
+
+    with page.expect_download() as download_info:
+        page.get_by_role("button", name="Télécharger les pièces jointes (zip)").click()
+
+    download = download_info.value
+    assert download.suggested_filename.endswith(".zip") is True
+    download_path = download.path()
+    with zipfile.ZipFile(download_path, "r") as z:
+        files = z.namelist()
+        expected = [expected_1.file.name, expected_2.file.name]
+        expected = sorted([e.replace("documents/", "") for e in expected])
+        assert sorted(files) == expected, f"Expected {expected} and got {files}"

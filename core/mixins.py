@@ -133,6 +133,8 @@ class WithDocumentListInContextMixin:
                     },
                 )
         context["document_count"] = documents.exclude(is_deleted=True).count()
+        downloadable_documents = [d for d in document_filter.qs if (d.is_deleted is False and d.is_infected is False)]
+        context["document_count_for_download"] = len(downloadable_documents)
         context["document_filter"] = document_filter
         return context
 

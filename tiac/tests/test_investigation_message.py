@@ -17,6 +17,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_see_message_in_new_tab_without_document_in_draft,
     generic_test_can_delete_my_own_draft_message,
     generic_test_can_delete_my_own_message,
+    generic_test_can_download_zip_attachments_of_message,
     generic_test_can_only_see_own_document_types_in_message_form,
     generic_test_can_preview_image_from_message_details,
     generic_test_can_reply_to_message,
@@ -140,6 +141,12 @@ def test_message_ordering(live_server, page: Page, mocked_authentification_user)
 def test_can_preview_image_from_message_details(live_server, page: Page, mocked_authentification_user):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_preview_image_from_message_details(live_server, page, evenement)
+
+
+@override_flag("download_zip", active=True)
+def test_can_download_zip_attachments_of_message(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_download_zip_attachments_of_message(live_server, page, evenement)
 
 
 def test_can_update_draft_message_in_new_tab(

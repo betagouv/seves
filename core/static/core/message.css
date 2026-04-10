@@ -9,6 +9,10 @@
     word-break: break-all;
     background-color: var(--background-default-grey);
 }
+.zip-download {
+    display: flex;
+    justify-content: center;
+}
 .message-document-container .fr-btn--tertiary {
     margin-bottom: 0;
 }
