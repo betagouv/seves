@@ -22,7 +22,12 @@
                 <div class="action-buttons">
                     {% partialdef form_btns inline %}
                         {% block buttons %}
-                            <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
+                            {% if form.instance.pk %}
+                                <a href="{{ form.instance.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                            {% else %}
+                                <a href="{% url 'ssa:evenements-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
+                            {% endif %}
+
                             {% if form.instance and form.instance.is_draft %}
                                 <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w">
                                     Enregistrer le brouillon

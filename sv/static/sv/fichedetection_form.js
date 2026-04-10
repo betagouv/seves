@@ -31,13 +31,6 @@ function hasStatusToOrganismeNuisibleData() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    for (const it of document.querySelectorAll("#cancel-link")) {
-        it.addEventListener("click", event => {
-            event.preventDefault()
-            window.location = document.referrer
-        })
-    }
-
     if (hasStatusToOrganismeNuisibleData()) {
         setUpOrganismeNuisible()
     }

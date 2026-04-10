@@ -27,6 +27,12 @@
 
                         {% block buttons %}
                             {% partialdef buttons inline %}
+                                {% if form.instance.pk %}
+                                    <a href="{{ form.instance.get_absolute_url }}" class="fr-link fr-mr-3w">Annuler</a>
+                                {% else %}
+                                    <a href="{% url 'tiac:evenement-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
+                                {% endif %}
+
                                 {% if form.instance and form.instance.is_draft %}
                                     <li>
                                         <button

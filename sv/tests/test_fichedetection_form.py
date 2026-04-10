@@ -663,14 +663,13 @@ def test_prelevement_resultat_card(
     expect(page.locator("#prelevements-list")).to_contain_text("NON CONCLUSIF")
 
 
-@pytest.mark.parametrize("action_name", ["Ajouter une détection", "Modifier"])
-def test_return_to_correct_detection_after_creation_or_update(live_server, page: Page, action_name):
+def test_return_to_correct_detection_after__update(live_server, page: Page):
     evenement = EvenementFactory()
     _, detection_2, _ = FicheDetectionFactory.create_batch(3, evenement=evenement)
 
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}?detection={detection_2.pk}")
 
-    page.get_by_role("link", name=action_name).click()
+    page.get_by_role("link", name="Modifier").click()
     page.get_by_test_id("bottom-action-btns").get_by_role("link", name="Annuler").click()
 
     expect(page.get_by_role("tab", name=f"{detection_2.numero}")).to_be_visible()
