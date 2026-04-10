@@ -53,7 +53,7 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.page.locator(".ql-bold").click()
     message_page.message_content_in_rich_text_editor.type("My content \n with a line return\n")
     message_page.page.locator(".ql-color.ql-picker.ql-color-picker").click()
-    message_page.page.locator(".ql-primary").first.click()
+    message_page.page.locator(".ql-primary").nth(1).click()
     message_page.message_content_in_rich_text_editor.type("Text in color\n")
     message_page.page.locator(".ql-list").click()
     message_page.message_content_in_rich_text_editor.type("Item 1\n")
@@ -72,7 +72,7 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.page.wait_for_timeout(20000)
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert (
-        '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-grey-925-125">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
+        '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-blue-france-sun-113-625">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
         in new_page.content()
     )
     assert object.messages.get().status == Message.Status.FINALISE
