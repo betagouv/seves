@@ -1,5 +1,6 @@
 from threading import Lock
 from unittest.mock import patch
+import zipfile
 
 from django.core.exceptions import ValidationError
 from django.forms import FileField, Form
@@ -7,7 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, Route, expect
 import pytest
 
-from core.factories import DocumentFactory
+from core.factories import DocumentFactory, MessageFactory, StructureFactory
 from core.models import Document
 from core.pages import WithDocumentsPage
 from seves import settings
@@ -198,3 +199,64 @@ def generic_test_document_modal_front_behavior(live_server, page: Page, content_
 
     content_object.refresh_from_db()
     assert content_object.documents.count() == previous + 3
+
+
+def generic_test_can_download_zip_of_documents(live_server, page: Page, object):
+    expected_1 = DocumentFactory(content_object=object)
+    expected_2 = DocumentFactory(content_object=object)
+    expected_3 = DocumentFactory(content_object=object)
+    infected = DocumentFactory(content_object=object)
+    Document.objects.filter(pk=infected.pk).update(is_infected=True)
+    to_be_scanned = DocumentFactory(content_object=object)
+    Document.objects.filter(pk=to_be_scanned.pk).update(is_infected=None)
+    DocumentFactory(content_object=object, is_deleted=True)
+
+    message = MessageFactory(content_object=object)
+    expected_4 = DocumentFactory(content_object=message)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    with page.expect_download() as download_info:
+        document_page.download_documents_zip.click()
+
+    download = download_info.value
+    assert download.suggested_filename.endswith(".zip") is True
+    download_path = download.path()
+    with zipfile.ZipFile(download_path, "r") as z:
+        files = z.namelist()
+        expected = [expected_1.file.name, expected_2.file.name, expected_3.file.name, expected_4.file.name]
+        expected = sorted([e.replace("documents/", "") for e in expected])
+        assert sorted(files) == expected, f"Expected {expected} and got {files}"
+
+
+def generic_test_can_download_zip_of_documents_with_filter(live_server, page: Page, object):
+    structure = StructureFactory()
+    document_1 = DocumentFactory(content_object=object, created_by_structure=structure)
+    document_2 = DocumentFactory(content_object=object, created_by_structure=structure)
+    DocumentFactory(content_object=object)
+
+    page.goto(
+        f"{live_server.url}{object.get_absolute_url()}?created_by_structure={structure.pk}#tabpanel-documents-panel"
+    )
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    expect(page.get_by_text("Télécharger les 2 documents (.zip)"))
+    with page.expect_download() as download_info:
+        document_page.download_documents_zip.click()
+
+    download = download_info.value
+    assert download.suggested_filename.endswith(".zip") is True
+    download_path = download.path()
+    with zipfile.ZipFile(download_path, "r") as z:
+        files = z.namelist()
+        expected = [document_1.file.name, document_2.file.name]
+        expected = sorted([e.replace("documents/", "") for e in expected])
+        assert sorted(files) == expected, f"Expected {expected} and got {files}"
+
+
+def generic_test_cant_download_zip_when_no_documents(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    document_page = WithDocumentsPage(page)
+    document_page.open_document_tab()
+    expect(document_page.download_documents_zip).not_to_be_visible()

@@ -7,7 +7,7 @@
     {% endflag %}
 {% endblock %}
 {% block content %}
-    {% for document in message.documents.all %}
+    {% for document in documents %}
         {% if document.can_be_viewed or document.can_pdf_be_viewed %}
             <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" role="dialog" id="fr-document-image-table-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
                 <div class="fr-container fr-container--fluid fr-container-md">
@@ -96,9 +96,19 @@
                             </div>
                             <div class="fr-col-4 white-container">
                                 <h5>Documents</h5>
-                                {% if message.documents.all %}
+                                {% if documents %}
                                     <p class="fr-hint-text">Pièces jointes. Retrouvez l'ensemble des documents dans l'onglet "Documents" du bloc de suivi.</p>
-                                    {% for document in message.documents.all %}
+                                    {% flag "download_zip" %}
+                                        {% if document_count_for_download > 1 %}
+                                            <form method="post" action="{% url 'document-zip' %}" class="zip-download">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                                <input type="hidden" name="pk" value="{{ message.pk }}">
+                                                <button type="submit" class="fr-btn fr-icon-download-line fr-btn--icon-left fr-mb-4v fr-btn--secondary">Télécharger les pièces jointes (zip)</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endflag %}
+                                    {% for document in documents %}
                                         <div class="fr-card--shadow fr-mb-1w">
                                             <div class="fr-px-2w fr-py-1w message-document-container">
                                                 {% if document.is_deleted %}

@@ -1,3 +1,4 @@
+{% load waffle_tags %}
 <div class="fr-container--fluid fr-mb-4w" id="documents">
     <div class="fr-grid-row">
         <div class="fr-col-12 fr-col-md-6">
@@ -9,18 +10,36 @@
             </form>
 
         </div>
-        {% if can_add_document %}
+        {% if document_count_for_download > 1 or can_add_document %}
             <div class="fr-col-12 fr-col-md-6 fr-flex--align-end">
                 <div class="fr-btns-group fr-btns-group--icon-left fr-btns-group--right fr-btns-group--inline-md">
-                    <button
-                        class="fr-btn fr-btn--secondary fr-icon-add-circle-line"
-                        type="button"
-                        aria-controls="document-modal"
-                        data-fr-opened="false"
-                        data-testid="add-document-btn"
-                    >
-                        Ajouter des documents
-                    </button>
+                    {% flag "download_zip" %}
+                        {% if document_count_for_download > 1  %}
+                            <form method="post" action="{% url 'document-zip' %}?{{ request.GET.urlencode }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                <input type="hidden" name="pk" value="{{ object.pk }}">
+                                <button
+                                    class="fr-btn fr-btn--secondary fr-icon-download-line"
+                                    type="submit"
+                                    data-testid="document-download-zip"
+                                >
+                                    Télécharger les {{ document_count_for_download}} documents (.zip)
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endflag %}
+                    {% if can_add_document %}
+                        <button
+                            class="fr-btn fr-btn--secondary fr-icon-add-circle-line"
+                            type="button"
+                            aria-controls="document-modal"
+                            data-fr-opened="false"
+                            data-testid="add-document-btn"
+                        >
+                            Ajouter des documents
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

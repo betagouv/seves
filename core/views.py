@@ -1,6 +1,8 @@
 import contextlib
+import io
 import json
 import logging
+import zipfile
 
 from django.conf import settings
 from django.contrib import messages
@@ -23,6 +25,7 @@ from reversion.models import Version
 
 from core.diffs import CompareMixin, Diff, get_diff_from_comment_version
 
+from .filters import DocumentFilter
 from .forms import (
     AgentAddForm,
     BasicMessageForm,
@@ -279,7 +282,6 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
             "recipients_copy__agent",
             "recipients_copy__structure",
             "recipients_copy__agent__structure",
-            "documents",
         )
 
     def dispatch(self, request, *args, **kwargs):
@@ -297,6 +299,10 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         context = super().get_context_data(**kwargs)
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
         context["can_reply_to"] = self.message.can_reply_to(self.request.user)
+        context["content_type"] = ContentType.objects.get_for_model(self.message)
+        context["documents"] = self.message.documents.all()
+        downloadable_documents = [d for d in context["documents"] if (d.is_deleted is False and d.is_infected is False)]
+        context["document_count_for_download"] = len(downloadable_documents)
         return context
 
 
@@ -616,3 +622,46 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
 
         context["patches"] = patches
         return context
+
+
+class ZipDownloadView(UserPassesTestMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        content_type = ContentType.objects.get(id=request.POST["content_type"])
+        self.object = content_type.model_class().objects.get(pk=request.POST["pk"])
+        if isinstance(self.object, Message):
+            self.fiche_object = self.object.content_object
+            self.is_message = True
+        else:
+            self.fiche_object = self.object
+            self.is_message = False
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.fiche_object.can_user_access(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        if self.is_message:
+            queryset = self.object.documents.all()
+        else:
+            documents = Document.objects.for_fiche(self.object)
+            queryset = DocumentFilter(self.request.GET, queryset=documents).qs
+
+        queryset = queryset.exclude(is_deleted=True).exclude(is_infected=None)
+
+        buffer = io.BytesIO()
+
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+            for obj in queryset:
+                f = obj.file
+                f.open("rb")
+
+                with zip_file.open(f.name.split("/")[-1], "w") as dest:
+                    for chunk in f.chunks():
+                        dest.write(chunk)
+
+                f.close()
+        buffer.seek(0)
+
+        response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+        response["Content-Disposition"] = f'attachment; filename="documents_{str(self.object)}.zip"'
+        return response

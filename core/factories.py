@@ -141,6 +141,10 @@ class DocumentFactory(DjangoModelFactory):
         return Agent.objects.get(user__email="test@example.com")
 
     @factory.lazy_attribute
+    def is_deleted(self):
+        return False
+
+    @factory.lazy_attribute
     def created_by_structure(self):
         return Structure.objects.get(libelle="Structure Test")
 

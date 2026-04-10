@@ -1,7 +1,11 @@
 from playwright.sync_api import Page
+from waffle.testutils import override_flag
 
 from core.tests.generic_tests.documents import (
     generic_test_can_add_document_to_evenement,
+    generic_test_can_download_zip_of_documents,
+    generic_test_can_download_zip_of_documents_with_filter,
+    generic_test_cant_download_zip_when_no_documents,
     generic_test_cant_see_document_type_from_other_app,
     generic_test_cant_see_document_type_from_other_app_when_editing_document,
     generic_test_document_modal_front_behavior,
@@ -38,3 +42,21 @@ def test_document_modal_xss_mitigated(live_server, page: Page):
 def test_document_modal_front_behavior(live_server, page: Page):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_document_modal_front_behavior(live_server, page, evenement)
+
+
+@override_flag("download_zip", active=True)
+def test_can_download_zip_of_documents(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_download_zip_of_documents(live_server, page, evenement)
+
+
+@override_flag("download_zip", active=True)
+def test_can_download_zip_of_documents_with_filter(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_can_download_zip_of_documents_with_filter(live_server, page, evenement)
+
+
+@override_flag("download_zip", active=True)
+def test_cant_download_zip_when_no_documents(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    generic_test_cant_download_zip_when_no_documents(live_server, page, evenement)
