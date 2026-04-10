@@ -156,7 +156,9 @@ class ZoneInfestee(models.Model):
         verbose_name = "Zone infestée"
         verbose_name_plural = "Zones infestées"
 
-    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    fiche_zone_delimitee = models.ForeignKey(
+        "FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone", related_name="zones_infestees"
+    )
     nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
     surface_infestee_totale = models.FloatField(
         verbose_name="Surface infestée totale", blank=True, null=True, validators=[MinValueValidator(0)]

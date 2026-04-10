@@ -340,10 +340,10 @@ def test_cant_forge_update_of_zone_delimitee_i_cant_see(client):
         "unite_rayon_zone_tampon": ["km"],
         "surface_tampon_totale": [""],
         "unite_surface_tampon_totale": ["m2"],
-        "zoneinfestee_set-TOTAL_FORMS": ["0"],
-        "zoneinfestee_set-INITIAL_FORMS": ["0"],
-        "zoneinfestee_set-MIN_NUM_FORMS": ["0"],
-        "zoneinfestee_set-MAX_NUM_FORMS": ["1000"],
+        "zones_infestees-TOTAL_FORMS": ["0"],
+        "zones_infestees-INITIAL_FORMS": ["0"],
+        "zones_infestees-MIN_NUM_FORMS": ["0"],
+        "zones_infestees-MAX_NUM_FORMS": ["1000"],
     }
     response = client.post(reverse("sv:fiche-zone-delimitee-update", kwargs={"pk": fiche_zone.pk}), data=payload)
 

@@ -149,7 +149,7 @@ class EvenementDetailView(
             context["detections_hors_zone_infestee"] = fiche_zone.fichedetection_set.all()
             context["zones_infestees"] = [
                 (zone_infestee, zone_infestee.fichedetection_set.all())
-                for zone_infestee in fiche_zone.zoneinfestee_set.all()
+                for zone_infestee in fiche_zone.zones_infestees.all()
             ]
         contact = self.request.user.agent.structure.contact_set.get()
         context["etat"] = self.get_object().get_etat_data_for_contact(contact)
@@ -747,7 +747,7 @@ class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, 
             detections_hors_zone_infestee = ", ".join([f.numero for f in fiche_zone.fichedetection_set.all()])
             zones_infestees = [
                 (zone_infestee, zone_infestee.fichedetection_set.all())
-                for zone_infestee in fiche_zone.zoneinfestee_set.all()
+                for zone_infestee in fiche_zone.zones_infestees.all()
             ]
 
         context = {

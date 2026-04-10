@@ -121,7 +121,7 @@ class FicheZoneQuerySet(FichesCommonQueryset):
     def with_nb_fiches_detection(self):
         return self.annotate(
             nb_fiches_detection=Count("fichedetection__id", distinct=True)
-            + Count("zoneinfestee__fichedetection__id", distinct=True)
+            + Count("zones_infestees__fichedetection__id", distinct=True)
         )
 
 
