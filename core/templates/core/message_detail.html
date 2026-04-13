@@ -8,7 +8,7 @@
 {% endblock %}
 {% block content %}
     {% for document in message.documents.all %}
-        {% if document.is_cartographie %}
+        {% if document.can_be_viewed or document.can_pdf_be_viewed %}
             <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" role="dialog" id="fr-document-image-table-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
                 <div class="fr-container fr-container--fluid fr-container-md">
                     <div class="fr-grid-row fr-grid-row--center">
@@ -18,9 +18,18 @@
                                     <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-document-image-table-{{ document.pk }}">Fermer</button>
                                 </div>
                                 <div class="fr-modal__content">
-                                    <div class="img-modal">
-                                        <img src="{{ document.file.url }}" loading="lazy"  alt="{{ document.nom }}">
-                                    </div>
+                                    {% if document.can_pdf_be_viewed %}
+                                        <div class="pdf-modal">
+                                            <object data="{{ document.file.url }}" type="application/pdf" width="100%" height="100%">
+                                                Votre navigateur ne supporte pas l'aperçu des fichiers PDF.
+                                            </object>
+                                        </div>
+                                    {% endif %}
+                                    {% if document.can_be_viewed %}
+                                        <div class="img-modal">
+                                            <img src="{{ document.file.url }}" loading="lazy"  alt="{{ document.nom }}">
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -100,7 +109,7 @@
                                                         {% if can_download_document %}
                                                             {{ document.nom }}
                                                             <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--sm fr-btns-group--right">
-                                                                {% if document.is_cartographie %}
+                                                                {% if document.can_be_viewed or document.can_pdf_be_viewed %}
                                                                     <li>
                                                                         <button data-fr-opened="false" aria-controls="fr-document-image-table-{{ document.pk }}" class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-m-0 fr-ml-2v"></button>
                                                                     </li>

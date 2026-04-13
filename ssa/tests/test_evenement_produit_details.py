@@ -8,7 +8,10 @@ import pytest
 
 from core.factories import StructureFactory
 from core.models import AuditLog
-from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
+from core.tests.generic_tests.bloc_commun import (
+    generic_test_bloc_commun_nb_items,
+    generic_test_can_preview_image_from_bloc_commun,
+)
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.tests.pages import EvenementProduitDetailsPage
@@ -152,3 +155,9 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
     other_object = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
+
+
+def test_can_preview_image_from_bloc_commun(live_server, page: Page):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+
+    generic_test_can_preview_image_from_bloc_commun(live_server, page, evenement)

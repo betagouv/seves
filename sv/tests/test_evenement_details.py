@@ -12,7 +12,10 @@ from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import AuditLog, Contact, Structure
-from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
+from core.tests.generic_tests.bloc_commun import (
+    generic_test_bloc_commun_nb_items,
+    generic_test_can_preview_image_from_bloc_commun,
+)
 from seves import settings
 from sv.factories import (
     EvenementFactory,
@@ -738,3 +741,9 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     other_object = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
     generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
+
+
+def test_can_preview_image_from_bloc_commun(live_server, page: Page):
+    evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_can_preview_image_from_bloc_commun(live_server, page, evenement)

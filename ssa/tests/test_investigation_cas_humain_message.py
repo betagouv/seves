@@ -17,6 +17,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_delete_my_own_draft_message,
     generic_test_can_delete_my_own_message,
     generic_test_can_only_see_own_document_types_in_message_form,
+    generic_test_can_preview_image_from_message_details,
     generic_test_can_reply_to_message,
     generic_test_can_search_in_message_list,
     generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab,
@@ -98,6 +99,11 @@ def test_cant_see_drafts_from_other_users(live_server, page: Page):
 def test_message_ordering(live_server, page: Page, mocked_authentification_user):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement)
+
+
+def test_can_preview_image_from_message_details(live_server, page: Page, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_preview_image_from_message_details(live_server, page, evenement)
 
 
 def test_can_update_draft_note_in_new_tab(

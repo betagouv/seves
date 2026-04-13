@@ -20,4 +20,5 @@ importmaps = {
     "Freelinks": static("core/free_links.js"),
     "DocumentUploads": static("core/form/document_uploads.mjs"),
     "FicheBlocCommun": static("core/fiche_bloc_commun.mjs"),
+    "ObjectLazyLoad": static("core/object_lazy_load.mjs"),
 }
