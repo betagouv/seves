@@ -3,7 +3,10 @@ from playwright.sync_api import Page, expect
 
 from core.mixins import WithEtatMixin
 from core.models import AuditLog
-from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
+from core.tests.generic_tests.bloc_commun import (
+    generic_test_bloc_commun_nb_items,
+    generic_test_can_preview_image_from_bloc_commun,
+)
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
     AlimentSuspectFactory,
@@ -171,6 +174,12 @@ def test_bloc_commun_nb_items(live_server, page: Page):
     other_object = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
     generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
+
+
+def test_can_preview_image_from_bloc_commun(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_can_preview_image_from_bloc_commun(live_server, page, evenement)
 
 
 def test_investigation_tiac_detail_page_synthese_content(live_server, page: Page):

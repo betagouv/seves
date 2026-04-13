@@ -30,6 +30,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_delete_my_own_draft_message,
     generic_test_can_delete_my_own_message,
     generic_test_can_only_see_own_document_types_in_message_form,
+    generic_test_can_preview_image_from_message_details,
     generic_test_can_reply_to_message,
     generic_test_can_search_in_message_list,
     generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_tab,
@@ -1012,6 +1013,11 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
 def test_message_ordering(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement)
+
+
+def test_can_preview_image_from_message_details(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementFactory()
+    generic_test_can_preview_image_from_message_details(live_server, page, evenement)
 
 
 def test_can_update_draft_message_in_new_tab(

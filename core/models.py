@@ -35,7 +35,13 @@ from .managers import (
 from .model_mixins import WithDocumentPermissionMixin, WithLastUpdatedDatetime, WithLocalisableMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
+from .validators import (
+    AllowedExtensions,
+    AllowedMimeTypes,
+    AnyOfValidator,
+    MagicMimeValidator,
+    validate_numero_agrement,
+)
 
 User = get_user_model()
 
@@ -319,6 +325,7 @@ class Document(models.Model):
     notification_sent = models.BooleanField(
         default=False, null=False, verbose_name="Est-ce qu'une notification a été envoyé suite à l'upload'"
     )
+    mimetype = models.CharField(max_length=100, blank=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
@@ -345,12 +352,26 @@ class Document(models.Model):
         return f"{self.nom} ({self.get_document_type_display()})"
 
     def save(self, *args, **kwargs):
+        if not self.pk and not self.mimetype and self.file:
+            try:
+                self.mimetype = MagicMimeValidator()(self.file)
+            except ValidationError:
+                pass
+
         with reversion.create_revision():
             super().save(*args, **kwargs)
 
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE
+
+    @property
+    def can_be_viewed(self):
+        return self.mimetype in [AllowedMimeTypes.IMAGE_PNG, AllowedMimeTypes.IMAGE_JPEG, AllowedMimeTypes.IMAGE_GIF]
+
+    @property
+    def can_pdf_be_viewed(self):
+        return self.mimetype == AllowedMimeTypes.APPLICATION_PDF
 
     @classmethod
     def validate_file_extention_for_document_type(cls, file, document_type):

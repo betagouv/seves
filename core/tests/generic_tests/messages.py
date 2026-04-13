@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Literal
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
@@ -871,3 +872,23 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     assert message_page.message_title_in_table(5) == finalise_newest.title
     assert message_page.message_title_in_table(6) == finalise_recent.title
     assert message_page.message_title_in_table(7) == finalise_oldest.title
+
+
+def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):
+    path = settings.BASE_DIR / "static/images/marianne.png"
+    file = SimpleUploadedFile(
+        name="test.png",
+        content=path.read_bytes(),
+        content_type="image/png",
+    )
+    message = MessageFactory(content_object=target_object)
+    DocumentFactory(content_object=message, is_infected=False, file=file)
+
+    page.goto(f"{live_server.url}{target_object.get_absolute_url()}")
+    message_page = ListOfMessagesPage(page)
+    page.locator("#tabpanel-messages").click()
+    new_page = message_page.open_message()
+
+    new_page.locator(".fr-icon-eye-line").click()
+    img = new_page.locator('img[src*="_test.png"]')
+    expect(img).to_be_visible()
