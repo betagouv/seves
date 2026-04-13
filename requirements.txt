@@ -63,7 +63,6 @@ django==6.0.4
     # via
     #   -r requirements.in
     #   dj-importmap
-    #   django-crispy-forms
     #   django-debug-toolbar
     #   django-dirtyfields
     #   django-dsfr
@@ -78,13 +77,11 @@ django==6.0.4
     #   sentry-sdk
 django-countries==8.2.0
     # via -r requirements.in
-django-crispy-forms==2.4
-    # via django-dsfr
 django-debug-toolbar==6.3.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
-django-dsfr==3.3.1
+django-dsfr==3.4.1
     # via -r requirements.in
 django-environ==0.13.0
     # via -r requirements.in
@@ -232,7 +229,6 @@ redis==7.4.0
     # via -r requirements.in
 requests==2.33.0
     # via
-    #   django-dsfr
     #   mozilla-django-oidc
     #   pytest-base-url
     #   requests-mock
