@@ -150,5 +150,5 @@ def test_evenement_produit_detail_page_access_other_structure(live_server, page:
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS, createur=StructureFactory())
-
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    other_object = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)

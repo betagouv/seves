@@ -76,8 +76,9 @@ def test_evenement_simple_detail_page_content_etablissement(
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = EvenementSimpleFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
 
 
 def test_evenement_simple_detail_page_synthese_content(live_server, page: Page):

@@ -735,5 +735,6 @@ def test_can_download_document(live_server, page):
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
