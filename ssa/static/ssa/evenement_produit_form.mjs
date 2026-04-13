@@ -1,9 +1,15 @@
 import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import choicesDefaults from "choicesDefaults"
 
+const NOTICE_TEXT = "Il existe des sous catégories pour « __value__ » : pensez à préciser dès que possible."
+
 document.addEventListener("DOMContentLoaded", () => {
     function handleNoticeProduitDisplay(options, value) {
         if (isLevel2WithChildren(options, value)) {
+            document.querySelector("#notice-container-produit .fr-notice__title").innerText = NOTICE_TEXT.replace(
+                "__value__",
+                value,
+            )
             document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
         } else {
             document.querySelector("#notice-container-produit").classList.add("fr-hidden")

@@ -94,9 +94,11 @@
                                 <div class="fr-mt-2w">
                                     {{ form.categorie_produit  }}
                                     <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
-                                        {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                        {% dsfr_notice title="__content__" %}
                                     </div>
-                                    {% render_field form.denomination %}
+                                    <div class="fr-mt-4v">
+                                        {% render_field form.denomination %}
+                                    </div>
                                     {% render_field form.marque %}
                                     {% render_field form.lots %}
                                     {% render_field form.description_complementaire %}
@@ -116,7 +118,7 @@
                                 <div id="categorie-danger"></div>
                                 {{ form.categorie_danger }}
                                 <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
-                                    {% dsfr_notice title="Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible." %}
+                                    {% dsfr_notice title="__content__" %}
                                 </div>
                                 <div class="fr-mt-4v">
                                     {% render_field form.precision_danger %}

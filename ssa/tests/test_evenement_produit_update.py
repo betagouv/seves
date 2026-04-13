@@ -285,10 +285,17 @@ def test_display_of_notices(live_server, mocked_authentification_user, page):
     )
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
-    expected_text = "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
 
-    expect(update_page.page.locator("#notice-container-produit").get_by_text(expected_text)).to_be_visible()
-    expect(update_page.page.locator("#notice-container-risque").get_by_text(expected_text)).to_be_visible()
+    expect(
+        update_page.page.locator("#notice-container-produit").get_by_text(
+            "Il existe des sous catégories pour « Ovoproduit » : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
+    expect(
+        update_page.page.locator("#notice-container-risque").get_by_text(
+            "Il existe des sous catégories pour « Bacillus » : pensez à préciser dès que possible."
+        )
+    ).to_be_visible()
 
 
 def test_update_type_evenement_will_trigger_email(
