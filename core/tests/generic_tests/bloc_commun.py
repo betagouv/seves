@@ -2,12 +2,9 @@ from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
 from core.models import Message
-from ssa.factories import EvenementProduitFactory
-from ssa.models import EvenementProduit
 
 
-def generic_test_bloc_commun_nb_items(live_server, page: Page, target_object):
-    other_obj = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+def generic_test_bloc_commun_nb_items(live_server, page: Page, target_object, other_obj):
     MessageFactory(status=Message.Status.AVANT_SAUVEGARDE, content_object=other_obj)
     MessageFactory(status=Message.Status.BROUILLON, content_object=other_obj)
     MessageFactory(status=Message.Status.FINALISE, content_object=other_obj)

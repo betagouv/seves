@@ -168,8 +168,9 @@ def test_investigation_tiac_detail_page_content_analyse_alimentaires(live_server
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
 
 
 def test_investigation_tiac_detail_page_synthese_content(live_server, page: Page):

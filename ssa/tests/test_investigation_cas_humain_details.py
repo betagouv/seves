@@ -76,5 +76,6 @@ def test_investigation_cas_humain_detail_page_content_etablissement(
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = InvestigationCasHumainFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = InvestigationCasHumainFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
