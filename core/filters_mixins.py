@@ -13,7 +13,11 @@ class WithNumeroFilterMixin(django_filters.FilterSet):
         label="Année",
         widget=TextInput(
             attrs={
-                "placeholder": "AAAA",
+                "placeholder": "exemple : 2024",
+                "inputmode": "numeric",
+                "pattern": "[0-9]*",
+                "maxlength": 4,
+                "minlength": 4,
             }
         ),
     )
@@ -21,9 +25,7 @@ class WithNumeroFilterMixin(django_filters.FilterSet):
         method="filter_numero",
         label="N° événement",
         widget=TextInput(
-            attrs={
-                "placeholder": "XXXXX",
-            }
+            attrs={"placeholder": "De 1 à 5 chiffres", "inputmode": "numeric", "pattern": "[0-9]*", "maxlength": 5}
         ),
     )
 
