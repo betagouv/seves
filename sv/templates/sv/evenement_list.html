@@ -1,5 +1,5 @@
 {% extends 'sv/base.html' %}
-{% load etat_tags or_empty_value_tag render_field static %}
+{% load and_more_ellipsis_tooltip etat_tags or_empty_value_tag render_field static %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/evenement_list.css' %}">
@@ -48,15 +48,15 @@
         </div>
 
         {% if paginator.count > 0 %}
-            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+            <div class="fr-table fr-table--no-caption">
                 <table class="evenements__list-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='ac_notified' display_name='Notifié AC' %}</th>
-                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
-                            <th scope="col" class="fr-col-3">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
-                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='publication' display_name='Publication' %}</th>
-                            <th scope="col" class="fr-col-1">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Dernière MAJ descripteurs' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='ac_notified' display_name='Notifié AC' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='publication' display_name='Publication' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Dernière MAJ descripteurs' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
                             <th scope="col">Commune</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
@@ -75,7 +75,7 @@
                                     <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
                                 </td>
                                 <td class="evenement__list-organisme">
-                                    {{ evenement.organisme_nuisible|default:"nc." }}
+                                    {{ evenement.organisme_nuisible|or_empty_value_tag:"table" }}
                                 </td>
                                 <td>
                                     {{ evenement.date_publication|date:"d/m/Y" }}
@@ -85,21 +85,7 @@
                                     {{ evenement.createur|truncatechars:30 }}
                                 </td>
                                 <td>
-                                    {% with evenement.communes_uniques|length as nb_communes %}
-                                        {% if nb_communes == 0 %}
-                                            {% empty_value_tag %}
-                                        {% endif %}
-                                        {% if nb_communes <= 3 %}
-                                            {% for commune in evenement.communes_uniques %}
-                                                {{ commune|or_empty_value_tag }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        {% else %}
-                                            {% for commune in evenement.communes_uniques|slice:":3" %}
-                                                {{ commune|or_empty_value_tag }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                            ... +{{ nb_communes|add:"-3" }}
-                                        {% endif %}
-                                    {% endwith %}
+                                    {% and_more_ellipsis_tooltip evenement.communes_uniques empty_type="table" %}
                                 </td>
                                 <td>
                                     <span class="fr-badge fr-badge--{{evenement.etat|etat_color}} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
