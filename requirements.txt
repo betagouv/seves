@@ -189,7 +189,7 @@ pygments==2.20.0
     #   rich
 pyopenssl==26.0.0
     # via josepy
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   pytest-base-url
     #   pytest-django
