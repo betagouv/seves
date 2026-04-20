@@ -3,6 +3,7 @@ body {
 }
 
 .evenements__list-table {
+    display: table !important;
     border-collapse: collapse;
 }
 .evenements__list-row {

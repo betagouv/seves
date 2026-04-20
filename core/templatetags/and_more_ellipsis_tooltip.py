@@ -1,3 +1,5 @@
+from typing import Literal
+
 from django import template
 from django.template import Context
 from django.template.base import Variable
@@ -14,9 +16,17 @@ def format_variable(item, field=None):
 
 
 @register.inclusion_tag("core/templatetags/and_more_ellipsis_tooltip.html")
-def and_more_ellipsis_tooltip(items, *, tooltip_id=None, tooltip_prefix=None, tooltip_prefix_plural=None, field=None):
+def and_more_ellipsis_tooltip(
+    items,
+    *,
+    empty_type: Literal["default", "table"] = "default",
+    tooltip_id=None,
+    tooltip_prefix=None,
+    tooltip_prefix_plural=None,
+    field=None,
+):
     if len(items) == 0:
-        return {"head": None}
+        return {"head": None, "empty_type": empty_type}
 
     head, *rest = list(items)
     tooltip_id = tooltip_id or f"tooltip-{get_random_string(6, 'abcdefghijklmnopqrstuvwxyz0123456789')}"
