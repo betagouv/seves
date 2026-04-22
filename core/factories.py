@@ -9,6 +9,7 @@ from django_countries import Countries
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
+from faker import Faker
 
 from core.constants import DEPARTEMENTS, REGIONS
 from core.models import Agent, Contact, Departement, Document, Message, Region, Structure
@@ -234,7 +235,6 @@ class DepartementFactory(DjangoModelFactory):
 
 class BaseEtablissementFactory(DjangoModelFactory):
     siret = factory.Faker("numerify", text="##############")
-    numero_agrement = factory.Faker("numerify", text="###.##.###")
     autre_identifiant = factory.Faker("numerify", text="#####################")
     raison_sociale = factory.Faker("sentence", nb_words=5)
     enseigne_usuelle = factory.Faker("sentence", nb_words=5)
@@ -245,6 +245,11 @@ class BaseEtablissementFactory(DjangoModelFactory):
     code_insee = factory.Faker("numerify", text="#####")
     departement = factory.SubFactory("core.factories.DepartementFactory")
     pays = FuzzyChoice([c.code for c in Countries()])
+
+    @factory.lazy_attribute
+    def numero_agrement(self):
+        fake = Faker("fr-FR")
+        return f"{fake.department_number()}.{fake.numerify('##.###')}"
 
     class Meta:
         abstract = True
