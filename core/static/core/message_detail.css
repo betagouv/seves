@@ -10,3 +10,6 @@
 .ql-indent-4 {
     padding-left: 12rem;
 }
+p {
+    margin: 0;
+}
