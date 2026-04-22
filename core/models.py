@@ -11,6 +11,7 @@ from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
+from django.utils import timezone
 from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
@@ -588,8 +589,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
     @property
     def displayed_date(self):
         if self.is_finalise:
-            return self.date_publication
-        return self.last_updated or self.date_creation
+            displayed_date = self.date_publication
+        else:
+            displayed_date = self.last_updated or self.date_creation
+        return timezone.localtime(displayed_date)
 
 
 @reversion.register()
