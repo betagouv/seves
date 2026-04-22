@@ -139,7 +139,7 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.6.1
     # via celery
-lxml==6.0.2
+lxml==6.1.0
     # via
     #   docxcompose3
     #   docxtpl
