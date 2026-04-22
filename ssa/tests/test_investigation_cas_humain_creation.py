@@ -155,7 +155,7 @@ def test_can_edit_etablissement_multiple_times(live_server, page: Page, ensure_d
     creation_page.open_edit_etablissement()
     expect(creation_page.page.locator('[id$="raison_sociale"]')).to_have_attribute("required", "")
     expect(creation_page.page.locator('[id$="numero_agrement"]')).to_have_attribute(
-        "pattern", r"^\d{2,3}\.\d{2,3}\.\d{2,3}$"
+        "pattern", r"^(2[abAB]|\d{2,3})\.\d{2,3}\.\d{2,3}$"
     )
     creation_page.current_modal.locator('[id$="-departement"]').select_option("01 - Ain")
     creation_page.close_etablissement_modal()
