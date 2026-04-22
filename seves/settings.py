@@ -315,6 +315,10 @@ SECURE_CSP = {
         "s3.rbx.io.cloud.ovh.net",
         "s3.eu-west-par.io.cloud.ovh.net",
     ),
+    "frame-src": (
+        "s3.rbx.io.cloud.ovh.net",
+        "s3.eu-west-par.io.cloud.ovh.net",
+    ),
     "connect-src": (
         CSP.SELF,
         "geo.api.gouv.fr",
@@ -328,6 +332,7 @@ SECURE_CSP = {
 if DEBUG:
     SECURE_CSP["img-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
     SECURE_CSP["object-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
+    SECURE_CSP["frame-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
     SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)
