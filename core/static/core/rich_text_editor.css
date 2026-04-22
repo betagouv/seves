@@ -2,9 +2,12 @@
     min-height: 15em;
 }
 
-/* The editor uses ol even for un-organized lists, DSFR forces some numbers for the ol element that we don't want here */
 .ql-editor ol {
+    /* The editor uses ol even for un-organized lists, DSFR forces some numbers for the ol element that we don't want here */
     padding-inline-start: initial !important;
+
+    font-size: 1rem;
+    line-height: 1.5rem;
     list-style: none !important;
 }
 
