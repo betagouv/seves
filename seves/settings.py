@@ -231,6 +231,7 @@ OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
 OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
+OIDC_TIMEOUT = env("OIDC_RP_TIMEOUT", int, default=20)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
