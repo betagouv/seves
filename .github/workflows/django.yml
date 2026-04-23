@@ -107,6 +107,7 @@ jobs:
       - name: Run tests
         run: >-
           pytest
+          --disable-warnings
           --tracing=retain-on-failure
           --splits ${{ strategy.job-total }}
           --group ${{ matrix.group }}
