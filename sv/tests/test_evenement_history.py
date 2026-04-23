@@ -38,12 +38,14 @@ def test_evenement_history_content(
     page.goto(f"{live_server.url}{detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
     page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.fill("Mon lieu 2")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
 
@@ -147,6 +149,7 @@ def test_evenement_history_content_prelevement_shows_even_when_no_modification_o
     page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 

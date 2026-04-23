@@ -30,7 +30,7 @@ class FicheDetectionExport(BaseExport):
         ("nom", "Nom"),
         ("adresse_lieu_dit", "Adresse ou lieu-dit"),
         ("commune_and_cp", "Commune"),
-        ("site_inspection", "Site d'inspection"),
+        ("site_inspection_label_with_group", "Site d'inspection"),
         ("wgs84_longitude", "Longitude WGS84"),
         ("wgs84_latitude", "Latitude WGS84"),
         ("activite_etablissement", "Activité établissement"),

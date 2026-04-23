@@ -76,7 +76,7 @@
                                             <section>
                                                 <address class="fr-card__detail fr-icon-map-pin-2-line">{{ lieu_initial.address_summary|or_empty_value_tag }}</address>
                                                 {% with extra_classes="fr-badge--info fr-badge--no-icon fr-mt-4v fr-mr-4v" %}
-                                                    {% dsfr_badge label=lieu_initial.get_site_inspection_display extra_classes=extra_classes %}
+                                                    {% dsfr_badge label=lieu_initial.site_inspection_label_with_group extra_classes=extra_classes %}
                                                     {% if lieu_initial.position_chaine_distribution_etablissement %}
                                                         {% dsfr_badge label=lieu_initial.position_chaine_distribution_etablissement extra_classes=extra_classes %}
                                                     {% endif %}

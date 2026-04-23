@@ -17,6 +17,7 @@ from core.fields import AdresseLieuDitField, DSFRCheckboxSelectMultiple, DSFRRad
 from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, VisibiliteUpdateBaseForm
 from core.models import Contact, Structure
+from sv.constants import SiteInspection
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithEvenementFreeLinksMixin,
@@ -55,6 +56,16 @@ class DepartementModelChoiceField(forms.ModelChoiceField):
         except Departement.DoesNotExist:
             pass
         return super().prepare_value(value)
+
+
+class SiteInspectionSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        context = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value in SiteInspection:
+            context["attrs"]["data-grouped-label"] = SiteInspection[value].label_with_group
+        if not value:
+            context["attrs"]["disabled"] = True
+        return context
 
 
 class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
@@ -127,6 +138,7 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             "is_etablissement": "Il s'agit d'un établissement",
             "raison_sociale_etablissement": "Raison sociale",
         }
+        widgets = {"site_inspection": SiteInspectionSelect}
 
     def clean_departement(self):
         if self.cleaned_data["departement"] == "":
@@ -140,7 +152,6 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         # Keep compatibility with how Lieux formset is currently rendered; needs to be refactored
         self.fields["site_inspection"].choices = [(None, ""), *self.fields["site_inspection"].choices]
         self.fields["site_inspection"].initial = None
-        self.fields["site_inspection"].required = False
 
         if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
             if self.instance.adresse_lieu_dit:

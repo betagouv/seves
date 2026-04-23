@@ -37,6 +37,7 @@ def _add_new_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill(f"nom lieu{extra_str}")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, f"une adresse{extra_str}")
 
     page.wait_for_timeout(100)
@@ -186,6 +187,7 @@ def test_add_lieu_to_list(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     expect(page.locator("#lieux").get_by_text("test lieu")).to_be_visible()
     assert len(page.locator("#lieux-list").get_by_test_id("lieu-initial").all()) == 1
@@ -216,11 +218,13 @@ def test_add_two_lieux_to_list(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("test lieu 2")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     expect(page.locator("#lieux").get_by_text("test lieu", exact=True)).to_be_visible()
@@ -271,6 +275,7 @@ def test_edit_lieu_form_with_only_nom_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     page.get_by_test_id("lieu-edit-btn").click()
@@ -482,12 +487,14 @@ def test_delete_lieu_from_list_with_multiple_lieux(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("lorem")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # ajout du deuxième lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("ipsum")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # suppression du premier lieu
@@ -504,7 +511,7 @@ def test_delete_lieu_from_list_with_multiple_lieux(
             "codePostal": "",
             "id": "1",
             "nom": "ipsum",
-            "siteInspection": "",
+            "siteInspection": "Inconnu > Inconnu - préciser dans les commentaires",
             "supplyChainPosition": "",
         }
     ]
@@ -520,12 +527,14 @@ def test_delete_correct_lieu(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("lorem")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # ajout du deuxième lieu
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("ipsum")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     page.get_by_test_id("lieu-delete-btn").first.click()
@@ -541,6 +550,7 @@ def test_delete_correct_lieu(
     assert len(cards) == 1
     assert cards[0]["commune"] == ""
     assert cards[0]["nom"] == "lorem"
+    assert cards[0]["siteInspection"] == "Inconnu > Inconnu - préciser dans les commentaires"
 
 
 @pytest.mark.django_db
@@ -554,6 +564,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("lorem")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # ajout d'un prélèvement
@@ -581,7 +592,7 @@ def test_delete_lieu_is_not_possible_if_linked_to_prelevement(
             "codePostal": "",
             "id": "0",
             "nom": "lorem",
-            "siteInspection": "",
+            "siteInspection": "Inconnu > Inconnu - préciser dans les commentaires",
             "supplyChainPosition": "",
         }
     ]
@@ -622,6 +633,7 @@ def test_info_message_in_prelevement_bloc_should_be_visible_without_locations(
 
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     page.get_by_test_id("lieu-delete-btn").first.click()
     page.get_by_test_id("submit-delete").locator("visible=true").click()

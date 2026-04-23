@@ -135,7 +135,7 @@ def test_export_data_values(force_utc, mocked_authentification_user):
         str(lieu),
         lieu.adresse_lieu_dit,
         lieu.commune,
-        lieu.get_site_inspection_display(),
+        lieu.site_inspection_label_with_group,
         "139.527867",
         "-61.396441",
         lieu.activite_etablissement,

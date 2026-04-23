@@ -254,7 +254,7 @@ def test_create_fiche_detection_with_lieu(
     assert lieu_from_db.adresse_etablissement == lieu.adresse_etablissement.replace("\n", " ")
     assert lieu_from_db.siret_etablissement == lieu.siret_etablissement
     assert lieu_from_db.code_inupp_etablissement == lieu.code_inupp_etablissement
-    assert lieu_from_db.site_inspection == lieu.site_inspection
+    assert lieu_from_db.get_site_inspection_display() == lieu.get_site_inspection_display()
     assert lieu_from_db.position_chaine_distribution_etablissement == lieu.position_chaine_distribution_etablissement
 
 
@@ -297,6 +297,7 @@ def test_create_fiche_detection_with_lieu_in_corsica(
             "response_body": json.dumps(response_body),
         }
     )
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.publish_btn.click()
 
@@ -338,7 +339,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
-    lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
+    lieu_form_elements.lieu_site_inspection_input.select_option(lieu.site_inspection)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
@@ -357,7 +358,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     assert lieu_from_db.code_insee == "59350"
     assert lieu_from_db.code_postal == "59000"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
-    assert lieu_from_db.site_inspection == lieu.site_inspection
+    assert lieu_from_db.get_site_inspection_display() == lieu.get_site_inspection_display()
     assert lieu_from_db.is_etablissement is False
 
     assert lieu_from_db.activite_etablissement == ""
@@ -439,6 +440,7 @@ def test_add_lieu_with_name_only_and_save(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.publish_btn.click()
 
@@ -523,6 +525,7 @@ def test_prelevements_are_always_linked_to_lieu(
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     for _ in range(2):
         form_elements.add_prelevement_btn.click()
@@ -574,6 +577,7 @@ def test_laboratoire_disable_in_prelevement_confirmation(
     form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # Ajouter un prélèvement
@@ -609,6 +613,7 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
 
     # Ajouter un prélèvement
@@ -650,6 +655,7 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
     form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
     lieu_form_elements.nom_input.fill("test lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.cancel_btn.click()
@@ -713,6 +719,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
 
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.is_etablissement_checkbox.click()
     lieu_form_elements.sirene_btn.click()
     choice_js_fill(
@@ -905,6 +912,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     choice_js_fill_from_element(
         page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
     )
@@ -965,6 +973,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.is_etablissement_checkbox.click(force=True)
     choice_js_fill_from_element(
         page, lieu_form_elements.adresse_etablissement_input, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
@@ -999,6 +1008,7 @@ def test_add_lieu_with_supply_chain(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.set_supply_chain(supply_chain_position.libelle)
 
     lieu_form_elements.save_btn.click()
