@@ -20,7 +20,6 @@ from ..factories import (
     LieuFactory,
     OrganismeNuisibleFactory,
     PositionChaineDistributionFactory,
-    SiteInspectionFactory,
     StatutReglementaireFactory,
     StructurePreleveuseFactory,
 )
@@ -204,12 +203,10 @@ def test_create_fiche_detection_with_lieu(
         libelle_long="Mon ON",
     )
     dept = DepartementFactory()
-    site_inspection = SiteInspectionFactory()
     position = PositionChaineDistributionFactory()
     lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
-        site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
     )
 
@@ -231,7 +228,7 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
     lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
-    lieu_form_elements.lieu_site_inspection_input.select_option(str(lieu.site_inspection.id))
+    lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
     )
@@ -328,7 +325,6 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    site_inspection = SiteInspectionFactory()
     lieu = LieuFactory.build(
         is_etablissement=False,
     )
@@ -342,7 +338,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
-    lieu_form_elements.lieu_site_inspection_input.select_option(str(site_inspection.id))
+    lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.save_btn.click()
@@ -361,7 +357,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     assert lieu_from_db.code_insee == "59350"
     assert lieu_from_db.code_postal == "59000"
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
-    assert lieu_from_db.site_inspection == site_inspection
+    assert lieu_from_db.site_inspection == lieu.site_inspection
     assert lieu_from_db.is_etablissement is False
 
     assert lieu_from_db.activite_etablissement == ""

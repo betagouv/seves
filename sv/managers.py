@@ -99,7 +99,6 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         ).prefetch_related(
             "lieux",
             "lieux__departement",
-            "lieux__site_inspection",
             "lieux__prelevements",
             "lieux__prelevements__structure_preleveuse",
             "lieux__prelevements__espece_echantillon",

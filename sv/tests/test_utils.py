@@ -104,7 +104,7 @@ class FicheDetectionFormDomElements:
 
     @property
     def commentaire_label(self) -> Locator:
-        return self.page.get_by_text("Commentaire")
+        return self.page.locator("label", has_text="Commentaire")
 
     @property
     def commentaire_input(self) -> Locator:

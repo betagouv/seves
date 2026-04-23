@@ -19,7 +19,6 @@ from ..factories import (
     LieuFactory,
     PositionChaineDistributionFactory,
     PrelevementFactory,
-    SiteInspectionFactory,
 )
 from ..models import (
     Departement,
@@ -344,12 +343,10 @@ def test_update_lieu(
     """Test que les modifications des descripteurs d'un lieu existant sont bien enregistrées en base de données."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
     dept = DepartementFactory()
-    site_inspection = SiteInspectionFactory()
     position = PositionChaineDistributionFactory()
     new_lieu = LieuFactory.build(
         departement=dept,
         is_etablissement=True,
-        site_inspection=site_inspection,
         position_chaine_distribution_etablissement=position,
     )
 
@@ -368,7 +365,7 @@ def test_update_lieu(
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
         lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, new_lieu.adresse_etablissement)
         lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
-        lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection.id))
+        lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection))
         lieu_form_elements.position_etablissement_input.select_option(
             str(new_lieu.position_chaine_distribution_etablissement.id)
         )
