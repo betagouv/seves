@@ -30,6 +30,8 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
                     postCode: item.properties.postcode,
                     city: item.properties.city,
                     context: item.properties.context,
+                    lat: item.geometry.coordinates[1],
+                    long: item.geometry.coordinates[0],
                 },
             })),
         )
@@ -70,6 +72,8 @@ export function setUpAddressChoices(element) {
                     postCode: null,
                     city: null,
                     context: null,
+                    lat: null,
+                    long: null,
                 },
             },
         ]

@@ -91,14 +91,12 @@ main {
     margin-bottom: 2rem;
 }
 
-[id^="lieu-form"] p,
-[id^="lieu-form"] .commune {
+[id^="lieu-form"] p {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
-[id^="lieu-form"] p label,
-[id^="lieu-form"] .commune label {
+[id^="lieu-form"] p label {
     flex: 0.75;
 }
 [id^="lieu-form"] p input,
@@ -197,6 +195,12 @@ label[for="id_date_premier_signalement"],
 label[for="id_commentaire"],
 label[for^="commune"],
 label[for^="id_lieux-"][for$="-wgs84_longitude"],
+label[for^="id_lieux-"][for$="-wgs84_latitude"],
 label[for^="id_prelevements-"][for$="-date_prelevement"] {
     font-weight: bold;
+}
+
+.map {
+    height: 100%;
+    min-height: 400px;
 }

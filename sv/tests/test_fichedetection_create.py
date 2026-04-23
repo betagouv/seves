@@ -877,6 +877,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
             "type": "FeatureCollection",
             "features": [
                 {
+                    "geometry": {"type": "Point", "coordinates": [2.304014, 48.840234]},
                     "properties": {
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
@@ -884,7 +885,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
                         "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
-                    }
+                    },
                 },
             ],
         }
@@ -909,6 +910,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
         page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
     )
     assert call_count["count"] == 1
+
     lieu_form_elements.save_btn.click()
     form_elements.publish_btn.click()
 
@@ -918,6 +920,72 @@ def test_can_add_lieu_with_adresse_auto_complete(
     assert lieu.code_insee == "75115"
     assert lieu.code_postal == "75015"
     assert lieu.departement.nom == "Paris"
+    assert lieu.wgs84_latitude == 48.840234
+    assert lieu.wgs84_longitude == 2.304014
+
+
+def test_lieu_map(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_fill_from_element,
+    ensure_departements,
+):
+    ensure_departements("Paris")
+    call_count = {"count": 0}
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "postcode": "75019",
+                        "citycode": "75119",
+                        "city": "Paris",
+                    },
+                }
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
+
+    form_elements.page.route(
+        "https://data.geopf.fr/geocodage/reverse?lon=**",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+
+    map = page.locator("canvas").locator("visible=true")
+    box = map.bounding_box()
+    x = box["x"] + box["width"] / 2
+    y = box["y"] + box["height"] / 2
+    page.mouse.dblclick(x, y)
+    page.wait_for_timeout(1000)
+    assert call_count["count"] == 1
+
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.commune == "Paris"
+    assert lieu.code_insee == "75119"
+    assert lieu.code_postal == "75019"
+    assert lieu.departement.nom == "Paris"
+    assert 48.5 < lieu.wgs84_latitude < 49
+    assert 2.1 < lieu.wgs84_longitude < 2.5
 
 
 def test_can_add_lieu_with_adresse_etablissement_autocomplete(
@@ -937,6 +1005,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
             "type": "FeatureCollection",
             "features": [
                 {
+                    "geometry": {"type": "Point", "coordinates": [2.304014, 48.840234]},
                     "properties": {
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
@@ -944,7 +1013,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
                         "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
-                    }
+                    },
                 },
             ],
         }

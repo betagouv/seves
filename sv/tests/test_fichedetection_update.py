@@ -129,7 +129,6 @@ def test_fiche_detection_update_lieu_modal_content(
     expect(lieu_form_elements.departement_hidden_input).to_have_value(lieu.departement.numero)
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value(str(lieu.wgs84_latitude))
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_visible()

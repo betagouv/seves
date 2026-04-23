@@ -1,5 +1,5 @@
 {% load widget_tweaks %}
-{% load render_field %}
+{% load render_field static %}
 
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
 <button type="button" data-fr-opened="false" class="fr-hidden" aria-controls="modal-add-lieu-{{ id }}"></button>
@@ -27,27 +27,53 @@
                                 <label class="fr-label" for="id_lieux-{{ id }}-nom">Nom du lieu</label>
                                 {{ form.nom }}
                             </p>
-                            <p class="adresse-lieu">
-                                <label class="fr-label" for="id_lieux-{{ id }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
-                                {{ form.adresse_lieu_dit }}
-                            </p>
-                            <div class="commune">
-                                <label class="fr-label" for="commune-select-{{ id }}">Commune</label>
-                                <select id="commune-select-{{ id }}" class="fr-input"></select>
-                            </div>
-                            {{ form.commune }}
-                            {{ form.code_insee }}
-                            {{ form.code_postal }}
-                            {{ form.departement }}
                             <p>
                                 <label class="fr-label" for="site-inspection">Site d'inspection</label>
                                 {{ form.site_inspection }}
                             </p>
-                            <p>
-                                <label class="fr-label" for="id_lieux-{{ id }}-wgs84_longitude">Coordonnées GPS (WGS84)</label>
-                                {{ form.wgs84_longitude }}
-                                {{ form.wgs84_latitude }}
-                            </p>
+
+                            <fieldset>
+                                <legend class="fr-fieldset__legend fr-m-0 fr-p-0">Localisation</legend>
+                                <span class="fr-hint-text fr-mb-1w">Placez votre repère en double cliquant sur la zone correspondante, en recherchant une adresse ou renseignez manuellement les coordonnées GPS</span>
+
+                                <div class="map-container"
+                                     data-map-json-file-value="{% static 'core/style_ign.json' %}"
+                                     data-map-reverse-api-value="{{ REVERSE_GEO_API }}"
+                                     data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
+                                     data-map-region-value="{{ request.user.agent.structure.region.nom }}"
+                                     data-map-departement-value="{{ request.user.agent.structure.departement.nom  }}"
+                                >
+                                    <div class="fr-grid-row fr-grid-row--gutters">
+                                        <div class="fr-col-6">
+                                            <div data-map-target="mapDisplay" class="map"></div>
+                                        </div>
+                                        <div class="fr-col-6">
+                                            <div class="fr-input-group adresse-lieu">
+                                                <label class="fr-label" for="id_lieux-{{ id }}-adresse_lieu_dit">Adresse ou lieu-dit</label>
+                                                {{ form.adresse_lieu_dit }}
+                                            </div>
+                                            <div class="fr-input-group commune">
+                                                <label class="fr-label" for="commune-select-{{ id }}">Commune</label>
+                                                <select id="commune-select-{{ id }}" class="fr-input" data-map-target="communeSelect"></select>
+                                            </div>
+                                            {{ form.commune|set_data:"map-target:communeInput" }}
+                                            {{ form.code_insee|set_data:"map-target:codeInseeInput"  }}
+                                            {{ form.code_postal|set_data:"map-target:codePostalInput"  }}
+                                            {{ form.departement|set_data:"map-target:departementInput"  }}
+                                            <div class="fr-input-group">
+                                                <label class="fr-label" for="id_lieux-{{ id }}-wgs84_latitude">Latitude (WGS84)</label>
+                                                {{ form.wgs84_latitude|set_data:"map-target:latitudeInput"|set_data:"action:map#onCoordinateChange" }}
+                                            </div>
+                                            <div class="fr-input-group">
+                                                <label class="fr-label" for="id_lieux-{{ id }}-wgs84_longitude">Longitude (WGS84)</label>
+                                                {{ form.wgs84_longitude|set_data:"map-target:longitudeInput"|set_data:"action:map#onCoordinateChange" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+
                             <hr class="fr-hr-or fr-mt-8v">
                             <p class="fr-checkbox-group">
                                 {{ form.is_etablissement }} {{ form.is_etablissement.label_tag }}

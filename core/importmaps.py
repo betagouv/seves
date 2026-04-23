@@ -5,6 +5,8 @@ importmaps = {
     "StimulusStore": "https://cdn.jsdelivr.net/npm/stimulus-store@0.0.3/dist/bundle.esm.js",
     "Choices": "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.mjs",
     "Quill": "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
+    "MapLibre": "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm",
+    "MapStyleSwitcher": "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/+esm",
     "Application": static("core/stimulus_app.mjs"),
     "Utils": static("core/utils.mjs"),
     "choicesDefaults": static("core/choices.mjs"),

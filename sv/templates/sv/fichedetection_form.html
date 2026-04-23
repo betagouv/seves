@@ -8,6 +8,8 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css">
 {% endblock %}
 
 {% block scripts %}
@@ -16,6 +18,7 @@
     <script type="text/javascript" src="{% static 'sv/fichedetection_common.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_lieux_form.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_prelevement_form.js' %}"></script>
+    <script type="module" src="{% static 'core/map.mjs' %}"></script>
 {% endblock %}
 
 {% block content %}

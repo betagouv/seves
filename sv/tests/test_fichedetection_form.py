@@ -122,7 +122,6 @@ def test_add_lieu_form_have_all_fields(
     expect(lieu_form_elements.commune_input).to_be_empty()
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_empty()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_attribute("placeholder", "Latitude")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_empty()
@@ -317,7 +316,6 @@ def test_edit_lieu_form_have_all_fields(
     expect(lieu_form_elements.departement_hidden_input).to_have_value("59")
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value("1")
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_visible()

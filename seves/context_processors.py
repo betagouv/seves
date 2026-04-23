@@ -7,6 +7,8 @@ from core.constants import Domains
 def common_settings(request):
     return {
         "COMMUNES_API": settings.COMMUNES_API,
+        "GEO_API_ROOT": settings.GEO_API_ROOT,
+        "REVERSE_GEO_API": settings.REVERSE_GEO_API,
         "siret_api_endpoint": reverse_lazy("siret-api", kwargs={"siret": "__siret__"}),
         "env": settings.ENVIRONMENT,
     }
