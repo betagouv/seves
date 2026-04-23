@@ -135,7 +135,7 @@ def test_export_data_values(force_utc, mocked_authentification_user):
         str(lieu),
         lieu.adresse_lieu_dit,
         lieu.commune,
-        str(lieu.site_inspection),
+        lieu.get_site_inspection_display(),
         "139.527867",
         "-61.396441",
         lieu.activite_etablissement,
@@ -180,7 +180,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(9):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     PrelevementFactory.create_batch(
@@ -191,7 +191,7 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
     queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(9):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
 

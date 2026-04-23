@@ -13,7 +13,6 @@ from .models import (
     OrganismeNuisible,
     PositionChaineDistribution,
     Prelevement,
-    SiteInspection,
     StatutEtablissement,
     StatutEvenement,
     StatutReglementaire,
@@ -50,7 +49,6 @@ admin.site.register(Lieu)
 admin.site.register(StatutEtablissement)
 admin.site.register(PositionChaineDistribution)
 admin.site.register(StructurePreleveuse)
-admin.site.register(SiteInspection)
 admin.site.register(MatricePrelevee)
 admin.site.register(EspeceEchantillon)
 admin.site.register(Laboratoire)

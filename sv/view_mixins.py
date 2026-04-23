@@ -140,7 +140,6 @@ class EvenementDetailMixin(UserPassesTestMixin):
                 "detections__lieux__departement",
                 "detections__lieux__departement__region",
                 "detections__lieux__position_chaine_distribution_etablissement",
-                "detections__lieux__site_inspection",
             )
         )
 

@@ -28,11 +28,7 @@
                         <div class="fr-grid-row fr-mb-2w">
                             <div class="fr-col-4 descripteur-label">Site d'inspection</div>
                             <div class="fr-col-6">
-                                {% if lieu.site_inspection.nom %}
-                                    {% dsfr_badge label=lieu.site_inspection.nom extra_classes="fr-badge--info fr-badge--no-icon" %}
-                                {% else %}
-                                    {% empty_value_tag %}
-                                {% endif %}
+                                {% dsfr_badge label=lieu.get_site_inspection_display extra_classes="fr-badge--info fr-badge--no-icon" %}
                             </div>
                         </div>
                         <div class="fr-grid-row fr-mb-2w">
