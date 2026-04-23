@@ -1,6 +1,7 @@
-from enum import auto
+from enum import auto, property as enum_property
 
 from django.db.models import TextChoices
+from django.utils.functional import classproperty
 
 STRUCTURE_EXPLOITANT = "Exploitant"
 STRUCTURES_PRELEVEUSES = [
@@ -129,42 +130,103 @@ class SiteInspection(TextChoices):
     FORET = auto(), "Forêt"
 
     # Plein air - autre
-    JARDINS_PRIVES = auto(), "Jardins privés (plein air)"
-    SITES_PUBLICS = auto(), "Sites publics (plein air)"
-    ZONE_PROTEGEE = auto(), "Espaces réglementés pour la préservation de l'environnement (plein air)"
-    PLANTES_SAUVAGES_HORS_ZONES_PROTEGEES = auto(), "Plantes sauvages dans des aires non protégées (plein air)"
-    PLATEFORME_LOGISTIQUE_TRANSIT_STOCKAGE_OU_REVENTE_BOIS = (
-        auto(),
-        "Plateforme logistique de transit, stockage ou revente de bois d'emballage (plein air)",
-    )
-    JARDINERIE_PLEIN_AIR = auto(), "Jardinerie (plein air)"
+    JARDINS_PRIVES = auto(), "Jardins privés"
+    SITES_PUBLICS = auto(), "Sites publics"
+    ZONE_PROTEGEE = auto(), "Zone protégée"
+    PLANTES_SAUVAGES_HORS_ZONES_PROTEGEES = auto(), "Plantes sauvages en dehors des zones protégées"
+    PLATEFORME_LOGISTIQUE_TRANSIT_STOCKAGE_OU_REVENTE_BOIS = auto(), "Site commercial qui utilise du bois d'emballage"
+    JARDINERIE_PLEIN_AIR = auto(), "Jardinerie"
     RESEAU_IRRIGATION_DRAINAGE = auto(), "Réseau d'irrigation ou de drainage"
     ZONE_HUMIDE = auto(), "Zone humide"
-    INDUSTRIE_BOIS_PLEIN_AIR = auto(), "Industrie du bois (plein air)"
-    POINTS_ENTREE_PLEIN_AIR = auto(), "Points d'entrée (plein air)"
-    ZONES_RISQUE_PLEIN_AIR = auto(), "Zones à risque (plein air)"
-    AEROPORT_PORT_ROUTE_VOIE_FERREE = auto(), "Aéroport, port, route, voie ferrée (plein air)"
-    MARCHES_REVENDEURS_MAGASINS_GROSSISTES = auto(), "Marchés, détaillants, magasins, grossistes (plein air)"
-    ZONES_URBAINES = auto(), "Zones urbaines (plein air)"
-    BOIS_EMBALLAGE_PALETTES_EN_BOIS = auto(), "Emballages en bois, palettes en bois (plein air)"
-    CONTROLES_DES_MOUVEMENTS = auto(), "Contrôles en circulation (plein air)"
-    AUTRE_PLEIN_AIR = auto(), "Autre (plein air)"
+    INDUSTRIE_BOIS_PLEIN_AIR = auto(), "Industrie du bois"
+    POINTS_ENTREE_PLEIN_AIR = auto(), "Points d'entrée"
+    ZONES_RISQUE_PLEIN_AIR = auto(), "Zones à risque"
+    AEROPORT_PORT_ROUTE_VOIE_FERREE = auto(), "Aéroport, port, route, voie ferrée"
+    MARCHES_REVENDEURS_MAGASINS_GROSSISTES = auto(), "Marchés, revendeurs, magasins, grossistes"
+    ZONES_URBAINES = auto(), "Zones urbaines"
+    BOIS_EMBALLAGE_PALETTES_EN_BOIS = auto(), "Bois d'emballage, palettes en bois"
+    CONTROLES_DES_MOUVEMENTS = auto(), "Contrôles des mouvements"
+    AUTRE_PLEIN_AIR = auto(), "Autre (plein air) - préciser dans les commentaires"
 
     # Environnement fermé
     SERRE = auto(), "Serre"
-    SITE_PRIVE_AUTRE_QUE_SERRE = auto(), "Site privé (environnement fermé) autre qu'une serre"
-    SITE_PUBLIC_AUTRE_QUE_SERRE = auto(), "Site public (environnement fermé) autre qu'une serre"
-    SITE_COMMERCIAL_UTILISANT_BOIS_EMBALLAGE = (
-        auto(),
-        "Installations couvertes et closes de transit, stockage ou revente de bois d'emballage",
-    )
-    JARDINERIE_ENVIRONNEMENT_FERME = auto(), "Jardinerie (environnement fermé)"
-    INDUSTRIE_BOIS_ENVIRONNEMENT_FERME = auto(), "Industrie du bois (environnement fermé)"
-    AEROPORT_PORT_GARE = auto(), "Aéroport, port, gare (environnement fermé)"
-    ZONES_RISQUE_ENVIRONNEMENT_FERME = auto(), "Zones à risque (environnement fermé)"
-    ACTIVITES_CONDITIONNEMENT_ENTREPOT = auto(), "Usine d'emballage, entrepôt (environnement fermé)"
-    GROSSISTES_MARCHES_DETAILLANTS = auto(), "Grossistes, marchés, détaillants (environnement fermé)"
-    AUTRE_ENVIRONNEMENT_FERME = auto(), "Autre (environnement fermé)"
+    SITE_PRIVE_AUTRE_QUE_SERRE = auto(), "Site privé autre qu'une serre"
+    SITE_PUBLIC_AUTRE_QUE_SERRE = auto(), "Site public autre qu'une serre"
+    SITE_COMMERCIAL_UTILISANT_BOIS_EMBALLAGE = auto(), "Site commercial qui utilise du bois d'emballage"
+    JARDINERIE_ENVIRONNEMENT_FERME = auto(), "Jardinerie"
+    INDUSTRIE_BOIS_ENVIRONNEMENT_FERME = auto(), "Industrie du bois"
+    AEROPORT_PORT_GARE = auto(), "Aéroport, port, gare"
+    ZONES_RISQUE_ENVIRONNEMENT_FERME = auto(), "Zones à risque"
+    ACTIVITES_CONDITIONNEMENT_ENTREPOT = auto(), "Activités de conditionnement, entrepôt"
+    GROSSISTES_MARCHES_DETAILLANTS = auto(), "Grossistes, marchés, détaillants"
+    AUTRE_ENVIRONNEMENT_FERME = auto(), "Autre (environnement fermé) - préciser dans les commentaires"
 
     # Inconnu
     INCONNU = auto(), "Inconnu - préciser dans les commentaires"
+
+    @classmethod
+    def create_named_groups(cls):
+        return {
+            "Plein air - zone de production": (
+                cls.CHAMP_CULTURE_PATURAGE,
+                cls.VERGER_VIGNE,
+                cls.PEPINIERE,
+                cls.FORET,
+            ),
+            "Plein air - autre": (
+                cls.JARDINS_PRIVES,
+                cls.SITES_PUBLICS,
+                cls.ZONE_PROTEGEE,
+                cls.PLANTES_SAUVAGES_HORS_ZONES_PROTEGEES,
+                cls.PLATEFORME_LOGISTIQUE_TRANSIT_STOCKAGE_OU_REVENTE_BOIS,
+                cls.JARDINERIE_PLEIN_AIR,
+                cls.RESEAU_IRRIGATION_DRAINAGE,
+                cls.ZONE_HUMIDE,
+                cls.INDUSTRIE_BOIS_PLEIN_AIR,
+                cls.POINTS_ENTREE_PLEIN_AIR,
+                cls.ZONES_RISQUE_PLEIN_AIR,
+                cls.AEROPORT_PORT_ROUTE_VOIE_FERREE,
+                cls.MARCHES_REVENDEURS_MAGASINS_GROSSISTES,
+                cls.ZONES_URBAINES,
+                cls.BOIS_EMBALLAGE_PALETTES_EN_BOIS,
+                cls.CONTROLES_DES_MOUVEMENTS,
+                cls.AUTRE_PLEIN_AIR,
+            ),
+            "Environnement fermé": (
+                cls.SERRE,
+                cls.SITE_PRIVE_AUTRE_QUE_SERRE,
+                cls.SITE_PUBLIC_AUTRE_QUE_SERRE,
+                cls.SITE_COMMERCIAL_UTILISANT_BOIS_EMBALLAGE,
+                cls.JARDINERIE_ENVIRONNEMENT_FERME,
+                cls.INDUSTRIE_BOIS_ENVIRONNEMENT_FERME,
+                cls.AEROPORT_PORT_GARE,
+                cls.ZONES_RISQUE_ENVIRONNEMENT_FERME,
+                cls.ACTIVITES_CONDITIONNEMENT_ENTREPOT,
+                cls.GROSSISTES_MARCHES_DETAILLANTS,
+                cls.AUTRE_ENVIRONNEMENT_FERME,
+            ),
+            "Inconnu": (cls.INCONNU,),
+        }
+
+    @classproperty
+    def named_groups(cls):
+        if not hasattr(cls, "_named_groups_"):
+            cls._named_groups_ = {
+                named_group: tuple((enum.value, enum.label) for enum in values)
+                for named_group, values in cls.create_named_groups().items()
+            }
+
+        return cls._named_groups_
+
+    @enum_property
+    def named_group(self):
+        if not hasattr(self, "_named_group_"):
+            for named_group, values in self.named_groups.items():
+                for name, _ in values:
+                    SiteInspection[name]._named_group_ = named_group
+
+        return self._named_group_
+
+    @enum_property
+    def label_with_group(self):
+        return f"{self.named_group} > {self.label}"
