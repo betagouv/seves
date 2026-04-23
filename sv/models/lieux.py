@@ -6,7 +6,7 @@ import reversion
 
 from core.model_mixins import WithLocalisableMixin
 from core.models import Departement, Region  # noqa F403
-from sv.constants import SiteInspection as SiteInspectionChoices
+from sv.constants import SiteInspection
 
 
 class PositionChaineDistribution(models.Model):
@@ -19,18 +19,6 @@ class PositionChaineDistribution(models.Model):
 
     def __str__(self):
         return self.libelle
-
-
-class SiteInspection(models.Model):
-    class Meta:
-        verbose_name = "Site d'inspection"
-        verbose_name_plural = "Sites d'inspection"
-        db_table = "sv_site_inspection"
-
-    nom = models.CharField(max_length=100, verbose_name="Nom", unique=True)
-
-    def __str__(self):
-        return self.nom
 
 
 def validate_wgs84_longitude(value):
@@ -106,8 +94,8 @@ class Lieu(WithLocalisableMixin, models.Model):
     )
     site_inspection = models.CharField(
         "Site d'inspection",
-        choices=SiteInspectionChoices,
-        default=SiteInspectionChoices.INCONNU,
+        choices=SiteInspection.named_groups,
+        default=SiteInspection.INCONNU,
     )
     position_chaine_distribution_etablissement = models.ForeignKey(
         "PositionChaineDistribution",
@@ -127,6 +115,10 @@ class Lieu(WithLocalisableMixin, models.Model):
         "code_inupp_etablissement",
         "position_chaine_distribution_etablissement",
     ]
+
+    @property
+    def site_inspection_label_with_group(self):
+        return SiteInspection(self.site_inspection).label_with_group
 
     def __str__(self):
         return str(self.nom)

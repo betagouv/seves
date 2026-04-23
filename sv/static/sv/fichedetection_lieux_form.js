@@ -110,7 +110,7 @@ function buildLieuCardFromModal(element) {
     const supplyChainPosition =
         (supplyChainPositionEl?.selectedIndex ?? -1 > 0) ? supplyChainPositionEl.selectedOptions[0].label : ""
     const siteInspectionEl = element.querySelector('[id$="site_inspection"]')
-    const siteInspection = (siteInspectionEl?.selectedIndex ?? -1 > 0) ? siteInspectionEl.selectedOptions[0].label : ""
+    const siteInspection = siteInspectionEl.selectedOptions[0].getAttribute("data-grouped-label")
 
     return {
         id: element.dataset.id,

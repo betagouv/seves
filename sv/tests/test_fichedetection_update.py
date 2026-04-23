@@ -275,6 +275,7 @@ def test_add_new_lieu(
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     form_elements.save_update_btn.click()
     page.wait_for_timeout(600)
@@ -289,6 +290,7 @@ def test_add_new_lieu(
     assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
     assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
     assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+    assert lieu_from_db.get_site_inspection_display() == "Inconnu - préciser dans les commentaires"
 
 
 @pytest.mark.django_db
@@ -309,6 +311,7 @@ def test_add_multiple_lieux(
     for lieu in lieux:
         form_elements.add_lieu_btn.click()
         lieu_form_elements.nom_input.fill(lieu.nom)
+        lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
         lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
         lieu_form_elements.force_commune()
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -331,6 +334,7 @@ def test_add_multiple_lieux(
         assert lieu_from_db.departement == Departement.objects.get(nom="Nord")
         assert lieu_from_db.wgs84_latitude == lieu.wgs84_latitude
         assert lieu_from_db.wgs84_longitude == lieu.wgs84_longitude
+        assert lieu_from_db.get_site_inspection_display() == "Inconnu - préciser dans les commentaires"
 
 
 @pytest.mark.django_db
@@ -1217,6 +1221,7 @@ def test_add_lieu_add_and_remove_commune(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.force_commune()
     page.locator("button[aria-label='Remove item: Lille']").click(force=True)
     lieu_form_elements.save_btn.click()
