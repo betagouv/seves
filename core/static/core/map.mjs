@@ -1,14 +1,14 @@
 import {applicationReady} from "Application"
+import {BaseMapController} from "BaseMapController"
 import maplibregl from "MapLibre"
 import {StyleSwitcherControl} from "MapStyleSwitcher"
-import {Controller} from "Stimulus"
 
 const DISTANT_ZOOM = 5
 const CLOSE_UP_ZOOM = 10
 const PRECISE_ZOOM = 15
 
 const DEFAULT_CENTER_CONFIG = {center: {lat: 48.866667, lon: 2.333333}, zoom: DISTANT_ZOOM}
-class MapController extends Controller {
+class MapController extends BaseMapController {
     static targets = [
         "mapDisplay",
         "latitudeInput",
@@ -20,7 +20,6 @@ class MapController extends Controller {
         "communeSelect",
     ]
     static values = {
-        jsonFile: String,
         reverseApi: String,
         geoApiRoot: String,
         region: String,
@@ -111,34 +110,6 @@ class MapController extends Controller {
         this.latitudeInputTarget.value = e.lngLat.lat
         this.longitudeInputTarget.value = e.lngLat.lng
         this.setAddressFieldsByLongLat(e)
-    }
-
-    addStyleSwitcher() {
-        const styles = [
-            {
-                id: "osm",
-                name: "Carte",
-                styleUrl: "https://openmaptiles.data.gouv.fr/styles/osm-bright/style.json",
-                description: "Carte",
-            },
-            {
-                id: "satellite",
-                name: "Vue Satellite",
-                styleUrl: this.jsonFileValue,
-                description: "Vue Satellite",
-            },
-        ]
-
-        const control = new StyleSwitcherControl({
-            styles,
-            activeStyleId: "osm",
-            theme: "auto",
-            showImages: false,
-            onAfterStyleChange: (_from, to) => {
-                this.map.setStyle(to.styleUrl)
-            },
-        })
-        this.map.addControl(control, "bottom-left")
     }
 
     async connect() {
