@@ -10,6 +10,7 @@ importmaps = {
     "Application": static("core/stimulus_app.mjs"),
     "Utils": static("core/utils.mjs"),
     "choicesDefaults": static("core/choices.mjs"),
+    "BaseMapController": static("core/base_map.mjs"),
     "BaseFormset": static("core/base_formset.mjs"),
     "BaseFormInModal": static("core/base_form_in_modal.mjs"),
     "dsfr": static("dsfr/dist/dsfr.module.min.js"),
