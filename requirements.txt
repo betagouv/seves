@@ -174,7 +174,7 @@ pre-commit==4.6.0
     # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
-psycopg2-binary==2.9.11
+psycopg2-binary==2.9.12
     # via -r requirements.in
 pycparser==2.22
     # via cffi
