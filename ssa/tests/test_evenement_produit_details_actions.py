@@ -95,8 +95,14 @@ def test_can_download_document_evenement_produit(live_server, page):
 
     details_page = EvenementProduitDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
-    with page.expect_download() as download_info:
-        details_page.download()
+    download = details_page.download().value
+    assert download.suggested_filename == f"evenement_produit_{evenement.numero}.docx"
 
-    download = download_info.value
+
+def test_can_download_document_evenement_produit_when_no_publication_date(live_server, page):
+    evenement = EvenementProduitFactory(date_publication=None)
+
+    details_page = EvenementProduitDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
     assert download.suggested_filename == f"evenement_produit_{evenement.numero}.docx"

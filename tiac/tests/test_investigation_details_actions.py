@@ -69,3 +69,12 @@ def test_can_cloturer_investigation_if_last_remaining_structure(
     assert evenement.etat == InvestigationTiac.Etat.CLOTURE
     assert page.get_by_text("Fin de suivi").count() == 2
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
+
+
+def test_can_download_document_investigation_cas_humain_when_no_publication_date(live_server, page):
+    evenement = InvestigationTiacFactory(date_publication=None)
+
+    details_page = InvestigationTiacDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
+    assert download.suggested_filename == f"investigation_tiac_{evenement.numero}.docx"
