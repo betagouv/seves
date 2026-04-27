@@ -180,11 +180,12 @@ def test_evenement_history_content_prelevement_shows_even_when_no_modification_o
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
-    creation_text = f"Objet ajouté : Prelevement Prélèvement n° {prelevement.id}"
-    update_text = f"Fiche Détection ({detection.numero}) - Lieu (Mon Lieu) - Prélèvement (Prélèvement N° {prelevement.id}) - N° D'Échantillon"
-
-    expect(page.get_by_text(creation_text, exact=True)).to_be_visible()
-    expect(page.get_by_text(update_text, exact=True)).to_be_visible()
+    creation_text = f"Objet ajouté : Prelevement {str(prelevement)}"
+    update_text = (
+        f"Fiche Détection ({detection.numero}) - Lieu (Mon Lieu) - Prélèvement ({str(prelevement)}) - N° D'Échantillon"
+    )
+    expect(page.get_by_text(creation_text)).to_be_visible()
+    expect(page.get_by_text(update_text)).to_be_visible()
 
 
 def test_evenement_history_content_add_and_edit_zone_infestee(
@@ -226,3 +227,39 @@ def test_evenement_history_content_add_and_edit_zone_infestee(
     update_text = f"Fiche Zone Délimitée ({evenement.numero}) - Zone Infestée (Old Value) - Nom De La Zone Infestée"
     expect(page.get_by_text(creation_text, exact=True)).to_be_visible()
     expect(page.get_by_text(update_text, exact=True)).to_be_visible()
+
+
+def test_evenement_history_only_one_entry_when_lieu_is_deleted(
+    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+):
+    statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
+    StructurePreleveuseFactory()
+    organisme_nuisible = OrganismeNuisibleFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.save_btn.click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    evenement = Evenement.objects.get()
+    detection = evenement.detections.get()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_test_id("lieu-delete-btn").click()
+    page.get_by_test_id("submit-delete").locator("visible=true").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    content_type = ContentType.objects.get_for_model(Evenement)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+
+    deletion_text = "Objet supprimé : Lieu Mon lieu"
+    expect(page.get_by_text(deletion_text, exact=True)).to_be_visible()
+    expect(page.get_by_text(deletion_text, exact=True)).to_have_count(1)
