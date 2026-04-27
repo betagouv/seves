@@ -5,7 +5,12 @@ class ObjectLazyLoad extends Controller {
     static targets = ["objectTag"]
 
     onPDFPreviewed() {
-        this.objectTagTarget.setAttribute("data", this.objectTagTarget.dataset.src)
+        const obj = document.createElement("object")
+        obj.setAttribute("type", this.objectTagTarget.dataset.type)
+        obj.setAttribute("width", this.objectTagTarget.dataset.width)
+        obj.setAttribute("height", this.objectTagTarget.dataset.height)
+        obj.setAttribute("data", this.objectTagTarget.dataset.src)
+        this.objectTagTarget.replaceWith(obj)
     }
 }
 
