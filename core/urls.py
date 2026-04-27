@@ -140,4 +140,9 @@ urlpatterns = [
         TemplateView.as_view(template_name="politique-de-confidentialite.html"),
         name="politique-de-confidentialite",
     ),
+    path(
+        "accessibilite/",
+        TemplateView.as_view(template_name="accessibilite.html"),
+        name="accessibilite",
+    ),
 ]
