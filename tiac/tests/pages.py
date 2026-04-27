@@ -6,6 +6,7 @@ from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
+from conftest import playwright_repeatable
 from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
@@ -527,6 +528,16 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin)
     def fil_de_suivi_type(self, line_number=1):
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
 
+    @playwright_repeatable
+    def download(self):
+        action_dropdown = self.page.locator("#action-1")
+        if not action_dropdown.is_visible():
+            self.page.get_by_role("button", name="Actions").click()
+            expect(action_dropdown).to_be_visible()
+        with self.page.expect_download() as download_info:
+            self.page.get_by_text("Télécharger le document", exact=True).click()
+        return download_info
+
 
 class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
     fields = [
@@ -869,3 +880,13 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixi
     @property
     def fil_de_suivi_type(self, line_number=1):
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
+
+    @playwright_repeatable
+    def download(self):
+        action_dropdown = self.page.locator("#action-1")
+        if not action_dropdown.is_visible():
+            self.page.get_by_role("button", name="Actions").click()
+            expect(action_dropdown).to_be_visible()
+        with self.page.expect_download() as download_info:
+            self.page.get_by_text("Télécharger le document", exact=True).click()
+        return download_info

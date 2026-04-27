@@ -179,3 +179,12 @@ def test_can_transform_evenement_simple_into_investigation_tiac_even_with_one_st
 
     investigation = InvestigationTiac.objects.get()
     assert investigation.is_draft is True
+
+
+def test_can_download_document_evenement_simple_when_no_publication_date(live_server, page):
+    evenement = EvenementSimpleFactory(date_publication=None)
+
+    details_page = EvenementSimpleDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
+    assert download.suggested_filename == f"enregistrement_simple_{evenement.numero}.docx"

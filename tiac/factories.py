@@ -99,7 +99,7 @@ class BaseTiacFactory(DjangoModelFactory):
                 kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%d"))
             except ValueError:
                 kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S"))
-        else:
+        elif value:
             kwargs["date_publication"] = timezone.make_aware(value)
 
         return super()._adjust_kwargs(**kwargs)

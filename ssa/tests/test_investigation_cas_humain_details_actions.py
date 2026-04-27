@@ -69,13 +69,19 @@ def test_can_cloturer_investigation_cas_humain_if_last_remaining_structure(
     expect(page.get_by_text(f"L'événement n°{evenement.numero} a bien été clôturé.")).to_be_visible()
 
 
-def test_can_download_document_evenement_produit(live_server, page):
+def test_can_download_document_investigation_cas_humain(live_server, page):
     evenement = InvestigationCasHumainFactory()
 
     details_page = InvestigationCasHumainDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
-    with page.expect_download() as download_info:
-        details_page.download()
+    download = details_page.download().value
+    assert download.suggested_filename == f"investigtion_cas_humain_{evenement.numero}.docx"
 
-    download = download_info.value
+
+def test_can_download_document_investigation_cas_humain_when_no_publication_date(live_server, page):
+    evenement = InvestigationCasHumainFactory(date_publication=None)
+
+    details_page = InvestigationCasHumainDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
     assert download.suggested_filename == f"investigtion_cas_humain_{evenement.numero}.docx"
