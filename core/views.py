@@ -547,6 +547,7 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         self.object = content_type.model_class().objects.get(pk=kwargs["pk"])
         self.handled_qs = []
         self.handled_revision_comments = []
+        self.handled_deleted_objects = []
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):

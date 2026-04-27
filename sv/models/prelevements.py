@@ -150,7 +150,10 @@ class Prelevement(models.Model):
     date_rapport_analyse = models.DateField(verbose_name="Date rapport d'analyse", blank=True, null=True)
 
     def __str__(self):
-        return f"Prélèvement n° {self.id}"
+        result = f"réalisé par {self.structure_preleveuse.nom}"
+        if self.numero_echantillon:
+            result += f" (numéro d'échantillon : {self.numero_echantillon})"
+        return result
 
     def clean(self):
         super().clean()
