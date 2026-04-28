@@ -11,50 +11,56 @@
 </template>
 
 <template id="prelevement-carte-tpl">
-    <div id="add-edit-prelevement-__card_id__" class="fr-card fr-mb-4v" data-testid="lieu-initial">
-        <div class="fr-card__body">
-            <div class="fr-card__content">
-                <div>
-                    <h3 class="fr-card__title lieu-nom">
-                        <button
-                            type="button"
-                            aria-controls="modal-add-edit-prelevement-__card_id__"
-                            data-fr-opened="false"
-                            data-id="__card_id__"
-                        >
-                            __nom__
-                        </button>
-                    </h3>
-                </div>
-                <div class="fr-card__desc">
-                    <section>
-                        __date_prelevement__
-                        <p class="fr-card__detail fr-icon-map-pin-2-line">__lieu__</p>
-                        <section class="prelevement-other-infos">__other_infos__</section>
-                        <section class="fr-mt-1v">__labels__</section>
-                    </section>
+    <div class="fr-col fr-col-xl-4 fr-col-sm-6">
+        <div
+            id="add-edit-prelevement-__card_id__"
+            class="fr-card"
+            data-testid="lieu-initial"
+        >
+            <div class="fr-card__body">
+                <div class="fr-card__content">
+                    <div>
+                        <h3 class="fr-card__title lieu-nom">
+                            <button
+                                type="button"
+                                aria-controls="modal-add-edit-prelevement-__card_id__"
+                                data-fr-opened="false"
+                                data-id="__card_id__"
+                            >
+                                __nom__
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="fr-card__desc">
+                        <section>
+                            __date_prelevement__
+                            <p class="fr-card__detail fr-icon-map-pin-2-line">__lieu__</p>
+                            <section class="prelevement-other-infos">__other_infos__</section>
+                            <section class="fr-mt-1v">__labels__</section>
+                        </section>
 
-                    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-btns-group--icon-left fr-mt-4v fr-mb-n4v">
-                        <button
-                            type="button"
-                            class="fr-btn fr-btn--tertiary fr-icon-pencil-line prelevement-edit-btn"
-                            aria-controls="modal-add-edit-prelevement-__card_id__"
-                            data-fr-opened="false"
-                            data-id="__card_id__"
-                            data-testid="prelevement-update-btn"
-                        >
-                            Modifier
-                        </button>
-                        <button
-                            type="button"
-                            class="fr-btn fr-btn--tertiary fr-icon-delete-bin-line prelevement-delete-btn"
-                            data-fr-opened="false"
-                            data-id="__card_id__"
-                            data-testid="prelevement-delete-btn"
-                        >
-                            Supprimer
-                        </button>
-                        __more_btns__
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm fr-btns-group--icon-left fr-mt-4v fr-mb-n4v">
+                            <button
+                                type="button"
+                                class="fr-btn fr-btn--tertiary fr-icon-pencil-line prelevement-edit-btn"
+                                aria-controls="modal-add-edit-prelevement-__card_id__"
+                                data-fr-opened="false"
+                                data-id="__card_id__"
+                                data-testid="prelevement-update-btn"
+                            >
+                                Modifier
+                            </button>
+                            <button
+                                type="button"
+                                class="fr-btn fr-btn--tertiary fr-icon-delete-bin-line prelevement-delete-btn"
+                                data-fr-opened="false"
+                                data-id="__card_id__"
+                                data-testid="prelevement-delete-btn"
+                            >
+                                Supprimer
+                            </button>
+                            __more_btns__
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,44 +1,12 @@
-/* -- Style de la page -- */
-main {
-    margin: 2rem 1.5rem;
-}
-
-/* -- Grid pour les blocs informations, objet de l'évènement, lieux, prélèvements et mesures de gestion -- */
-#fiche-detection-form {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 1.5rem;
-}
-#informations {
-    grid-column: span 3;
-}
-#mesures-gestion {
-    grid-column: span 3;
-}
-#lieux,
-#prelevements {
-    max-height: 690px;
-    overflow-y: auto;
-}
-
 /* -- Styles des blocs (intérieur) -- */
-#informations,
-#objet-evenement,
-#lieux,
-#prelevements,
-#mesures-gestion {
+.block {
     padding: 1.5rem;
-    background-color: white;
+    margin-bottom: 1.5rem;
+    background-color: var(--background-default-grey);
 }
 
-/* Entête (titre et boutons) */
-#fiche-detection-form-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-#fiche-detection-form-header h1 {
-    margin-bottom: 0.5rem;
+.block.block--full {
+    height: 100%;
 }
 
 /* Informations */
@@ -66,26 +34,6 @@ main {
     flex: 1.25;
 }
 
-/* Objet de l'évènement */
-#id_commentaire {
-    min-height: 10rem;
-}
-
-/* Lieux */
-#lieux-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-}
-#lieux .lieu-nom {
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: black;
-}
-#lieux .lieu-header {
-    display: flex;
-    justify-content: space-between;
-}
 #modal-add-edit-lieu-title,
 #modal-add-edit-prelevement-title {
     margin-bottom: 2rem;
