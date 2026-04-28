@@ -22,13 +22,16 @@
 {% endblock %}
 
 {% block content %}
-    <main>
+    <main class="fr-container--fluid fr-p-6v">
         {% if is_creation %}
             {{ status_to_organisme_nuisible|json_script:"status-to-organisme-nuisible-id" }}
         {% endif %}
         {{ prelevement_resultats|json_script:"prelevement-resultats" }}
 
-        <form action="{% if is_creation %}{% url 'sv:fiche-detection-creation' %}{% else %}{% url 'sv:fiche-detection-modification' form.instance.id  %}{% endif %}" method="post">
+        <form
+            action="{% if is_creation %}{% url 'sv:fiche-detection-creation' %}{% else %}{% url 'sv:fiche-detection-modification' form.instance.id %}{% endif %}"
+            method="post"
+        >
             {% csrf_token %}
             {{ form.latest_version }}
             {% if request.GET.evenement %}
@@ -37,16 +40,14 @@
                 <input type="hidden" name="evenement" value="{{ form.instance.evenement.pk }}">
             {% endif %}
 
-            <div id="fiche-detection-form-header">
-                <div>
-                    <h1>
-                        {% if is_creation %}
-                            Création d'une fiche détection
-                        {% else %}
-                            Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
-                        {% endif %}
-                    </h1>
-                </div>
+            <div class="fr-flex fr-flex--row fr-flex--space-between">
+                <h1>
+                    {% if is_creation %}
+                        Création d'une fiche détection
+                    {% else %}
+                        Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
+                    {% endif %}
+                </h1>
 
                 <section>
                     {% partialdef form_btns inline %}
@@ -69,23 +70,23 @@
                 </section>
             </div>
 
-            <div id="fiche-detection-form">
-                <div id="informations">
-                    <h2 class="fr-h6">Informations</h2>
-                    <div id="informations-content">
-                        <div id="date-creation">
-                            <label class="fr-label" for="date-creation-input">Date de création</label>
-                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
-                        </div>
-                        <div id="statut-evenement">
-                            {{ form.statut_evenement.label_tag }} {{ form.statut_evenement }}
-                        </div>
+            <div class="block">
+                <h2 class="fr-h6">Informations</h2>
+                <div id="informations-content">
+                    <div id="date-creation">
+                        <label class="fr-label" for="date-creation-input">Date de création</label>
+                        <input type="text" id="date-creation-input" class="fr-input fr-m-0" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                    </div>
+                    <div id="statut-evenement">
+                        {{ form.statut_evenement.label_tag }} {{ form.statut_evenement }}
                     </div>
                 </div>
+            </div>
 
-                <div id="objet-evenement">
-                    <h2 class="fr-h6">Objet de l'évènement</h2>
-                    <div class="fr-container--fluid">
+            <div class="fr-grid-row fr-grid-row--gutters fr-flex--align-stretch fr-mb-3v">
+                <div class="fr-col fr-col-md-6">
+                    <div class="block block--full">
+                        <h2 class="fr-h6">Objet de l'évènement</h2>
                         {% if form.organisme_nuisible %}
                             <div id="organisme-nuisible" class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
                                 <div class="fr-col-12 fr-col-lg-5 required-field">{{ form.organisme_nuisible.label_tag }}</div>
@@ -126,15 +127,25 @@
                         </p>
                     </div>
                 </div>
+                <div class="fr-col fr-col-md-6">
+                    <div class="block block--full">
 
-                <div id="lieux">
-                    <div id="lieux-header">
-                        <h2 class="fr-h6">Lieux</h2>
-                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-                                id="add-lieu-bouton">Ajouter</button>
                     </div>
+                </div>
+            </div>
 
-                    {{ lieu_formset.management_form }}
+            <div class="fr-mb-6v block">
+                <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+                    <h2 class="fr-h6 fr-m-0">Lieux</h2>
+                    <button
+                        type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+                        id="add-lieu-bouton"
+                    >
+                        Ajouter
+                    </button>
+                </div>
+
+                {{ lieu_formset.management_form }}
 
                     {% for form in lieu_formset %}
                         {% if form.instance.pk %}
@@ -143,65 +154,70 @@
                         {% endif %}
                     {% endfor %}
 
-                    {% for form in lieu_formset %}
-                        {% if not form.instance.pk %}
-                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=forloop.counter0 %}
-                        {% endif %}
-                    {% endfor %}
+                {% for form in lieu_formset %}
+                    {% if not form.instance.pk %}
+                        {% include 'sv/_fichedetection_form__lieux_modal.html' with id=forloop.counter0 %}
+                    {% endif %}
+                {% endfor %}
 
-                    <div id="lieux-list">
-                    </div>
+                <div id="lieux-list" class="fr-flex fr-flex--row fr-grid-row--gutters"></div>
+            </div>
+
+            <div class="fr-mb-6v block">
+                <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+                    <h2 class="fr-h6 fr-m-0">Prélèvements</h2>
+                    <button
+                        id="btn-add-prelevment"
+                        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+                        type="button"
+                    >
+                        Ajouter
+                    </button>
                 </div>
 
-                <div id="prelevements">
-                    <div id="prelevements-header">
-                        <h2 class="fr-h6">Prélèvements</h2>
-                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" id="btn-add-prelevment">Ajouter</button>
-                    </div>
+                {% for form in existing_prelevements %}
+                    {{ form.id }}
+                    {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=form.instance.pk existing="true" %}
+                {% endfor %}
 
-                    {% for form in existing_prelevements %}
-                        {{ form.id }}
-                        {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=form.instance.pk existing="true" %}
-                    {% endfor %}
+                {% for form in prelevement_forms %}
+                    {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=forloop.counter0 %}
+                {% endfor %}
 
-                    {% for form in prelevement_forms %}
-                        {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=forloop.counter0 %}
-                    {% endfor %}
+                <div id="prelevements-list" class="fr-flex fr-flex--row fr-grid-row--gutters"></div>
 
-                    <div id="prelevements-list"></div>
+                <div id="no-lieux-text">
+                    <p>Aucun prélèvement.</p>
 
-                    <div id="no-lieux-text">
-                        <p>Aucun prélèvement.</p>
-                        <div class="fr-notice fr-notice--info">
-                            <div class="fr-container">
-                                <div class="fr-notice__body">
-                                    <p>
-                                        <span class="fr-notice__title">Pour ajouter un prélèvement, vous devez avoir renseigné au moins un lieu.</span>
-                                    </p>
-                                    <button title="Masquer le message" id="button-1290" class="fr-btn--close fr-btn btn--close-notice-js" >Masquer le message</button>
-                                </div>
+                    <div class="fr-notice fr-notice--info fr-px-4v">
+                        <div class="fr-container--fluid">
+                            <div class="fr-notice__body">
+                                <p>
+                                    <span class="fr-notice__title">Pour ajouter un prélèvement, vous devez avoir renseigné au moins un lieu.</span>
+                                </p>
+                                <button title="Masquer le message" id="button-1290" class="fr-btn--close fr-btn btn--close-notice-js" >Masquer le message</button>
                             </div>
                         </div>
                     </div>
-
                 </div>
 
-                <div id="mesures-gestion">
-                    <h2 class="fr-h6">Mesures de gestion</h2>
-                    <div id="mesures-gestion-content">
-                        <p id="mesures-conservatoires-immediates">
-                            {{ form.mesures_conservatoires_immediates.label_tag }} {{ form.mesures_conservatoires_immediates }}
-                        </p>
-                        <p id="mesures-consignation">
-                            {{ form.mesures_consignation.label_tag }} {{ form.mesures_consignation }}
-                        </p>
-                        <p id="mesures-phytosanitaires">
-                            {{ form.mesures_phytosanitaires.label_tag }}{{ form.mesures_phytosanitaires }}
-                        </p>
-                        <p id="mesures-surveillance-specifique">
-                            {{ form.mesures_surveillance_specifique.label_tag }}{{ form.mesures_surveillance_specifique }}
-                        </p>
-                    </div>
+            </div>
+
+            <div class="block">
+                <h2 class="fr-h6">Mesures de gestion</h2>
+                <div id="mesures-gestion-content">
+                    <p id="mesures-conservatoires-immediates">
+                        {{ form.mesures_conservatoires_immediates.label_tag }} {{ form.mesures_conservatoires_immediates }}
+                    </p>
+                    <p id="mesures-consignation">
+                        {{ form.mesures_consignation.label_tag }} {{ form.mesures_consignation }}
+                    </p>
+                    <p id="mesures-phytosanitaires">
+                        {{ form.mesures_phytosanitaires.label_tag }}{{ form.mesures_phytosanitaires }}
+                    </p>
+                    <p id="mesures-surveillance-specifique">
+                        {{ form.mesures_surveillance_specifique.label_tag }}{{ form.mesures_surveillance_specifique }}
+                    </p>
                 </div>
             </div>
 
