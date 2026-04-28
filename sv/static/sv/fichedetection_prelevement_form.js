@@ -20,41 +20,6 @@ import choicesDefaults from "choicesDefaults"
 document.prelevementCards = []
 const modalHTMLContent = {}
 
-function fetchEspecesEchantillon(query) {
-    return fetch(`/sv/api/espece/recherche/?q=${query}`)
-        .then(response => response.json())
-        .then(data =>
-            data.results.map(item => ({
-                value: item.id,
-                label: item.name,
-            })),
-        )
-        .catch(error => {
-            console.error("Erreur lors de la récupération des données:", error)
-            return []
-        })
-}
-
-function addChoicesEspeceEchantillon(element) {
-    const choicesEspece = new Choices(element, {
-        ...choicesDefaults,
-        removeItemButton: true,
-        placeholderValue: "Tapez minimum 2 caractères",
-        searchResultLimit: 50,
-        position: "top",
-    })
-    choicesEspece.input.element.addEventListener("input", () => {
-        const query = choicesEspece.input.element.value
-        if (query.length >= 2) {
-            fetchEspecesEchantillon(query).then(results => {
-                choicesEspece.clearChoices()
-                choicesEspece.setChoices(results, "value", "label", true)
-            })
-        }
-    })
-    return choicesEspece
-}
-
 /** @param {MouseEvent} evt */
 function duplicatePrelevement(evt) {
     evt.preventDefault()
@@ -307,7 +272,6 @@ function handleModalClose(event) {
     document
         .querySelectorAll(".prelevement-save-btn")
         .forEach(button => button.addEventListener("click", savePrelevement))
-    document.querySelectorAll("select[id$=espece-echantillon]").forEach(element => addChoicesEspeceEchantillon(element))
     document
         .querySelectorAll("select[id$=structure_preleveuse]")
         .forEach(element => element.addEventListener("change", setIsOfficiel))

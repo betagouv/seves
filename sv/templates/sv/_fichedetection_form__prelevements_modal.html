@@ -68,7 +68,12 @@
                                 <div class="fr-col-4">{{ form.matrice_prelevee.label_tag }}</div>
                                 <div class="fr-col-8">{{ form.matrice_prelevee }}</div>
                             </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="espece-echantillon">
+                            <div
+                                class="fr-grid-row fr-grid-row--gutters"
+                                id="espece-echantillon"
+                                data-controller="espece-search"
+                                data-espece-search-position-value="top"
+                            >
                                 <div class="fr-col-4">
                                     <label
                                         class="fr-label"
@@ -82,6 +87,7 @@
                                         id="id_prelevements-{{ id }}-espece-echantillon"
                                         class="fr-input"
                                         name="prelevements-{{ id }}-espece_echantillon"
+                                        data-espece-search-target="select"
                                     >
                                         {% if form.instance.espece_echantillon %}
                                             <option value="{{ form.instance.espece_echantillon.pk }}" selected>
