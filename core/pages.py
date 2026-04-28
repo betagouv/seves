@@ -8,8 +8,8 @@ from django.conf import settings
 from playwright.sync_api import Locator, Page, expect
 import pytest
 
-from conftest import playwright_repeatable
 from core.models import Agent, Structure
+from core.tests.pages import playwright_repeatable
 
 
 class BaseDocumentPage(ABC):
