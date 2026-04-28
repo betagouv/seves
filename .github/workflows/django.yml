@@ -1,5 +1,7 @@
 name: Django application
 on: [push]
+permissions:
+  checks: write
 env:
   SECRET_KEY: NOT_A_REAL_SECRET
   DATABASE_URL: postgres://postgres:postgres@localhost/github_actions
