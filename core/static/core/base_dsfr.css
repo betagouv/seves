@@ -103,8 +103,13 @@
 .fr-flex--align-end {
     align-self: flex-end;
 }
-.fr-flex--gap-6v {
-    gap: 1.5rem;
+
+.fr-flex--align-items-start {
+    align-items: flex-start !important;
+}
+
+.fr-flex--gap-2v {
+    gap: 0.5rem;
 }
 
 .fr-container-xxl {

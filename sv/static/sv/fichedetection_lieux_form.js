@@ -23,9 +23,6 @@ function displayLieuxCards() {
     const lieuListElement = document.getElementById("lieux-list")
     const lieuTpl = document.getElementById("lieu-carte-tpl").innerHTML
     lieuListElement.innerHTML = ""
-    if (document.lieuxCards.length === 0) {
-        lieuListElement.innerText = "Aucun lieu."
-    }
 
     document.lieuxCards.forEach(card => {
         let departement = (card.departement || null) ?? ""

@@ -4,15 +4,18 @@ import re
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from faker import Faker
 from playwright.sync_api import Page, expect
 import pytest
 
 from core.constants import DEPARTEMENTS, REGIONS
 from core.factories import DepartementFactory
 from core.models import Structure
-from sv.constants import STRUCTURE_EXPLOITANT
+from sv.constants import STRUCTURE_EXPLOITANT, ElementInfesteQuantiteUnite, ElementInfesteType
 
 from ..factories import (
+    ElementInfesteFactory,
+    EspeceEchantillonFactory,
     EvenementFactory,
     FicheDetectionFactory,
     LaboratoireFactory,
@@ -22,6 +25,7 @@ from ..factories import (
 )
 from ..models import (
     Departement,
+    ElementInfeste,
     Evenement,
     FicheDetection,
     Laboratoire,
@@ -30,6 +34,7 @@ from ..models import (
     Region,
     StructurePreleveuse,
 )
+from .pages import EvenementUpdatePage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -68,9 +73,6 @@ def test_fiche_detection_update_page_content(live_server, page: Page, form_eleme
 
     # Commentaire
     expect(form_elements.commentaire_input).to_have_value(fiche_detection.commentaire)
-
-    # Végétaux infestés
-    expect(form_elements.vegetaux_infestes_input).to_have_value(fiche_detection.vegetaux_infestes)
 
     # Mesures conservatoires immédiates
     expect(form_elements.mesures_conservatoires_immediates_input).to_have_value(
@@ -168,7 +170,6 @@ def test_fiche_detection_update_page_content_with_no_data(
         contexte=None,
         date_premier_signalement=None,
         commentaire="",
-        vegetaux_infestes="",
         mesures_conservatoires_immediates="",
         mesures_consignation="",
         mesures_phytosanitaires="",
@@ -183,7 +184,6 @@ def test_fiche_detection_update_page_content_with_no_data(
     expect(form_elements.contexte_input).to_have_value("")
     expect(form_elements.date_1er_signalement_input).to_have_value("")
     expect(form_elements.commentaire_input).to_have_value("")
-    expect(form_elements.vegetaux_infestes_input).to_have_value("")
     expect(form_elements.mesures_conservatoires_immediates_input).to_have_value("")
     expect(form_elements.mesures_consignation_input).to_have_value("")
     expect(form_elements.mesures_phytosanitaires_input).to_have_value("")
@@ -208,7 +208,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
     form_elements.date_1er_signalement_input.fill(new_fiche_detection.date_premier_signalement.strftime("%Y-%m-%d"))
     form_elements.commentaire_input.fill(new_fiche_detection.commentaire)
-    form_elements.vegetaux_infestes_input.fill(new_fiche_detection.vegetaux_infestes)
     form_elements.mesures_conservatoires_immediates_input.fill(new_fiche_detection.mesures_conservatoires_immediates)
     form_elements.mesures_consignation_input.fill(new_fiche_detection.mesures_consignation)
     form_elements.mesures_phytosanitaires_input.fill(new_fiche_detection.mesures_phytosanitaires)
@@ -223,7 +222,6 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     assert fiche_detection_updated.statut_evenement == new_fiche_detection.statut_evenement
     assert fiche_detection_updated.contexte == new_fiche_detection.contexte
     assert fiche_detection_updated.commentaire == new_fiche_detection.commentaire
-    assert fiche_detection_updated.vegetaux_infestes == new_fiche_detection.vegetaux_infestes
     assert (
         fiche_detection_updated.mesures_conservatoires_immediates
         == new_fiche_detection.mesures_conservatoires_immediates
@@ -1183,7 +1181,6 @@ def test_cant_forge_update_of_detection_i_cant_see(client):
         "statut_evenement": [""],
         "contexte": [""],
         "date_premier_signalement": [""],
-        "vegetaux_infestes": [""],
         "commentaire": ["AAAA"],
         "lieux-TOTAL_FORMS": ["10"],
         "lieux-INITIAL_FORMS": ["0"],
@@ -1324,3 +1321,124 @@ def test_lieu_for_prelevement_is_correct_when_multiple_lieux(
 
     prelevement.refresh_from_db()
     assert prelevement.lieu == lieu_2
+
+
+def test_elements_infestes_add_new(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+
+    to_add = ElementInfesteFactory.build_batch(3, espece=EspeceEchantillonFactory())
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+
+    evenement_page.navigate(fiche)
+    expect(evenement_page.empty_message).to_be_visible()
+
+    for element in to_add:
+        evenement_page.fill_new_form_and_check(element, action="save")
+
+        generated_card = evenement_page.elements_cards.last
+        expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+        expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+
+        if element.quantite:
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+            )
+
+    assert fiche.elements_infestes.count() == 0
+    expect(evenement_page.empty_message).not_to_be_visible()
+
+    evenement_page.save()
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == 3
+    for expected, actual in zip(to_add, fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id"))
+
+
+def test_elements_infestes_add_to_existing(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+    existing = ElementInfesteFactory.create_batch(3, fiche_detection=fiche)
+
+    to_add = ElementInfesteFactory.build_batch(3, espece=EspeceEchantillonFactory())
+    to_add_and_delete = ElementInfesteFactory(espece=EspeceEchantillonFactory())
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+
+    evenement_page.navigate(fiche)
+    expect(evenement_page.empty_message).not_to_be_visible()
+
+    # First, delete one existing
+    evenement_page.remove_last_card()
+
+    for element in (*to_add, to_add_and_delete):
+        evenement_page.fill_new_form_and_check(element, action="save")
+
+        generated_card = evenement_page.elements_cards.last
+        expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+        expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+
+        if element.quantite:
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+            )
+
+        if element == to_add_and_delete:
+            evenement_page.remove_last_card()
+
+    assert fiche.elements_infestes.count() == len(existing)
+    expect(evenement_page.empty_message).not_to_be_visible()
+
+    evenement_page.save()
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == len(existing[:-1]) + len(to_add)
+    for expected, actual in zip((*existing[:-1], *to_add), fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id", "espece_id"))
+
+
+def test_elements_infestes_remove_all(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+    ElementInfesteFactory.create_batch(3, fiche_detection=fiche)
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+
+    evenement_page.navigate(fiche)
+    expect(evenement_page.empty_message).not_to_be_visible()
+
+    while evenement_page.elements_cards.count():
+        evenement_page.remove_last_card()
+
+    expect(evenement_page.empty_message).to_be_visible()
+
+    evenement_page.save()
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == 0
+
+
+def test_elements_infestes_edit(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+    elements_infestes = ElementInfesteFactory.create_batch(3, fiche_detection=fiche, quantite="", comments="")
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+
+    fake = Faker()
+    idx_to_change = 1
+    elements_infeste: ElementInfeste = elements_infestes[idx_to_change]
+    new_data = ElementInfesteFactory.create(
+        espece=elements_infeste.espece,
+        type=fake.random_element([it.value for it in ElementInfesteType if it != elements_infeste.type]),
+        quantite="12",
+        quantite_unite=ElementInfesteQuantiteUnite.KILOGRAMME,
+        comments=fake.paragraph(nb_sentences=5),
+    )
+
+    evenement_page.navigate(fiche)
+    evenement_page.edit_card(idx_to_change, new_data, close_with_action="save")
+    evenement_page.save()
+
+    elements_infeste.refresh_from_db()
+    assert_models_are_equal(
+        elements_infeste, new_data, fields=("type", "espece", "quantite", "quantite_unite", "comments")
+    )
