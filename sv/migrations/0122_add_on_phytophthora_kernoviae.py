@@ -16,7 +16,7 @@ def reverse_add_organisme_nuisible(apps, _):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sv", "0120_auto_20260424_1058"),
+        ("sv", "0121_lieu_site_inspection_new"),
     ]
 
     operations = [
