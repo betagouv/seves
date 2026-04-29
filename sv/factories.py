@@ -338,7 +338,7 @@ class EvenementFactory(DjangoModelFactory):
             else:
                 self.date_publication = extracted
         else:
-            self.date_publication = Faker().date_time_this_decade()
+            self.date_publication = timezone.make_aware(Faker().date_time_this_decade())
 
     @factory.sequence
     def numero_evenement(n):
