@@ -34,4 +34,15 @@ function search(haystack, needle) {
     return false
 }
 
-export {search}
+const uniqueId = (() => {
+    const counters = new Map()
+    return prefix => {
+        if (!counters.has(prefix)) {
+            counters.set(prefix, 0)
+        }
+        counters.set(prefix, counters.get(prefix) + 1)
+        return `${prefix}-${counters.get(prefix)}`
+    }
+})()
+
+export {search, uniqueId}

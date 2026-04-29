@@ -78,11 +78,11 @@ class ChoiceJSPage:
     def try_select_option(self, exact_name, *, search=None, check_selection=None):
         search = search or exact_name
 
-        self._try_open()
-        if len(self._get_selected_option(exact_name).all()) > 0:
+        if self._get_selected_option(exact_name).count() > 0:
             # Option already selected
             return
 
+        self._try_open()
         self.choice_widget.locator("input.choices__input").fill(search)
         self.choice_widget.locator(".choices__list.choices__list--dropdown").get_by_role(
             "option", name=exact_name, exact=True

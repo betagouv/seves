@@ -3,6 +3,7 @@ from reversion.admin import VersionAdmin
 
 from .models import (
     Contexte,
+    ElementInfeste,
     EspeceEchantillon,
     Evenement,
     FicheDetection,
@@ -40,6 +41,12 @@ class EvenementnAdmin(VersionAdmin):
 @admin.register(VersionFicheZoneDelimitee)
 class VersionFicheZoneDelimiteeAdmin(VersionAdmin):
     readonly_fields = ("fiche_zone_delimitee_data",)
+
+
+@admin.register(ElementInfeste)
+class ElementInfesteAdmin(admin.ModelAdmin):
+    search_fields = ("type", "espece", "quantite", "quantite_unite", "comments")
+    list_display = ("__str__", "type", "espece", "quantite", "quantite_unite")
 
 
 admin.site.register(OrganismeNuisible)

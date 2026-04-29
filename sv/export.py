@@ -18,7 +18,6 @@ class FicheDetectionExport(BaseExport):
         ("createur", "Structure créatrice"),
         ("statut_evenement", "Statut de l'événement"),
         ("contexte", "Contexte"),
-        ("vegetaux_infestes", "Nombre ou volume de végétaux infestés"),
         ("date_premier_signalement", "Date premier signalement"),
         ("commentaire", "Commentaire"),
         ("mesures_conservatoires_immediates", "Mesures conservatoires immédiates"),

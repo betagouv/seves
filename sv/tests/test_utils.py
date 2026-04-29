@@ -111,14 +111,6 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Commentaire")
 
     @property
-    def vegetaux_infestes_label(self) -> Locator:
-        return self.page.get_by_text("Végétaux infestés")
-
-    @property
-    def vegetaux_infestes_input(self) -> Locator:
-        return self.page.get_by_label("Végétaux infestés")
-
-    @property
     def mesures_conservatoires_immediates_label(self) -> Locator:
         return self.page.get_by_text("Mesures conservatoires immédiates")
 

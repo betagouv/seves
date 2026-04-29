@@ -14,6 +14,7 @@ from core.tests.pages import ChoiceJSPage
 from sv.constants import CONTEXTES, STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES
 
 from ..factories import (
+    ElementInfesteFactory,
     EspeceEchantillonFactory,
     EvenementFactory,
     FicheDetectionFactory,
@@ -36,6 +37,7 @@ from ..models import (
     StatutEvenement,
     StatutReglementaire,
 )
+from .pages import EvenementCreationPage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -112,10 +114,6 @@ def test_new_fiche_detection_form_content(
     expect(form_elements.commentaire_input).to_be_visible()
     expect(form_elements.commentaire_input).to_be_empty()
 
-    expect(form_elements.vegetaux_infestes_label).to_be_visible()
-    expect(form_elements.vegetaux_infestes_input).to_be_visible()
-    expect(form_elements.vegetaux_infestes_input).to_be_empty()
-
     expect(form_elements.mesures_conservatoires_immediates_label).to_be_visible()
     expect(form_elements.mesures_conservatoires_immediates_input).to_be_visible()
     expect(form_elements.mesures_conservatoires_immediates_input).to_be_empty()
@@ -167,7 +165,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
     page.get_by_label("Commentaire").fill("test commentaire")
-    page.get_by_label("Végétaux infestés").fill("3 citronniers")
     page.get_by_label("Mesures conservatoires immédiates").fill("test mesures conservatoires")
     page.get_by_label("Mesures de consignation").fill("test mesures consignation")
     page.get_by_label("Mesures phytosanitaires").fill("test mesures phyto")
@@ -184,7 +181,6 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     assert fiche_detection.contexte.id == contexte.id
     assert fiche_detection.date_premier_signalement.strftime("%Y-%m-%d") == "2024-04-21"
     assert fiche_detection.commentaire == "test commentaire"
-    assert fiche_detection.vegetaux_infestes == "3 citronniers"
     assert fiche_detection.mesures_conservatoires_immediates == "test mesures conservatoires"
     assert fiche_detection.mesures_consignation == "test mesures consignation"
     assert fiche_detection.mesures_phytosanitaires == "test mesures phyto"
@@ -1139,3 +1135,96 @@ def test_fiche_detection_organisme_nuisible_are_sorted(live_server, page: Page, 
         "Allard",
         "Zallard",
     ]
+
+
+@pytest.mark.parametrize(
+    "scenario,should_remain",
+    (
+        ({"total": 1}, 1),
+        ({"total": 2}, 2),
+        ({"total": 3}, 3),
+        ({"total": 5, "cancel": 2, "remove": 1}, 2),
+        ({"total": 3, "remove": 1}, 2),
+        ({"total": 3, "remove": 3}, 0),
+    ),
+    ids=lambda scenario, *_: f"{scenario!r}",
+)
+def test_elements_infestes(live_server, page: Page, assert_models_are_equal, scenario, should_remain):
+    scenario = {"cancel": 0, "remove": 0, **scenario}
+
+    add_count = scenario["total"] - scenario["cancel"] - scenario["remove"]
+    to_add = ElementInfesteFactory.build_batch(add_count, espece=EspeceEchantillonFactory())
+    to_cancel = ElementInfesteFactory.build_batch(scenario["cancel"], espece=EspeceEchantillonFactory())
+    to_remove = ElementInfesteFactory.build_batch(scenario["remove"], espece=EspeceEchantillonFactory())
+
+    all_elements = [*to_add, *to_cancel, *to_remove]
+
+    fiche: FicheDetection = FicheDetectionFactory.build(
+        evenement__organisme_nuisible=OrganismeNuisibleFactory(),
+        evenement__statut_reglementaire=StatutReglementaireFactory(),
+    )
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+
+    expect(evenement_page.empty_message).to_be_visible()
+
+    evenement_page.fill_required(fiche)
+
+    for element in all_elements:
+        should_cancel = element in to_cancel
+        evenement_page.fill_new_form_and_check(element, action="cancel" if should_cancel else "save")
+
+        if not should_cancel:
+            generated_card = evenement_page.elements_cards.last
+            expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+            )
+
+        if element in to_remove:
+            evenement_page.remove_last_card()
+
+    if should_remain:
+        expect(evenement_page.empty_message).not_to_be_visible()
+    else:
+        expect(evenement_page.empty_message).to_be_visible()
+
+    evenement_page.save()
+
+    fiche = FicheDetection.objects.get()
+    assert fiche.elements_infestes.count() == should_remain
+    for expected, actual in zip(to_add, fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id"))
+
+
+def test_elements_infestes_card_content(live_server, page: Page, assert_models_are_equal):
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+
+    element = ElementInfesteFactory.build(espece=EspeceEchantillonFactory())
+    evenement_page.fill_new_form_and_check(element, action="save")
+    expect(evenement_page.elements_cards.last.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).to_contain_text(
+        f"Espèce végétale : {element.espece}"
+    )
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).to_contain_text(
+        f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+    )
+
+    element = ElementInfesteFactory.build(quantite="", espece=EspeceEchantillonFactory())
+    evenement_page.fill_new_form_and_check(element, action="save")
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).to_contain_text(
+        f"Espèce végétale : {element.espece}"
+    )
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).not_to_contain_text(
+        "Quantité d’éléments infestés"
+    )
+
+    element = ElementInfesteFactory.build(espece=None)
+    evenement_page.fill_new_form_and_check(element, action="save")
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).not_to_contain_text("Espèce végétale")
+    expect(evenement_page.elements_cards.last.locator(".fr-card__desc")).to_contain_text(
+        f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+    )
