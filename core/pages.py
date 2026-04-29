@@ -8,6 +8,7 @@ from django.conf import settings
 from playwright.sync_api import Locator, Page, expect
 import pytest
 
+from conftest import playwright_repeatable
 from core.models import Agent, Structure
 
 
@@ -410,3 +411,25 @@ class WithContactsPage:
         ).to_be_visible()
         expect(self.page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
         self.page.get_by_test_id(f"contact-delete-{contact.id}").click()
+
+
+class WithActionsPage:
+    @playwright_repeatable
+    def download(self):
+        action_dropdown = self.page.locator("#action-1")
+        if not action_dropdown.is_visible():
+            self.page.get_by_role("button", name="Actions").click()
+            expect(action_dropdown).to_be_visible()
+        with self.page.expect_download() as download_info:
+            self.page.get_by_text("Télécharger le document", exact=True).click()
+        return download_info
+
+    def cloturer(self, wording="Clôturer l'événement"):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name=wording).click()
+        self.page.get_by_role("button", name="Clôturer").click()
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()
