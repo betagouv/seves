@@ -13,6 +13,8 @@ from core.models import Structure
 from sv.constants import STRUCTURE_EXPLOITANT
 
 from ..factories import (
+    ElementInfesteFactory,
+    EspeceEchantillonFactory,
     EvenementFactory,
     FicheDetectionFactory,
     LaboratoireFactory,
@@ -30,6 +32,7 @@ from ..models import (
     Region,
     StructurePreleveuse,
 )
+from .pages import ElementsInfestesPage, UpdateEvenementPage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -1324,3 +1327,100 @@ def test_lieu_for_prelevement_is_correct_when_multiple_lieux(
 
     prelevement.refresh_from_db()
     assert prelevement.lieu == lieu_2
+
+
+def test_elements_infestes_add_new(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+
+    to_add = ElementInfesteFactory.build_batch(3, espece=EspeceEchantillonFactory())
+
+    evenement_page = UpdateEvenementPage(page, live_server)
+    elements_infestes_page = ElementsInfestesPage(page)
+
+    evenement_page.navigate(fiche)
+    expect(elements_infestes_page.empty_message).to_be_visible()
+
+    for element in to_add:
+        elements_infestes_page.fill_form_and_check(element, action="save")
+
+        generated_card = elements_infestes_page.elements_cards.last
+        expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+        expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+
+        if element.quantite:
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+            )
+
+    assert fiche.elements_infestes.count() == 0
+    expect(elements_infestes_page.empty_message).not_to_be_visible()
+
+    evenement_page.end_with(action="save")
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == 3
+    for expected, actual in zip(to_add, fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id"))
+
+
+def test_elements_infestes_add_to_existing(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+    existing = ElementInfesteFactory.create_batch(3, fiche_detection=fiche)
+
+    to_add = ElementInfesteFactory.build_batch(3, espece=EspeceEchantillonFactory())
+    to_add_and_delete = ElementInfesteFactory(espece=EspeceEchantillonFactory())
+
+    evenement_page = UpdateEvenementPage(page, live_server)
+    elements_infestes_page = ElementsInfestesPage(page)
+
+    evenement_page.navigate(fiche)
+    expect(elements_infestes_page.empty_message).not_to_be_visible()
+
+    # First, delete one existing
+    elements_infestes_page.action_on_last_card(action="remove")
+
+    for element in (*to_add, to_add_and_delete):
+        elements_infestes_page.fill_form_and_check(element, action="save")
+
+        generated_card = elements_infestes_page.elements_cards.last
+        expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+        expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+
+        if element.quantite:
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+            )
+
+        if element == to_add_and_delete:
+            elements_infestes_page.action_on_last_card(action="remove")
+
+    assert fiche.elements_infestes.count() == len(existing)
+    expect(elements_infestes_page.empty_message).not_to_be_visible()
+
+    evenement_page.end_with(action="save")
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == len(existing[:-1]) + len(to_add)
+    for expected, actual in zip((*existing[:-1], *to_add), fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id", "espece_id"))
+
+
+def test_elements_infestes_remove_all(live_server, page: Page, assert_models_are_equal):
+    fiche: FicheDetection = FicheDetectionFactory()
+    ElementInfesteFactory.create_batch(3, fiche_detection=fiche)
+
+    evenement_page = UpdateEvenementPage(page, live_server)
+    elements_infestes_page = ElementsInfestesPage(page)
+
+    evenement_page.navigate(fiche)
+    expect(elements_infestes_page.empty_message).not_to_be_visible()
+
+    while elements_infestes_page.elements_cards.count():
+        elements_infestes_page.action_on_last_card(action="remove")
+
+    expect(elements_infestes_page.empty_message).to_be_visible()
+
+    evenement_page.end_with(action="save")
+
+    fiche.refresh_from_db()
+    assert fiche.elements_infestes.count() == 0

@@ -132,5 +132,8 @@ fileignoreconfig:
   checksum: bd7eecb56935ccb9d5bdabe237b49cee84550fc7bf0294b2c9bcffb9c3117c3e
 - filename: core/templatetags/and_more_ellipsis_tooltip.py
   checksum: 9bb7dec4fbad7b8e2cc194a176314f55d4363fa0d1bae405653710f15200ab62
+- filename: core/static/core/stimulus_app.mjs
+  checksum: aaa529f0e3a3259250c195c4c90de3f77f4afd29b43d3097fcb6c6c2aac7e4b1
+
 
 version: "1.0"

@@ -17,7 +17,7 @@ from core.fields import AdresseLieuDitField, DSFRCheckboxSelectMultiple, DSFRRad
 from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, VisibiliteUpdateBaseForm
 from core.models import Contact, Structure
-from sv.constants import SiteInspection
+from sv.constants import ElementInfesteQuantiteUnite, SiteInspection
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithEvenementFreeLinksMixin,
@@ -276,19 +276,59 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
 class ElementInfesteForm(DsfrBaseForm, forms.ModelForm):
     template_name = "sv/forms/element_infeste.html"
 
+    quantite_unite = forms.TypedChoiceField(
+        label="Unité",
+        choices=ElementInfesteQuantiteUnite,
+        required=False,
+        widget=forms.RadioSelect,
+    )
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/espece_search.mjs"),), css={"all": ("sv/element_infeste.css",)})
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["espece"].empty_label = settings.SELECT_EMPTY_CHOICE
+        try:  # Try to filter the queryset with provided value
+            self.fields["espece"].queryset = self.fields["espece"].queryset.filter(pk=self["espece"].value())
+        except Exception:
+            self.fields["espece"].queryset = self.fields["espece"].queryset.none()
+
+    def _clean_fields(self):
+        super()._clean_fields()
+
     class Meta:
         model = ElementInfeste
+        exclude = ("fiche_detection",)
+        widgets = {"comments": forms.Textarea(attrs={"cols": None, "rows": 4})}
 
 
-class ElementInfesteBaseFormSet(forms.BaseFormSet):
+class ElementInfesteBaseFormSet(forms.BaseInlineFormSet):
     template_name = "sv/forms/element_infeste_base_set.html"
     deletion_widget = forms.HiddenInput
 
     @property
     def media(self):
-        return super().media + Media(
-            js=(js_module("tiac/etablissements.mjs"),),
-        )
+        return super().media + Media(js=(js_module("sv/elements_infestes.mjs"),))
+
+    @property
+    def empty_form(self):
+        """Prevent empty form from not requiring its fields"""
+        result = super().empty_form
+        result.empty_permitted = False
+        result.use_required_attribute = True
+        return result
+
+    def _construct_form(self, i, **kwargs):
+        result = super()._construct_form(i, **kwargs)
+        result.empty_permitted = False
+        return result
+
+
+ElementInfesteFormSet = inlineformset_factory(
+    FicheDetection, ElementInfeste, ElementInfesteForm, ElementInfesteBaseFormSet, extra=0, can_delete=True
+)
 
 
 class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):

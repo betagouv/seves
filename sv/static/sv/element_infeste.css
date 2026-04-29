@@ -1,0 +1,5 @@
+[for*="quantite"]:not([for*="quantite_unite"]),
+[for*="espece"],
+legend[id*="quantite_unite-legend"] {
+    font-weight: bolder;
+}

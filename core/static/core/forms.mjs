@@ -31,6 +31,10 @@ export function collectFormValues(
     const result = {}
 
     for (const element of formLike.elements) {
+        if (element instanceof HTMLFieldSetElement || element instanceof HTMLButtonElement) {
+            continue
+        }
+
         if (!skipValidation) {
             // Clear any previously set custom validity before rechecking
             element.setCustomValidity("")
@@ -44,13 +48,45 @@ export function collectFormValues(
         }
 
         const inputName = nameTransform(element.name).trim()
-        const inputValue = typeof element.value === "string" ? element.value.trim() : ""
 
-        // If form element is a <select> we want to pick the <option> text rather than its value that is purely
-        // technical; unless it is managed by Choice.js
-        if (element instanceof HTMLSelectElement && element.dataset.choice === undefined && inputValue !== "") {
-            const option = element.options[element.selectedIndex]
-            result[inputName] = option ? option.innerText.trim() : ""
+        if (element instanceof HTMLSelectElement && element.dataset.choice !== undefined) {
+            // This is a ChoiceJS. We process them differently here. We may want both the value and the label
+            // Maybe refactor this in the future so that we do that also for normal HTMLSelectElement to minimize code?
+            if (element.multiple && !Array.isArray(result[inputName])) {
+                result[inputName] = []
+                result[`${inputName}Label`] = []
+            } else {
+                result[inputName] = ""
+                result[`${inputName}Label`] = ""
+            }
+
+            try {
+                if (element.multiple) {
+                    for (const option of element.selectedOptions) {
+                        result[`${inputName}Label`].push(option.innerText.trim())
+                        result[inputName].push(option.value)
+                    }
+                } else {
+                    result[`${inputName}Label`] = element.selectedOptions[0].innerText.trim()
+                    result[inputName] = element.selectedOptions[0].value
+                }
+            } catch (_) {}
+        } else if (element instanceof HTMLSelectElement) {
+            if (element.multiple && !Array.isArray(result[inputName])) {
+                result[inputName] = []
+            } else {
+                result[inputName] = ""
+            }
+
+            try {
+                if (element.multiple) {
+                    for (const option of element.selectedOptions) {
+                        result[inputName].push(option.innerText.trim())
+                    }
+                } else {
+                    result[inputName] = element.selectedOptions[0].innerText.trim()
+                }
+            } catch (_) {}
         } else if (element.type === "checkbox") {
             if (!Array.isArray(result[inputName])) {
                 result[inputName] = []
@@ -61,12 +97,13 @@ export function collectFormValues(
                 } catch (_) {}
             }
         } else if (element.type === "radio") {
+            if (!Object.hasOwn(result, inputName)) {
+                result[inputName] = ""
+            }
             if (element.checked) {
                 try {
                     result[inputName] = element.labels[0].textContent.trim()
-                } catch (_) {
-                    result[inputName] = ""
-                }
+                } catch (_) {}
             }
         } else {
             result[inputName] = element.value

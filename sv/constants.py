@@ -1,5 +1,6 @@
 from enum import auto, property as enum_property
 
+from django.conf import settings
 from django.db.models import TextChoices
 from django.utils.functional import classproperty
 
@@ -244,6 +245,8 @@ class ElementInfesteType(TextChoices):
     AUCUN = auto(), "Aucun"
     INCONNU = auto(), "Inconnu"
 
+    __empty__ = settings.SELECT_EMPTY_CHOICE
+
 
 class ElementInfesteQuantiteUnite(TextChoices):
     METRE_CARRE = auto(), "m²"
@@ -251,4 +254,4 @@ class ElementInfesteQuantiteUnite(TextChoices):
     HECTAR = auto(), "ha"
     METRE_CUBE = auto(), "m³"
     KILOGRAMME = auto(), "kg"
-    PARTIE_POUR_CENT = auto(), "pce"
+    PIECE = auto(), "pièce"

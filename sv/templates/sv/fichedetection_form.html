@@ -1,9 +1,7 @@
 
 {% extends 'sv/base.html' %}
-{% load widget_tweaks %}
+{% load etat_tags static widget_tweaks %}
 
-{% load static %}
-{% load etat_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
@@ -49,7 +47,7 @@
                     {% endif %}
                 </h1>
 
-                <section>
+                <section data-testid="fiche-action-btns">
                     {% partialdef form_btns inline %}
                         {% if evenement %}
                             {% if is_creation %}
@@ -85,7 +83,7 @@
 
             <div class="fr-grid-row fr-grid-row--gutters fr-flex--align-stretch fr-mb-3v">
                 <div class="fr-col fr-col-md-6">
-                    <div class="block block--full">
+                    <div class="block block--full" data-testid="fiche-detection">
                         <h2 class="fr-h6">Objet de l'évènement</h2>
                         {% if form.organisme_nuisible %}
                             <div id="organisme-nuisible" class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
@@ -128,14 +126,14 @@
                     </div>
                 </div>
                 <div class="fr-col fr-col-md-6">
-                    <div class="block block--full">
-
+                    <div class="block block--full" data-testid="elements-infestes">
+                        {{ element_infeste_formset }}
                     </div>
                 </div>
             </div>
 
-            <div class="fr-mb-6v block">
-                <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+            <div id="lieux" class="fr-mb-6v block">
+                <div id="lieux-header" class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
                     <h2 class="fr-h6 fr-m-0">Lieux</h2>
                     <button
                         type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
@@ -147,12 +145,12 @@
 
                 {{ lieu_formset.management_form }}
 
-                    {% for form in lieu_formset %}
-                        {% if form.instance.pk %}
-                            {{ form.id }}
-                            {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk existing_object=True %}
-                        {% endif %}
-                    {% endfor %}
+                {% for form in lieu_formset %}
+                    {% if form.instance.pk %}
+                        {{ form.id }}
+                        {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk existing_object=True %}
+                    {% endif %}
+                {% endfor %}
 
                 {% for form in lieu_formset %}
                     {% if not form.instance.pk %}
@@ -164,7 +162,7 @@
             </div>
 
             <div class="fr-mb-6v block">
-                <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+                <div id="prelevements-header" class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
                     <h2 class="fr-h6 fr-m-0">Prélèvements</h2>
                     <button
                         id="btn-add-prelevment"

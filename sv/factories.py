@@ -19,6 +19,8 @@ from .constants import (
     STATUTS_REGLEMENTAIRES,
     STRUCTURE_EXPLOITANT,
     STRUCTURES_PRELEVEUSES,
+    ElementInfesteQuantiteUnite,
+    ElementInfesteType,
     SiteInspection,
 )
 from .models import (
@@ -38,6 +40,7 @@ from .models import (
     StructurePreleveuse,
     ZoneInfestee,
 )
+from .models.elements_infestes import ElementInfeste
 
 fake = Faker()
 
@@ -343,3 +346,24 @@ class EvenementFactory(DjangoModelFactory):
     @factory.sequence
     def numero_evenement(n):
         return n + 1
+
+
+class ElementInfesteFactory(DjangoModelFactory):
+    fiche_detection = factory.SubFactory(FicheDetectionFactory)
+    type = factory.fuzzy.FuzzyChoice(ElementInfesteType)
+    espece = factory.SubFactory(EspeceEchantillonFactory)
+
+    @factory.lazy_attribute
+    def quantite(self):
+        return "" if fake.boolean(chance_of_getting_true=25) else str(fake.random_int(min=0, max=int(10e9)))
+
+    @factory.lazy_attribute
+    def quantite_unite(self):
+        return fake.random_element(ElementInfesteQuantiteUnite.values) if self.quantite else ""
+
+    @factory.lazy_attribute
+    def comments(self):
+        return "" if fake.boolean(chance_of_getting_true=25) else fake.paragraph(nb_sentences=5)
+
+    class Meta:
+        model = ElementInfeste
