@@ -63,7 +63,7 @@ def test_can_cloturer_investigation_if_last_remaining_structure(
 
     details_page = InvestigationTiacDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
-    details_page.cloturer()
+    details_page.cloturer(wording="Clôturer l'investigation")
 
     evenement.refresh_from_db()
     assert evenement.etat == InvestigationTiac.Etat.CLOTURE

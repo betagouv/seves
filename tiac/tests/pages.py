@@ -6,7 +6,7 @@ from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
-from conftest import playwright_repeatable
+from core.pages import WithActionsPage
 from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
@@ -439,7 +439,7 @@ class EvenementListPage(WithTreeSelect):
         self._set_treeselect_option("categorie-produit", label)
 
 
-class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
+class EvenementSimpleDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -473,16 +473,6 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin)
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
-
-    def delete(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Supprimer l'événement", exact=True).click()
-        self.page.get_by_test_id("submit-delete-modal").click()
-
-    def cloturer(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_role("link", name="Clôturer l'événement").click()
-        self.page.get_by_role("button", name="Clôturer").click()
 
     def transfer(self, choice_js_fill, libelle):
         self.page.get_by_role("button", name="Actions").click()
@@ -527,16 +517,6 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin)
     @property
     def fil_de_suivi_type(self, line_number=1):
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
-
-    @playwright_repeatable
-    def download(self):
-        action_dropdown = self.page.locator("#action-1")
-        if not action_dropdown.is_visible():
-            self.page.get_by_role("button", name="Actions").click()
-            expect(action_dropdown).to_be_visible()
-        with self.page.expect_download() as download_info:
-            self.page.get_by_text("Télécharger le document", exact=True).click()
-        return download_info
 
 
 class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
@@ -777,7 +757,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixin):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -817,11 +797,6 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixi
         self.page.get_by_role("button", name="Actions").click()
         self.page.get_by_test_id("delete-nav").click()
         self.page.get_by_test_id("submit-delete-modal").click()
-
-    def cloturer(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_role("link", name="Clôturer l'investigation").click()
-        self.page.get_by_role("button", name="Clôturer").click()
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)
@@ -880,13 +855,3 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithSyntheseBlockMixi
     @property
     def fil_de_suivi_type(self, line_number=1):
         return self.page.text_content(f"#table-sm-row-key-{line_number} td:nth-child(6) a")
-
-    @playwright_repeatable
-    def download(self):
-        action_dropdown = self.page.locator("#action-1")
-        if not action_dropdown.is_visible():
-            self.page.get_by_role("button", name="Actions").click()
-            expect(action_dropdown).to_be_visible()
-        with self.page.expect_download() as download_info:
-            self.page.get_by_text("Télécharger le document", exact=True).click()
-        return download_info
