@@ -34,6 +34,7 @@ from sv.models import (
     StatutReglementaire,
     ZoneInfestee,
 )
+from sv.models.elements_infestes import ElementInfeste
 
 
 class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -270,6 +271,24 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
         if self.cleaned_data["is_officiel"] is False:
             self.cleaned_data["numero_rapport_inspection"] = ""
             self.cleaned_data["laboratoire"] = None
+
+
+class ElementInfesteForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "sv/forms/element_infeste.html"
+
+    class Meta:
+        model = ElementInfeste
+
+
+class ElementInfesteBaseFormSet(forms.BaseFormSet):
+    template_name = "sv/forms/element_infeste_base_set.html"
+    deletion_widget = forms.HiddenInput
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("tiac/etablissements.mjs"),),
+        )
 
 
 class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
