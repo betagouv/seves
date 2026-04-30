@@ -24,7 +24,7 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(15):
+    with django_assert_num_queries(14):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -35,7 +35,7 @@ def test_export_tiac_performances_scales_on_number_of_evenement_simple(
     data = [{"model": "tiac.evenementsimple", "ids": [evenement.id, evenement_2.id, evenement_3.id]}]
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(15):
+    with django_assert_num_queries(14):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -51,7 +51,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     ContactStructureFactory(structure=contact.agent.structure)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(21):
+    with django_assert_num_queries(20):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -63,7 +63,7 @@ def test_export_tiac_performances_scales_on_number_of_related_objects(
     EtablissementFactory(investigation=evenement)
     task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
 
-    with django_assert_num_queries(25):
+    with django_assert_num_queries(24):
         TiacExport().export(task.id)
 
     task.refresh_from_db()
@@ -166,3 +166,53 @@ def test_export_etat_value_in_fin_de_suivi(live_server, mocked_authentification_
     assert task.task_done is True
     lines = task.file.read().decode("utf-8")
     assert lines.count("Fin de suivi pour ma structure") == 2
+
+
+def test_export_tiac_number_of_lines_and_content(
+    live_server, mocked_authentification_user, page: Page, django_assert_num_queries
+):
+    evenement_1 = InvestigationTiacFactory()
+    EtablissementFactory(investigation=evenement_1, raison_sociale="Etablissement 1")
+    RepasSuspectFactory(investigation=evenement_1, denomination="Repas 1")
+    RepasSuspectFactory(investigation=evenement_1, denomination="Repas 2")
+
+    evenement_2 = InvestigationTiacFactory()
+    EtablissementFactory(investigation=evenement_2, raison_sociale="Etablissement 2")
+    EtablissementFactory(investigation=evenement_2, raison_sociale="Etablissement 3")
+
+    evenement_3 = EvenementSimpleFactory()
+    EtablissementFactory(evenement_simple=evenement_3, raison_sociale="Etablissement 4")
+
+    evenement_4 = EvenementSimpleFactory()
+
+    data = [
+        {"model": "tiac.investigationtiac", "ids": [evenement_1.id, evenement_2.id]},
+        {"model": "tiac.evenementsimple", "ids": [evenement_3.id, evenement_4.id]},
+    ]
+    contact = ContactAgentFactory()
+    ContactStructureFactory(structure=contact.agent.structure)
+    task = Export.objects.create(user=contact.agent.user, queryset_sequence=data)
+
+    TiacExport().export(task.id)
+    task.refresh_from_db()
+    assert task.task_done is True
+
+    content = task.file.read().decode("utf-8")
+    lines = content.split("\n")
+    assert len(lines) == len(
+        [
+            "Headers",
+            "Evenement 1 + Etablissement 1 + Repas 1",
+            "Evenement 1 + Repas 2",
+            "Evenement 2 + Etablissement 2",
+            "Evenement 2 + Etablissement 3",
+            "Evenement 3 + Etablissement 4",
+            "Evenement 4",
+            "Blank line",
+        ]
+    )
+
+    assert lines[7] == ""
+    expected_values = ["Etablissement 1", "Etablissement 2", "Etablissement 3", "Etablissement 4", "Repas 1", "Repas 2"]
+    for value in expected_values:
+        assert value in content
