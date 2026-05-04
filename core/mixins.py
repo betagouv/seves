@@ -14,7 +14,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage
 from django.db import models, transaction
 from django.forms import BaseModelFormSet, Media
 from django.forms.utils import RenderableMixin
@@ -52,6 +51,7 @@ from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
 from .html import html_to_simple_text
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
+from .storage import get_document_url
 
 logger = logging.getLogger(__name__)
 
@@ -126,12 +126,7 @@ class WithDocumentListInContextMixin:
         for document in document_filter.qs:
             document.edit_form = DocumentEditForm(instance=document, allowed_document_types=allowed_document_types)
             if document.can_pdf_be_viewed:
-                document.file.pdf_url = default_storage.url(
-                    document.file.name,
-                    parameters={
-                        "ResponseContentDisposition": "inline",
-                    },
-                )
+                document.file.pdf_url = get_document_url(document.file.name)
         context["document_count"] = documents.exclude(is_deleted=True).count()
         downloadable_documents = [d for d in document_filter.qs if (d.is_deleted is False and d.is_infected is False)]
         context["document_count_for_download"] = len(downloadable_documents)
