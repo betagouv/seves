@@ -20,7 +20,7 @@
                                 <div class="fr-modal__content">
                                     {% if document.can_pdf_be_viewed %}
                                         <div class="pdf-modal">
-                                            <object data="{{ document.file.url }}" type="application/pdf" width="100%" height="100%">
+                                            <object data="{{ document.pdf_preview_url }}" type="application/pdf" width="100%" height="100%">
                                                 Votre navigateur ne supporte pas l'aperçu des fichiers PDF.
                                             </object>
                                         </div>
