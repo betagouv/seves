@@ -20,6 +20,7 @@ from .views import (
     RevisionsListView,
     SoftDeleteView,
     StructureAddView,
+    ZipDownloadView,
     sirene_api,
 )
 
@@ -120,6 +121,11 @@ urlpatterns = [
         name="revision-list",
     ),
     path(
+        "documents/zip/",
+        ZipDownloadView.as_view(),
+        name="document-zip",
+    ),
+    path(
         "message/<int:pk>/",
         MessageDetailsView.as_view(),
         name="message-view",
@@ -133,5 +139,10 @@ urlpatterns = [
         "politique-de-confidentialite/",
         TemplateView.as_view(template_name="politique-de-confidentialite.html"),
         name="politique-de-confidentialite",
+    ),
+    path(
+        "accessibilite/",
+        TemplateView.as_view(template_name="accessibilite.html"),
+        name="accessibilite",
     ),
 ]

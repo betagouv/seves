@@ -1,12 +1,16 @@
+from datetime import datetime
 from typing import Literal
+import zipfile
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
-from core.models import Contact, FinSuiviContact, Message, Structure
-from core.pages import CreateMessagePage, UpdateMessagePage
+from core.models import Contact, Document, FinSuiviContact, Message, Structure
+from core.pages import CreateMessagePage, ListOfMessagesPage, UpdateMessagePage
 
 
 def generic_test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill, object):
@@ -51,7 +55,7 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.page.locator(".ql-bold").click()
     message_page.message_content_in_rich_text_editor.type("My content \n with a line return\n")
     message_page.page.locator(".ql-color.ql-picker.ql-color-picker").click()
-    message_page.page.locator(".ql-primary").first.click()
+    message_page.page.locator(".ql-primary").nth(1).click()
     message_page.message_content_in_rich_text_editor.type("Text in color\n")
     message_page.page.locator(".ql-list").click()
     message_page.message_content_in_rich_text_editor.type("Item 1\n")
@@ -70,7 +74,7 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.page.wait_for_timeout(20000)
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert (
-        '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-grey-925-125">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
+        '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-blue-france-sun-113-625">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
         in new_page.content()
     )
     assert object.messages.get().status == Message.Status.FINALISE
@@ -809,3 +813,108 @@ def generic_test_cant_see_messages_in_internal_state(live_server, page: Page, mo
     expect(page.locator("#tabpanel-messages-panel")).not_to_contain_text(msg1.title, use_inner_text=True)
     expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg2.title, use_inner_text=True)
     expect(page.locator("#tabpanel-messages-panel")).to_contain_text(msg3.title, use_inner_text=True)
+
+
+def generic_test_message_ordering(live_server, page: Page, mocked_authentification_user, object):
+    sender = mocked_authentification_user.agent.contact_set.get()
+    common_kwargs = {"content_object": object, "sender": sender}
+    finalise_oldest = MessageFactory(
+        title="finalisé le plus ancien",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    brouillon_older = MessageFactory(
+        title="Brouillon ancien",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    finalise_recent = MessageFactory(
+        title="finalisé récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    brouillon_newest = MessageFactory(
+        title="Brouillon le plus récent",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    finalise_newest = MessageFactory(
+        title="finalisé le plus récent",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
+        **common_kwargs,
+    )
+    old_draft_updated_recently = MessageFactory(
+        title="Brouillon ancien mis à jour",
+        status=Message.Status.BROUILLON,
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
+        last_updated=timezone.now(),
+        **common_kwargs,
+    )
+    old_draft_recently_published = MessageFactory(
+        title="Brouillon ancien mais envoyé récemment",
+        status=Message.Status.FINALISE,
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
+        date_publication=timezone.now(),
+        **common_kwargs,
+    )
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = ListOfMessagesPage(page)
+
+    assert message_page.message_title_in_table(1) == f"[BROUILLON] {old_draft_updated_recently.title}"
+    assert message_page.message_title_in_table(2) == f"[BROUILLON] {brouillon_newest.title}"
+    assert message_page.message_title_in_table(3) == f"[BROUILLON] {brouillon_older.title}"
+    assert message_page.message_title_in_table(4) == old_draft_recently_published.title
+    assert message_page.message_title_in_table(5) == finalise_newest.title
+    assert message_page.message_title_in_table(6) == finalise_recent.title
+    assert message_page.message_title_in_table(7) == finalise_oldest.title
+
+
+def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):
+    path = settings.BASE_DIR / "static/images/marianne.png"
+    file = SimpleUploadedFile(
+        name="test.png",
+        content=path.read_bytes(),
+        content_type="image/png",
+    )
+    message = MessageFactory(content_object=target_object)
+    DocumentFactory(content_object=message, is_infected=False, file=file)
+
+    page.goto(f"{live_server.url}{target_object.get_absolute_url()}")
+    message_page = ListOfMessagesPage(page)
+    page.locator("#tabpanel-messages").click()
+    new_page = message_page.open_message()
+
+    new_page.locator(".fr-icon-eye-line").click()
+    img = new_page.locator('img[src*="_test.png"]')
+    expect(img).to_be_visible()
+
+
+def generic_test_can_download_zip_attachments_of_message(live_server, page: Page, object):
+    message = MessageFactory(content_object=object)
+    expected_1 = DocumentFactory(content_object=message)
+    expected_2 = DocumentFactory(content_object=message)
+    _not_expected_1 = DocumentFactory(content_object=MessageFactory(content_object=object))
+    _not_expected_2 = DocumentFactory(content_object=object)
+    _not_expected_3 = DocumentFactory(content_object=message, is_deleted=True)
+    not_expected_4 = DocumentFactory(content_object=message)
+    Document.objects.filter(pk=not_expected_4.pk).update(is_infected=True)
+
+    page.goto(f"{live_server.url}{message.get_absolute_url()}")
+
+    with page.expect_download() as download_info:
+        page.get_by_role("button", name="Télécharger les pièces jointes (zip)").click()
+
+    download = download_info.value
+    assert download.suggested_filename.endswith(".zip") is True
+    download_path = download.path()
+    with zipfile.ZipFile(download_path, "r") as z:
+        files = z.namelist()
+        expected = [expected_1.file.name, expected_2.file.name]
+        expected = sorted([e.replace("documents/", "") for e in expected])
+        assert sorted(files) == expected, f"Expected {expected} and got {files}"

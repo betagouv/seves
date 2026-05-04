@@ -7,10 +7,12 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls.base import reverse
+from django.utils import timezone
 from django.utils.functional import classproperty
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
@@ -29,13 +31,19 @@ from .managers import (
     LienLibreManager,
     LienLibreQueryset,
     MessageManager,
-    MessagQueryset,
+    MessageQueryset,
     StructureQueryset,
 )
-from .model_mixins import WithDocumentPermissionMixin, WithLocalisableMixin
+from .model_mixins import WithDocumentPermissionMixin, WithLastUpdatedDatetime, WithLocalisableMixin
 from .soft_delete_mixins import AllowsSoftDeleteMixin
 from .storage import get_timestamped_filename, get_timestamped_filename_export
-from .validators import AllowedExtensions, AnyOfValidator, MagicMimeValidator, validate_numero_agrement
+from .validators import (
+    AllowedExtensions,
+    AllowedMimeTypes,
+    AnyOfValidator,
+    MagicMimeValidator,
+    validate_numero_agrement,
+)
 
 User = get_user_model()
 
@@ -319,6 +327,7 @@ class Document(models.Model):
     notification_sent = models.BooleanField(
         default=False, null=False, verbose_name="Est-ce qu'une notification a été envoyé suite à l'upload'"
     )
+    mimetype = models.CharField(max_length=100, blank=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
@@ -345,12 +354,26 @@ class Document(models.Model):
         return f"{self.nom} ({self.get_document_type_display()})"
 
     def save(self, *args, **kwargs):
+        if not self.pk and not self.mimetype and self.file:
+            try:
+                self.mimetype = MagicMimeValidator()(self.file)
+            except ValidationError:
+                pass
+
         with reversion.create_revision():
             super().save(*args, **kwargs)
 
     @property
     def is_cartographie(self):
         return self.document_type == Document.TypeDocument.CARTOGRAPHIE
+
+    @property
+    def can_be_viewed(self):
+        return self.mimetype in [AllowedMimeTypes.IMAGE_PNG, AllowedMimeTypes.IMAGE_JPEG, AllowedMimeTypes.IMAGE_GIF]
+
+    @property
+    def can_pdf_be_viewed(self):
+        return self.mimetype == AllowedMimeTypes.APPLICATION_PDF
 
     @classmethod
     def validate_file_extention_for_document_type(cls, file, document_type):
@@ -384,9 +407,18 @@ class Document(models.Model):
         if self.file and self.document_type:
             self.validate_file_extention_for_document_type(self.file, self.document_type)
 
+    @property
+    def pdf_preview_url(self):
+        return default_storage.url(
+            self.file.name,
+            parameters={
+                "ResponseContentDisposition": "inline",
+            },
+        )
+
 
 @reversion.register()
-class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
+class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdatedDatetime, models.Model):
     MESSAGE = "message"
     NOTE = "note"
     POINT_DE_SITUATION = "point de situation"
@@ -418,6 +450,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
 
     sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages", null=True)
     sender_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="messages", null=False)
@@ -432,7 +465,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
 
     historical_data = models.JSONField(default=dict, blank=True)
 
-    objects = MessageManager.from_queryset(MessagQueryset)()
+    objects = MessageManager.from_queryset(MessageQueryset)()
 
     show_nested_diff_in_revision_list = False
     show_deleted_state_in_revision_list = False
@@ -562,6 +595,14 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, models.Model):
                 super().save(*args, **kwargs)
         else:
             super().save(*args, **kwargs)
+
+    @property
+    def displayed_date(self):
+        if self.is_finalise:
+            displayed_date = self.date_publication
+        else:
+            displayed_date = self.last_updated or self.date_creation
+        return timezone.localtime(displayed_date)
 
 
 @reversion.register()

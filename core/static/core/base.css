@@ -278,3 +278,14 @@ fieldset {
 .muted-action .history-removed {
     color: var(--text-disabled-grey);
 }
+
+.img-modal {
+    width: 95%;
+}
+.img-modal img {
+    max-width: 95%;
+}
+
+.pdf-modal object {
+    min-height: 400px;
+}

@@ -1,3 +1,7 @@
+from enum import auto
+
+from django.db.models import TextChoices
+
 STRUCTURE_EXPLOITANT = "Exploitant"
 STRUCTURES_PRELEVEUSES = [
     "SRAL",
@@ -116,24 +120,51 @@ POSITION_CHAINE_DISTRIBUTION = [
     "Achat en ligne",
 ]
 
-SITES_INSPECTION = [
-    "Verger à graine",
-    "Peuplement classé",
-    "Champ",
-    "Verger",
-    "Vignoble",
-    "Pépinière",
-    "Forêt",
-    "Jardin privé",
-    "Site public",
-    "Espace protégé",
-    "Friches",
-    "Jardinerie",
-    "Plateforme logistique",
-    "Site de stockage de bois",
-    "Serre",
-    "Batiment privé",
-    "Batiment public",
-    "Autre (à préciser dans le fil de suivi)",
-    "Sans objet",
-]
+
+class SiteInspection(TextChoices):
+    # Plein air - zone de production
+    CHAMP_CULTURE_PATURAGE = auto(), "Champ (culture, pâturage)"
+    VERGER_VIGNE = auto(), "Verger/vigne"
+    PEPINIERE = auto(), "Pépinière"
+    FORET = auto(), "Forêt"
+
+    # Plein air - autre
+    JARDINS_PRIVES = auto(), "Jardins privés (plein air)"
+    SITES_PUBLICS = auto(), "Sites publics (plein air)"
+    ZONE_PROTEGEE = auto(), "Espaces réglementés pour la préservation de l'environnement (plein air)"
+    PLANTES_SAUVAGES_HORS_ZONES_PROTEGEES = auto(), "Plantes sauvages dans des aires non protégées (plein air)"
+    PLATEFORME_LOGISTIQUE_TRANSIT_STOCKAGE_OU_REVENTE_BOIS = (
+        auto(),
+        "Plateforme logistique de transit, stockage ou revente de bois d'emballage (plein air)",
+    )
+    JARDINERIE_PLEIN_AIR = auto(), "Jardinerie (plein air)"
+    RESEAU_IRRIGATION_DRAINAGE = auto(), "Réseau d'irrigation ou de drainage"
+    ZONE_HUMIDE = auto(), "Zone humide"
+    INDUSTRIE_BOIS_PLEIN_AIR = auto(), "Industrie du bois (plein air)"
+    POINTS_ENTREE_PLEIN_AIR = auto(), "Points d'entrée (plein air)"
+    ZONES_RISQUE_PLEIN_AIR = auto(), "Zones à risque (plein air)"
+    AEROPORT_PORT_ROUTE_VOIE_FERREE = auto(), "Aéroport, port, route, voie ferrée (plein air)"
+    MARCHES_REVENDEURS_MAGASINS_GROSSISTES = auto(), "Marchés, détaillants, magasins, grossistes (plein air)"
+    ZONES_URBAINES = auto(), "Zones urbaines (plein air)"
+    BOIS_EMBALLAGE_PALETTES_EN_BOIS = auto(), "Emballages en bois, palettes en bois (plein air)"
+    CONTROLES_DES_MOUVEMENTS = auto(), "Contrôles en circulation (plein air)"
+    AUTRE_PLEIN_AIR = auto(), "Autre (plein air)"
+
+    # Environnement fermé
+    SERRE = auto(), "Serre"
+    SITE_PRIVE_AUTRE_QUE_SERRE = auto(), "Site privé (environnement fermé) autre qu'une serre"
+    SITE_PUBLIC_AUTRE_QUE_SERRE = auto(), "Site public (environnement fermé) autre qu'une serre"
+    SITE_COMMERCIAL_UTILISANT_BOIS_EMBALLAGE = (
+        auto(),
+        "Installations couvertes et closes de transit, stockage ou revente de bois d'emballage",
+    )
+    JARDINERIE_ENVIRONNEMENT_FERME = auto(), "Jardinerie (environnement fermé)"
+    INDUSTRIE_BOIS_ENVIRONNEMENT_FERME = auto(), "Industrie du bois (environnement fermé)"
+    AEROPORT_PORT_GARE = auto(), "Aéroport, port, gare (environnement fermé)"
+    ZONES_RISQUE_ENVIRONNEMENT_FERME = auto(), "Zones à risque (environnement fermé)"
+    ACTIVITES_CONDITIONNEMENT_ENTREPOT = auto(), "Usine d'emballage, entrepôt (environnement fermé)"
+    GROSSISTES_MARCHES_DETAILLANTS = auto(), "Grossistes, marchés, détaillants (environnement fermé)"
+    AUTRE_ENVIRONNEMENT_FERME = auto(), "Autre (environnement fermé)"
+
+    # Inconnu
+    INCONNU = auto(), "Inconnu - préciser dans les commentaires"

@@ -1,3 +1,4 @@
+{% load waffle_tags %}
 <div class="fr-container--fluid fr-mb-4w" id="documents">
     <div class="fr-grid-row">
         <div class="fr-col-12 fr-col-md-6">
@@ -9,18 +10,36 @@
             </form>
 
         </div>
-        {% if can_add_document %}
+        {% if document_count_for_download > 1 or can_add_document %}
             <div class="fr-col-12 fr-col-md-6 fr-flex--align-end">
                 <div class="fr-btns-group fr-btns-group--icon-left fr-btns-group--right fr-btns-group--inline-md">
-                    <button
-                        class="fr-btn fr-btn--secondary fr-icon-add-circle-line"
-                        type="button"
-                        aria-controls="document-modal"
-                        data-fr-opened="false"
-                        data-testid="add-document-btn"
-                    >
-                        Ajouter des documents
-                    </button>
+                    {% flag "download_zip" %}
+                        {% if document_count_for_download > 1  %}
+                            <form method="post" action="{% url 'document-zip' %}?{{ request.GET.urlencode }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                <input type="hidden" name="pk" value="{{ object.pk }}">
+                                <button
+                                    class="fr-btn fr-btn--secondary fr-icon-download-line"
+                                    type="submit"
+                                    data-testid="document-download-zip"
+                                >
+                                    Télécharger les {{ document_count_for_download}} documents (.zip)
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endflag %}
+                    {% if can_add_document %}
+                        <button
+                            class="fr-btn fr-btn--secondary fr-icon-add-circle-line"
+                            type="button"
+                            aria-controls="document-modal"
+                            data-fr-opened="false"
+                            data-testid="add-document-btn"
+                        >
+                            Ajouter des documents
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}
@@ -93,7 +112,7 @@
                                                             <a href="{{ document.file.url }}" target="_blank" class="fr-icon-download-line fr-btn fr-btn--tertiary fr-mr-1w no-border"></a>
                                                         </li>
 
-                                                        {% if document.is_cartographie %}
+                                                        {% if document.can_be_viewed %}
                                                             <li>
                                                                 <button href="#" data-fr-opened="false" aria-controls="fr-document-image-table-{{ document.pk }}" class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-mr-1w no-border"></button>
                                                             </li>
@@ -107,7 +126,7 @@
                                                                                 </div>
                                                                                 <div class="fr-modal__content">
                                                                                     <div class="img-modal">
-                                                                                        <img src="{{ document.file.url }}" loading="lazy"  >
+                                                                                        <img src="{{ document.file.url }}" loading="lazy">
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -115,6 +134,30 @@
                                                                     </div>
                                                                 </div>
                                                             </dialog>
+                                                        {% elif document.can_pdf_be_viewed %}
+                                                            <span data-controller="object-lazy-load">
+                                                                <li>
+                                                                    <button data-action="object-lazy-load#onPDFPreviewed" data-fr-opened="false" aria-controls="fr-document-image-table-{{ document.pk }}" class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-mr-1w no-border"></button>
+                                                                </li>
+                                                                <dialog aria-labelledby="fr-modal-title-modal-document-{{ document.pk }}" id="fr-document-image-table-{{ document.pk }}" class="fr-modal" data-fr-concealing-backdrop="true">
+                                                                    <div class="fr-container fr-container--fluid fr-container-md">
+                                                                        <div class="fr-grid-row fr-grid-row--center">
+                                                                            <div class="fr-col-12 fr-col-md-12 fr-col-lg-12">
+                                                                                <div class="fr-modal__body">
+                                                                                    <div class="fr-modal__header">
+                                                                                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-document-image-table-{{ document.pk }}">Fermer</button>
+                                                                                    </div>
+                                                                                    <div class="fr-modal__content pdf-modal">
+                                                                                        <div data-src="{{ document.pdf_preview_url }}" data-object-lazy-load-target="objectTag" data-type="application/pdf" data-width="100%" data-height="100%">
+                                                                                            Votre navigateur ne supporte pas l'aperçu des fichiers PDF.
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </dialog>
+                                                            </span>
                                                         {% else %}
                                                             <li>
                                                                 <button class="fr-icon-eye-line fr-btn fr-btn--tertiary fr-mr-1w no-border" disabled="true"></button>

@@ -3,7 +3,10 @@ from playwright.sync_api import Page, expect
 
 from core.mixins import WithEtatMixin
 from core.models import AuditLog
-from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
+from core.tests.generic_tests.bloc_commun import (
+    generic_test_bloc_commun_nb_items,
+    generic_test_can_preview_image_from_bloc_commun,
+)
 from tiac.constants import DangersSyndromiques
 from tiac.factories import (
     AlimentSuspectFactory,
@@ -33,6 +36,7 @@ def test_investigation_tiac_detail_page_content(live_server, page: Page):
     ).to_be_visible()
     expect(details_page.origin.get_by_text(evenement.get_evenement_origin_display(), exact=True)).to_be_visible()
     expect(details_page.modalite.get_by_text(evenement.get_modalites_declaration_display(), exact=True)).to_be_visible()
+    expect(details_page.modalite.get_by_text(evenement.numero_rasff, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text(evenement.contenu, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text(evenement.numero_sivss, exact=True)).to_be_visible()
     expect(details_page.context_block.get_by_text("Investigation de TIAC", exact=True)).to_be_visible()
@@ -167,8 +171,15 @@ def test_investigation_tiac_detail_page_content_analyse_alimentaires(live_server
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
+
+
+def test_can_preview_image_from_bloc_commun(live_server, page: Page):
+    evenement = InvestigationTiacFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_can_preview_image_from_bloc_commun(live_server, page, evenement)
 
 
 def test_investigation_tiac_detail_page_synthese_content(live_server, page: Page):

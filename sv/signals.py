@@ -16,7 +16,7 @@ def create_evenement_version_on_fiche_zone_delimitee_delete(sender, instance: Fi
             reversion.set_comment(f"La fiche zone délimitée '{evenement.numero}' a été supprimée.")
             zone_data = model_to_dict(instance)
             zone_data["createur"] = model_to_dict(instance.createur)
-            zones_infestees = instance.zoneinfestee_set.all()
+            zones_infestees = instance.zones_infestees.all()
             zone_data["zones_infestees"] = [model_to_dict(zi) for zi in zones_infestees]
             reversion.add_to_revision(evenement)
             reversion.add_meta(VersionFicheZoneDelimitee, fiche_zone_delimitee_data=zone_data)

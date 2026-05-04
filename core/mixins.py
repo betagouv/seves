@@ -125,6 +125,8 @@ class WithDocumentListInContextMixin:
         for document in document_filter.qs:
             document.edit_form = DocumentEditForm(instance=document, allowed_document_types=allowed_document_types)
         context["document_count"] = documents.exclude(is_deleted=True).count()
+        downloadable_documents = [d for d in document_filter.qs if (d.is_deleted is False and d.is_infected is False)]
+        context["document_count_for_download"] = len(downloadable_documents)
         context["document_filter"] = document_filter
         return context
 
@@ -146,7 +148,8 @@ class WithBlocCommunPermission:
 class WithMessageMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        message_list = self.get_object().messages.for_user(self.request.user).optimized_for_list()
+        message_list = self.get_object().messages.for_user(self.request.user)
+        message_list = message_list.optimized_for_list().order_by_status_and_date()
         message_filter = MessageFilter(self.request.GET, queryset=message_list)
         contact_agent = None
         if message_filter.qs:
@@ -792,8 +795,14 @@ class AbstractMessageHandlingView(
         self._add_contacts_to_object(form.instance)
         self.add_user_contacts(self.fiche_objet)
         self._handle_visibilite_if_needed(form.instance)
+
+        message = form.instance
+        message.last_updated = timezone.now()
+        if message.is_finalise:
+            form.instance.date_publication = timezone.now()
+        form.instance.save()
         try:
-            transaction.on_commit(lambda: notify_message(form.instance))
+            transaction.on_commit(lambda: notify_message(message))
         except OperationalError:
             messages.error(
                 self.request, "Une erreur s'est produite lors de l'envoi du message.", extra_tags="core messages"
@@ -826,7 +835,7 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
 
     def create_document_bloc_commun(self):
         obj = self.object
-        messages = [m for m in obj.messages.filter(status=Message.Status.FINALISE)]
+        messages = obj.messages.filter(status=Message.Status.FINALISE).optimized_for_list().order_by_status_and_date()
         sub_template = DocxTemplate("core/doc_templates/bloc_commun.docx")
 
         for message in messages:

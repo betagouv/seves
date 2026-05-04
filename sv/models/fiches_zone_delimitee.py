@@ -14,7 +14,7 @@ from sv.managers import FicheZoneManager
 from sv.models.models_mixins import WithDerniereMiseAJourMixin
 
 
-@reversion.register()
+@reversion.register(follow=["zones_infestees"])
 class FicheZoneDelimitee(WithDerniereMiseAJourMixin, models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
@@ -156,7 +156,9 @@ class ZoneInfestee(models.Model):
         verbose_name = "Zone infestée"
         verbose_name_plural = "Zones infestées"
 
-    fiche_zone_delimitee = models.ForeignKey("FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone")
+    fiche_zone_delimitee = models.ForeignKey(
+        "FicheZoneDelimitee", on_delete=models.CASCADE, verbose_name="Fiche zone", related_name="zones_infestees"
+    )
     nom = models.CharField(max_length=50, verbose_name="Nom de la zone infestée", blank=True)
     surface_infestee_totale = models.FloatField(
         verbose_name="Surface infestée totale", blank=True, null=True, validators=[MinValueValidator(0)]
@@ -188,3 +190,6 @@ class ZoneInfestee(models.Model):
             with reversion.create_revision():
                 super().save(*args, **kwargs)
             FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.fiche_zone_delimitee.id)
+
+    def __str__(self):
+        return self.nom or "Zone infestée sans nom"

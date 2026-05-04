@@ -96,6 +96,15 @@ class TiacFilter(
         widget=TextInput(attrs={"placeholder": "Aliment, analyse, repas, établissement..."}),
     )
 
+    numero_rasff = django_filters.CharFilter(
+        label="Numéro RASFF/AAC",
+        lookup_expr="contains",
+        widget=TextInput(
+            attrs={
+                "placeholder": "0000.0000 ou 000000",
+            }
+        ),
+    )
     numero_sivss = django_filters.CharFilter(
         field_name="numero_sivss",
         lookup_expr="contains",

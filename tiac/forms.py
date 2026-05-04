@@ -14,7 +14,6 @@ from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_mo
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
-from core.widgets import Treeselect
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
@@ -46,9 +45,21 @@ from tiac.models import (
 
 
 class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
-    date_reception = forms.DateTimeField(
+    date_reception = forms.DateField(
         label="Date de réception",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "type": "date",
+                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
+                "max": timezone.localtime(timezone.now()).date().isoformat(),
+            },
+        ),
+    )
+    numero_rasff = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
+        label="N° RASFF/AAC",
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -70,6 +81,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             "date_reception",
             "evenement_origin",
             "modalites_declaration",
+            "numero_rasff",
             "contenu",
             "notify_ars",
             "nb_sick_persons",
@@ -93,6 +105,8 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_rasff")
         self._add_free_links()
 
     def save(self, commit=True):
@@ -229,10 +243,22 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     CategorieDanger = CategorieDanger
     DangersSyndromiques = DangersSyndromiques
 
-    date_reception = forms.DateTimeField(
+    date_reception = forms.DateField(
         required=False,
         label="Date de réception",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "value": timezone.now().strftime("%Y-%m-%d")}),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "type": "date",
+                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
+                "max": timezone.localtime(timezone.now()).date().isoformat(),
+            },
+        ),
+    )
+    numero_rasff = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "0000.0000 ou 000000"}),
+        label="N° RASFF/AAC",
     )
     evenement_origin = SEVESChoiceField(
         choices=EvenementOrigin.choices,
@@ -314,6 +340,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "date_reception",
             "evenement_origin",
             "modalites_declaration",
+            "numero_rasff",
             "contenu",
             "notify_ars",
             "will_trigger_inquiry",
@@ -375,6 +402,8 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             self[field].field.queryset = (
                 queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
             )
+        if not self.user.agent.structure.is_ac:
+            self.fields.pop("numero_rasff")
 
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
@@ -443,17 +472,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
                 ("Événement produit", queryset_evenement_produit),
             ],
         )
-
-
-class InvestigationTiacFormNewTreeslect(InvestigationTiacForm):
-    selected_hazard = forms.MultipleChoiceField(label="Dangers retenus", widget=Treeselect)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["selected_hazard"].choices = {
-            "Dangers les plus courants": {"__can_expand__": False, **{it.value: str(it) for it in DANGERS_COURANTS}},
-            "Liste complète des dangers": {"__can_expand__": False, **{it.value: it.label for it in CategorieDanger}},
-        }
 
 
 class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):

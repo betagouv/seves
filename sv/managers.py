@@ -99,7 +99,6 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         ).prefetch_related(
             "lieux",
             "lieux__departement",
-            "lieux__site_inspection",
             "lieux__prelevements",
             "lieux__prelevements__structure_preleveuse",
             "lieux__prelevements__espece_echantillon",
@@ -121,7 +120,7 @@ class FicheZoneQuerySet(FichesCommonQueryset):
     def with_nb_fiches_detection(self):
         return self.annotate(
             nb_fiches_detection=Count("fichedetection__id", distinct=True)
-            + Count("zoneinfestee__fichedetection__id", distinct=True)
+            + Count("zones_infestees__fichedetection__id", distinct=True)
         )
 
 

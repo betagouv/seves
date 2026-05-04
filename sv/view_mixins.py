@@ -1,9 +1,13 @@
 from collections import defaultdict
+import json
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch
 from django.http import Http404
+from django.utils import timezone
+import reversion
+from reversion.models import Version
 
 from core.mixins import WithOrderingMixin
 from sv.forms import (
@@ -86,7 +90,19 @@ class WithPrelevementHandlingMixin:
             prelevement_form.fields["lieu"].queryset = allowed_lieux
 
             if prelevement_form.is_valid():
-                prelevement_form.save()
+                with reversion.create_revision():
+                    prelevement = prelevement_form.save()
+                    lieu = prelevement.lieu
+                    reversion.add_to_revision(lieu)
+                    reversion.set_user(self.request.user)
+
+                last_version = Version.objects.get_for_object(lieu).first()
+                if last_version:
+                    data = json.loads(last_version.serialized_data)
+                    if isinstance(data, list) and len(data) > 0:
+                        data[0]["fields"]["_forced_update_trigger"] = str(timezone.now())
+                        last_version.serialized_data = json.dumps(data)
+                        last_version.save(update_fields=["serialized_data"])
             else:
                 error_msg = ""
                 for field, error in prelevement_form.errors.items():
@@ -124,7 +140,6 @@ class EvenementDetailMixin(UserPassesTestMixin):
                 "detections__lieux__departement",
                 "detections__lieux__departement__region",
                 "detections__lieux__position_chaine_distribution_etablissement",
-                "detections__lieux__site_inspection",
             )
         )
 

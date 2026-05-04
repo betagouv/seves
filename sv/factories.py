@@ -15,11 +15,11 @@ from core.models import Structure
 from .constants import (
     CONTEXTES,
     POSITION_CHAINE_DISTRIBUTION,
-    SITES_INSPECTION,
     STATUTS_EVENEMENT,
     STATUTS_REGLEMENTAIRES,
     STRUCTURE_EXPLOITANT,
     STRUCTURES_PRELEVEUSES,
+    SiteInspection,
 )
 from .models import (
     Contexte,
@@ -33,7 +33,6 @@ from .models import (
     OrganismeNuisible,
     PositionChaineDistribution,
     Prelevement,
-    SiteInspection,
     StatutEvenement,
     StatutReglementaire,
     StructurePreleveuse,
@@ -120,14 +119,6 @@ class ContexteFactory(DjangoModelFactory):
     nom = factory.lazy_attribute(lambda _: random.choice(CONTEXTES))
 
 
-class SiteInspectionFactory(DjangoModelFactory):
-    class Meta:
-        model = SiteInspection
-        django_get_or_create = ("nom",)
-
-    nom = factory.lazy_attribute(lambda _: random.choice(random.choices(SITES_INSPECTION)))
-
-
 class PrelevementFactory(DjangoModelFactory):
     class Meta:
         model = Prelevement
@@ -210,7 +201,7 @@ class LieuFactory(DjangoModelFactory):
     adresse_etablissement = factory.Faker("address")
     siret_etablissement = factory.Faker("numerify", text="##############")
     code_inupp_etablissement = factory.Faker("numerify", text="#######")
-    site_inspection = factory.SubFactory("sv.factories.SiteInspectionFactory")
+    site_inspection = FuzzyChoice(SiteInspection)
     position_chaine_distribution_etablissement = factory.SubFactory("sv.factories.PositionChaineDistributionFactory")
 
     @classmethod
@@ -229,7 +220,7 @@ class LieuFactory(DjangoModelFactory):
             adresse_etablissement="",
             siret_etablissement="",
             code_inupp_etablissement="",
-            site_inspection=None,
+            site_inspection=SiteInspection.INCONNU,
             position_chaine_distribution_etablissement=None,
             **kwargs,
         )
@@ -347,7 +338,7 @@ class EvenementFactory(DjangoModelFactory):
             else:
                 self.date_publication = extracted
         else:
-            self.date_publication = Faker().date_time_this_decade()
+            self.date_publication = timezone.make_aware(Faker().date_time_this_decade())
 
     @factory.sequence
     def numero_evenement(n):

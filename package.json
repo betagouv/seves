@@ -14,6 +14,7 @@
     "BaseFormInModal": "file:./core/static/core/base_form_in_modal.mjs",
     "TreeSelect": "file:./ssa/static/ssa/treeselectjs.umd.js",
     "DocumentUploads": "file:./core/static/core/form/document_uploads.mjs",
-    "FicheBlocCommun": "file:./core/static/core/fiche_bloc_commun.mjs"
+    "FicheBlocCommun": "file:./core/static/core/fiche_bloc_commun.mjs",
+    "ObjectLazyLoad": "file:./core/static/core/object_lazy_load.mjs"
   }
 }

@@ -4,7 +4,21 @@ from typing import Literal
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, Exists, F, Func, IntegerField, Manager, OuterRef, Q, QuerySet, Subquery, Value, When
+from django.db.models import (
+    Case,
+    DateTimeField,
+    Exists,
+    F,
+    Func,
+    IntegerField,
+    Manager,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+    When,
+)
 
 from core.constants import (
     BSV_STRUCTURE,
@@ -224,7 +238,7 @@ class MessageManager(Manager):
         return self.create(**kwargs)
 
     def get_base_queryset(self):
-        return MessagQueryset(self.model, using=self._db).filter(is_deleted=False)
+        return MessageQueryset(self.model, using=self._db).filter(is_deleted=False)
 
     def get_queryset(self):
         from core.models import Message
@@ -232,11 +246,25 @@ class MessageManager(Manager):
         return self.get_base_queryset().exclude(status=Message.Status.AVANT_SAUVEGARDE)
 
 
-class MessagQueryset(QuerySet):
+class MessageQueryset(QuerySet):
     def for_user(self, user):
         from core.models import Message
 
         return self.filter(Q(status=Message.Status.FINALISE) | Q(sender=user.agent.contact_set.get()))
+
+    def order_by_status_and_date(self):
+        from core.models import Message
+
+        return self.annotate(
+            displayed_date_orm=Case(
+                When(status=Message.Status.FINALISE, then=F("date_publication")),
+                default=Case(
+                    When(last_updated__isnull=False, then=F("last_updated")),
+                    default=F("date_creation"),
+                ),
+                output_field=DateTimeField(),
+            )
+        ).order_by("status", "-displayed_date_orm")
 
     def optimized_for_list(self):
         return self.select_related("sender__agent__structure", "sender_structure").prefetch_related(

@@ -5,6 +5,7 @@ from urllib.parse import quote
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
+from core.pages import WithActionsPage
 from ssa.models import Etablissement
 
 
@@ -285,7 +286,7 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         return self.page.locator(".fr-alert__title").all_text_contents()
 
 
-class SsaBaseDetailPage:
+class SsaBaseDetailPage(WithActionsPage):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -318,20 +319,6 @@ class SsaBaseDetailPage:
     @property
     def etablissement_modal(self):
         return self.page.locator(".fr-modal").locator("visible=true")
-
-    def cloturer(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_role("link", name="Clôturer l'événement").click()
-        self.page.get_by_role("button", name="Clôturer").click()
-
-    def delete(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Supprimer l'événement", exact=True).click()
-        self.page.get_by_test_id("submit-delete-modal").click()
-
-    def download(self):
-        self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Télécharger le document", exact=True).click()
 
 
 class InvestigationCasHumainDetailsPage(SsaBaseDetailPage):

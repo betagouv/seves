@@ -35,7 +35,7 @@
         {% for message in message_filter.qs %}
             <tr id="table-sm-row-key-{{ forloop.counter }}" class="{% if message.is_draft %}message-draft{% endif %}" data-row-key="{{ forloop.counter }}">
                 <td>
-                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.date_creation }}</a>
+                    <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.displayed_date }}</a>
                 </td>
                 <td>
                     <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.sender_structure }}</a>

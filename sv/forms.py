@@ -137,6 +137,11 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
 
+        # Keep compatibility with how Lieux formset is currently rendered; needs to be refactored
+        self.fields["site_inspection"].choices = [(None, ""), *self.fields["site_inspection"].choices]
+        self.fields["site_inspection"].initial = None
+        self.fields["site_inspection"].required = False
+
         if not self.is_bound and self.instance and self.instance.pk and self.instance.adresse_lieu_dit:
             if self.instance.adresse_lieu_dit:
                 choice = (self.instance.adresse_lieu_dit, self.instance.adresse_lieu_dit)

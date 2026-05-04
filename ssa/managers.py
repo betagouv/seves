@@ -93,6 +93,7 @@ class InvestigationCasHumainQueryset(EvenementBaseQueryset):
             "date_creation",
             "etat",
             "last_updated",
+            "date_publication",
         )
 
 

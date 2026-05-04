@@ -48,7 +48,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==46.0.6
+cryptography==46.0.7
     # via
     #   josepy
     #   mozilla-django-oidc
@@ -63,7 +63,6 @@ django==6.0.4
     # via
     #   -r requirements.in
     #   dj-importmap
-    #   django-crispy-forms
     #   django-debug-toolbar
     #   django-dirtyfields
     #   django-dsfr
@@ -78,19 +77,17 @@ django==6.0.4
     #   sentry-sdk
 django-countries==8.2.0
     # via -r requirements.in
-django-crispy-forms==2.4
-    # via django-dsfr
 django-debug-toolbar==6.3.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
-django-dsfr==3.3.1
+django-dsfr==3.4.2
     # via -r requirements.in
 django-environ==0.13.0
     # via -r requirements.in
 django-filter==25.2
     # via -r requirements.in
-django-post-office==3.11.0
+django-post-office==3.11.2
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
@@ -142,7 +139,7 @@ josepy==1.14.0
     # via mozilla-django-oidc
 kombu==5.6.1
     # via celery
-lxml==6.0.2
+lxml==6.1.0
     # via
     #   docxcompose3
     #   docxtpl
@@ -173,11 +170,11 @@ playwright==1.58.0
     #   pytest-playwright
 pluggy==1.5.0
     # via pytest
-pre-commit==4.5.1
+pre-commit==4.6.0
     # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
-psycopg2-binary==2.9.11
+psycopg2-binary==2.9.12
     # via -r requirements.in
 pycparser==2.22
     # via cffi
@@ -189,7 +186,7 @@ pygments==2.20.0
     #   rich
 pyopenssl==26.0.0
     # via josepy
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   pytest-base-url
     #   pytest-django
@@ -232,7 +229,6 @@ redis==7.4.0
     # via -r requirements.in
 requests==2.33.0
     # via
-    #   django-dsfr
     #   mozilla-django-oidc
     #   pytest-base-url
     #   requests-mock
@@ -240,11 +236,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.9
+ruff==0.15.12
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.57.0
+sentry-sdk[django]==2.58.0
     # via -r requirements.in
 six==1.16.0
     # via

@@ -12,7 +12,10 @@ from core.constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import AuditLog, Contact, Structure
-from core.tests.generic_tests.bloc_commun import generic_test_bloc_commun_nb_items
+from core.tests.generic_tests.bloc_commun import (
+    generic_test_bloc_commun_nb_items,
+    generic_test_can_preview_image_from_bloc_commun,
+)
 from seves import settings
 from sv.factories import (
     EvenementFactory,
@@ -24,6 +27,7 @@ from sv.factories import (
     ZoneInfesteeFactory,
 )
 from sv.models import Etat, Evenement, FicheDetection, Prelevement
+from sv.tests.pages import EvenementPage
 
 
 def get_date_formated(date_derniere_mise_a_jour):
@@ -724,16 +728,30 @@ def test_can_download_document(live_server, page):
     fiche_zone_delimitee = FicheZoneFactory()
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee)
 
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    with page.expect_download() as download_info:
-        page.get_by_role("button", name="Actions").click()
-        page.get_by_text("Télécharger le document", exact=True).click()
+    details_page = EvenementPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
+    assert download.suggested_filename == f"evenement_{evenement.numero}.docx"
 
-    download = download_info.value
+
+def test_can_download_document_when_no_publication_date(live_server, page):
+    fiche_zone_delimitee = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone_delimitee, date_publication=None)
+
+    details_page = EvenementPage(page, live_server.url)
+    details_page.navigate(evenement)
+    download = details_page.download().value
     assert download.suggested_filename == f"evenement_{evenement.numero}.docx"
 
 
 def test_bloc_commun_nb_items(live_server, page: Page):
     evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    other_object = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
 
-    generic_test_bloc_commun_nb_items(live_server, page, evenement)
+    generic_test_bloc_commun_nb_items(live_server, page, evenement, other_object)
+
+
+def test_can_preview_image_from_bloc_commun(live_server, page: Page):
+    evenement = EvenementFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    generic_test_can_preview_image_from_bloc_commun(live_server, page, evenement)

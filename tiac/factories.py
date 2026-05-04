@@ -70,6 +70,7 @@ class BaseTiacFactory(DjangoModelFactory):
 
     evenement_origin = FuzzyChoice(EvenementOrigin.values)
     modalites_declaration = FuzzyChoice(ModaliteDeclarationEvenement.values)
+    numero_rasff = factory.Faker("bothify", text="####.####")
     contenu = factory.Faker("paragraph")
     notify_ars = factory.Faker("boolean")
 
@@ -98,7 +99,7 @@ class BaseTiacFactory(DjangoModelFactory):
                 kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%d"))
             except ValueError:
                 kwargs["date_publication"] = timezone.make_aware(datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S"))
-        else:
+        elif value:
             kwargs["date_publication"] = timezone.make_aware(value)
 
         return super()._adjust_kwargs(**kwargs)

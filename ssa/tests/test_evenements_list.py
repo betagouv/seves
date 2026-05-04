@@ -761,3 +761,24 @@ def test_number_of_total_items(live_server, mocked_authentification_user, page: 
     search_page.submit_search()
 
     expect(page.get_by_text("1 sur un total de 3", exact=True)).to_be_visible()
+
+
+def test_list_performance_scaling(live_server, client, django_assert_num_queries):
+    EvenementProduitFactory()
+    EvenementProduitFactory()
+    InvestigationCasHumainFactory()
+    InvestigationCasHumainFactory()
+
+    url = reverse("ssa:evenements-liste")
+    client.get(url)
+
+    with django_assert_num_queries(13):
+        client.get(url)
+
+    EvenementProduitFactory()
+    EvenementProduitFactory()
+    InvestigationCasHumainFactory()
+    InvestigationCasHumainFactory()
+
+    with django_assert_num_queries(13):
+        client.get(url)

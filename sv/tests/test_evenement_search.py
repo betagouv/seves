@@ -120,8 +120,8 @@ def test_search_with_evenement_number(live_server, page: Page) -> None:
     page.get_by_label("N° événement").fill("1")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name="2024.1")).to_be_visible()
-    expect(page.get_by_role("cell", name="2024.2")).not_to_be_visible()
+    expect(page.get_by_role("cell", name="2024.1", exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name="2024.2", exact=True)).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -135,8 +135,8 @@ def test_search_with_evenement_number_allows_year_only(live_server, page: Page):
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name="2024.1", exact=True)).to_be_visible()
-    expect(page.get_by_role("cell", name="2024.10")).to_be_visible()
-    expect(page.get_by_role("cell", name="2023.1")).not_to_be_visible()
+    expect(page.get_by_role("cell", name="2024.10", exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name="2023.1", exact=True)).not_to_be_visible()
 
 
 def test_search_with_region(live_server, page: Page, mocked_authentification_user, ensure_departements) -> None:
@@ -151,8 +151,10 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     page.get_by_label("Région").select_option("Corse")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(other_lieu.fiche_detection.evenement.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero), exact=True)).to_be_visible()
+    expect(
+        page.get_by_role("cell", name=str(other_lieu.fiche_detection.evenement.numero), exact=True)
+    ).not_to_be_visible()
 
 
 @pytest.mark.django_db
@@ -188,14 +190,20 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     page.get_by_label("Région").select_option(str(nouvelle_aquitaine.id))
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(evenement_lieu_sans_region_structure_autre.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_lieu_autre_region_structure_autre.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_autre.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_autre.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero))).to_have_count(1)
-    expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_naq.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_structure_naq.numero))).to_be_visible()
+    expect(
+        page.get_by_role("cell", name=str(evenement_lieu_sans_region_structure_autre.numero), exact=True)
+    ).not_to_be_visible()
+    expect(
+        page.get_by_role("cell", name=str(evenement_lieu_autre_region_structure_autre.numero), exact=True)
+    ).not_to_be_visible()
+    expect(
+        page.get_by_role("cell", name=str(evenement_sans_lieu_structure_autre.numero), exact=True)
+    ).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_autre.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_lieu_naq_structure_naq.numero), exact=True)).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(evenement_sans_lieu_structure_naq.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_structure_naq.numero), exact=True)).to_be_visible()
     expect(page.locator("body")).to_contain_text("4 sur un total de 7")
 
 
@@ -249,11 +257,11 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
         == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat=&structure_contact=&agent_contact="
     )
 
-    expect(page.get_by_role("cell", name=evenement_1.numero)).to_be_visible()
+    expect(page.get_by_role("cell", name=evenement_1.numero, exact=True)).to_be_visible()
     expect(page.get_by_role("cell", name=organisme.libelle_court, exact=True)).to_be_visible()
-    expect(page.get_by_role("cell", name=evenement_2.numero)).to_be_visible()
+    expect(page.get_by_role("cell", name=evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_role("cell", name=organisme_sub_specie.libelle_court)).to_be_visible()
-    expect(page.get_by_role("cell", name=evenement_3.numero)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=evenement_3.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_role("cell", name=evenement_3.organisme_nuisible.libelle_court)).not_to_be_visible()
 
 
@@ -269,8 +277,8 @@ def test_search_with_period(live_server, page: Page, mocked_authentification_use
     page.get_by_label("Et le").fill("2024-06-19")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(evenement_1.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_2.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_1.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero), exact=True)).not_to_be_visible()
 
 
 def test_search_with_crossed_dates(live_server, page: Page, mocked_authentification_user) -> None:
@@ -297,8 +305,8 @@ def test_search_with_state(live_server, page: Page) -> None:
     page.get_by_label("État").select_option("Clôturé")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(evenement_1.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_1.numero), exact=True)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero), exact=True)).to_be_visible()
 
 
 def test_search_with_multiple_filters(live_server, page: Page, choice_js_fill) -> None:
@@ -317,8 +325,8 @@ def test_search_with_multiple_filters(live_server, page: Page, choice_js_fill) -
     page.get_by_label("État").select_option(str(fiche1.evenement.etat))
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(fiche1.evenement.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(fiche2.evenement.numero))).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche1.evenement.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche2.evenement.numero), exact=True)).not_to_be_visible()
 
 
 def test_search_without_filters(live_server, page: Page) -> None:
@@ -330,8 +338,8 @@ def test_search_without_filters(live_server, page: Page) -> None:
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(fiche_1.evenement.numero))).to_be_visible()
-    expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_1.evenement.numero), exact=True)).to_be_visible()
+    expect(page.get_by_role("cell", name=str(fiche_2.evenement.numero), exact=True)).to_be_visible()
     expect(page.get_by_text("2 sur un total de 2")).to_be_visible()
 
 
@@ -376,7 +384,7 @@ def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
     page.get_by_label("Région").select_option(str(lieu.departement.region.id))
     page.get_by_role("button", name="Rechercher").click()
 
-    expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero))).to_have_count(1)
+    expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero), exact=True)).to_have_count(1)
 
 
 def test_filter_deleted_detection_in_count_column(live_server, page):
@@ -400,8 +408,8 @@ def test_search_with_structure_contact(live_server, page: Page):
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.locator(".evenements__list-row")).to_have_count(1)
-    expect(page.get_by_role("cell", name=str(evenement_1.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_1.numero), exact=True)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero), exact=True)).to_be_visible()
 
 
 def test_search_with_agent_contact(live_server, page: Page, choice_js_fill):
@@ -415,5 +423,5 @@ def test_search_with_agent_contact(live_server, page: Page, choice_js_fill):
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.locator(".evenements__list-row")).to_have_count(1)
-    expect(page.get_by_role("cell", name=str(evenement_1.numero))).not_to_be_visible()
-    expect(page.get_by_role("cell", name=str(evenement_2.numero))).to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_1.numero), exact=True)).not_to_be_visible()
+    expect(page.get_by_role("cell", name=str(evenement_2.numero), exact=True)).to_be_visible()

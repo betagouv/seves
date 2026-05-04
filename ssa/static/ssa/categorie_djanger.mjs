@@ -1,5 +1,7 @@
 import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 
+const NOTICE_TEXT = "Il existe des sous catégories pour « __value__ » : pensez à préciser dès que possible."
+
 function handleValueChangeCategorieDanger(value, options) {
     const fullPath = findPath(value, options)
         .map(n => n.name)
@@ -18,6 +20,10 @@ function handleValueChangeCategorieDanger(value, options) {
 
 function handleNoticeDangerDisplay(options, value) {
     if (isLevel2WithChildren(options, value)) {
+        document.querySelector("#notice-container-risque .fr-notice__title").innerText = NOTICE_TEXT.replace(
+            "__value__",
+            value,
+        )
         document.querySelector("#notice-container-risque").classList.remove("fr-hidden")
     } else {
         document.querySelector("#notice-container-risque").classList.add("fr-hidden")
@@ -25,8 +31,15 @@ function handleNoticeDangerDisplay(options, value) {
 }
 
 function setupCategorieDanger() {
+    const selectedValueEl = document.getElementById("id_categorie_danger")
+
+    if (selectedValueEl === null) {
+        // Prevent old Treeselect init on FF
+        return
+    }
+
     const options = JSON.parse(document.getElementById("categorie-danger-data").textContent)
-    const selectedValue = document.getElementById("id_categorie_danger").value
+    const selectedValue = selectedValueEl.value
     const treeselect = new Treeselect({
         parentHtmlContainer: document.getElementById("categorie-danger"),
         value: selectedValue,

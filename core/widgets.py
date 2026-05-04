@@ -1,15 +1,31 @@
 from copy import deepcopy
+import dataclasses
 import itertools
 import re
-from typing import Collection, Iterable, Literal, Mapping
+from typing import Any, Collection, Iterable, Literal, Mapping
 
+from django.db.models import Choices
 from django.forms import Media, widgets
+from django.utils.choices import normalize_choices
 
 from core.form_mixins import js_module
 
 
-class TreeselectGroup(widgets.ChoiceWidget):
-    template_name = "core/form/widgets/treeselect.html#group"
+@dataclasses.dataclass
+class TreeselectGroup:
+    value: Any
+    label: str
+    choices: type[Choices] | Iterable[tuple[Any, str]]
+
+
+class TreeselectGroupWidget(widgets.ChoiceWidget):
+    @property
+    def template_name(self):
+        return (
+            "core/form/widgets/treeselect.html#group"
+            if self.group_label
+            else "core/form/widgets/treeselect.html#nogroup"
+        )
 
     @property
     def allow_multiple_selected(self):
@@ -31,24 +47,25 @@ class TreeselectGroup(widgets.ChoiceWidget):
     def choices(self, value):
         self._choices = deepcopy(value)
 
-    def __init__(self, parent: "Treeselect", value, choices):
+    def __init__(self, parent: "TreeselectCheckbox", label, choices):
         self.parent = parent
-        self.group_value = value
+        self.group_label = label
         super().__init__(self.parent.attrs, choices)
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context.update(context.pop("widget"))
-        context["group"] = self.group_value
+        context["group"] = self.group_label
         context["group_index"] = self.parent.get_next_id()
         context["can_expand"] = self.choices.get("__can_expand__", True)
+        context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
         if "__self__" in self.choices:
-            group_label = self.choices["__self__"]
+            group_value = self.choices["__self__"]
             context["group_option"] = self.create_option(
                 name,
-                self.group_value,
-                group_label,
-                str(self.group_value) in value,
+                group_value,
+                self.group_label,
+                str(self.group_label) in value,
                 self.parent.get_next_id(),
                 None,
                 attrs,
@@ -58,11 +75,11 @@ class TreeselectGroup(widgets.ChoiceWidget):
 
     def optgroups(self, name, value, attrs=None):
         has_selected = False
-        for option_value, option_label in self.choices.items():
-            if self._is_dunder(option_value):
+        for option_label, option_value in self.choices.items():
+            if self._is_dunder(option_label):
                 continue
-            if isinstance(option_label, Mapping):
-                yield TreeselectGroup(self.parent, option_value, option_label).get_context(name, value, attrs)
+            if isinstance(option_value, Mapping):
+                yield TreeselectGroupWidget(self.parent, option_label, option_value).get_context(name, value, attrs)
             else:
                 selected = (not has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
                 has_selected |= selected
@@ -73,6 +90,7 @@ class TreeselectGroup(widgets.ChoiceWidget):
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
         context = super().create_option(name, value, label, selected, index, subindex, attrs)
         context["attrs"]["required"] = False  # `require` on checkboxes forces to check all checkboxes
+        context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
         if group_option:
             context["group_index"] = self.parent.get_next_id()
         return context
@@ -84,7 +102,10 @@ class TreeselectGroup(widgets.ChoiceWidget):
         return len(name) > 4 and name[:2] == name[-2:] == "__" and name[2] != "_" and name[-3] != "_"
 
 
-class Treeselect(widgets.ChoiceWidget):
+_UNSET = object()
+
+
+class TreeselectCheckbox(widgets.ChoiceWidget):
     allow_multiple_selected = True
     input_type = "checkbox"
     template_name = "core/form/widgets/treeselect.html"
@@ -98,7 +119,8 @@ class Treeselect(widgets.ChoiceWidget):
 
     @choices.setter
     def choices(self, value):
-        self._choices = self._normalize_choices(value)
+        if not self._choices:
+            self._choices = self._choices_as_dict(value)
 
     @property
     def media(self):
@@ -113,19 +135,20 @@ class Treeselect(widgets.ChoiceWidget):
     def __init__(
         self,
         attrs=None,
-        choices: Iterable | Mapping = (),
+        choices: Iterable[tuple[Any, Any] | tuple[str, Iterable[tuple[Any, Any]]]] | Iterable[TreeselectGroup] = (),
         *,
-        input_type: Literal["checkbox", "radio"] | None = None,
-        has_search_bar=None,
-        category_separator=None,
+        input_type: Literal["checkbox", "radio"] = None,
+        has_search_bar=_UNSET,
+        category_separator=_UNSET,
     ):
+        self._choices = {}
         self._widget_choices = None
 
         if input_type is not None:
             self.input_type = input_type
-        if has_search_bar is not None:
+        if has_search_bar is not _UNSET:
             self.has_search_bar = has_search_bar
-        if category_separator is not None:
+        if category_separator is not _UNSET:
             self.category_separator = category_separator
         super().__init__(attrs, choices)
 
@@ -139,9 +162,13 @@ class Treeselect(widgets.ChoiceWidget):
         context["widget"]["has_search_bar"] = self.has_search_bar
         return context
 
-    def optgroups(self, name, value, attrs=None):
-        for option_value, option_label in self.choices.items():
-            yield TreeselectGroup(self, option_value, option_label).get_context(name, value, attrs)
+    def optgroups(self, name, values, attrs=None):
+        for label, group_values in self.choices.items():
+            if isinstance(values, dict):
+                yield TreeselectGroupWidget(self, label, group_values).get_context(name, values, attrs)
+            else:
+                # Here `group_values` actually represent a single value
+                yield TreeselectGroupWidget(self, None, {label: group_values}).get_context(name, values, attrs)
 
     def create_option(
         self,
@@ -153,20 +180,31 @@ class Treeselect(widgets.ChoiceWidget):
         subindex=None,
         attrs=None,
     ):
-        return TreeselectGroup(self, value, choices=(label,)).create_option(
+        return TreeselectGroupWidget(self, None, choices={label: value}).create_option(
             name, value, label, selected, index, subindex, attrs
         )
 
-    def _normalize_choices(self, choices) -> dict:
+    def _choices_as_dict(self, choices) -> dict:
         result = {}
 
-        for value, categorised_label in choices:
+        for item in choices:
+            if isinstance(item, TreeselectGroup):
+                result[item.label] = self._choices_as_dict(normalize_choices(item.choices))
+                if item.value is None:
+                    result[item.label]["__can_expand__"] = False
+                else:
+                    result[item.label]["__self__"] = item.value
+                continue
+
+            value, categorised_label = item
             if isinstance(categorised_label, str):
-                *categories, label = re.split(rf"\s*{self.category_separator}\s*", categorised_label)
+                if self.category_separator:
+                    *categories, label = re.split(rf"\s*{self.category_separator}\s*", categorised_label)
+                else:
+                    categories = []
+                    label = categorised_label
             elif isinstance(categorised_label, Collection):
-                if isinstance(categorised_label, Mapping):
-                    categorised_label = categorised_label.items()
-                result[value] = self._normalize_choices(categorised_label)
+                result[value] = self._choices_as_dict(categorised_label)
                 continue
             else:
                 categories, label = [], categorised_label
@@ -180,5 +218,13 @@ class Treeselect(widgets.ChoiceWidget):
                     new_dict = {"__self__": curr_dict[part]}
                     curr_dict[part] = new_dict
                 curr_dict = curr_dict[part]
-            curr_dict[value] = label
+            curr_dict[label] = value
         return result
+
+    def render(self, name, value, attrs=None, renderer=None):
+        return super().render(name, value, attrs, renderer)
+
+
+class TreeselectRadio(TreeselectCheckbox):
+    allow_multiple_selected = False
+    input_type = "radio"

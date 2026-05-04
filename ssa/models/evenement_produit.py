@@ -167,7 +167,7 @@ class EvenementProduit(
 
     # Informations liées au risque
     # Inclue WithEvenementRisqueMixin
-    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=True)
+    source = models.CharField(max_length=100, choices=Source.choices, verbose_name="Source", blank=False)
     quantification = models.CharField(
         blank=True, null=True, verbose_name="Quantification maximale à l'origine de l'événement"
     )

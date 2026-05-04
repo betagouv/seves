@@ -8,6 +8,7 @@ from django.conf import settings
 from playwright.sync_api import Locator, Page, expect
 import pytest
 
+from conftest import playwright_repeatable
 from core.models import Agent, Structure
 
 
@@ -135,7 +136,41 @@ class BaseDocumentPage(ABC):
             self.validate_document_modal()
 
 
-class BaseMessagePage(BaseDocumentPage, ABC):
+class ListOfMessagesPage:
+    def __init__(self, page: Page):
+        self.page = page
+
+    def message_sender_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
+
+    def message_recipient_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(3) a")
+
+    def message_title_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(4) a")
+
+    def message_type_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
+
+    def open_message(self, index=1) -> Page:
+        """Returns the new message page if page was opened in a new tab"""
+        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
+        if link.get_attribute("target") == "_blank":
+            with self.page.context.expect_page() as new_page_info:
+                link.click()
+            return new_page_info.value
+        else:
+            link.click()
+            self.page.wait_for_url("**/core/message/**/")
+            return self.page
+
+    def search_in_message_list(self, query):
+        self.page.locator("#id_full_text_search").fill(query)
+        self.page.locator(".fr-icon-search-line").click()
+        self.page.wait_for_load_state("load")
+
+
+class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     TITLE_ID = "#id_title"
     CONTENT_ID = "#id_content"
     DRAFT_BTN_TEST_ID = "draft-fildesuivi-add-submit"
@@ -249,30 +284,6 @@ class BaseMessagePage(BaseDocumentPage, ABC):
     def save_as_draft_message(self):
         self.save_as_draft_button.click()
 
-    def message_sender_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
-
-    def message_recipient_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(3) a")
-
-    def message_title_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(4) a")
-
-    def message_type_in_table(self, index=1):
-        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(6) a")
-
-    def open_message(self, index=1) -> Page:
-        """Returns the new message page if page was opened in a new tab"""
-        link = self.page.locator(f"#table-sm-row-key-{index} td:nth-child(6) a")
-        if link.get_attribute("target") == "_blank":
-            with self.page.context.expect_page() as new_page_info:
-                link.click()
-            return new_page_info.value
-        else:
-            link.click()
-            self.page.wait_for_url("**/core/message/**/")
-            return self.page
-
     def add_basic_message_content(self):
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
@@ -296,11 +307,6 @@ class BaseMessagePage(BaseDocumentPage, ABC):
     @property
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
-
-    def search_in_message_list(self, query):
-        self.page.locator("#id_full_text_search").fill(query)
-        self.page.locator(".fr-icon-search-line").click()
-        self.page.wait_for_load_state("load")
 
 
 class CreateMessagePage(BaseMessagePage):
@@ -331,6 +337,10 @@ class WithDocumentsPage(BaseDocumentPage):
     @property
     def add_document_button(self):
         return self.page.get_by_role("button", name="Ajouter des documents")
+
+    @property
+    def download_documents_zip(self):
+        return self.page.get_by_test_id("document-download-zip")
 
     def open_document_tab(self):
         if not self.page.locator(self.container_id).is_visible():
@@ -401,3 +411,25 @@ class WithContactsPage:
         ).to_be_visible()
         expect(self.page.locator(f"#fr-modal-contact-{contact.id}")).to_be_visible()
         self.page.get_by_test_id(f"contact-delete-{contact.id}").click()
+
+
+class WithActionsPage:
+    @playwright_repeatable
+    def download(self):
+        action_dropdown = self.page.locator("#action-1")
+        if not action_dropdown.is_visible():
+            self.page.get_by_role("button", name="Actions").click()
+            expect(action_dropdown).to_be_visible()
+        with self.page.expect_download() as download_info:
+            self.page.get_by_text("Télécharger le document", exact=True).click()
+        return download_info
+
+    def cloturer(self, wording="Clôturer l'événement"):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_role("link", name=wording).click()
+        self.page.get_by_role("button", name="Clôturer").click()
+
+    def delete(self):
+        self.page.get_by_role("button", name="Actions").click()
+        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.page.get_by_test_id("submit-delete-modal").click()

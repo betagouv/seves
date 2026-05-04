@@ -1,3 +1,14 @@
+/* Disable all Treeselect animations to improve performance */
+.fr-treeselect,
+.fr-treeselect:before,
+.fr-treeselect:after,
+.fr-treeselect *,
+.fr-treeselect *:before,
+.fr-treeselect *:after {
+    transition-property: none !important;
+    animation: none !important;
+}
+
 .fr-treeselect {
     position: relative;
 }
@@ -14,13 +25,16 @@
     display: inline-flex;
     flex-direction: row;
     width: 100%;
-    padding: 0.5rem 1rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
     font-size: 1rem;
+    font-weight: 400;
     line-height: 1.5rem;
     color: var(--text-default-grey);
     text-align: left;
     appearance: none;
-    background-color: var(--background-contrast-grey);
+    /* Setting !important here to avoid .fr-accordion__btn to hijack style */
+    background-color: var(--background-contrast-grey) !important;
     background-image: none;
     background-repeat: no-repeat;
     background-position: calc(100% - 1rem) 50%;
@@ -31,11 +45,12 @@
 
 .fr-treeselect__button::after {
     --icon-size: 1rem;
-    display: inline-block;
+    position: absolute;
+    right: 0.75rem;
     flex: 0 0 auto;
     width: var(--icon-size);
     height: var(--icon-size);
-    margin: auto 0 auto auto;
+    margin: auto 0 auto min(1.5rem, auto);
     vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
     content: "";
     background-color: currentColor;
@@ -44,12 +59,19 @@
     transition: transform 0.3s;
 }
 
+.fr-treeselect__wrapper {
+    width: 100% !important;
+}
+
 .fr-treeselect__collapse {
     --collapse-max-height: 24rem;
     --children-gap: 1rem;
     position: absolute;
-    z-index: 1;
+    z-index: calc(var(--ground) + 750);
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    overflow: hidden;
     background-color: var(--background-overlap-grey);
     filter: drop-shadow(var(--overlap-shadow));
 }
@@ -61,9 +83,8 @@
 }
 
 .fr-treeselect__collapse > .fr-treeselect__body {
-    flex-grow: 1;
     padding: var(--children-gap);
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .fr-treeselect__body .fr-collapse {
@@ -78,6 +99,9 @@
 .fr-treeselect__group-header > .fr-treeselect__group-selectable {
     display: flex;
     flex-direction: row;
+    width: 100%;
+    max-width: initial;
+    margin: 0;
 }
 
 .fr-treeselect__group-header > .fr-treeselect__group-selectable > .fr-label {
@@ -107,5 +131,52 @@
 
 .fr-treeselect__element > .fr-checkbox-group,
 .fr-treeselect__element > .fr-radio-group {
+    width: 100%;
+    max-width: 100%;
     margin: 1rem 0.5rem;
+}
+
+.fr-checkbox-group input[type="checkbox"] + label {
+    padding-left: 0.5rem;
+}
+
+/* Fix a weird behavior of radio markers in DSFR */
+.fr-radio-group input[type="radio"] + label {
+    padding-left: 2.5rem;
+    background-position: left center;
+}
+
+.fr-treeselect__selected .fr-tag .fr-btn {
+    max-width: none;
+    padding: 0.25rem;
+    margin: -0.25rem -0.75rem -0.25rem 0.5rem;
+    border-radius: 1rem;
+}
+
+.fr-treeselect__selected .fr-tag .fr-btn:before {
+    padding: 0;
+    margin: 0;
+}
+
+.fr-treeselect__head .fr-search-bar {
+    position: relative;
+}
+
+.fr-treeselect__head .fr-search-bar .fr-treeselect__search-bar-clear {
+    position: absolute;
+    top: 0;
+    right: 0;
+    max-width: 1.5rem;
+    max-height: 1.5rem;
+
+    padding: 0.25rem;
+    margin: 0.5rem 1rem;
+    background: transparent;
+    border-radius: 100%;
+}
+
+.fr-treeselect__head .fr-search-bar .fr-treeselect__search-bar-clear:before {
+    --icon-size: 1rem;
+    -webkit-mask-image: url("/static/dsfr/dist/icons/system/close-line.svg") !important;
+    mask-image: url("/static/dsfr/dist/icons/system/close-line.svg") !important;
 }

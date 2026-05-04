@@ -95,55 +95,35 @@ def test_display_of_notice_produit_field(live_server, mocked_authentification_us
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
 
-    expect(
-        creation_page.page.locator("#notice-container-produit").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).not_to_be_visible()
+    notice_element = creation_page.page.locator("#notice-container-produit")
+    expect(notice_element).not_to_be_visible()
     creation_page.set_categorie_produit_from_label("Produit non alimentaire > Autre produit non alimentaire")
-    expect(
-        creation_page.page.locator("#notice-container-produit").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).not_to_be_visible()
+    expect(notice_element).not_to_be_visible()
     creation_page.set_categorie_produit_from_label("Produit carné > PABV cuit - produit à base de viande cuit")
-    expect(
-        creation_page.page.locator("#notice-container-produit").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).to_be_visible()
+    expected = "Il existe des sous catégories pour « PABV cuit - produit à base de viande cuit » : pensez à préciser dès que possible."
+    expect(notice_element.get_by_text(expected)).to_be_visible()
 
 
 def test_display_of_notice_danger_field_not_shown(live_server, mocked_authentification_user, page: Page):
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
 
-    expect(
-        creation_page.page.locator("#notice-container-risque").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).not_to_be_visible()
+    notice_element = creation_page.page.locator("#notice-container-risque")
+    expect(notice_element).not_to_be_visible()
     creation_page.set_categorie_danger_from_label("Bactérie > Coliformes")
-    expect(
-        creation_page.page.locator("#notice-container-risque").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).not_to_be_visible()
+    expect(notice_element).not_to_be_visible()
 
 
 def test_display_of_notice_danger_field_shown(live_server, mocked_authentification_user, page: Page):
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate()
 
-    expect(
-        creation_page.page.locator("#notice-container-risque").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
-        )
-    ).not_to_be_visible()
+    notice_element = creation_page.page.locator("#notice-container-risque")
+    expect(notice_element).not_to_be_visible()
     creation_page.set_categorie_danger_from_label("Bactérie > Clostridium")
     expect(
-        creation_page.page.locator("#notice-container-risque").get_by_text(
-            "Catégorie de niveau 2 sélectionnée : pensez à préciser dès que possible."
+        notice_element.get_by_text(
+            "Il existe des sous catégories pour « Clostridium » : pensez à préciser dès que possible."
         )
     ).to_be_visible()
 

@@ -103,7 +103,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees(live_server, pag
     assert all(detection in detections_hors_zone_infestee for detection in fiche_from_db.fichedetection_set.all())
 
     # Vérification des zones infestées
-    zones_infestees_from_db = fiche_from_db.zoneinfestee_set.all()
+    zones_infestees_from_db = fiche_from_db.zones_infestees.all()
     assert zones_infestees_from_db.count() == 2
     for zone_infestee, detections_zone_infestee, zone_infestee_from_db in zip(
         [zone_infestee1, zone_infestee2],
@@ -146,7 +146,7 @@ def test_can_create_fiche_zone_delimitee_with_2_zones_infestees_and_delete_one(l
     assert all(detection in detections_hors_zone_infestee for detection in fiche_from_db.fichedetection_set.all())
 
     # Vérification des zones infestées
-    zones_infestees_from_db = fiche_from_db.zoneinfestee_set.all()
+    zones_infestees_from_db = fiche_from_db.zones_infestees.all()
     assert zones_infestees_from_db.count() == 1
     for zone_infestee, detections_zone_infestee, zone_infestee_from_db in zip(
         [zone_infestee2],
@@ -277,16 +277,16 @@ def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
         "evenement": evenement.pk,
         "latest_version": "0",
         "commentaire": "",
-        "zoneinfestee_set-TOTAL_FORMS": "1",
-        "zoneinfestee_set-INITIAL_FORMS": "0",
-        "zoneinfestee_set-MIN_NUM_FORMS": "0",
-        "zoneinfestee_set-MAX_NUM_FORMS": "1000",
-        "zoneinfestee_set-0-nom": "",
-        "zoneinfestee_set-0-caracteristique_principale": "",
-        "zoneinfestee_set-0-rayon": "",
-        "zoneinfestee_set-0-unite_rayon": "km",
-        "zoneinfestee_set-0-surface_infestee_totale": "",
-        "zoneinfestee_set-0-unite_surface_infestee_totale": "m2",
+        "zones_infestees-TOTAL_FORMS": "1",
+        "zones_infestees-INITIAL_FORMS": "0",
+        "zones_infestees-MIN_NUM_FORMS": "0",
+        "zones_infestees-MAX_NUM_FORMS": "1000",
+        "zones_infestees-0-nom": "",
+        "zones_infestees-0-caracteristique_principale": "",
+        "zones_infestees-0-rayon": "",
+        "zones_infestees-0-unite_rayon": "km",
+        "zones_infestees-0-surface_infestee_totale": "",
+        "zones_infestees-0-unite_surface_infestee_totale": "m2",
         "rayon_zone_tampon": "",
         "unite_rayon_zone_tampon": "km",
         "surface_tampon_totale": "",

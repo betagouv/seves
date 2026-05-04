@@ -231,6 +231,7 @@ OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
 OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
+OIDC_TIMEOUT = env("OIDC_RP_TIMEOUT", int, default=20)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -269,6 +270,7 @@ CELERY_TASK_ALWAYS_EAGER = env("CELERY_TASK_ALWAYS_EAGER", default=False)
 if not CELERY_TASK_ALWAYS_EAGER:
     CELERY_BROKER_URL = env.cache_url("SCALINGO_REDIS_URL")["LOCATION"]
     CELERY_REDIS_SOCKET_KEEPALIVE = True
+    CELERY_BROKER_CONNECTION_MAX_RETRIES = None
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -309,6 +311,14 @@ SECURE_CSP = {
         "s3.rbx.io.cloud.ovh.net",
         "s3.eu-west-par.io.cloud.ovh.net",
     ),
+    "object-src": (
+        "s3.rbx.io.cloud.ovh.net",
+        "s3.eu-west-par.io.cloud.ovh.net",
+    ),
+    "frame-src": (
+        "s3.rbx.io.cloud.ovh.net",
+        "s3.eu-west-par.io.cloud.ovh.net",
+    ),
     "connect-src": (
         CSP.SELF,
         "geo.api.gouv.fr",
@@ -321,6 +331,8 @@ SECURE_CSP = {
 
 if DEBUG:
     SECURE_CSP["img-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
+    SECURE_CSP["object-src"] = (CSP.SELF, "127.0.0.1:9000")
+    SECURE_CSP["frame-src"] = (CSP.SELF, "127.0.0.1:9000")
 
 if ENVIRONMENT != "test":
     SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)

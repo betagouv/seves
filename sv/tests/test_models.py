@@ -28,7 +28,6 @@ from sv.models import (
     PositionChaineDistribution,
     Prelevement,
     Region,
-    SiteInspection,
     StatutEtablissement,
     StatutEvenement,
     StatutReglementaire,
@@ -376,7 +375,6 @@ def test_departement_unique_constraints(test_data, region_fixture, should_raise,
         (StatutEtablissement, "libelle", "Statut établissement"),
         (PositionChaineDistribution, "libelle", "Position chaine distribution"),
         (StructurePreleveuse, "nom", "Structure preleveuse"),
-        (SiteInspection, "nom", "Site d'inspection"),
         (MatricePrelevee, "libelle", "Matrice prelevee"),
         (Laboratoire, "nom", "Laboratoire"),
         (StatutEvenement, "libelle", "Statut de l'événement"),
@@ -514,7 +512,7 @@ def test_delete_fiche_zone_creates_revision_on_evenement():
     evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone)
     latest_version = evenement.latest_version
     fiche_zone_id = fiche_zone.id
-    zones_infestees = list(fiche_zone.zoneinfestee_set.all())
+    zones_infestees = list(fiche_zone.zones_infestees.all())
 
     fiche_zone.refresh_from_db()
     fiche_zone.delete()

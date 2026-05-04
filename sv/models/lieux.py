@@ -6,6 +6,7 @@ import reversion
 
 from core.model_mixins import WithLocalisableMixin
 from core.models import Departement, Region  # noqa F403
+from sv.constants import SiteInspection as SiteInspectionChoices
 
 
 class PositionChaineDistribution(models.Model):
@@ -103,12 +104,10 @@ class Lieu(WithLocalisableMixin, models.Model):
             ),
         ],
     )
-    site_inspection = models.ForeignKey(
-        "SiteInspection",
-        on_delete=models.PROTECT,
-        verbose_name="Site d'inspection",
-        blank=True,
-        null=True,
+    site_inspection = models.CharField(
+        "Site d'inspection",
+        choices=SiteInspectionChoices,
+        default=SiteInspectionChoices.INCONNU,
     )
     position_chaine_distribution_etablissement = models.ForeignKey(
         "PositionChaineDistribution",
