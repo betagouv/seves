@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
@@ -405,6 +406,15 @@ class Document(models.Model):
             )
         if self.file and self.document_type:
             self.validate_file_extention_for_document_type(self.file, self.document_type)
+
+    @property
+    def pdf_preview_url(self):
+        return default_storage.url(
+            self.file.name,
+            parameters={
+                "ResponseContentDisposition": "inline",
+            },
+        )
 
 
 @reversion.register()
