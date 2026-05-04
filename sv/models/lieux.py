@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django_countries.fields import CountryField
 import reversion
 
+from core.diffs import force_update_on_version
 from core.model_mixins import WithLocalisableMixin
 from core.models import Departement, Region  # noqa F403
 from sv.constants import SiteInspection
@@ -124,9 +125,7 @@ class Lieu(WithLocalisableMixin, models.Model):
         return str(self.nom)
 
     def save(self, *args, **kwargs):
-        from sv.models import FicheDetection
-
         with transaction.atomic():
             with reversion.create_revision():
                 super().save(*args, **kwargs)
-            FicheDetection.objects.update_date_derniere_mise_a_jour(self.fiche_detection.id)
+                force_update_on_version(self.fiche_detection)

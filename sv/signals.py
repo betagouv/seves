@@ -4,7 +4,8 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 import reversion
 
-from sv.models import Evenement, FicheZoneDelimitee, VersionFicheZoneDelimitee
+from core.diffs import force_update_on_version
+from sv.models import FicheZoneDelimitee, Lieu, VersionFicheZoneDelimitee
 
 
 @receiver(pre_delete, sender=FicheZoneDelimitee)
@@ -20,4 +21,10 @@ def create_evenement_version_on_fiche_zone_delimitee_delete(sender, instance: Fi
             zone_data["zones_infestees"] = [model_to_dict(zi) for zi in zones_infestees]
             reversion.add_to_revision(evenement)
             reversion.add_meta(VersionFicheZoneDelimitee, fiche_zone_delimitee_data=zone_data)
-        Evenement.objects.update_date_derniere_mise_a_jour(evenement.id)
+
+
+@receiver(pre_delete, sender=Lieu)
+def create_version_on_fiche_detection_when_lieu_is_deleted_without_any_other_modification(
+    sender, instance: Lieu, **kwargs
+):
+    force_update_on_version(instance.fiche_detection)
