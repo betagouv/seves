@@ -18,6 +18,8 @@ from core.model_mixins import (
     WithBlocCommunFieldsMixin,
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
+    WithLastUpdatedDatetime,
+    update_last_updated_on_revision,
 )
 from core.models import Document, LienLibre, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -25,9 +27,9 @@ from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from ..managers import EvenementManager
 from .common import OrganismeNuisible, StatutReglementaire
 from .fiches_zone_delimitee import FicheZoneDelimitee
-from .models_mixins import WithDerniereMiseAJourMixin
 
 
+@update_last_updated_on_revision
 @reversion.register(follow=["contacts", "messages", "documents", "fiche_zone_delimitee", "detections"])
 class Evenement(
     AllowACNotificationMixin,
@@ -39,7 +41,7 @@ class Evenement(
     EmailNotificationMixin,
     WithFicheDocumentPermissionMixin,
     WithContactPermissionMixin,
-    WithDerniereMiseAJourMixin,
+    WithLastUpdatedDatetime,
     WithBlocCommunFieldsMixin,
     models.Model,
 ):
