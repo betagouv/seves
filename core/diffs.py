@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
+import json
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -95,6 +96,16 @@ def create_manual_version(obj, comment, user=None):
         db="default",
     )
     return revision
+
+
+def force_update_on_version(object):
+    last_version = Version.objects.get_for_object(object).first()
+    if last_version:
+        data = json.loads(last_version.serialized_data)
+        if isinstance(data, list) and len(data) > 0:
+            data[0]["fields"]["_forced_update_trigger"] = str(timezone.now())
+            last_version.serialized_data = json.dumps(data)
+            last_version.save(update_fields=["serialized_data"])
 
 
 @cache

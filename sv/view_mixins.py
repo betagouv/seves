@@ -1,14 +1,12 @@
 from collections import defaultdict
-import json
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch
 from django.http import Http404
-from django.utils import timezone
 import reversion
-from reversion.models import Version
 
+from core.diffs import force_update_on_version
 from core.mixins import WithOrderingMixin
 from sv.forms import (
     PrelevementForm,
@@ -95,14 +93,8 @@ class WithPrelevementHandlingMixin:
                     lieu = prelevement.lieu
                     reversion.add_to_revision(lieu)
                     reversion.set_user(self.request.user)
-
-                last_version = Version.objects.get_for_object(lieu).first()
-                if last_version:
-                    data = json.loads(last_version.serialized_data)
-                    if isinstance(data, list) and len(data) > 0:
-                        data[0]["fields"]["_forced_update_trigger"] = str(timezone.now())
-                        last_version.serialized_data = json.dumps(data)
-                        last_version.save(update_fields=["serialized_data"])
+                force_update_on_version(lieu)
+                force_update_on_version(lieu.fiche_detection)
             else:
                 error_msg = ""
                 for field, error in prelevement_form.errors.items():
@@ -172,7 +164,7 @@ class WithFilteredListMixin(WithOrderingMixin):
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "organisme": "organisme_nuisible__libelle_court",
             "publication": "date_publication",
-            "maj": "date_derniere_mise_a_jour_globale",
+            "maj": "last_updated",
             "createur": "createur__libelle",
             "etat": "etat",
             "visibilite": "visibilite",
@@ -192,7 +184,6 @@ class WithFilteredListMixin(WithOrderingMixin):
             .with_fin_de_suivi(contact)
             .with_nb_fiches_detection()
             .optimized_for_list()
-            .with_date_derniere_mise_a_jour()
         )
 
     def get_queryset(self):

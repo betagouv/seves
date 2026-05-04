@@ -323,12 +323,19 @@ class EvenementFactory(DjangoModelFactory):
 
     @factory.post_generation
     def date_creation(self, create, extracted, **kwargs):  # noqa: F811
-        if extracted and create:
-            if isinstance(extracted, str):
-                self.date_creation = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
-            else:
-                self.date_creation = extracted
-            self.save()
+        if not create:
+            return
+
+        if isinstance(extracted, str):
+            date = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
+        elif extracted:
+            date = extracted
+        else:
+            date = self.date_creation
+
+        self.date_creation = date
+        self.last_updated = date
+        self.save()
 
     @factory.post_generation
     def date_publication(self, create, extracted, **kwargs):  # noqa: F811

@@ -148,7 +148,7 @@ def choice_js_option_disabled(db, page):
 @pytest.fixture
 def choice_js_get_values(db, page):
     def _choice_js_get_values(page, locator, delete_remove_link=False):
-        selected_options = page.locator(f'{locator} ~ div [aria-selected="true"]')
+        selected_options = page.locator(f'{locator} ~ div [aria-selected="true"]:not(.choices__list--dropdown *)')
         texts = []
         for i in range(selected_options.count()):
             text = selected_options.nth(i).inner_text()

@@ -8,14 +8,14 @@ import reversion
 from reversion.models import Revision, Version
 
 from core.constants import UnitesMesure
+from core.diffs import force_update_on_version
 from core.models import Structure
 from core.versions import get_versions_from_ids
 from sv.managers import FicheZoneManager
-from sv.models.models_mixins import WithDerniereMiseAJourMixin
 
 
 @reversion.register(follow=["zones_infestees"])
-class FicheZoneDelimitee(WithDerniereMiseAJourMixin, models.Model):
+class FicheZoneDelimitee(models.Model):
     class UnitesRayon(TextChoices):
         METRE = UnitesMesure.METRE
         KILOMETRE = UnitesMesure.KILOMETRE
@@ -189,7 +189,7 @@ class ZoneInfestee(models.Model):
         with transaction.atomic():
             with reversion.create_revision():
                 super().save(*args, **kwargs)
-            FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.fiche_zone_delimitee.id)
+            force_update_on_version(self.fiche_zone_delimitee)
 
     def __str__(self):
         return self.nom or "Zone infestée sans nom"
