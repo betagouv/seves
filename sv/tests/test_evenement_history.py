@@ -245,6 +245,7 @@ def test_evenement_history_only_one_entry_when_lieu_is_deleted(
     page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.save_btn.click()
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
