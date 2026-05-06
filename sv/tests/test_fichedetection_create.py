@@ -975,6 +975,7 @@ def test_lieu_map(
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
 
     map = page.locator("canvas").locator("visible=true")
     box = map.bounding_box()
