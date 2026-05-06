@@ -19,7 +19,7 @@
                             >
                                 Ajouter un lieu
                             </h1>
-                            {% if delete %}
+                            {% if existing_object %}
                                 <p class="fr-hidden">{{ form.DELETE }}</p>
                             {% endif %}
 
@@ -35,8 +35,7 @@
                             <fieldset>
                                 <legend class="fr-fieldset__legend fr-m-0 fr-p-0">Localisation</legend>
                                 <span class="fr-hint-text fr-mb-1w">Placez votre repère en double cliquant sur la zone correspondante, en recherchant une adresse ou renseignez manuellement les coordonnées GPS</span>
-
-                                <div class="map-container"
+                                <div class="map-container" {% if existing_object %}data-controller="map"{% endif %}
                                      data-map-json-file-value="{% static 'core/style_ign.json' %}"
                                      data-map-reverse-api-value="{{ REVERSE_GEO_API }}"
                                      data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
