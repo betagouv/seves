@@ -1,0 +1,18 @@
+{% load dsfr_tags set_context_var widget_tweaks %}
+
+{% if form.instance.pk %}{{ form.id }}{% endif %}
+
+{% dsfr_form_field form.type %}
+<fieldset class="fr-mb-6v" data-controller="espece-search" data-testid="espece-search">
+    {% dsfr_form_field form.espece|set_data:"espece-search-target:select" %}
+</fieldset>
+<fieldset class="fr-fieldset fr-mb-0">
+    <div class="fr-fieldset__element fr-fieldset__element--inline fr-fieldset__element--inline-grow">
+        {% dsfr_form_field form.quantite %}
+    </div>
+    <div class="fr-fieldset__element fr-fieldset__element--inline">
+        {% set_context_var form.quantite_unite.field.widget "inline" True %}
+        {% dsfr_form_field form.quantite_unite %}
+    </div>
+</fieldset>
+{% dsfr_form_field form.comments %}

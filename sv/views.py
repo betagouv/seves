@@ -21,6 +21,7 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
+from django.views.generic.edit import FormMixin
 from docxtpl import DocxTemplate
 import reversion
 from reversion.models import Version
@@ -46,6 +47,7 @@ from core.mixins import (
 from core.models import Contact
 from core.redirect import safe_redirect
 from sv.forms import (
+    ElementInfesteFormSet,
     EvenementForm,
     EvenementUpdateForm,
     EvenementVisibiliteUpdateForm,
@@ -194,7 +196,28 @@ class EvenementUpdateView(
         return context
 
 
+class FicheDetectionViewMixin(FormMixin, MediaDefiningMixin):
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["element_infeste_formset"].media
+
+    def get_element_infeste_formset_kwargs(self):
+        return super().get_form_kwargs()
+
+    def get_element_infeste_formset(self, *, instance=None):
+        kwargs = self.get_element_infeste_formset_kwargs()
+        if instance:
+            kwargs["instance"] = instance
+        return ElementInfesteFormSet(**kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context["form"]
+        context["element_infeste_formset"] = self.get_element_infeste_formset(instance=form.instance)
+        return context
+
+
 class FicheDetectionCreateView(
+    FicheDetectionViewMixin,
     WithStatusToOrganismeNuisibleMixin,
     WithPrelevementHandlingMixin,
     WithPrelevementResultatsMixin,
@@ -253,6 +276,7 @@ class FicheDetectionCreateView(
         self.object = None
         form = self.get_form()
         lieu_formset = LieuFormSet(request.POST)
+        elements_infestes = self.get_element_infeste_formset(instance=form.instance)
 
         if self.evenement:
             evenement_data = {
@@ -263,7 +287,7 @@ class FicheDetectionCreateView(
         else:
             evenement_form = EvenementForm(request.POST, user=self.request.user)
 
-        if not form.is_valid():
+        if not form.is_valid() or not elements_infestes.is_valid():
             return self.form_invalid(form)
 
         if not lieu_formset.is_valid():
@@ -290,6 +314,7 @@ class FicheDetectionCreateView(
                 reversion.add_to_revision(self.object.evenement)
                 reversion.set_user(self.request.user)
 
+            elements_infestes.save()
             lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             allowed_lieux = Lieu.objects.filter(pk__in=[lieu.id for lieu in allowed_lieux])
@@ -307,6 +332,7 @@ class FicheDetectionCreateView(
 
 
 class FicheDetectionUpdateView(
+    FicheDetectionViewMixin,
     WithStatusToOrganismeNuisibleMixin,
     WithPrelevementHandlingMixin,
     WithAddUserContactsMixin,
@@ -393,7 +419,9 @@ class FicheDetectionUpdateView(
             queryset=Lieu.objects.filter(fiche_detection=self.get_object()),
         )
 
-        if not form.is_valid():
+        elements_infestes = self.get_element_infeste_formset(instance=self.object)
+
+        if not form.is_valid() or not elements_infestes.is_valid():
             return self.form_invalid(form)
 
         if not lieu_formset.is_valid():
@@ -403,6 +431,7 @@ class FicheDetectionUpdateView(
             self.object = form.save()
             lieu_formset.save()
             allowed_lieux = self.object.lieux.all()
+            elements_infestes.save()
             try:
                 self._save_prelevement_if_not_empty(
                     request.POST.copy(), allowed_lieux, check_for_inactive_values=True, detection=self.object

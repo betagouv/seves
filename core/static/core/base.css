@@ -289,3 +289,9 @@ fieldset {
 .pdf-modal object {
     min-height: 400px;
 }
+
+.with-empty-placeholder:has(.with-empty-placeholder--item:not(.fr-hidden, [hidden], [aria-hidden]))
+    .with-empty-placeholder--placeholder,
+.with-empty-placeholder .with-empty-placeholder--placeholder-hidden {
+    display: none;
+}

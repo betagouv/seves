@@ -1,9 +1,10 @@
 from datetime import datetime
 import json
 from unittest import mock
+from urllib.parse import urlparse
 
 from django.conf import settings
-from django.urls import reverse
+from django.urls import resolve, reverse
 from playwright.sync_api import Page, expect
 import pytest
 
@@ -13,6 +14,7 @@ from core.models import Contact
 from sv.constants import CONTEXTES, STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES
 
 from ..factories import (
+    ElementInfesteFactory,
     EspeceEchantillonFactory,
     EvenementFactory,
     FicheDetectionFactory,
@@ -35,6 +37,7 @@ from ..models import (
     StatutEvenement,
     StatutReglementaire,
 )
+from .pages import ElementsInfestesPage, NewEvenementPage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -1156,3 +1159,71 @@ def test_fiche_detection_organisme_nuisible_are_sorted(live_server, page: Page, 
         "Allard",
         "Zallard",
     ]
+
+
+@pytest.mark.parametrize(
+    "scenario,should_remain",
+    (
+        ({"total": 1}, 1),
+        ({"total": 2}, 2),
+        ({"total": 3}, 3),
+        ({"total": 5, "cancel": 2, "remove": 1}, 2),
+        ({"total": 3, "remove": 1}, 2),
+        ({"total": 3, "remove": 3}, 0),
+    ),
+    ids=lambda scenario, *_: f"{scenario!r}",
+)
+def test_elements_infestes(live_server, page: Page, assert_models_are_equal, scenario, should_remain):
+    scenario = {"cancel": 0, "remove": 0, **scenario}
+
+    add_count = scenario["total"] - scenario["cancel"] - scenario["remove"]
+    to_add = ElementInfesteFactory.build_batch(add_count, espece=EspeceEchantillonFactory())
+    to_cancel = ElementInfesteFactory.build_batch(scenario["cancel"], espece=EspeceEchantillonFactory())
+    to_remove = ElementInfesteFactory.build_batch(scenario["remove"], espece=EspeceEchantillonFactory())
+
+    all_elements = [*to_add, *to_cancel, *to_remove]
+
+    fiche: FicheDetection = FicheDetectionFactory.build(
+        evenement__organisme_nuisible=OrganismeNuisibleFactory(),
+        evenement__statut_reglementaire=StatutReglementaireFactory(),
+    )
+
+    evenement_page = NewEvenementPage(page, live_server)
+    elements_infestes_page = ElementsInfestesPage(page)
+
+    evenement_page.navigate()
+    expect(elements_infestes_page.empty_message).to_be_visible()
+
+    evenement_page.fill_required(fiche)
+
+    for element in all_elements:
+        should_cancel = element in to_cancel
+        elements_infestes_page.fill_form_and_check(element, action="cancel" if should_cancel else "save")
+
+        if not should_cancel:
+            generated_card = elements_infestes_page.elements_cards.last
+            expect(generated_card.locator(".fr-card__title")).to_contain_text(element.get_type_display())
+            expect(generated_card.locator(".fr-card__desc")).to_contain_text(f"Espèce végétale : {element.espece}")
+
+            if element.quantite:
+                expect(generated_card.locator(".fr-card__desc")).to_contain_text(
+                    f"Quantité d’éléments infestés : {element.quantite_with_unite}"
+                )
+
+        if element in to_remove:
+            elements_infestes_page.action_on_card(elements_infestes_page.elements_cards.count() - 1, action="remove")
+
+    if should_remain:
+        expect(elements_infestes_page.empty_message).not_to_be_visible()
+    else:
+        expect(elements_infestes_page.empty_message).to_be_visible()
+
+    evenement_page.end_with(action="save")
+
+    numero_annee, numero_evenement = resolve(urlparse(page.url).path).kwargs["numero"].split(".")
+    fiche = FicheDetection.objects.get(
+        evenement__numero_annee=numero_annee, evenement__numero_evenement=numero_evenement
+    )
+    assert fiche.elements_infestes.count() == should_remain
+    for expected, actual in zip(to_add, fiche.elements_infestes.all()):
+        assert_models_are_equal(expected, actual, to_exclude=("_state", "id", "fiche_detection_id"))

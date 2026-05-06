@@ -4,7 +4,7 @@ import {Controller} from "Stimulus"
 /**
  * Base controller for forms that generate cards and handle deletion.
  * @property {HTMLElement[]} cardContainerTargets
- * @property {HTMLFormElement} fieldsetTarget
+ * @property {HTMLFieldSetElement} fieldsetTarget
  * @property {HTMLInputElement} deleteInputTarget
  * @property {HTMLDialogElement} dialogTarget
  * @property {HTMLDialogElement} deleteModalTarget
@@ -22,6 +22,14 @@ export class BaseFormInModal extends Controller {
         dsfr(this.dialogTarget).modal.conceal()
     }
 
+    /**
+     * Performs additionnal validation. Can be overriden in children
+     * @param formValues
+     */
+    clean(formValues) {
+        return true
+    }
+
     onValidateForm() {
         const formValues = collectFormValues(this.fieldsetTarget, {
             nameTransform: name => name.replace(`${this.formPrefixValue}-`, ""),
@@ -29,6 +37,7 @@ export class BaseFormInModal extends Controller {
         if (formValues === undefined) {
             return
         }
+        if (!this.clean(formValues)) return
         this.initCard(formValues)
     }
 
@@ -128,6 +137,7 @@ export class BaseFormInModal extends Controller {
                 aria-labelledby="delete-modal-title"
                 aria-modal="true"
                 data-${this.identifier}-target="deleteModal"
+                data-testid="deletion-confirmation"
             >
                 <div class="fr-container fr-container--fluid">
                     <div class="fr-grid-row fr-grid-row--center">
