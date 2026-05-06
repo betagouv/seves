@@ -355,6 +355,7 @@ def test_update_lieu(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_test_id("lieu-edit-btn").click()
+    expect(lieu_form_elements.map_canvas).to_be_visible()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
