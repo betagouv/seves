@@ -13,6 +13,7 @@ from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ngettext
 from django.views import View
@@ -652,11 +653,15 @@ class ZipDownloadView(UserPassesTestMixin, View):
         buffer = io.BytesIO()
 
         with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+            now = timezone.localtime(timezone.now()).timetuple()[:6]
             for obj in queryset:
                 f = obj.file
                 f.open("rb")
 
-                with zip_file.open(f.name.split("/")[-1], "w") as dest:
+                filename = f.name.split("/")[-1]
+                info = zipfile.ZipInfo(filename)
+                info.date_time = now
+                with zip_file.open(info, "w") as dest:
                     for chunk in f.chunks():
                         dest.write(chunk)
 
