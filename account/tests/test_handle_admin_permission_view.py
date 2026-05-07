@@ -46,7 +46,7 @@ def test_can_add_admin_permissions(
     assert agent_already_admin.agent_with_structure in choice_js_get_all_values(page, ".choices")
 
     choice_js_fill(page, ".choices", agent_will_be_admin.agent_with_structure, agent_will_be_admin.agent_with_structure)
-    page.get_by_label("Alim").check(force=True)
+    page.locator(".white-container").get_by_text("Alim", exact=True).check()
     page.get_by_role("button", name="Accorder le rôle administrateur").click()
     page.get_by_role("button", name="Confirmer le rôle d’administrateur").click()
     expect(page.get_by_text("Le rôle administrateur a été accordé")).to_be_visible()
@@ -118,8 +118,8 @@ def test_can_add_admin_permissions_to_user_with_existing_permissions(
     expect(page.locator("table").get_by_text(agent_already_admin.agent_with_structure, exact=True)).to_be_visible()
 
     choice_js_fill(page, ".choices", agent_already_admin.agent_with_structure, agent_already_admin.agent_with_structure)
-    page.get_by_label("Alim").check(force=True)
-    page.get_by_label("SV").uncheck(force=True)
+    page.locator(".white-container").get_by_text("Alim", exact=True).check()
+    page.locator(".white-container").get_by_text("SV", exact=True).uncheck()
     page.get_by_role("button", name="Accorder le rôle administrateur").click()
     page.get_by_role("button", name="Confirmer le rôle d’administrateur").click()
     expect(page.get_by_text("Le rôle administrateur a été accordé")).to_be_visible()
@@ -130,3 +130,6 @@ def test_can_add_admin_permissions_to_user_with_existing_permissions(
     agent_already_admin.refresh_from_db()
     assert agent_already_admin.user.is_active is True
     assert set(agent_already_admin.user.groups.values_list("name", flat=True)) == {CAN_GIVE_ACCESS_GROUP, SSA_GROUP}
+
+
+# TODO ajouter le filtre sur les structures + test

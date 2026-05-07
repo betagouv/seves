@@ -169,12 +169,10 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
             admin.domains = ", ".join([g.name.split("_user")[0].title() for g in app_groups_for_user])
             admin.domains = admin.domains.replace("Ssa", "Alim")
 
-        # TODO maybe clean this code a bit
         users_with_groups = [u for u in self.get_users_for_add_admin_form() if u.groups.all()]
         map = {settings.SV_GROUP: "SV", settings.SSA_GROUP: "SSA"}
-        context["user_to_groups"] = json.dumps(
-            {u.id: list(map.get(g.name, "") for g in u.groups.all()) for u in users_with_groups}
-        )
+        user_id_to_group_list = {u.id: list(map.get(g.name, "") for g in u.groups.all()) for u in users_with_groups}
+        context["user_to_groups"] = json.dumps(user_id_to_group_list)
         return context
 
     def get_media(self, **context_data):
