@@ -17,3 +17,6 @@
 td {
     white-space: unset !important;
 }
+.search-btn {
+    margin-top: auto;
+}
