@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <div data-controller="permissions-admin-form">
+    <div data-controller="permissions-admin-form" data-permissions-admin-form-config-value="{{ user_to_groups }}">
         <dialog id="fr-modal-add-user" class="fr-modal" aria-labelledby="modal-title" aria-modal="true" data-permissions-admin-form-target="confirmModal">
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
@@ -57,13 +57,19 @@
                                     <span>Pour le(s) domaine(s)</span>
                                     <div class="fr-fieldset__element fr-fieldset__element--inline">
                                         <div class="fr-checkbox-group">
-                                            <input name="domains" id="checkbox-10" type="checkbox" value="SSA" data-action="permissions-admin-form#handleButtonState">
+                                            <input name="domains" id="checkbox-10" type="checkbox" value="SSA"
+                                                   data-action="permissions-admin-form#handleButtonState"
+                                                   data-permissions-admin-form-target="SSACheckbox"
+                                            >
                                             <label class="fr-label" for="checkbox-10"> Alim </label>
                                         </div>
                                     </div>
                                     <div class="fr-fieldset__element fr-fieldset__element--inline">
                                         <div class="fr-checkbox-group">
-                                            <input name="domains" id="checkbox-11" type="checkbox" value="SV" data-action="permissions-admin-form#handleButtonState">
+                                            <input name="domains" id="checkbox-11" type="checkbox" value="SV"
+                                                   data-action="permissions-admin-form#handleButtonState"
+                                                   data-permissions-admin-form-target="SVCheckbox"
+                                            >
                                             <label class="fr-label" for="checkbox-11"> SV </label>
                                         </div>
                                     </div>

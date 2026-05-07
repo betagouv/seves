@@ -6,7 +6,6 @@ from dsfr.forms import DsfrBaseForm
 from core.fields import DSFRCheckboxInput
 from core.form_mixins import js_module
 from core.forms import DSFRForm
-from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP, SV_GROUP
 
 User = get_user_model()
 
@@ -41,17 +40,9 @@ class AddAdminForm(DsfrBaseForm, forms.Form):
     domains = forms.MultipleChoiceField(choices=[("SV", "SV"), ("SSA", "SSA")], widget=CheckboxSelectMultiple)
 
     def __init__(self, *args, **kwargs):
+        users = kwargs.pop("users")
         super().__init__(*args, **kwargs)
-        groups = [CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP]
-        existing_admin_with_all_groups = User.objects
-
-        for g in groups:
-            existing_admin_with_all_groups = existing_admin_with_all_groups.filter(groups__name=g)
-
-        existing_admin_with_all_groups = existing_admin_with_all_groups.values_list("pk", flat=True)
-        self.fields["user"].queryset = User.objects.exclude(pk__in=existing_admin_with_all_groups).select_related(
-            "agent", "agent__structure"
-        )
+        self.fields["user"].queryset = users
         self.fields["user"].label_from_instance = lambda obj: obj.agent.agent_with_structure
 
     @property

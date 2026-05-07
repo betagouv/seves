@@ -1,4 +1,5 @@
 from collections import defaultdict
+import json
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -15,7 +16,7 @@ from core.mixins import MediaDefiningMixin
 from core.models import Contact
 from core.redirect import safe_redirect
 from seves import settings
-from seves.settings import CAN_GIVE_ACCESS_GROUP
+from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP, SV_GROUP
 
 User = get_user_model()
 
@@ -133,9 +134,32 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         return (
             Group.objects.get(name=CAN_GIVE_ACCESS_GROUP)
             .user_set.all()
-            .prefetch_related("groups")
+            .prefetch_related("groups")  # TODO why this ?
             .select_related("agent", "agent__structure")
         )
+
+    def get_users_for_add_admin_form(self):
+        if hasattr(self, "users_for_add_admin_form"):
+            return self.users_for_add_admin_form
+
+        groups = [CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP]
+        existing_admin_with_all_groups = User.objects
+
+        for g in groups:
+            existing_admin_with_all_groups = existing_admin_with_all_groups.filter(groups__name=g)
+
+        existing_admin_with_all_groups = existing_admin_with_all_groups.values_list("pk", flat=True)
+        self.users_for_add_admin_form = (
+            User.objects.exclude(pk__in=existing_admin_with_all_groups)
+            .select_related("agent", "agent__structure")
+            .prefetch_related("groups")
+        )
+        return self.users_for_add_admin_form
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["users"] = self.get_users_for_add_admin_form()
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -144,6 +168,13 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
             app_groups_for_user = [g for g in admin.groups.all() if g.name in [settings.SV_GROUP, settings.SSA_GROUP]]
             admin.domains = ", ".join([g.name.split("_user")[0].title() for g in app_groups_for_user])
             admin.domains = admin.domains.replace("Ssa", "Alim")
+
+        # TODO maybe clean this code a bit
+        users_with_groups = [u for u in self.get_users_for_add_admin_form() if u.groups.all()]
+        map = {settings.SV_GROUP: "SV", settings.SSA_GROUP: "SSA"}
+        context["user_to_groups"] = json.dumps(
+            {u.id: list(map.get(g.name, "") for g in u.groups.all()) for u in users_with_groups}
+        )
         return context
 
     def get_media(self, **context_data):
@@ -160,8 +191,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         form = self.get_form()
         if form.is_valid():
             return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+        return self.form_invalid(form)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -172,8 +202,12 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         user.save()
         if "SV" in form.cleaned_data["domains"]:
             user.groups.add(Group.objects.get(name=settings.SV_GROUP))
+        else:
+            user.groups.add(Group.objects.get(name=settings.SV_GROUP))
         if "SSA" in form.cleaned_data["domains"]:
             user.groups.add(Group.objects.get(name=settings.SSA_GROUP))
+        else:
+            user.groups.remove(Group.objects.get(name=settings.SSA_GROUP))
 
         notify_new_admin_permission(user.agent.contact_set.get(), form.cleaned_data["domains"])
         messages.success(self.request, "Le rôle administrateur a été accordé")
