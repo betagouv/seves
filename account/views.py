@@ -203,7 +203,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         if "SV" in form.cleaned_data["domains"]:
             user.groups.add(Group.objects.get(name=settings.SV_GROUP))
         else:
-            user.groups.add(Group.objects.get(name=settings.SV_GROUP))
+            user.groups.remove(Group.objects.get(name=settings.SV_GROUP))
         if "SSA" in form.cleaned_data["domains"]:
             user.groups.add(Group.objects.get(name=settings.SSA_GROUP))
         else:
