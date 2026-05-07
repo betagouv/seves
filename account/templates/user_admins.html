@@ -58,7 +58,7 @@
                                     <div class="fr-fieldset__element fr-fieldset__element--inline">
                                         <div class="fr-checkbox-group">
                                             <input name="domains" id="checkbox-10" type="checkbox" value="SSA" data-action="permissions-admin-form#handleButtonState">
-                                            <label class="fr-label" for="checkbox-10"> SSA </label>
+                                            <label class="fr-label" for="checkbox-10"> Alim </label>
                                         </div>
                                     </div>
                                     <div class="fr-fieldset__element fr-fieldset__element--inline">
@@ -98,6 +98,9 @@
                                             Accordé à
                                         </th>
                                         <th scope="col">
+                                            Email
+                                        </th>
+                                        <th scope="col">
                                             Accordé pour
                                         </th>
                                         <th scope="col">
@@ -113,6 +116,9 @@
                                         <tr>
                                             <td>
                                                 {{ existing.agent.agent_with_structure }}
+                                            </td>
+                                            <td>
+                                                {{ existing.email }}
                                             </td>
                                             <td>
                                                 {{ existing.agent.structure }}

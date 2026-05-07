@@ -1,13 +1,12 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.forms import CheckboxSelectMultiple, Media
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import DSFRCheckboxInput
 from core.form_mixins import js_module
 from core.forms import DSFRForm
-from seves.settings import CAN_GIVE_ACCESS_GROUP
+from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP, SV_GROUP
 
 User = get_user_model()
 
@@ -43,8 +42,14 @@ class AddAdminForm(DsfrBaseForm, forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        existing_admins = Group.objects.get(name=CAN_GIVE_ACCESS_GROUP).user_set.values_list("pk", flat=True)
-        self.fields["user"].queryset = User.objects.exclude(pk__in=existing_admins).select_related(
+        groups = [CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP]
+        existing_admin_with_all_groups = User.objects
+
+        for g in groups:
+            existing_admin_with_all_groups = existing_admin_with_all_groups.filter(groups__name=g)
+
+        existing_admin_with_all_groups = existing_admin_with_all_groups.values_list("pk", flat=True)
+        self.fields["user"].queryset = User.objects.exclude(pk__in=existing_admin_with_all_groups).select_related(
             "agent", "agent__structure"
         )
         self.fields["user"].label_from_instance = lambda obj: obj.agent.agent_with_structure

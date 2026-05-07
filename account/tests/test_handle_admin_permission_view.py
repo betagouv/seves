@@ -78,3 +78,22 @@ def test_can_remove_admin_permissions(live_server, page, mocked_authentification
     agent_already_admin.refresh_from_db()
     assert agent_already_admin.user.is_active is True
     assert set(agent_already_admin.user.groups.values_list("name", flat=True)) == {SSA_GROUP}
+
+
+@pytest.mark.django_db
+def test_performances_admin_page_scales(client, mocked_authentification_user, django_assert_num_queries):
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    mocked_authentification_user.agent.structure = structure
+    AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
+
+    with django_assert_num_queries(6):
+        response = client.get(reverse("handle-admins"))
+        assert response.status_code == 200
+
+    AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
+    AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
+    AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
+
+    with django_assert_num_queries(6):
+        response = client.get(reverse("handle-admins"))
+        assert response.status_code == 200

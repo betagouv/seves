@@ -129,21 +129,21 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
     def test_func(self):
         return self.request.user.agent.structure.is_mus
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["existing_admins"] = (
+    def get_existing_admins(self):
+        return (
             Group.objects.get(name=CAN_GIVE_ACCESS_GROUP)
             .user_set.all()
             .prefetch_related("groups")
             .select_related("agent", "agent__structure")
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["existing_admins"] = self.get_existing_admins()
         for admin in context["existing_admins"]:
-            admin.domains = ", ".join(
-                [
-                    g.name.split("_user")[0].title()
-                    for g in admin.groups.filter(name__in=[settings.SV_GROUP, settings.SSA_GROUP])
-                ]
-            )
+            app_groups_for_user = [g for g in admin.groups.all() if g.name in [settings.SV_GROUP, settings.SSA_GROUP]]
+            admin.domains = ", ".join([g.name.split("_user")[0].title() for g in app_groups_for_user])
+            admin.domains = admin.domains.replace("Ssa", "Alim")
         return context
 
     def get_media(self, **context_data):
