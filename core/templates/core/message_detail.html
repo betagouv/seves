@@ -88,7 +88,7 @@
 
                                     <hr class="fr-hr-or fr-mt-2w">
                                     {% flag "rich_text_editor" %}
-                                        {{ message.safe_message_content }}
+                                        {{ message.safe_message_content|linebreaksbr }}
                                     {% else %}
                                         {{ message.content|linebreaksbr }}
                                     {% endflag %}
