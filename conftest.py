@@ -91,9 +91,9 @@ def choice_js_fill():
     ):
         from core.tests.pages import ChoiceJSPage
 
-        ChoiceJSPage(
-            page, sel_or_locator, fill_content, exact_name, check_selection=check_selection
-        ).try_select_option()
+        ChoiceJSPage(page, sel_or_locator).try_select_option(
+            exact_name, search=fill_content, check_selection=check_selection
+        )
 
     return _choice_js_fill
 

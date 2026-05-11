@@ -54,13 +54,8 @@ class ChoiceJSPage:
         result = self.choice_widget.locator(".choices__list.choices__list--multiple + .choices__input")
         return result.first if result.count() > 0 else self.choice_widget
 
-    def __init__(
-        self, page: Page, sel_or_locator: str | Locator, search_token, exact_name=None, *, check_selection=None
-    ):
+    def __init__(self, page: Page, sel_or_locator: str | Locator):
         self.locator = sel_or_locator if isinstance(sel_or_locator, Locator) else page.locator(sel_or_locator)
-        self._search_token = search_token
-        self._exact_name = exact_name or search_token
-        self._user_check_selection = check_selection
 
     def _try_open(self):
         if self.dropdown.is_visible():
@@ -74,20 +69,22 @@ class ChoiceJSPage:
             ".choices__list.choices__list--single,.choices__list.choices__list--multiple"
         ).get_by_role("option", name=exact_name)
 
-    def _check_selection(self):
-        if callable(self._user_check_selection):
-            return self._user_check_selection()
-        return expect(self._get_selected_option(self._exact_name)).to_have_count(1)
+    def _check_selection(self, exact_name, check_selection):
+        if callable(check_selection):
+            return check_selection()
+        return expect(self._get_selected_option(exact_name)).to_have_count(1)
 
     @playwright_repeatable
-    def try_select_option(self):
+    def try_select_option(self, exact_name, *, search=None, check_selection=None):
+        search = search or exact_name
+
         self._try_open()
-        if len(self._get_selected_option(self._exact_name).all()) > 0:
+        if len(self._get_selected_option(exact_name).all()) > 0:
             # Option already selected
             return
 
-        self.choice_widget.locator("input.choices__input").fill(self._search_token)
+        self.choice_widget.locator("input.choices__input").fill(search)
         self.choice_widget.locator(".choices__list.choices__list--dropdown").get_by_role(
-            "option", name=self._exact_name, exact=True
+            "option", name=exact_name, exact=True
         ).locator("visible=true").click()
-        self._check_selection()
+        self._check_selection(exact_name, check_selection)
