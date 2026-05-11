@@ -390,7 +390,7 @@ def test_update_reference_clusters_will_trigger_email(live_server, page, mailout
 def test_update_evenement_produit_performances(client, django_assert_num_queries):
     evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
 
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(10):
         client.get(evenement.get_update_url())
 
 

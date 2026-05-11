@@ -1,3 +1,4 @@
+from datetime import datetime
 from threading import Lock
 from unittest.mock import patch
 import zipfile
@@ -248,11 +249,14 @@ def generic_test_can_download_zip_of_documents_with_filter(live_server, page: Pa
     download = download_info.value
     assert download.suggested_filename.endswith(".zip") is True
     download_path = download.path()
-    with zipfile.ZipFile(download_path, "r") as z:
-        files = z.namelist()
+    with zipfile.ZipFile(download_path, "r") as zip:
+        files = zip.namelist()
         expected = [document_1.file.name, document_2.file.name]
         expected = sorted([e.replace("documents/", "") for e in expected])
         assert sorted(files) == expected, f"Expected {expected} and got {files}"
+
+        for info in zip.infolist():
+            assert datetime(*info.date_time).date() == datetime.now().date()
 
 
 def generic_test_cant_download_zip_when_no_documents(live_server, page: Page, object):

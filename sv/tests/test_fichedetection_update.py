@@ -129,7 +129,6 @@ def test_fiche_detection_update_lieu_modal_content(
     expect(lieu_form_elements.departement_hidden_input).to_have_value(lieu.departement.numero)
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
-    expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_have_text("Coordonnées GPS (WGS84)")
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value(str(lieu.wgs84_latitude))
     expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_be_visible()
@@ -356,6 +355,7 @@ def test_update_lieu(
 
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     page.get_by_test_id("lieu-edit-btn").click()
+    expect(lieu_form_elements.map_canvas).to_be_visible()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
     lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()

@@ -77,6 +77,7 @@ function displayLieuxCards() {
 function showLieuModal(event) {
     event.preventDefault()
     const currentModal = getNextAvailableModal()
+    currentModal.querySelector(".map-container").setAttribute("data-controller", "map")
     handleHasNotImplemented(currentModal)
     modalHTMLContent[currentModal.dataset.id] = currentModal.querySelector(".fr-modal__content").innerHTML
     dsfr(currentModal).modal.disclose()
@@ -200,6 +201,9 @@ function setUpCommune(element) {
         codePostalInput.value = ""
         departementInput.value = ""
     })
+    choicesCommunes.passedElement.element.addEventListener("forcedChoice", event => {
+        choicesCommunes.setValue([event.detail.value])
+    })
 
     return choicesCommunes
 }
@@ -209,6 +213,10 @@ function onAdresseLieuChoice(event, modal, communeChoice) {
     modal.querySelector("[id$=commune]").value = event.detail.customProperties.city
     modal.querySelector("[id$=code_insee]").value = event.detail.customProperties.inseeCode
     modal.querySelector("[id$=code_postal]").value = event.detail.customProperties.postCode
+    modal.querySelector("[id$=wgs84_latitude]").value = event.detail.customProperties.lat
+    modal.querySelector("[id$=wgs84_longitude]").value = event.detail.customProperties.long
+    modal.querySelector("[id$=wgs84_latitude]").dispatchEvent(new Event("input"))
+    modal.querySelector("[id$=wgs84_longitude]").dispatchEvent(new Event("input"))
     if (event.detail.customProperties.context) {
         modal.querySelector("[id$=departement]").value = event.detail.customProperties.context.split(",")[0].trim()
     }

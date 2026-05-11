@@ -364,6 +364,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
             "type": "FeatureCollection",
             "features": [
                 {
+                    "geometry": {"type": "Point", "coordinates": [2.304014, 48.840234]},
                     "properties": {
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
@@ -371,7 +372,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
                         "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
-                    }
+                    },
                 },
             ],
         }

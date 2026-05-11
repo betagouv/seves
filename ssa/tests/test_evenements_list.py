@@ -19,16 +19,16 @@ def test_old_url_redirects(client):
 
 
 def test_list_table_order_by_default(live_server, mocked_authentification_user, page: Page):
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=2, last_updated=datetime.datetime.now())
-    EvenementProduitFactory(numero_annee=2025, numero_evenement=1, last_updated=datetime.datetime.now())
-    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=22, last_updated=datetime.datetime.now())
-    InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22, last_updated=datetime.datetime.now())
+    EvenementProduitFactory(numero_annee=2025, numero_evenement=2)
+    EvenementProduitFactory(numero_annee=2025, numero_evenement=1)
+    InvestigationCasHumainFactory(numero_annee=2025, numero_evenement=22)
+    InvestigationCasHumainFactory(numero_annee=2024, numero_evenement=22)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    assert search_page.numero_cell(line_index=1).text_content() == "A-2024.22"
-    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.22"
+    assert search_page.numero_cell(line_index=1).text_content() == "A-2025.22"
+    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.2"
     assert search_page.numero_cell(line_index=3).text_content() == "A-2025.1"
-    assert search_page.numero_cell(line_index=4).text_content() == "A-2025.2"
+    assert search_page.numero_cell(line_index=4).text_content() == "A-2024.22"
 
 
 def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, page: Page):
@@ -85,8 +85,8 @@ def test_list_can_filter_by_numero(live_server, mocked_authentification_user, pa
 
     search_page.annee_field.fill("2025")
     search_page.submit_search()
-    assert search_page.numero_cell().text_content() == "A-2025.1"
-    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.2"
+    assert search_page.numero_cell().text_content() == "A-2025.2"
+    assert search_page.numero_cell(line_index=2).text_content() == "A-2025.1"
     expect(search_page.page.get_by_text("2024.22")).not_to_be_visible()
 
 

@@ -17,7 +17,8 @@ def test_lieu_details(live_server, page):
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Code INSEE")).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Département")).to_be_visible()
     expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Région")).to_be_visible()
-    expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Coord. WGS84")).to_be_visible()
+    expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Latitude")).to_be_visible()
+    expect(page.locator(f"#fr-modal-lieu-{lieu.pk}").get_by_text("Longitude")).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-adresse")).to_contain_text(lieu.adresse_lieu_dit)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-commune")).to_contain_text(lieu.commune)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-code-insee")).to_contain_text(lieu.code_insee)
@@ -29,6 +30,7 @@ def test_lieu_details(live_server, page):
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84-longitude")).to_contain_text(
         str(lieu.wgs84_longitude).replace(".", ",")
     )
+    expect(page.locator(f"#fr-modal-lieu-{lieu.pk} .maplibregl-canvas")).to_be_visible()
     expect(page.get_by_text("Il s'agit d'un établissement", exact=True)).to_be_visible()
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-activite-etablissement")).to_contain_text(lieu.activite_etablissement)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-pays-etablissement")).to_contain_text(
@@ -99,8 +101,8 @@ def test_lieu_details_with_no_data(live_server, page):
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-code-insee")).to_contain_text(EMPTY_PLACEHOLDER)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-departement")).to_contain_text(EMPTY_PLACEHOLDER)
     expect(page.get_by_test_id(f"lieu-{lieu.pk}-region")).to_contain_text(EMPTY_PLACEHOLDER)
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text(EMPTY_PLACEHOLDER)
-    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84-latitude")).to_contain_text(EMPTY_PLACEHOLDER)
+    expect(page.get_by_test_id(f"lieu-{lieu.pk}-wgs84-longitude")).to_contain_text(EMPTY_PLACEHOLDER)
 
 
 def test_prelevement_card(live_server, page):

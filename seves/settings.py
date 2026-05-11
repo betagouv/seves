@@ -326,7 +326,10 @@ SECURE_CSP = {
         "data.economie.gouv.fr",
         "api-adresse.data.gouv.fr",
         "fichiers-publics.agriculture.gouv.fr",
+        "openmaptiles.data.gouv.fr",
+        "data.geopf.fr",
     ),
+    "worker-src": ("blob:",),
 }
 
 if DEBUG:
@@ -344,6 +347,8 @@ if ENVIRONMENT != "test":
 SIRENE_API_KEY = env("SIRENE_API_KEY", default="")
 SIRENE_API_BASE = env("SIRENE_API_base", default="https://api.insee.fr/api-sirene/3.11/")
 COMMUNES_API = env("COMMUNES_API", default="https://geo.api.gouv.fr/communes")
+GEO_API_ROOT = env("GEO_API_ROOT", default="https://geo.api.gouv.fr")
+REVERSE_GEO_API = "https://data.geopf.fr/geocodage/reverse"
 
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = True
 

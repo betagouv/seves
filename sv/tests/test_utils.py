@@ -227,6 +227,10 @@ class LieuFormDomElements:
         return self.page.locator('[id^="id_lieux-"][id$="-nom"]').locator("visible=true")
 
     @property
+    def map_canvas(self) -> Locator:
+        return self.page.locator(".maplibregl-canvas").locator("visible=true")
+
+    @property
     def adresse_label(self) -> Locator:
         return self.page.get_by_text("Adresse ou lieu-dit").locator("visible=true")
 
@@ -268,7 +272,7 @@ class LieuFormDomElements:
 
     @property
     def coord_gps_wgs84_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Coordonnées GPS (WGS84)").locator("visible=true")
+        return self.page.get_by_text("Latitude (WGS84)").locator("visible=true")
 
     @property
     def coord_gps_wgs84_latitude_input(self) -> Locator:

@@ -10,6 +10,7 @@ import pytest
 from core.constants import Visibilite
 from core.factories import DepartementFactory, StructureFactory
 from core.models import Contact
+from core.tests.pages import ChoiceJSPage
 from sv.constants import CONTEXTES, STATUTS_EVENEMENT, STATUTS_REGLEMENTAIRES
 
 from ..factories import (
@@ -148,7 +149,10 @@ def test_update_detection_form_show_date_creation(
 
 @pytest.mark.django_db
 def test_fiche_detection_create_without_lieux_and_prelevement(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, choice_js_fill
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    mocked_authentification_user,
 ):
     statut_evenement = StatutEvenement.objects.first()
     organisme_nuisible = OrganismeNuisible.objects.get(libelle_court="Xylella fastidiosa (maladie de Pierce)")
@@ -158,7 +162,7 @@ def test_fiche_detection_create_without_lieux_and_prelevement(
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     """Test que les informations de la fiche de détection sont bien enregistrées après création."""
     page.get_by_label("Statut évènement").select_option(value=str(statut_evenement.id))
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Xylella", organisme_nuisible.libelle_court)
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option(organisme_nuisible.libelle_court, search="Xylella")
     page.get_by_label("Statut réglementaire").select_option(value=str(statut_reglementaire.id))
     page.get_by_label("Contexte").select_option(value=str(contexte.id))
     page.get_by_label("Date 1er signalement").fill("2024-04-21")
@@ -194,7 +198,6 @@ def test_create_fiche_detection_with_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
-    choice_js_fill,
     ensure_departements,
 ):
     ensure_departements("Nord")
@@ -212,7 +215,7 @@ def test_create_fiche_detection_with_lieu(
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
@@ -264,19 +267,13 @@ def test_create_fiche_detection_with_lieu_in_corsica(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
     ensure_departements,
 ):
     ensure_departements("Corse-du-Sud")
     organisme_nuisible = OrganismeNuisibleFactory()
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    choice_js_fill(
-        page,
-        "#organisme-nuisible .choices__list--single",
-        organisme_nuisible.libelle_court,
-        organisme_nuisible.libelle_court,
-    )
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option(organisme_nuisible.libelle_court)
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
@@ -318,7 +315,6 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
-    choice_js_fill,
     ensure_departements,
 ):
     ensure_departements("Nord")
@@ -332,7 +328,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
@@ -371,7 +367,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
 
 
 def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user, choice_js_fill
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à la structure de l'utilisateur connecté
     est ajouté dans la liste des contacts de l'événement"""
@@ -380,7 +376,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
         libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
 
@@ -403,7 +399,7 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
 
 
 def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
-    live_server, page: Page, choice_js_fill, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
+    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
 ):
     """Test que lors de la création d'une fiche de détection, le contact correspondant à l'agent de l'utilisateur connecté
     est ajouté dans la liste des contacts de l'événement"""
@@ -412,7 +408,7 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
         libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.publish_btn.click()
 
@@ -427,7 +423,6 @@ def test_add_lieu_with_name_only_and_save(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    choice_js_fill,
     lieu_form_elements: LieuFormDomElements,
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
@@ -435,7 +430,7 @@ def test_add_lieu_with_name_only_and_save(
         libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()
@@ -454,7 +449,9 @@ def test_add_lieu_with_name_only_and_save(
 @pytest.mark.django_db
 @mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_pre_selected(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
@@ -467,7 +464,7 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
     organisme_nuisible.save()
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
@@ -481,7 +478,9 @@ def test_fiche_detection_status_reglementaire_is_pre_selected(
 @pytest.mark.django_db
 @mock.patch.dict("sv.constants.KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES", {"OQ": ["XYLEFM"]}, clear=True)
 def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, choice_js_fill
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
 ):
     statut = StatutReglementaire.objects.get(code="OQ")
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
@@ -499,10 +498,11 @@ def test_fiche_detection_status_reglementaire_is_emptied_when_unknown(
     organisme_nuisible_no_status.libelle_court = "Pas mon ON"
     organisme_nuisible_no_status.save()
 
+    choice_js_page = ChoiceJSPage(page, "#organisme-nuisible")
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    choice_js_page.try_select_option("Mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value(str(statut.id))
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Pas mon ON", "Pas mon ON")
+    choice_js_page.try_select_option("Pas mon ON")
     expect(form_elements.statut_reglementaire_input).to_have_value("")
 
 
@@ -512,7 +512,6 @@ def test_prelevements_are_always_linked_to_lieu(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
@@ -521,7 +520,7 @@ def test_prelevements_are_always_linked_to_lieu(
     structures = StructurePreleveuseFactory.create_batch(2)
     page.wait_for_timeout(600)
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
@@ -544,15 +543,13 @@ def test_prelevements_are_always_linked_to_lieu(
 
 
 @pytest.mark.django_db
-def test_one_fiche_detection_is_created_when_double_click_on_save_btn(
-    live_server, form_elements, choice_js_fill, page: Page
-):
+def test_one_fiche_detection_is_created_when_double_click_on_save_btn(live_server, form_elements, page: Page):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").dblclick()
     page.wait_for_timeout(600)
@@ -565,7 +562,6 @@ def test_laboratoire_disable_in_prelevement_confirmation(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
 ):
     """Test que les laboratoires non officiels sont désactivés quand le type d'analyse est confirmation"""
     LaboratoireFactory.create_batch(3)
@@ -601,7 +597,6 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
 ):
     """Test que tous les laboratoires sont actifs quand le type d'analyse est première intention"""
     LaboratoireFactory.create_batch(3)
@@ -643,14 +638,13 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
-    choice_js_fill,
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
@@ -671,7 +665,6 @@ def test_create_fiche_detection_with_lieu_using_siret(
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
     mocked_authentification_user,
-    choice_js_fill,
     settings,
     ensure_departements,
 ):
@@ -714,7 +707,7 @@ def test_create_fiche_detection_with_lieu_using_siret(
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
 
     form_elements.add_lieu_btn.click()
@@ -722,11 +715,9 @@ def test_create_fiche_detection_with_lieu_using_siret(
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.is_etablissement_checkbox.click()
     lieu_form_elements.sirene_btn.click()
-    choice_js_fill(
-        page,
-        "#header-search-0 .fr-select .choices__list--single",
-        "120 079 017",
+    ChoiceJSPage(page, "#header-search-0").try_select_option(
         "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
+        search="120 079 017",
         check_selection=lambda: expect(
             page.locator('#lieu-form [name$="siret_etablissement"]').locator("visible=true")
         ).to_have_value(siret),
@@ -764,19 +755,14 @@ def test_fiche_detection_without_organisme_nuisible_shows_error(
 
 
 def test_can_create_evenement_if_last_evenement_is_deleted(
-    live_server, page: Page, mocked_authentification_user, choice_js_fill, form_elements: FicheDetectionFormDomElements
+    live_server, page: Page, mocked_authentification_user, form_elements: FicheDetectionFormDomElements
 ):
     EvenementFactory(numero_annee=datetime.now().year, numero_evenement=1, is_deleted=True)
     organisme_nuisible = OrganismeNuisibleFactory()
     statut_reglementaire = StatutReglementaireFactory()
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(
-        page,
-        "#organisme-nuisible .choices__list--single",
-        organisme_nuisible.libelle_court,
-        organisme_nuisible.libelle_court,
-    )
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option(organisme_nuisible.libelle_court)
     form_elements.statut_reglementaire_input.select_option(statut_reglementaire.libelle)
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
@@ -872,7 +858,6 @@ def test_can_add_lieu_with_adresse_auto_complete(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
     choice_js_fill_from_element,
     ensure_departements,
 ):
@@ -884,6 +869,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
             "type": "FeatureCollection",
             "features": [
                 {
+                    "geometry": {"type": "Point", "coordinates": [2.304014, 48.840234]},
                     "properties": {
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
@@ -891,7 +877,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
                         "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
-                    }
+                    },
                 },
             ],
         }
@@ -908,7 +894,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
     )
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
@@ -917,6 +903,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
         page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
     )
     assert call_count["count"] == 1
+
     lieu_form_elements.save_btn.click()
     form_elements.publish_btn.click()
 
@@ -926,6 +913,72 @@ def test_can_add_lieu_with_adresse_auto_complete(
     assert lieu.code_insee == "75115"
     assert lieu.code_postal == "75015"
     assert lieu.departement.nom == "Paris"
+    assert lieu.wgs84_latitude == 48.840234
+    assert lieu.wgs84_longitude == 2.304014
+
+
+def test_lieu_map(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill_from_element,
+    ensure_departements,
+):
+    ensure_departements("Paris")
+    call_count = {"count": 0}
+
+    def handle(route):
+        response = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "postcode": "75019",
+                        "citycode": "75119",
+                        "city": "Paris",
+                    },
+                }
+            ],
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
+        call_count["count"] += 1
+
+    form_elements.page.route(
+        "https://data.geopf.fr/geocodage/reverse?lon=**",
+        handle,
+    )
+    OrganismeNuisible.objects.get_or_create(
+        libelle_court="Mon ON",
+        libelle_long="Mon ON",
+    )
+
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
+    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("un lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+
+    map = page.locator("canvas").locator("visible=true")
+    box = map.bounding_box()
+    x = box["x"] + box["width"] / 2
+    y = box["y"] + box["height"] / 2
+    page.mouse.dblclick(x, y)
+    page.wait_for_timeout(1000)
+    assert call_count["count"] == 1
+
+    lieu_form_elements.save_btn.click()
+    form_elements.publish_btn.click()
+
+    lieu = Lieu.objects.get()
+    assert lieu.commune == "Paris"
+    assert lieu.code_insee == "75119"
+    assert lieu.code_postal == "75019"
+    assert lieu.departement.nom == "Paris"
+    assert 48.5 < lieu.wgs84_latitude < 49
+    assert 2.1 < lieu.wgs84_longitude < 2.5
 
 
 def test_can_add_lieu_with_adresse_etablissement_autocomplete(
@@ -933,7 +986,6 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill,
     choice_js_fill_from_element,
     ensure_departements,
 ):
@@ -945,6 +997,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
             "type": "FeatureCollection",
             "features": [
                 {
+                    "geometry": {"type": "Point", "coordinates": [2.304014, 48.840234]},
                     "properties": {
                         "label": "251 Rue de Vaugirard 75015 Paris",
                         "name": "251 Rue de Vaugirard",
@@ -952,7 +1005,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
                         "postcode": "75015",
                         "city": "Paris",
                         "context": "75, Paris, Île-de-France",
-                    }
+                    },
                 },
             ],
         }
@@ -969,7 +1022,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     )
 
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
@@ -994,7 +1047,6 @@ def test_add_lieu_with_supply_chain(
     live_server,
     page: Page,
     form_elements: FicheDetectionFormDomElements,
-    choice_js_fill,
     lieu_form_elements: LieuFormDomElements,
 ):
     organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
@@ -1003,7 +1055,7 @@ def test_add_lieu_with_supply_chain(
     )
     supply_chain_position = PositionChaineDistributionFactory()
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    choice_js_fill(page, "#organisme-nuisible .choices__list--single", "Mon ON", "Mon ON")
+    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
     form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.click()

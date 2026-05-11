@@ -87,7 +87,7 @@ fileignoreconfig:
 - filename: core/diffs.py
   checksum: aa005df583bb90c6e3318e74b1f63c103053728ffd99da0e85031c0fc61aaed9
 - filename: tiac/tests/test_evenement_export.py
-  checksum: 81fc205d819a3c14459b42424a400d3f8ab55d3ad1e3116f6dcc83bfa299393f
+  checksum: c4a90bce455298c458c6938aa944f2f293bfef4780719ba02e0bf5678bb85356
 - filename: tiac/export.py
   checksum: f13f0a927917a063b11ccb4e13c29d3e705d27ca3f80394e5671043c7e5fa23e
 - filename: tiac/factories.py

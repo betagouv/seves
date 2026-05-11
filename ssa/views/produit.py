@@ -177,6 +177,13 @@ class EvenementUpdateView(
         self.object = super().get_object(queryset)
         return self.object
 
+    def get_form_class(self):
+        return (
+            EvenementProduitTreeselectForm
+            if waffle.flag_is_active(self.request, "new_treeselect")
+            else super().get_form_class()
+        )
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user

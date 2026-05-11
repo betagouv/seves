@@ -406,9 +406,12 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     change = obj_compare.get_m2o_change_info()
                 for item in change["deleted_items"]:
                     klass = item._object_version.object.__class__
+                    if (item.object_id, item.content_type_id) in self.handled_deleted_objects:
+                        continue
                     if getattr(klass, "show_deleted_state_in_revision_list", True):
                         new = f"Objet supprimé : {klass.__name__} {item}"
                         diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
+                        self.handled_deleted_objects.append((item.object_id, item.content_type_id))
                 for item in change["added_items"]:
                     klass = item._object_version.object.__class__
                     if getattr(klass, "show_class_name_in_added_items", True):
