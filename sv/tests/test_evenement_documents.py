@@ -9,7 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
-from waffle.testutils import override_flag
 
 from core.factories import DocumentFactory, MessageFactory, StructureFactory
 from core.models import Document, Message, Structure
@@ -672,19 +671,16 @@ def test_document_modal_front_behavior(live_server, page: Page):
     generic_test_document_modal_front_behavior(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_of_documents(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_can_download_zip_of_documents(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_of_documents_with_filter(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_can_download_zip_of_documents_with_filter(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_cant_download_zip_when_no_documents(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_cant_download_zip_when_no_documents(live_server, page, evenement)

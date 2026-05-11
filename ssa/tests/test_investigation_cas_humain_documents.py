@@ -1,5 +1,4 @@
 from playwright.sync_api import Page, expect
-from waffle.testutils import override_flag
 
 from core.factories import DocumentFactory
 from core.pages import WithDocumentsPage
@@ -74,19 +73,16 @@ def test_document_modal_front_behavior(live_server, page: Page):
     generic_test_document_modal_front_behavior(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_of_documents(live_server, page: Page):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_download_zip_of_documents(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_of_documents_with_filter(live_server, page: Page):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_download_zip_of_documents_with_filter(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_cant_download_zip_when_no_documents(live_server, page: Page):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_cant_download_zip_when_no_documents(live_server, page, evenement)

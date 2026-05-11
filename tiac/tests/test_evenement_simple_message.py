@@ -137,7 +137,6 @@ def test_can_preview_image_from_message_details(live_server, page: Page, mocked_
     generic_test_can_preview_image_from_message_details(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_attachments_of_message(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     generic_test_can_download_zip_attachments_of_message(live_server, page, evenement)
