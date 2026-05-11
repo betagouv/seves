@@ -21,7 +21,7 @@ class WithFilteredListMixin(WithOrderingMixin):
         }
 
     def get_default_order_by(self):
-        return "last_update"
+        return "numero_evenement"
 
     def get_raw_queryset(self):
         user = self.request.user
