@@ -334,7 +334,7 @@ def test_will_show_action_buttons_for_fiche_detection_after_showing_lieu_modal(l
     expect(page.get_by_role("button", name="Modifier la détection", exact=True)).to_be_visible()
     expect(page.get_by_role("button", name="Supprimer la détection", exact=True)).to_be_visible()
 
-    page.locator(".lieu-initial").get_by_text("Voir le détail", exact=True).click()
+    page.get_by_test_id("lieu-initial").get_by_text("Voir le détail", exact=True).click()
     page.keyboard.press("Escape")
 
     expect(page.get_by_role("button", name="Modifier la détection", exact=True)).to_be_visible()

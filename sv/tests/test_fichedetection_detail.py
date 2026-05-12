@@ -109,11 +109,11 @@ def test_prelevement_card(live_server, page):
     prelevement = PrelevementFactory(is_officiel=False, resultat=Prelevement.Resultat.DETECTE)
     page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_absolute_url()}")
 
-    expect(page.locator(".prelevement").get_by_text(prelevement.numero_echantillon)).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text(prelevement.espece_echantillon.libelle)).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text(prelevement.laboratoire.nom)).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text(prelevement.get_resultat_display())).to_be_visible()
-    expect(page.locator(".prelevement").get_by_text("Prélèvement non officiel")).to_be_visible()
+    expect(page.get_by_test_id("prelevement").get_by_text(prelevement.numero_echantillon)).to_be_visible()
+    expect(page.get_by_test_id("prelevement").get_by_text(prelevement.espece_echantillon.libelle)).to_be_visible()
+    expect(page.get_by_test_id("prelevement").get_by_text(prelevement.laboratoire.nom)).to_be_visible()
+    expect(page.get_by_test_id("prelevement").get_by_text(prelevement.get_resultat_display())).to_be_visible()
+    expect(page.get_by_test_id("prelevement").get_by_text("Prélèvement non officiel")).to_be_visible()
 
 
 def test_prelevement_non_officiel_details_with_no_data(live_server, page):

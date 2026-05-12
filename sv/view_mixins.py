@@ -15,6 +15,7 @@ from sv.forms import (
 from .constants import KNOWN_OEPP_CODES_FOR_STATUS_REGLEMENTAIRES, KNOWN_OEPPS
 from .filters import EvenementFilter
 from .models import (
+    ElementInfeste,
     Evenement,
     FicheDetection,
     Laboratoire,
@@ -132,6 +133,7 @@ class EvenementDetailMixin(UserPassesTestMixin):
                 "detections__lieux__departement",
                 "detections__lieux__departement__region",
                 "detections__lieux__position_chaine_distribution_etablissement",
+                Prefetch("detections__elements_infestes", queryset=ElementInfeste.objects.select_related("espece")),
             )
         )
 
