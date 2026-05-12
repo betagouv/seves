@@ -294,3 +294,10 @@ fieldset {
     .with-empty-placeholder--placeholder {
     display: none;
 }
+
+.seves-card .fr-card__end {
+    height: unset;
+}
+.seves-card .fr-card__desc {
+    flex-grow: 10;
+}

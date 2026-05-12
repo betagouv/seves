@@ -106,7 +106,7 @@ class ElementInfesteFormController extends BaseFormInModal {
         return `
             <section data-${this.identifier}-target="cardContainer">
                 ${invalidWarning}
-                <div class="fr-card" ${this.isValidValue ? "" : ` aria-labelledby="${id}--error-desc"`} data-testid="element-card">
+                <div class="fr-card seves-card"${this.isValidValue ? "" : ` aria-labelledby="${id}--error-desc"`} data-testid="element-card">
                     <div class="fr-card__body">
                         <div class="fr-card__content">
                             <h3
@@ -132,8 +132,9 @@ class ElementInfesteFormController extends BaseFormInModal {
                                     elementInfeste.quantite,
                                     `<p class="fr-mb-0">Quantité d’éléments infestés : ${elementInfeste.quantite} ${elementInfeste.quantite_unite}</p>`,
                                 )}
-
-                                <div class="fr-btns-group fr-btns-group--inline-lg fr-btns-group--icon-left fr-btns-group--sm fr-btns-group--right fr-mt-4v fr-mb-n4v">
+                            </div>
+                            <div class="fr-card__end">
+                                <div class="fr-btns-group fr-btns-group--sm fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left fr-mb-n4v">
                                     <button
                                         class="fr-btn fr-btn--secondary fr-icon-edit-line modify-button"
                                         type="button"

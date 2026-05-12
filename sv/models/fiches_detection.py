@@ -181,3 +181,8 @@ class FicheDetection(
 
     def get_soft_delete_attribute_error_message(self):
         return f"La détection {self.numero} ne peut pas être supprimée"
+
+    def prelevements(self):
+        for lieu in self.lieux.all():
+            for prelevement in lieu.prelevements.all():
+                yield prelevement
