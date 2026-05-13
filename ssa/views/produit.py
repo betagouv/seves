@@ -67,6 +67,7 @@ class EvenementProduitCreateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["maestro_reference"] = self.request.GET.get("maestro_reference")
         return kwargs
 
     def post(self, request, *args, **kwargs):
