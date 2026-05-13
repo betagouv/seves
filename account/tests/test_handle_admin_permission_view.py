@@ -48,6 +48,7 @@ def test_can_add_admin_permissions(
     choice_js_fill(page, ".choices", agent_will_be_admin.agent_with_structure, agent_will_be_admin.agent_with_structure)
     page.get_by_label("SSA").check(force=True)
     page.get_by_role("button", name="Accorder le rôle administrateur").click()
+    expect(page.locator("#fr-modal-add-user")).to_be_visible()
     page.get_by_role("button", name="Confirmer le rôle d’administrateur").click()
     expect(page.get_by_text("Le rôle administrateur a été accordé")).to_be_visible()
 
