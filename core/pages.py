@@ -172,7 +172,6 @@ class ListOfMessagesPage:
 
 class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     TITLE_ID = "#id_title"
-    CONTENT_ID = "#id_content"
     DRAFT_BTN_TEST_ID = "draft-fildesuivi-add-submit"
     SUBMIT_BTN_TEST_ID = "fildesuivi-add-submit"
 
@@ -264,11 +263,14 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     @property
     def message_content(self):
-        return self.page.locator(f"{self.CONTENT_ID}")
-
-    @property
-    def message_content_in_rich_text_editor(self):
         return self.page.locator("#rich-text-editor .ql-editor")
+
+    def erase_message_content(self):
+        self.message_content.click()
+        expect(self.message_content).to_be_focused()
+        self.page.keyboard.press("Control+A")
+        self.page.keyboard.press("Backspace")
+        expect(self.message_content).to_have_text("")
 
     @property
     def submit_button(self):

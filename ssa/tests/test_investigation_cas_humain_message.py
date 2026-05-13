@@ -1,6 +1,5 @@
 from playwright.sync_api import Page
 import pytest
-from waffle.testutils import override_flag
 
 from core.factories import ContactStructureFactory, MessageFactory
 from core.models import Message
@@ -43,13 +42,11 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, mocked_authentification_user):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_send_draft_message_with_rich_text_editor(

@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
-from waffle.testutils import override_flag
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import (
@@ -61,13 +60,11 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     generic_test_can_send_draft_message_with_rich_text_editor(
@@ -125,7 +122,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
@@ -208,7 +205,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     )
 
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert page.url == f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-messages-panel"
@@ -233,7 +230,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     new_page = new_page_info.value
 
     expect(new_page.get_by_role("heading", name="Title of the message")).to_be_visible()
-    assert "My content <br> with a line return" in new_page.content()
+    assert "<p>My content </p><p> with a line return</p>" in new_page.content()
 
     # Check that all the recipients / copies were added as contact
     new_page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -282,7 +279,7 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 
     message_page.page.locator(".destinataires-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
-    message_page.page.locator("#id_content").fill("My content \n with a line return")
+    message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     message_page.page.get_by_test_id("fildesuivi-add-submit").click()
 
     message_page.page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
@@ -312,7 +309,7 @@ def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
 
     message_page.page.locator(".destinataires-contacts-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
-    message_page.page.locator("#id_content").fill("My content \n with a line return")
+    message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     message_page.page.get_by_test_id("fildesuivi-add-submit").click()
     message_page.page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
 
@@ -484,13 +481,13 @@ def test_create_message_adds_agent_and_structure_contacts(
     )
     page.keyboard.press("Escape")
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que le message a été créé
     assert evenement.messages.count() == 1
     message = evenement.messages.get()
-    assert message.content == "Message de test"
+    assert message.content == "<p>Message de test</p>"
     assert message.message_type == Message.MESSAGE
 
     # Vérification des contacts dans l'interface
@@ -541,7 +538,7 @@ def test_create_multiple_messages_adds_contacts_once(
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 1")
-    page.locator("#id_content").fill("Message de test 1")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test 1")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Ajout du second message
@@ -556,7 +553,7 @@ def test_create_multiple_messages_adds_contacts_once(
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 2")
-    page.locator("#id_content").fill("Message de test 2")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test 2")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que les deux messages ont été créés
@@ -609,7 +606,7 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     evenement.refresh_from_db()
@@ -644,7 +641,7 @@ def test_create_message_from_locale_from_same_structure_does_not_changes_visibil
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     evenement.refresh_from_db()
@@ -682,7 +679,7 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que le message a été créé
@@ -766,7 +763,7 @@ def test_message_with_national_referent_does_not_add_structure(live_server, page
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national")
-    page.locator("#id_content").fill("Test avec référent national")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec référent national")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -808,7 +805,7 @@ def test_message_with_two_national_referents_in_same_structure_does_not_add_stru
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour deux référents nationaux")
-    page.locator("#id_content").fill("Test avec deux référents nationaux")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux référents nationaux")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent1.agent).exists()
@@ -846,7 +843,7 @@ def test_message_with_national_referent_and_regular_agent_add_structure(live_ser
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national et agent normal")
-    page.locator("#id_content").fill("Test avec deux destinataires")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -883,7 +880,7 @@ def test_message_with_national_referent_and_regular_agent_in_different_structure
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour agents de structures différentes")
-    page.locator("#id_content").fill("Test avec deux destinataires de structures différentes")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires de structures différentes")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -907,7 +904,7 @@ def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutb
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -925,7 +922,7 @@ def test_can_add_draft_note(live_server, page: Page, choice_js_fill, mailoutbox)
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Note").click()
     page.locator("#id_title").fill("Title of the note")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -943,7 +940,7 @@ def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill,
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Point de situation").click()
     page.locator("#id_title").fill("Title of the point de situation")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -976,7 +973,7 @@ def test_can_add_draft_demande_intervention(
         use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the demande d'intervention")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -1000,7 +997,7 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
