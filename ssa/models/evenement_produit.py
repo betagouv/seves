@@ -186,6 +186,8 @@ class EvenementProduit(
         models.CharField(max_length=12, validators=[rappel_conso_validator]), blank=True, null=True
     )
 
+    maestro_reference = models.CharField(max_length=255, blank=True, null=True, verbose_name="Référence MAESTRO")
+
     historical_data = models.JSONField(default=dict, blank=True)
 
     objects = EvenementProduitManager()

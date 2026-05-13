@@ -194,8 +194,8 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         self.numero_rappel_part_3 = page.locator("#rappel-3")
         self.numero_rappel_submit = page.locator("#rappel-submit")
 
-    def navigate(self):
-        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
+    def navigate(self, extra_url=""):
+        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}{extra_url}")
 
     def navigate_update_page(self, evenement):
         self.page.goto(f"{self.base_url}{evenement.get_update_url()}")
