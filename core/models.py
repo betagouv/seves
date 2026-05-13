@@ -579,11 +579,11 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
 
     def get_reply_intro_text(self):
         sender = self.sender.display_with_agent_unit if self.sender else self.sender_structure
-        intro = f"\n\n\n ******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
+        intro = f"\n\n\n******* Le {self.date_creation.strftime('%d/%m/%Y à %Hh%M')} {sender} a envoyé à {', '.join([r.display_with_agent_unit for r in self.recipients.all()])}"
         if self.recipients_copy.all():
             intro += f" et à (en copie) {', '.join([r.display_with_agent_unit for r in self.recipients_copy.all()])}"
 
-        intro += f" le message suivant *******: \n\n {self.content}"
+        intro += f" le message suivant *******: \n\n{self.content}"
         return intro
 
     def _user_can_interact(self, user):

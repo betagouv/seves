@@ -1,10 +1,8 @@
 {% extends 'core/base.html' %}
 {% load static waffle_tags %}
 {% block extrahead %}
-    {% flag "rich_text_editor" %}
-        <link rel="stylesheet" href="{% static 'core/message_detail.css' %}">
-        <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
-    {% endflag %}
+    <link rel="stylesheet" href="{% static 'core/message_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
 {% endblock %}
 {% block content %}
     {% for document in documents %}
@@ -87,11 +85,7 @@
                                     </div>
 
                                     <hr class="fr-hr-or fr-mt-2w">
-                                    {% flag "rich_text_editor" %}
-                                        {{ message.safe_message_content|linebreaksbr }}
-                                    {% else %}
-                                        {{ message.content|linebreaksbr }}
-                                    {% endflag %}
+                                    {{ message.safe_message_content|linebreaksbr }}
                                 </div>
                             </div>
                             <div class="fr-col-4 white-container">
