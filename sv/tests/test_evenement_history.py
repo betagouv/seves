@@ -4,8 +4,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from sv.factories import FicheZoneFactory, OrganismeNuisibleFactory, StructurePreleveuseFactory, ZoneInfesteeFactory
+from sv.factories import (
+    ElementInfesteFactory,
+    EspeceEchantillonFactory,
+    FicheZoneFactory,
+    OrganismeNuisibleFactory,
+    StructurePreleveuseFactory,
+    ZoneInfesteeFactory,
+)
 from sv.models import Evenement, FicheZoneDelimitee, Lieu, Prelevement, StatutReglementaire, StructurePreleveuse
+from sv.tests.pages import EvenementUpdatePage
 from sv.tests.test_utils import FicheDetectionFormDomElements, FicheZoneDelimiteeFormPage, PrelevementFormDomElements
 
 
@@ -61,11 +69,26 @@ def test_evenement_history_content(
     form_page.commentaire.fill("Test")
     form_page.submit_update_form()
 
+    element_infeste = ElementInfesteFactory.build(espece=EspeceEchantillonFactory())
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(detection)
+    evenement_page.fill_new_form_and_check(element_infeste, action="save")
+    evenement_page.save()
+
     content_type = ContentType.objects.get_for_model(Evenement)
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
     expected_rows = [
+        [
+            "Doe John",
+            "Structure Test",
+            mock.ANY,
+            f"Fiche Détection ({detection.numero}) - Elementinfeste",
+            "Vide",
+            f"Objet ajouté : ElementInfeste {element_infeste}",
+            "Vide",
+        ],
         [
             "Doe John",
             "Structure Test",

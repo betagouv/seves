@@ -80,7 +80,7 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         return self.filter(query)
 
     def optimized_for_export(self, contact):
-        from sv.models import Evenement
+        from sv.models import ElementInfeste, Evenement
 
         evenement_qs = (
             Evenement.objects.all()
@@ -104,6 +104,7 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
             "lieux__prelevements__matrice_prelevee",
             "lieux__prelevements__laboratoire",
             Prefetch("evenement", queryset=evenement_qs),
+            Prefetch("elements_infestes", queryset=ElementInfeste.objects.select_related("espece")),
         )
 
 
