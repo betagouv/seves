@@ -1,9 +1,11 @@
 from django.db import models
+import reversion
 
 from sv.constants import ElementInfesteQuantiteUnite, ElementInfesteType
 from sv.models import EspeceEchantillon
 
 
+@reversion.register
 class ElementInfeste(models.Model):
     fiche_detection = models.ForeignKey(
         "sv.FicheDetection",
@@ -22,3 +24,6 @@ class ElementInfeste(models.Model):
     @property
     def quantite_with_unite(self):
         return f"{self.quantite} {self.get_quantite_unite_display()}" if self.quantite else ""
+
+    def __str__(self):
+        return f"Élement infesté : {self.get_type_display()}, {self.espece}"

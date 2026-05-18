@@ -1,4 +1,5 @@
 import csv
+import itertools
 
 from core.export import BaseExport
 
@@ -24,6 +25,12 @@ class FicheDetectionExport(BaseExport):
         ("mesures_consignation", "Mesures de consignation"),
         ("mesures_phytosanitaires", "Mesures phytosanitaires"),
         ("mesures_surveillance_specifique", "Mesures de surveillance spécifique"),
+    ]
+    elements_infestes_fields = [
+        ("type", "Type (élément infesté)"),
+        ("espece", "Espèce de l'élément infesté"),
+        ("quantite_with_unite", "Quantité d'éléments infestés"),
+        ("comments", "Commentaires (élément infesté)"),
     ]
     lieux_fields = [
         ("nom", "Nom"),
@@ -67,6 +74,7 @@ class FicheDetectionExport(BaseExport):
         """Retourne les noms des champs pour l'en-tête du CSV"""
         all_fields = (
             self.fiche_detection_fields
+            + self.elements_infestes_fields
             + self.lieux_fields
             + self.prelevement_fields
             + self.fiche_zone_delimitee_fields
@@ -75,7 +83,7 @@ class FicheDetectionExport(BaseExport):
         return [header for _, header in all_fields]
 
     def add_fiche_detection_data(self, result, fiche):
-        return self.add_data(result, fiche, self.fiche_detection_fields)
+        self.add_data(result, fiche, self.fiche_detection_fields)
 
     def add_lieu_data(self, result, lieu):
         return self.add_data(result, lieu, self.lieux_fields)
@@ -96,37 +104,39 @@ class FicheDetectionExport(BaseExport):
         self.add_zone_infestee_data(result, fiche)
         return result
 
-    def get_fiche_data_with_lieu(self, fiche, lieu):
-        result = {}
-        self.add_fiche_detection_data(result, fiche)
-        self.add_lieu_data(result, lieu)
-        self.add_zone_delimitee_data(result, fiche)
-        self.add_zone_infestee_data(result, fiche)
-        return result
+    def get_elements_infestes_lines(self, fiche_detection):
+        return [
+            self.add_data({}, element_infeste, self.elements_infestes_fields)
+            for element_infeste in fiche_detection.elements_infestes.all()
+        ]
 
-    def get_fiche_data_with_prelevement(self, fiche, prelevement):
-        result = {}
-        self.add_fiche_detection_data(result, fiche)
-        self.add_lieu_data(result, prelevement.lieu)
-        self.add_prelevement_data(result, prelevement)
-        self.add_zone_delimitee_data(result, fiche)
-        self.add_zone_infestee_data(result, fiche)
+    def get_lieux_lines(self, fiche_detection):
+        result = []
+        for lieu in fiche_detection.lieux.all():
+            data = self.add_lieu_data({}, lieu)
+            prelevement_data = [
+                self.add_prelevement_data(data.copy(), prelevement) for prelevement in lieu.prelevements.all()
+            ]
+            if prelevement_data:
+                result.extend(prelevement_data)
+            else:
+                result.append(data)
         return result
 
     def get_lines_from_instance(self, fiche_detection):
-        lieux = fiche_detection.lieux.all()
-        if not lieux:
-            yield self.get_fiche_data(fiche_detection)
-            return
+        lines_chain = [self.get_elements_infestes_lines(fiche_detection), self.get_lieux_lines(fiche_detection)]
 
-        for lieu in lieux:
-            prelevements = lieu.prelevements.all()
-            if not prelevements:
-                yield self.get_fiche_data_with_lieu(fiche_detection, lieu)
-                continue
-
-            for prelevement in prelevements:
-                yield self.get_fiche_data_with_prelevement(fiche_detection, prelevement)
+        fiche_data = self.get_fiche_data(fiche_detection)
+        if any(len(it) > 1 for it in lines_chain):
+            # If any of the fiche_detection relations have more than 1 element, we have to span on multiple lines
+            for line in itertools.chain(*lines_chain):
+                yield {**fiche_data, **line}
+        else:
+            # Otherwise, we can put all the data on one line
+            result = fiche_data.copy()
+            for line in itertools.chain(*lines_chain):
+                result.update(line)
+            yield result
 
     def export(self, stream, queryset):
         writer = csv.DictWriter(
