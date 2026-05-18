@@ -41,7 +41,7 @@ class StatutEvenement(models.Model):
         return self.libelle
 
 
-@reversion.register(follow=["lieux"])
+@reversion.register(follow=["lieux", "elements_infestes"])
 class FicheDetection(
     AllowsSoftDeleteMixin,
     models.Model,

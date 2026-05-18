@@ -8,7 +8,14 @@ import pytest
 from core.constants import Visibilite
 from core.models import FinSuiviContact
 from sv.export import FicheDetectionExport
-from sv.factories import FicheDetectionFactory, FicheZoneFactory, LieuFactory, PrelevementFactory, ZoneInfesteeFactory
+from sv.factories import (
+    ElementInfesteFactory,
+    FicheDetectionFactory,
+    FicheZoneFactory,
+    LieuFactory,
+    PrelevementFactory,
+    ZoneInfesteeFactory,
+)
 from sv.models import Evenement, FicheDetection, StructurePreleveuse
 
 
@@ -34,6 +41,11 @@ def test_export_headers_content(mocked_authentification_user):
         "Mesures de consignation",
         "Mesures phytosanitaires",
         "Mesures de surveillance spécifique",
+        # == Élément infesté ==
+        "Type (élément infesté)",
+        "Espèce de l'élément infesté",
+        "Quantité d'éléments infestés",
+        "Commentaires (élément infesté)",
         # == Lieu ==
         "Nom",
         "Adresse ou lieu-dit",
@@ -101,6 +113,8 @@ def test_export_data_values(force_utc, mocked_authentification_user):
     fiche_detection = prelevement.lieu.fiche_detection
     evenement = fiche_detection.evenement
 
+    ElementInfesteFactory(fiche_detection=fiche_detection)
+
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
@@ -129,6 +143,11 @@ def test_export_data_values(force_utc, mocked_authentification_user):
         fiche_detection.mesures_consignation,
         fiche_detection.mesures_phytosanitaires,
         fiche_detection.mesures_surveillance_specifique,
+        # == Element infesté ==
+        fiche_detection.elements_infestes.all()[0].get_type_display(),
+        str(fiche_detection.elements_infestes.all()[0].espece),
+        fiche_detection.elements_infestes.all()[0].quantite_with_unite,
+        fiche_detection.elements_infestes.all()[0].comments,
         # == Lieu ==
         str(lieu),
         lieu.adresse_lieu_dit,
@@ -174,11 +193,12 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
         structure_preleveuse=structure,
         lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
     )
+    ElementInfesteFactory()
     stream = StringIO()
     detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
     contact = mocked_authentification_user.agent.structure.contact_set.get()
     queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
     PrelevementFactory.create_batch(
@@ -187,9 +207,13 @@ def test_export_fiche_detection_performance(django_assert_num_queries, mocked_au
         lieu__fiche_detection__evenement__visibilite=Visibilite.NATIONALE,
     )
     stream = StringIO()
-    detections = [d.id for e in Evenement.objects.all() for d in e.detections.all()]
+    detections = []
+    for e in Evenement.objects.all():
+        for d in e.detections.all():
+            ElementInfesteFactory.create_batch(3, fiche_detection=d)
+            detections.append(d.id)
     queryset = FicheDetection.objects.filter(id__in=detections).optimized_for_export(contact=contact)
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(10):
         FicheDetectionExport().export(stream=stream, queryset=queryset)
 
 
