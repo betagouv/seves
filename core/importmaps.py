@@ -14,7 +14,7 @@ importmaps = {
     "BaseFormset": static("core/base_formset.mjs"),
     "BaseFormInModal": static("core/base_form_in_modal.mjs"),
     "dsfr": static("dsfr/dist/dsfr.module.min.js"),
-    "BanAutocomplete": static("core/ban_autocomplete.js"),
+    "BanAutocomplete": static("core/ban_autocomplete.mjs"),
     "Forms": static("core/forms.mjs"),
     "ViewManager": static("core/view_manager.js"),
     "CustomTreeSelect": static("ssa/_custom_tree_select.js"),
@@ -24,4 +24,5 @@ importmaps = {
     "DocumentUploads": static("core/form/document_uploads.mjs"),
     "FicheBlocCommun": static("core/fiche_bloc_commun.mjs"),
     "ObjectLazyLoad": static("core/object_lazy_load.mjs"),
+    "SvLieux": static("sv/lieux.mjs"),
 }

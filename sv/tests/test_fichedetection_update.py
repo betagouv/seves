@@ -268,7 +268,7 @@ def test_add_new_lieu(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.force_lieu_address(lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -309,7 +309,7 @@ def test_add_multiple_lieux(
         form_elements.add_lieu_btn.click()
         lieu_form_elements.nom_input.fill(lieu.nom)
         lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+        lieu_form_elements.force_lieu_address(lieu.adresse_lieu_dit)
         lieu_form_elements.force_commune()
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -355,7 +355,7 @@ def test_update_lieu(
     page.get_by_test_id("lieu-edit-btn").click()
     expect(lieu_form_elements.map_canvas).to_be_visible()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
+    lieu_form_elements.force_lieu_address(new_lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
@@ -365,7 +365,7 @@ def test_update_lieu(
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
         lieu_form_elements.pays_etablissement_input.select_option(new_lieu.pays_etablissement.code)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, new_lieu.adresse_etablissement)
+        lieu_form_elements.force_lieu_address(new_lieu.adresse_etablissement)
         lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
         lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection))
         lieu_form_elements.position_etablissement_input.select_option(
@@ -416,7 +416,7 @@ def test_update_two_lieux(
         else:
             page.get_by_role("button", name="Modifier").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
+        lieu_form_elements.force_lieu_address(new_lieu.adresse_lieu_dit)
         if index == 0:
             lieu_form_elements.force_commune()
         else:

@@ -69,10 +69,9 @@ class SiteInspectionSelect(forms.Select):
         return context
 
 
-class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
+class LieuForm(forms.ModelForm, DsfrBaseForm):
     nom = forms.CharField(widget=forms.TextInput(), required=True)
-    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False)
-    commune = forms.CharField(widget=forms.HiddenInput(), required=False)
+    adresse_lieu_dit = AdresseLieuDitField(choices=[], required=False, widget=forms.HiddenInput())
     code_insee = forms.CharField(widget=forms.HiddenInput(), required=False)
     code_postal = forms.CharField(widget=forms.HiddenInput(), required=False)
     departement = DepartementModelChoiceField(
@@ -81,24 +80,8 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={"class": "fr-hidden"}),
     )
-    wgs84_longitude = forms.FloatField(
-        required=False,
-        widget=forms.NumberInput(
-            attrs={
-                "class": "wgs-longitude-field",
-                "placeholder": "Longitude",
-            }
-        ),
-    )
-    wgs84_latitude = forms.FloatField(
-        required=False,
-        widget=forms.NumberInput(
-            attrs={
-                "class": "wgs-latitude-field",
-                "placeholder": "Latitude",
-            }
-        ),
-    )
+    wgs84_longitude = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"placeholder": "Longitude"}))
+    wgs84_latitude = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"placeholder": "Latitude"}))
     activite_etablissement = forms.CharField(
         required=False,
         label="Description de l’activité",
@@ -122,7 +105,9 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
             }
         ),
     )
-    adresse_etablissement = AdresseLieuDitField(choices=[], required=False, label="Adresse ou lieu-dit")
+    adresse_etablissement = AdresseLieuDitField(
+        choices=[], required=False, label="Adresse ou lieu-dit", widget=forms.HiddenInput
+    )
     departement_etablissement = DepartementModelChoiceField(
         queryset=Departement.objects.all(),
         to_field_name="numero",
@@ -132,14 +117,9 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
     code_insee_etablissement = forms.CharField(widget=forms.HiddenInput(), required=False)
     pays_etablissement = CountryField(blank=True).formfield(label="Pays")
 
-    class Meta:
-        model = Lieu
-        exclude = []
-        labels = {
-            "is_etablissement": "Il s'agit d'un établissement",
-            "raison_sociale_etablissement": "Raison sociale",
-        }
-        widgets = {"site_inspection": SiteInspectionSelect}
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("core/map.mjs"), js_module("core/ban_autocomplete.mjs")))
 
     def clean_departement(self):
         if self.cleaned_data["departement"] == "":
@@ -147,8 +127,13 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
         return self.cleaned_data["departement"]
 
     def __init__(self, *args, **kwargs):
-        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
         super().__init__(*args, **kwargs)
+
+        # Prevent forms initialised in formsets from not requiring fields
+        self.empty_permitted = False
+        self.use_required_attribute = True
+
+        self.fields["position_chaine_distribution_etablissement"].empty_label = ""
 
         # Keep compatibility with how Lieux formset is currently rendered; needs to be refactored
         self.fields["site_inspection"].choices = [(None, ""), *self.fields["site_inspection"].choices]
@@ -162,26 +147,38 @@ class LieuForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
                 choice = (self.instance.adresse_etablissement, self.instance.adresse_etablissement)
                 self.fields["adresse_etablissement"].choices = [choice]
 
-        if convert_required_to_data_required:
-            self._convert_required_to_data_required()
-
     def clean(self):
         super().clean()
         if not self.cleaned_data["is_etablissement"]:
             for field in Lieu.ETABLISSEMENT_FIELDS:
                 self.cleaned_data.pop(field)
 
+    class Meta:
+        model = Lieu
+        exclude = ("fiche_detection",)
+        labels = {
+            "is_etablissement": "Il s'agit d'un établissement",
+            "raison_sociale_etablissement": "Raison sociale",
+        }
+        widgets = {"commune": forms.HiddenInput, "site_inspection": SiteInspectionSelect}
 
-class CustomLieuFormSet(BaseInlineFormSet):
-    def get_form_kwargs(self, index):
-        kwargs = super().get_form_kwargs(index)
-        if hasattr(self, "custom_kwargs"):
-            kwargs.update(self.custom_kwargs)
-        return kwargs
+
+class LieuBaseFormSet(BaseInlineFormSet):
+    template_name = "sv/forms/lieu_base_set.html"
+    deletion_widget = forms.HiddenInput
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/lieux.mjs"),))
+
+    def __init__(self, data=None, files=None, instance=None, save_as_new=False, prefix=None, queryset=None, **kwargs):
+        super().__init__(data, files, instance, save_as_new, prefix, queryset, **kwargs)
+        if self.instance and self.instance.pk:
+            self.queryset = self.queryset.filter(fiche_detection=self.instance)
 
 
 LieuFormSet = inlineformset_factory(
-    FicheDetection, Lieu, form=LieuForm, formset=CustomLieuFormSet, extra=10, can_delete=True
+    FicheDetection, Lieu, form=LieuForm, formset=LieuBaseFormSet, extra=0, can_delete=True
 )
 
 

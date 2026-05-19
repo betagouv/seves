@@ -114,6 +114,7 @@ export class BaseFormInModal extends Controller {
             .filter(it => !!it?.length)
             .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
             .join("")
+            .trim()
     }
 
     formatDate(value) {

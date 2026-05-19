@@ -38,7 +38,7 @@ def _add_new_lieu(
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill(f"nom lieu{extra_str}")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, f"une adresse{extra_str}")
+    lieu_form_elements.force_lieu_address(f"une adresse{extra_str}")
 
     page.wait_for_timeout(100)
 
@@ -375,7 +375,7 @@ def test_add_lieu_form_is_empty_after_edit(
     # modification du lieu
     page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.fill("nom lieu modifié")
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, "une adresse modifiée")
+    lieu_form_elements.force_lieu_address("une adresse modifiée")
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill("11")
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill("21")
