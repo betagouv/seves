@@ -116,10 +116,29 @@ class AlertController extends Controller {
     }
 }
 
+class ModalController extends Controller {
+    get modal() {
+        return dsfr(this.element).modal
+    }
+
+    disclose() {
+        this.modal.disclose()
+    }
+
+    conceal() {
+        this.modal.conceal()
+    }
+
+    async disclosePromise() {
+        await dsfrDisclosePromise(this.modal)
+    }
+}
+
 const Application = new StimulusApp()
 /** @type {Promise<StimulusApp>} */
 const applicationReady = Application.start().then(() => {
     Application.register("dismissable-alert", AlertController)
+    Application.register("modal", ModalController)
     return Application
 })
 

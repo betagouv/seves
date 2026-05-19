@@ -84,7 +84,5 @@ class ChoiceJSPage:
 
         self._try_open()
         self.choice_widget.locator("input.choices__input").fill(search)
-        self.choice_widget.locator(".choices__list.choices__list--dropdown").get_by_role(
-            "option", name=exact_name, exact=True
-        ).locator("visible=true").click()
+        self.dropdown.get_by_role("option", name=exact_name, exact=True).locator("visible=true").click()
         self._check_selection(exact_name, check_selection)

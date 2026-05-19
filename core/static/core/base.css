@@ -295,6 +295,9 @@ fieldset {
     display: none;
 }
 
+.seves-card {
+    height: 100%;
+}
 .seves-card .fr-card__end {
     height: unset;
 }

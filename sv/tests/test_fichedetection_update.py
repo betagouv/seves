@@ -1,5 +1,4 @@
 import json
-import re
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -34,6 +33,7 @@ from ..models import (
     Region,
     StructurePreleveuse,
 )
+from .generic_tests.test_fichedetection import generic_test_cant_delete_lieu_with_associated_prelevement
 from .pages import EvenementUpdatePage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
@@ -106,16 +106,10 @@ def test_fiche_detection_update_lieu_modal_content(
     page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
 
     # modification du lieu
-    page.get_by_test_id("lieu-edit-btn").click()
-
-    expect(lieu_form_elements.close_btn).to_be_visible()
-    expect(lieu_form_elements.close_btn).to_have_text("Fermer")
-
-    expect(page.get_by_role("heading", name="Ajouter un lieu")).to_be_visible()
-    expect(lieu_form_elements.title).to_have_text("Ajouter un lieu")
+    lieu_form_elements.edit_form(0)
 
     expect(lieu_form_elements.nom_label).to_be_visible()
-    expect(lieu_form_elements.nom_label).to_have_text("Nom du lieu")
+    expect(lieu_form_elements.nom_label).to_contain_text("Nom du lieu")
     expect(lieu_form_elements.nom_input).to_be_visible()
     expect(lieu_form_elements.nom_input).to_have_value(lieu.nom)
 
@@ -128,7 +122,6 @@ def test_fiche_detection_update_lieu_modal_content(
     expect(lieu_form_elements.commune_hidden_input).to_have_value(lieu.commune)
     expect(lieu_form_elements.code_insee_hidden_input).to_have_value(lieu.code_insee)
     expect(page.get_by_text(f"{lieu.commune} ({lieu.departement.numero})Remove item")).to_be_visible()
-    expect(lieu_form_elements.departement_hidden_input).to_have_value(lieu.departement.numero)
 
     expect(lieu_form_elements.coord_gps_wgs84_latitude_label).to_be_visible()
     expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_be_visible()
@@ -138,12 +131,13 @@ def test_fiche_detection_update_lieu_modal_content(
 
     expect(lieu_form_elements.is_etablissement_checkbox).to_be_checked()
 
-    expect(lieu_form_elements.siret_etablissement_input).to_be_visible()
     expect(lieu_form_elements.siret_etablissement_input).to_have_value(lieu.siret_etablissement)
+    expected_value = f"{lieu.siret_etablissement}\nRemove item"
+    assert choice_js_get_values(page, '[id^="id_lieux-"][id$="siret_etablissement"]')[0].replace(
+        "\n", " "
+    ) == expected_value.replace("\n", " ")
 
-    expect(lieu_form_elements.adresse_etablissement_input).to_be_visible()
-
-    expect(lieu_form_elements.adresse_etablissement_hidden_input).to_have_value(lieu.adresse_etablissement)
+    expect(lieu_form_elements.adresse_etablissement_input).to_have_value(lieu.adresse_etablissement)
     expected_value = f"{lieu.adresse_etablissement}\nRemove item"
     assert choice_js_get_values(page, '[id^="id_lieux-"][id$="adresse_etablissement"]')[0].replace(
         "\n", " "
@@ -202,7 +196,9 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     fiche_detection = FicheDetectionFactory()
     new_fiche_detection = FicheDetectionFactory()
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     form_elements.statut_evenement_input.select_option(str(new_fiche_detection.statut_evenement.id))
 
     form_elements.contexte_input.select_option(str(new_fiche_detection.contexte.id))
@@ -212,8 +208,7 @@ def test_fiche_detection_update_without_lieux_and_prelevement(
     form_elements.mesures_consignation_input.fill(new_fiche_detection.mesures_consignation)
     form_elements.mesures_phytosanitaires_input.fill(new_fiche_detection.mesures_phytosanitaires)
     form_elements.mesures_surveillance_specifique_input.fill(new_fiche_detection.mesures_surveillance_specifique)
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     fiche_detection_updated = FicheDetection.objects.get(id=fiche_detection.id)
     assert (
@@ -244,9 +239,9 @@ def test_saving_without_changes_does_create_revision(
     assert fiche.latest_version is not None
     latest_version = fiche.latest_version
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
+    evenement_page.save()
 
     fiche.refresh_from_db()
     del fiche.latest_version
@@ -264,18 +259,18 @@ def test_add_new_lieu(
     """Test que l'ajout d'un nouveau lieu est bien enregistré en base de données."""
     fiche_detection = FicheDetectionFactory()
     lieu = LieuFactory.build(code_insee="17000")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.force_lieu_address(lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
     lieu_from_db = fd.lieux.first()
@@ -304,19 +299,20 @@ def test_add_multiple_lieux(
     lieu_3 = LieuFactory.build(code_insee="17002")
     lieux = [lieu_1, lieu_2, lieu_3]
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     for lieu in lieux:
-        form_elements.add_lieu_btn.click()
+        lieu_form_elements.open_new_form()
         lieu_form_elements.nom_input.fill(lieu.nom)
         lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+        lieu_form_elements.force_lieu_address(lieu.adresse_lieu_dit)
         lieu_form_elements.force_commune()
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-        lieu_form_elements.save_btn.click()
+        lieu_form_elements.close_with(action="save")
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     assert Lieu.objects.count() == 3
     lieu_1_from_db = Lieu.objects.get(nom=lieux[0].nom)
@@ -351,11 +347,13 @@ def test_update_lieu(
         position_chaine_distribution_etablissement=position,
     )
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_test_id("lieu-edit-btn").click()
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
+    lieu_form_elements.edit_form(0)
     expect(lieu_form_elements.map_canvas).to_be_visible()
     lieu_form_elements.nom_input.fill(new_lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
+    lieu_form_elements.force_lieu_address(new_lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
@@ -365,15 +363,14 @@ def test_update_lieu(
         lieu_form_elements.activite_etablissement_input.fill(new_lieu.activite_etablissement)
         lieu_form_elements.pays_etablissement_input.select_option(new_lieu.pays_etablissement.code)
         lieu_form_elements.raison_sociale_etablissement_input.fill(new_lieu.raison_sociale_etablissement)
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, new_lieu.adresse_etablissement)
-        lieu_form_elements.siret_etablissement_input.fill(new_lieu.siret_etablissement)
+        lieu_form_elements.force_etablissement_address(new_lieu.adresse_etablissement)
+        lieu_form_elements.force_siret_etablissement(new_lieu.siret_etablissement)
         lieu_form_elements.lieu_site_inspection_input.select_option(str(new_lieu.site_inspection))
         lieu_form_elements.position_etablissement_input.select_option(
             str(new_lieu.position_chaine_distribution_etablissement.id)
         )
-    lieu_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
     lieu_from_db = fd.lieux.first()
@@ -409,14 +406,16 @@ def test_update_two_lieux(
     LieuFactory(fiche_detection=fiche_detection)
     new_lieux = LieuFactory.build_batch(2, code_insee="17000")
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     for index, new_lieu in enumerate(new_lieux):
         if index == 0:
             page.get_by_role("button", name="Modifier").first.click()
         else:
             page.get_by_role("button", name="Modifier").nth(index).click()
         lieu_form_elements.nom_input.fill(new_lieu.nom)
-        lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, new_lieu.adresse_lieu_dit)
+        lieu_form_elements.force_lieu_address(new_lieu.adresse_lieu_dit)
         if index == 0:
             lieu_form_elements.force_commune()
         else:
@@ -460,10 +459,9 @@ def test_update_two_lieux(
             )
         lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(new_lieu.wgs84_latitude))
         lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(new_lieu.wgs84_longitude))
-        lieu_form_elements.save_btn.click()
+        lieu_form_elements.close_with(action="save")
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     lieux_from_db = FicheDetection.objects.get(id=fiche_detection.id).lieux.all()
     for lieu_from_db, new_lieu in zip(lieux_from_db, new_lieux):
@@ -491,11 +489,10 @@ def test_delete_lieu(
     Il existe qu'un seul lieu en bd."""
     fiche_detection = FicheDetectionFactory(with_lieu=True)
     lieu_id = fiche_detection.lieux.first().id
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_test_id("lieu-delete-btn").first.click()
-    page.get_by_test_id("submit-delete").locator("visible=true").click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+    lieu_form_elements.remove_card(by_idx=0)
+    evenement_page.save()
 
     with pytest.raises(ObjectDoesNotExist):
         Lieu.objects.get(id=lieu_id)
@@ -513,16 +510,15 @@ def test_delete_lieu_with_prelevement(
     lieu_id = lieu.id
     prelevement_id = lieu.prelevements.first().id
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
 
     page.get_by_test_id("prelevement-delete-btn").click()
     page.get_by_test_id("submit-delete").locator("visible=true").click()
 
-    page.get_by_test_id("lieu-delete-btn").click()
-    page.get_by_test_id("submit-delete").locator("visible=true").click()
+    lieu_form_elements.remove_card(by_idx=0)
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     with pytest.raises(ObjectDoesNotExist):
         Lieu.objects.get(id=lieu_id)
@@ -539,8 +535,19 @@ def test_delete_one_lieu_from_set_of_lieux(
 ):
     """Test que la suppression d'un lieu existant est bien enregistrée en base de données.
     Il existe plusieurs lieux en bd. Valide la suppression du lieu selectionné."""
-    # TODO
-    pass
+    fiche_detection = FicheDetectionFactory(with_lieu=3)
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
+    lieux_count = Lieu.objects.count()
+    lieu_id = lieu_form_elements.dialogs.nth(1).get_by_test_id("lieu-pk").get_attribute("value")
+    lieu_form_elements.remove_card(by_idx=1)
+    evenement_page.save()
+
+    with pytest.raises(ObjectDoesNotExist):
+        Lieu.objects.get(id=lieu_id)
+
+    assert Lieu.objects.count() == lieux_count - 1
 
 
 @pytest.mark.django_db
@@ -551,31 +558,44 @@ def test_delete_multiple_lieux(
     lieu_form_elements: LieuFormDomElements,
 ):
     """Test que la suppression de plusieurs lieux existants est bien enregistrée en base de données."""
-    fiche_detection = FicheDetectionFactory(with_lieu=True)
-    LieuFactory(fiche_detection=fiche_detection)
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    page.get_by_test_id("lieu-delete-btn").first.click()
-    page.get_by_test_id("submit-delete").locator("visible=true").click()
-    page.get_by_test_id("lieu-delete-btn").first.click()
-    page.get_by_test_id("submit-delete").locator("visible=true").click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    fiche_detection = FicheDetectionFactory(with_lieu=3)
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+    while lieu_form_elements.elements_cards.count() > 0:
+        lieu_form_elements.remove_card(by_idx=0)
+    evenement_page.save()
 
     fd = FicheDetection.objects.get(id=fiche_detection.id)
     assert fd.lieux.count() == 0
+
+
+def test_cant_delete_lieu_with_associated_prelevement(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    fiche_detection = FicheDetectionFactory(with_lieu=True, with_prelevement=True)
+    prelevement = PrelevementFactory(lieu__fiche_detection=fiche_detection)
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
+    generic_test_cant_delete_lieu_with_associated_prelevement(prelevement, evenement_page)
 
 
 def test_commune_display_in_card_and_edit_modal(live_server, page: Page):
     fiche_detection = FicheDetectionFactory()
     lieu = LieuFactory(fiche_detection=fiche_detection)
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    expect(
-        page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*"), exact=True)
-    ).to_be_visible()
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+    lieu_form_elements = LieuFormDomElements(page)
+    expect(lieu_form_elements.elements_cards.nth(0)).to_contain_text(f"{lieu.commune}")
 
-    page.get_by_test_id("lieu-edit-btn").click()
-    expect(page.locator("#lieux-list").get_by_text(re.compile(rf".*{re.escape(lieu.commune)}.*Remove item")))
+    lieu_form_elements.edit_form(0)
+    expect(lieu_form_elements.opened_dialog).to_contain_text(f"{lieu.commune}")
 
 
 @pytest.mark.django_db
@@ -590,7 +610,9 @@ def test_add_new_prelevement_non_officiel(
     lieu = LieuFactory()
     prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu, is_officiel=False)
 
-    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu.fiche_detection)
+
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
@@ -607,8 +629,7 @@ def test_add_new_prelevement_non_officiel(
     prelevement_form_elements.resultat_input(prelevement.resultat).click()
     prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
@@ -637,7 +658,9 @@ def test_add_new_prelevement_officiel(
         lieu=lieu, is_officiel=True, type_analyse=Prelevement.TypeAnalyse.CONFIRMATION
     )
 
-    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu.fiche_detection)
+
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
     prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
@@ -657,8 +680,7 @@ def test_add_new_prelevement_officiel(
     prelevement_form_elements.laboratoire_input.select_option(str(prelevement.laboratoire.id))
     prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.lieu.id == prelevement.lieu.id
@@ -692,7 +714,9 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     lieu = LieuFactory()
     prelevement = PrelevementFactory.build(lieu=lieu, is_officiel=False)
 
-    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu.fiche_detection)
+
     form_elements.add_prelevement_btn.click()
 
     # Fill the form as if it was made by a Structure that can be official
@@ -709,8 +733,7 @@ def test_add_new_prelevement_exploitant_cant_be_officiel(
     expect(prelevement_form_elements.prelevement_officiel_checkbox).to_be_disabled()
 
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     prelevement_from_db = Prelevement.objects.get(lieu=lieu)
     assert prelevement_from_db.structure_preleveuse == structure_exploitant
@@ -735,7 +758,9 @@ def test_add_multiple_prelevements(
     prelevement_3 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu)
     prelevements = [prelevement_1, prelevement_2, prelevement_3]
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     for prelevement in prelevements:
         form_elements.add_prelevement_btn.click()
         prelevement_form_elements.lieu_input.select_option(str(prelevement.lieu.nom))
@@ -755,8 +780,7 @@ def test_add_multiple_prelevements(
         prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
         prelevement_form_elements.save_btn.click()
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     prelevements_from_db = Prelevement.objects.filter(lieu=lieu)
     for prelevement, prelevement_from_db in zip(prelevements, prelevements_from_db):
@@ -783,7 +807,9 @@ def test_update_prelevement(
     new_lieu = LieuFactory(fiche_detection=prelevement.lieu.fiche_detection)
     new_prelevement = PrelevementFactory.build_with_some_related_objects_saved(lieu=new_lieu, is_officiel=False)
 
-    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(new_lieu.fiche_detection)
+
     page.get_by_test_id("prelevement-update-btn").first.click()
     prelevement_form_elements.lieu_input.select_option(str(new_prelevement.lieu))
     prelevement_form_elements.structure_input.select_option(str(new_prelevement.structure_preleveuse.id))
@@ -800,8 +826,7 @@ def test_update_prelevement(
     prelevement_form_elements.date_rapport_analyse_input.fill(new_prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
     prelevement_form_elements.save_btn.click()
     page.wait_for_timeout(600)
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     prelevement_from_db = Prelevement.objects.get(lieu=new_lieu)
     assert prelevement_from_db.lieu.id == new_prelevement.lieu.id
@@ -830,7 +855,9 @@ def test_update_multiple_prelevements(
     new_prelevement_1 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu1, is_officiel=False)
     new_prelevement_2 = PrelevementFactory.build_with_some_related_objects_saved(lieu=lieu2, is_officiel=False)
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     for index, new_prelevement in enumerate([new_prelevement_1, new_prelevement_2]):
         expect(
             page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
@@ -861,8 +888,7 @@ def test_update_multiple_prelevements(
             page.locator("[id*='modal-add-edit-prelevement'] .fr-modal__body").locator("visible=true")
         ).to_have_count(0)
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     assert Prelevement.objects.count() == 2
     prelevement_from_db_1 = Prelevement.objects.get(lieu=lieu1)
@@ -885,11 +911,12 @@ def test_delete_prelevement(live_server, page: Page, form_elements: FicheDetecti
     """Test que la suppression d'un prelevement existant est bien enregistrée en base de données."""
     prelevement = PrelevementFactory()
 
-    page.goto(f"{live_server.url}{prelevement.lieu.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(prelevement.lieu.fiche_detection)
+
     page.get_by_test_id("prelevement-delete-btn").click()
     page.get_by_test_id("submit-delete").locator("visible=true").click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     with pytest.raises(ObjectDoesNotExist):
         Prelevement.objects.get(id=prelevement.id)
@@ -901,6 +928,8 @@ def test_delete_multiple_prelevements(live_server, page: Page, form_elements: Fi
     lieu = LieuFactory()
     PrelevementFactory.create_batch(2, lieu=lieu)
 
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu.fiche_detection)
     page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
     # Supprime le premier prélèvement
     page.get_by_test_id("prelevement-delete-btn").first.click()
@@ -909,8 +938,7 @@ def test_delete_multiple_prelevements(live_server, page: Page, form_elements: Fi
     # Supprime le deuxième prélèvement
     page.get_by_test_id("prelevement-delete-btn").first.click()
     page.get_by_test_id("submit-delete").locator("visible=true").click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     assert Prelevement.objects.count() == 0
 
@@ -923,16 +951,15 @@ def test_can_edit_and_save_lieu_with_name_only(
     form_elements: FicheDetectionFormDomElements,
 ):
     fiche = FicheDetectionFactory()
-    Lieu.objects.create(fiche_detection=fiche, nom="Chez moi")
+    LieuFactory(fiche_detection=fiche, nom="Chez moi")
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
-    page.get_by_test_id("lieu-edit-btn").click()
-    lieu_form_elements.nom_input.click()
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
+
+    lieu_form_elements.edit_form(0)
     lieu_form_elements.nom_input.fill("Chez moi mis à jour")
-    lieu_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-
-    page.wait_for_timeout(600)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fiche = FicheDetection.objects.get()
     lieu = fiche.lieux.get()
@@ -968,12 +995,14 @@ def test_can_pick_inactive_labo_in_prelevement_is_old_fiche(
     labo = Laboratoire.objects.create(nom="Haunted lab", is_active=False)
     PrelevementFactory(lieu=lieu, laboratoire=labo)
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     form_elements.commentaire_input.fill("AAA")
     page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.laboratoire_input.locator(f'option[value="{labo.pk}"]').count() == 1
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
+    evenement_page.save()
 
     fiche_detection.refresh_from_db()
     assert fiche_detection.commentaire == "AAA"
@@ -1007,12 +1036,14 @@ def test_can_pick_inactive_structure_in_prelevement_is_old_fiche(
     structure = StructurePreleveuse.objects.create(nom="My Structure", is_active=False)
     PrelevementFactory(lieu=lieu, structure_preleveuse=structure)
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
     form_elements.commentaire_input.fill("AAA")
     page.get_by_test_id("prelevement-update-btn").first.click()
     assert prelevement_form_elements.structure_input.locator(f'option[value="{structure.pk}"]').count() == 1
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
+    evenement_page.save()
 
     fiche_detection.refresh_from_db()
     assert fiche_detection.commentaire == "AAA"
@@ -1079,10 +1110,11 @@ def test_update_fichedetection_adds_agent_and_structure_contacts(
     """Test que la modification d'une fiche détection ajoute l'agent et sa structure comme contacts"""
     fiche = FicheDetectionFactory()
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
+
     form_elements.commentaire_input.fill("Nouveau commentaire")
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     fiche.refresh_from_db()
     assert fiche.commentaire == "Nouveau commentaire"
@@ -1096,15 +1128,15 @@ def test_update_fichedetection_multiple_times_adds_contacts_once(
     """Test que plusieurs modifications d'une fiche détection n'ajoutent qu'une fois les contacts"""
     fiche = FicheDetectionFactory()
 
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
+
     form_elements.commentaire_input.fill("Première modification")
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     page.goto(f"{live_server.url}{fiche.get_update_url()}")
     form_elements.commentaire_input.fill("Seconde modification")
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     fiche.refresh_from_db()
     assert fiche.commentaire == "Seconde modification"
@@ -1120,25 +1152,27 @@ def test_fiche_detection_update_has_locking_protection(
     mocked_authentification_user,
 ):
     fiche = FicheDetectionFactory(commentaire="AAA")
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche)
     page.get_by_label("Commentaire").fill("BBB")
 
     fiche.commentaire = "CCC"
     fiche.save()
 
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    locking_text = (
+        "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. "
+        "Fermer cette modale pour charger la dernière version."
+    )
+    expect(page.locator("body")).not_to_contain_text(locking_text)
+    evenement_page.save_button.click()
+    expect(page.get_by_text(locking_text)).to_be_visible()
+
+    with page.expect_event("framenavigated"):
+        page.keyboard.press("Escape")
+    expect(page.get_by_text(locking_text)).not_to_be_visible()
 
     fiche.refresh_from_db()
     assert fiche.commentaire == "CCC"
-    initial_timestamp = page.evaluate("performance.timing.navigationStart")
-    expect(
-        page.get_by_text(
-            "Vos modifications n'ont pas été enregistrées. Un autre utilisateur a modifié cet objet. Fermer cette modale pour charger la dernière version."
-        )
-    ).to_be_visible()
-    page.keyboard.press("Escape")
-    page.wait_for_function(f"performance.timing.navigationStart > {initial_timestamp}")
 
 
 def test_cant_forge_update_of_detection_i_cant_see(client):
@@ -1215,15 +1249,16 @@ def test_add_lieu_add_and_remove_commune(
     fiche_detection = FicheDetectionFactory()
     lieu = LieuFactory.build(code_insee="17000")
 
-    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
-    form_elements.add_lieu_btn.click()
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(fiche_detection)
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill(lieu.nom)
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.force_commune()
     page.locator("button[aria-label='Remove item: Lille']").click(force=True)
-    lieu_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
-    page.wait_for_timeout(600)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fiche = FicheDetection.objects.get(id=fiche_detection.id)
     lieu_from_db = fiche.lieux.first()
@@ -1281,11 +1316,14 @@ def test_can_add_commune_to_existing_lieu(
     lieu_form_elements: LieuFormDomElements,
 ):
     lieu = LieuFactory(commune="")
-    page.goto(f"{live_server.url}{lieu.fiche_detection.get_update_url()}")
-    page.get_by_test_id("lieu-edit-btn").click()
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu.fiche_detection)
+
+    lieu_form_elements.edit_form(0)
     lieu_form_elements.force_commune()
-    lieu_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     lieu.refresh_from_db()
     assert lieu.commune == "Lille"
@@ -1306,16 +1344,17 @@ def test_lieu_for_prelevement_is_correct_when_multiple_lieux(
     LieuFactory(nom="Lieu 3", fiche_detection=lieu_1.fiche_detection)
     prelevement = PrelevementFactory(lieu=lieu_2, is_officiel=False)
 
-    page.goto(f"{live_server.url}{lieu_1.fiche_detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(lieu_1.fiche_detection)
+
     expect(page.locator("#prelevements-list").get_by_text("Lieu 2", exact=True)).to_be_visible()
 
     page.locator(".prelevement-edit-btn").locator("visible=true").click()
     expect(prelevement_form_elements.lieu_input).to_have_value(lieu_2.nom)
     prelevement_form_elements.numero_echantillon_input.fill("123")
     prelevement_form_elements.save_btn.click()
-    form_elements.save_update_btn.click()
+    evenement_page.save()
 
-    page.wait_for_url("**sv/evenement/**")
     page.get_by_title("Consulter le détail du prélèvement 123").click()
     expect(page.get_by_test_id(f"prelevement-{prelevement.pk}-lieu")).to_have_text("Lieu 2")
 

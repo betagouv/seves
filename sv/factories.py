@@ -262,7 +262,10 @@ class FicheDetectionFactory(DjangoModelFactory):
     def with_lieu(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
-        LieuFactory(fiche_detection=self)
+        if not isinstance(extracted, int):
+            extracted = 1
+
+        LieuFactory.create_batch(extracted, fiche_detection=self)
 
     @factory.post_generation
     def with_prelevement(self, create, extracted, **kwargs):
