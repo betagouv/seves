@@ -111,6 +111,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
 
         for (const it of this.element.querySelectorAll("& > .fr-treeselect__group-header input")) {
             it.setAttribute(`data-${this.identifier}-target`, "input")
+            const actions = (it.dataset.action || "").split(/\s+/)
+            it.dataset.action = [`${this.identifier}#onSelect`, ...actions].join(" ")
         }
     }
 
@@ -157,6 +159,15 @@ class TreeselectGroup extends TreeselectGroupConnectable {
             this.element.setAttribute("hidden", "hidden")
         } else {
             this.element.removeAttribute("hidden")
+        }
+    }
+
+    onSelect({target: {checked}}) {
+        if (checked) {
+            this.collapseTargets.forEach(async it => {
+                await dsfrDisclosePromise(dsfr(it).collapse)
+                it.scrollIntoView({block: "center"})
+            })
         }
     }
 }

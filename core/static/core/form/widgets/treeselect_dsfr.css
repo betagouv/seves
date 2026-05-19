@@ -122,11 +122,20 @@
     padding-left: 0.5rem;
 }
 
-.fr-treeselect__element {
-    flex: 1 1 100%;
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
+.fr-treeselect__group-header > .fr-treeselect__group-selectable > .fr-accordion__btn {
+    background-color: transparent !important;
+}
+
+.fr-treeselect__group-header > .fr-treeselect__group-selectable:has(.fr-accordion__btn[aria-expanded="true"]) {
+    background-color: var(--background-contrast-grey);
+}
+
+.fr-treeselect__group-header > .fr-treeselect__group-selectable:has(.fr-accordion__btn):hover {
+    background-color: var(--background-contrast-grey-hover);
+}
+
+.fr-treeselect__group-header > .fr-treeselect__group-selectable:has(.fr-accordion__btn):active {
+    background-color: var(--background-contrast-grey-active);
 }
 
 .fr-treeselect__element > .fr-checkbox-group,
@@ -166,8 +175,9 @@
     position: absolute;
     top: 0;
     right: 0;
-    max-width: 1.5rem;
-    max-height: 1.5rem;
+    max-width: 1.5rem !important;
+    min-height: unset !important;
+    max-height: 1.5rem !important;
 
     padding: 0.25rem;
     margin: 0.5rem 1rem;
