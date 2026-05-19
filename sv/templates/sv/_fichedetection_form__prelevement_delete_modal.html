@@ -1,7 +1,12 @@
 <!-- Modal confirmation suppression prelevement -->
 <!-- bouton relié à la modal en display non -> https://github.com/GouvernementFR/dsfr/issues/728 -->
 <button type="button" class="fr-hidden" data-fr-opened="false" aria-controls="modal-delete-prelevement-confirmation"></button>
-<dialog aria-labelledby="modal-delete-prelevement-confirmation-title" id="modal-delete-prelevement-confirmation" class="fr-modal" role="dialog">
+<dialog
+    id="modal-delete-prelevement-confirmation"
+    class="fr-modal"
+    data-testid="deletion-confirmation"
+    aria-labelledby="modal-delete-prelevement-confirmation-title"
+>
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">

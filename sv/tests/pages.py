@@ -128,6 +128,10 @@ class EvenementCreationPage(WithElementsInfestesFormset):
         return self.page.get_by_test_id("fiche-action-btns")
 
     @property
+    def save_button(self):
+        return self.action_buttons.get_by_role("button", name="Enregistrer")
+
+    @property
     def fiche_fieldset(self):
         return self.page.get_by_test_id("fiche-detection")
 
@@ -155,7 +159,7 @@ class EvenementCreationPage(WithElementsInfestesFormset):
         self.statut_reglementaire.select_option(value=fiche.evenement.statut_reglementaire.libelle)
 
     def save(self):
-        self.action_buttons.get_by_role("button", name="Enregistrer").click()
+        self.save_button.click(no_wait_after=True)
         self.page.wait_for_url(to_match_viewname("sv:evenement-details"))
 
 

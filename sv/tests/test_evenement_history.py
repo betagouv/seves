@@ -22,11 +22,20 @@ from sv.models import (
     StructurePreleveuse,
 )
 from sv.tests.pages import EvenementUpdatePage
-from sv.tests.test_utils import FicheDetectionFormDomElements, FicheZoneDelimiteeFormPage, PrelevementFormDomElements
+from sv.tests.test_utils import (
+    FicheDetectionFormDomElements,
+    FicheZoneDelimiteeFormPage,
+    LieuFormDomElements,
+    PrelevementFormDomElements,
+)
 
 
 def test_evenement_history_content(
-    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
     organisme_nuisible = OrganismeNuisibleFactory()
@@ -52,17 +61,17 @@ def test_evenement_history_content(
     form_elements.save_update_btn.click()
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Mon lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     form_elements.save_update_btn.click()
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
     page.get_by_test_id("lieu-edit-btn").click()
     lieu_form_elements.nom_input.fill("Mon lieu 2")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     form_elements.save_update_btn.click()
 
     initial_fiche_zone = FicheZoneFactory.build()
@@ -165,7 +174,11 @@ def test_evenement_history_content(
 
 
 def test_evenement_history_content_prelevement_shows_even_when_no_modification_on_lieu(
-    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
     StructurePreleveuseFactory()
@@ -178,10 +191,10 @@ def test_evenement_history_content_prelevement_shows_even_when_no_modification_o
         organisme_nuisible.libelle_court,
     )
     page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Mon lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     evenement = Evenement.objects.get()
@@ -220,7 +233,11 @@ def test_evenement_history_content_prelevement_shows_even_when_no_modification_o
 
 
 def test_evenement_history_content_add_and_edit_zone_infestee(
-    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
     organisme_nuisible = OrganismeNuisibleFactory()
@@ -261,7 +278,11 @@ def test_evenement_history_content_add_and_edit_zone_infestee(
 
 
 def test_evenement_history_only_one_entry_when_lieu_is_deleted(
-    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
 ):
     statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
     StructurePreleveuseFactory()
@@ -274,10 +295,10 @@ def test_evenement_history_only_one_entry_when_lieu_is_deleted(
         organisme_nuisible.libelle_court,
     )
     page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Mon lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     evenement = Evenement.objects.get()
@@ -285,7 +306,7 @@ def test_evenement_history_only_one_entry_when_lieu_is_deleted(
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
     page.get_by_test_id("lieu-delete-btn").click()
-    page.get_by_test_id("submit-delete").locator("visible=true").click()
+    page.get_by_test_id("deletion-confirmation").get_by_role("button", name="Supprimer").click()
     page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
 
     content_type = ContentType.objects.get_for_model(Evenement)

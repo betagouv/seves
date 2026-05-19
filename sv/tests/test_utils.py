@@ -1,10 +1,13 @@
+import contextlib
 import json
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
+import pytest
 
+from core.tests.pages import ChoiceJSPage, playwright_repeatable
 from sv.models import FicheDetection, FicheZoneDelimitee, Prelevement, ZoneInfestee
 
 
@@ -14,10 +17,6 @@ class FicheDetectionFormDomElements:
 
     def __init__(self, page: Page):
         self.page = page
-
-    @property
-    def title(self) -> Locator:
-        return self.page.locator("#fiche-detection-form-header")
 
     @property
     def informations_title(self) -> Locator:
@@ -46,10 +45,6 @@ class FicheDetectionFormDomElements:
     @property
     def publish_btn(self) -> Locator:
         return self.page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer")
-
-    @property
-    def add_lieu_btn(self) -> Locator:
-        return self.page.locator("#lieux-header").get_by_role("button", name="Ajouter")
 
     @property
     def add_prelevement_btn(self) -> Locator:
@@ -147,20 +142,211 @@ class FicheDetectionFormDomElements:
 class LieuFormDomElements:
     """Classe contenant les éléments du DOM de la modal de création/modification d'un lieu"""
 
+    @property
+    def block(self):
+        return self.page.get_by_test_id("lieux-list")
+
+    @property
+    def add_button(self):
+        return self.block.get_by_test_id("add-lieu")
+
+    @property
+    def dialogs(self):
+        return self.block.get_by_test_id("form-dialog")
+
+    @property
+    def opened_dialog(self):
+        return self.block.get_by_test_id("form-dialog").filter(visible=True)
+
+    @property
+    def dialog_action_buttons(self):
+        return self.opened_dialog.get_by_test_id("action-btns")
+
+    @property
+    def empty_message(self):
+        return self.block.get_by_text("Aucun lieu.")
+
+    @property
+    def elements_cards(self):
+        return self.block.get_by_test_id("lieu-initial").filter(visible=True)
+
+    @property
+    def deletion_confimation_dialogs(self):
+        return self.block.get_by_test_id("deletion-confirmation")
+
+    @property
+    def opened_deletion_confimation_dialog(self):
+        return self.deletion_confimation_dialogs.filter(visible=True)
+
+    ####
+
+    @property
+    def title(self) -> Locator:
+        return self.page.locator('[id^="modal-add-edit-lieu-title-"]').locator("visible=true")
+
+    @property
+    def nom_label(self) -> Locator:
+        return self.page.get_by_text("Nom du lieu").locator("visible=true")
+
+    @property
+    def nom_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="-nom"]').locator("visible=true")
+
+    @property
+    def map_canvas(self) -> Locator:
+        return self.page.locator(".maplibregl-canvas").locator("visible=true")
+
+    @property
+    def adresse_label(self) -> Locator:
+        return self.page.get_by_text("Adresse ou lieu-dit").locator("visible=true")
+
+    @property
+    def adresse_input(self) -> Locator:
+        return (
+            self.page.locator(".fr-modal__content")
+            .locator("visible=true")
+            .locator('[id^="id_lieux-"][id$="adresse_lieu_dit"]')
+        )
+
+    @property
+    def adresse_choicesjs(self) -> Locator:
+        return self.page.get_by_test_id("ban-search")
+
+    @property
+    def commune_label(self) -> Locator:
+        return self.page.get_by_text("Commune", exact=True).locator("visible=true")
+
+    @property
+    def commune_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[name$="commune"]')
+
+    @property
+    def commune_hidden_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="commune"]')
+
+    @property
+    def code_insee_hidden_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_insee"]')
+
+    @property
+    def code_postal_hidden_input(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_postal"]')
+
+    @property
+    def departement_input(self) -> Locator:
+        return self.opened_dialog.locator('[id$="departement"]')
+
+    @property
+    def coord_gps_wgs84_latitude_label(self) -> Locator:
+        return self.page.get_by_text("Latitude (WGS84)").locator("visible=true")
+
+    @property
+    def coord_gps_wgs84_latitude_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_latitude"]').locator("visible=true")
+
+    @property
+    def coord_gps_wgs84_longitude_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_longitude"]').locator("visible=true")
+
+    @property
+    def is_etablissement_checkbox(self) -> Locator:
+        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[for$="is_etablissement"]')
+
+    @property
+    def is_etablissement_checkbox_checked(self) -> bool:
+        return self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').is_checked()
+
+    @property
+    def activite_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="activite_etablissement"]').locator("visible=true")
+
+    @property
+    def pays_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="pays_etablissement"]').locator("visible=true")
+
+    @property
+    def raison_sociale_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="raison_sociale_etablissement"]').locator("visible=true")
+
+    @property
+    def adresse_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="adresse_etablissement"]')
+
+    @property
+    def siret_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="siret_etablissement"]')
+
+    @property
+    def code_inupp_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="inupp_etablissement"]').locator("visible=true")
+
+    @property
+    def lieu_site_inspection_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="site_inspection"]').locator("visible=true")
+
+    @property
+    def position_etablissement_input(self) -> Locator:
+        return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
+
     def __init__(self, page: Page):
         self.page = page
+        # Mock BAN search by default
+        self._address_choicejs = ChoiceJSPage(self.page, self.opened_dialog.get_by_test_id("ban-search"))
+        self._commune_choicejs = ChoiceJSPage(self.page, self.opened_dialog.get_by_test_id("communes-search"))
+        self._address_etablissement_choicejs = ChoiceJSPage(
+            self.page, self.opened_dialog.get_by_test_id("ban-search-etablissement")
+        )
+        self._siret_choicejs = ChoiceJSPage(self.page, self.opened_dialog.get_by_test_id("siret-etablissement"))
 
-    def force_adresse(self, element, adresse: str, extra_str: str = ""):
+    @contextlib.contextmanager
+    def mock_ban(self):
+        ban_url = f"{settings.GEOCODE_URL}/search/?*"
         self.page.route(
-            f"{settings.GEOCODE_URL}/search/?*",
+            ban_url,
             lambda route: route.fulfill(
                 status=200, content_type="application/json", body="""{"type": "FeatureCollection","features": []}"""
             ),
         )
-        element.click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
-        self.page.get_by_role("option", name=f"{adresse}{extra_str} (Forcer la valeur)", exact=True).click()
+        yield
+        self.page.unroute(ban_url)
+
+    def close_with(self, *, action: Literal["save", "cancel"]):
+        if action == "save":
+            self.dialog_action_buttons.get_by_role("button", name="Enregistrer").click()
+        else:
+            self.dialog_action_buttons.get_by_role("button", name="Annuler").click()
+        expect(self.dialogs.filter(visible=True)).to_have_count(0)
+
+    @playwright_repeatable
+    def open_new_form(self):
+        if self.opened_dialog.count() == 1:
+            return
+
+        self.block.get_by_test_id("add-lieu").click()
+        expect(self.opened_dialog).to_be_visible()
+
+    @playwright_repeatable
+    def edit_form(self, idx):
+        if self.opened_dialog.count() == 1:
+            self.page.keyboard.press("Escape")
+            expect(self.opened_dialog).to_have_count(0)
+
+        self.elements_cards.nth(idx).get_by_role("button", name="Modifier").click()
+        expect(self.opened_dialog).to_be_visible()
+
+    def fill_lieu_address(self, exact_name, *, search=None):
+        self._address_choicejs.try_select_option(exact_name, search=search)
+
+    def force_lieu_address(self, address: str):
+        with self.mock_ban():
+            self.fill_lieu_address(f"{address} (Forcer la valeur)", search=address)
+
+    def fill_etablissement_address(self, exact_name, *, search=None):
+        self._address_etablissement_choicejs.try_select_option(exact_name, search=search)
+
+    def force_etablissement_address(self, address: str):
+        with self.mock_ban():
+            self.fill_etablissement_address(f"{address} (Forcer la valeur)", search=address)
 
     def force_commune(self, config=None):
         if not config:
@@ -190,142 +376,14 @@ class LieuFormDomElements:
             ),
         )
 
-        self.page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2000)
-        self.page.locator("*:focus").fill(config["search_text"])
-        self.page.get_by_role("option", name=config["option_name"], exact=True).click()
+        self._commune_choicejs.try_select_option(config["option_name"], search=config["search_text"])
+        self.page.unroute(url)
 
-    @property
-    def close_btn(self) -> Locator:
-        return self.page.get_by_role("button", name="Fermer")
+    def fill_siret_etablissement(self, exact_siret, *, search=None):
+        self._siret_choicejs.try_select_option(exact_siret, search=search)
 
-    @property
-    def cancel_btn(self) -> Locator:
-        return self.page.locator('[id^="modal-add-lieu-"][open="true"]').get_by_role("link", name="Annuler")
-
-    @property
-    def title(self) -> Locator:
-        return self.page.locator('[id^="modal-add-edit-lieu-title-"]').locator("visible=true")
-
-    @property
-    def save_btn(self) -> Locator:
-        return self.page.locator('[data-testid^="lieu-save-btn-"]').locator("visible=true")
-
-    @property
-    def nom_label(self) -> Locator:
-        return self.page.get_by_text("Nom du lieu").locator("visible=true")
-
-    @property
-    def nom_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="-nom"]').locator("visible=true")
-
-    @property
-    def map_canvas(self) -> Locator:
-        return self.page.locator(".maplibregl-canvas").locator("visible=true")
-
-    @property
-    def adresse_label(self) -> Locator:
-        return self.page.get_by_text("Adresse ou lieu-dit").locator("visible=true")
-
-    @property
-    def adresse_input(self) -> Locator:
-        return (
-            self.page.locator(".fr-modal__content")
-            .locator("visible=true")
-            .locator('[id^="id_lieux-"][id$="adresse_lieu_dit"]')
-        )
-
-    @property
-    def adresse_choicesjs(self) -> Locator:
-        return self.page.locator(".adresse-lieu .choices__list--single").locator("visible=true").locator("..")
-
-    @property
-    def commune_label(self) -> Locator:
-        return self.page.get_by_text("Commune", exact=True).locator("visible=true")
-
-    @property
-    def commune_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id^="commune-select-"]')
-
-    @property
-    def commune_hidden_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="commune"]')
-
-    @property
-    def code_insee_hidden_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_insee"]')
-
-    @property
-    def code_postal_hidden_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="code_postal"]')
-
-    @property
-    def departement_hidden_input(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[id$="departement"]')
-
-    @property
-    def coord_gps_wgs84_latitude_label(self) -> Locator:
-        return self.page.get_by_text("Latitude (WGS84)").locator("visible=true")
-
-    @property
-    def coord_gps_wgs84_latitude_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_latitude"]').locator("visible=true")
-
-    @property
-    def coord_gps_wgs84_longitude_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="-wgs84_longitude"]').locator("visible=true")
-
-    @property
-    def is_etablissement_checkbox(self) -> Locator:
-        return self.page.locator(".fr-modal__content").locator("visible=true").locator('[for$="is_etablissement"]')
-
-    @property
-    def is_etablissement_checkbox_checked(self) -> bool:
-        return self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').is_checked()
-
-    @property
-    def sirene_btn(self) -> Locator:
-        return self.page.locator('[id$="-sirene-btn"]').locator("visible=true")
-
-    @property
-    def activite_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="activite_etablissement"]').locator("visible=true")
-
-    @property
-    def pays_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="pays_etablissement"]').locator("visible=true")
-
-    @property
-    def raison_sociale_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="raison_sociale_etablissement"]').locator("visible=true")
-
-    @property
-    def adresse_etablissement_hidden_input(self) -> Locator:
-        return (
-            self.page.locator(".fr-modal__content")
-            .locator("visible=true")
-            .locator('[id^="id_lieux-"][id$="adresse_etablissement"]')
-        )
-
-    @property
-    def adresse_etablissement_input(self) -> Locator:
-        return self.page.locator(".adresse-etablissement .choices__list--single").locator("visible=true").locator("..")
-
-    @property
-    def siret_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="siret_etablissement"]').locator("visible=true")
-
-    @property
-    def code_inupp_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="inupp_etablissement"]').locator("visible=true")
-
-    @property
-    def lieu_site_inspection_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="site_inspection"]').locator("visible=true")
-
-    @property
-    def position_etablissement_input(self) -> Locator:
-        return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
+    def force_siret_etablissement(self, siret):
+        self._siret_choicejs.try_select_option(f"{siret} (Forcer la valeur)", search=siret)
 
     def set_supply_chain(self, name):
         # Using set_checked(True, force=True) because Playwright tests that checkbox isn't obscured as part of
@@ -337,12 +395,43 @@ class LieuFormDomElements:
             "visible=true"
         ).select_option(name)
 
+    def get_element_card_remove_button(self, *, by_idx=None, by_name=None):
+        if by_idx is not None:
+            return self.elements_cards.nth(by_idx).get_by_role("button", name="Supprimer")
+        elif by_name is not None:
+            return self.elements_cards.locator(f":scope:has(.fr-card__title:has-text('{by_name}'))").get_by_role(
+                "button", name="Supprimer"
+            )
+        else:
+            pytest.fail("Must specify either 'by_idx' or 'by_name' argument")
+
+    def remove_card(self, *, by_idx=None, by_name=None):
+        self.get_element_card_remove_button(by_idx=by_idx, by_name=by_name).click()
+        self.opened_deletion_confimation_dialog.get_by_role("button", name="Supprimer").click()
+        expect(self.deletion_confimation_dialogs.filter(visible=True)).to_have_count(0)
+
 
 class PrelevementFormDomElements:
     """Classe contenant les éléments du DOM de la modal de création/modification d'un prélèvement"""
 
     def __init__(self, page: Page):
         self.page = page
+
+    @property
+    def block(self):
+        return self.page.get_by_test_id("prelevements-list")
+
+    @property
+    def elements_cards(self):
+        return self.block.get_by_test_id("prelevement").filter(visible=True)
+
+    @property
+    def deletion_confimation_dialogs(self):
+        return self.page.get_by_test_id("deletion-confirmation")
+
+    @property
+    def opened_deletion_confimation_dialog(self):
+        return self.deletion_confimation_dialogs.filter(visible=True)
 
     @property
     def close_btn(self) -> Locator:
@@ -431,6 +520,11 @@ class PrelevementFormDomElements:
     @property
     def date_rapport_analyse_input(self) -> Locator:
         return self.page.get_by_label("Date rapport d'analyse").locator("visible=true")
+
+    def remove_card(self, idx):
+        self.elements_cards.nth(idx).get_by_role("button", name="Supprimer").click()
+        self.opened_deletion_confimation_dialog.get_by_role("button", name="Supprimer").click()
+        expect(self.deletion_confimation_dialogs.filter(visible=True)).to_have_count(0)
 
 
 class FicheZoneDelimiteeFormPage:
