@@ -13,11 +13,9 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_form.js' %}"></script>
-    <script type="text/javascript" src="{% static 'sv/fichedetection_common.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_lieux_form.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_prelevement_form.js' %}"></script>
     <script type="module" src="{% static 'sv/espece_search.mjs' %}"></script>
-    <script type="module" src="{% static 'core/map.mjs' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -130,45 +128,21 @@
                 </div>
             </div>
 
-            <div id="lieux" class="fr-mb-6v block">
-                <div id="lieux-header" class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
-                    <h2 class="fr-h6 fr-m-0">Lieux</h2>
-                    <button
-                        type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-                        id="add-lieu-bouton"
-                    >
-                        Ajouter
-                    </button>
-                </div>
-
-                {{ lieu_formset.management_form }}
-
-                {% for form in lieu_formset %}
-                    {% if form.instance.pk %}
-                        {{ form.id }}
-                        {% include 'sv/_fichedetection_form__lieux_modal.html' with id=form.instance.pk existing_object=True %}
-                    {% endif %}
-                {% endfor %}
-
-                {% for form in lieu_formset %}
-                    {% if not form.instance.pk %}
-                        {% include 'sv/_fichedetection_form__lieux_modal.html' with id=forloop.counter0 %}
-                    {% endif %}
-                {% endfor %}
-
-                <div class="with-empty-placeholder">
-                    <div id="lieux-list" class="fr-grid-row fr-grid-row--gutters"></div>
-                    <p class="with-empty-placeholder--placeholder fr-m-0">Aucun lieu.</p>
+            <div id="lieux" class="fr-mb-6v">
+                <div class="block block--full" data-testid="lieux">
+                    {{ lieu_formset }}
                 </div>
             </div>
 
-            <div class="fr-mb-6v block">
+            <div class="fr-mb-6v block" data-controller="prelevement-form">
                 <div id="prelevements-header" class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
                     <h2 class="fr-h6 fr-m-0">Prélèvements</h2>
                     <button
                         id="btn-add-prelevment"
                         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
                         type="button"
+                        data-prelevement-form-target="addButton"
+                        disabled
                     >
                         Ajouter
                     </button>
@@ -228,7 +202,6 @@
             </section>
         </form>
 
-        {% include "sv/_fichedetection_form__lieu_card.html" %}
         {% include "sv/_fichedetection_form__prelevement_card.html" %}
         {% include "sv/_fichedetection_form__prelevement_delete_modal.html" %}
         {% include "sv/_fichedetection_form__lieu_delete_modal.html" %}

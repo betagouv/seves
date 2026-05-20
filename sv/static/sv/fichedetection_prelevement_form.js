@@ -1,5 +1,7 @@
-import {escapeHTML} from "Application"
-import choicesDefaults from "choicesDefaults"
+import {applicationReady, escapeHTML} from "Application"
+import {Controller} from "Stimulus"
+import {useStore} from "StimulusStore"
+import {lieuxStore} from "SvLieux"
 
 /**
  * @typedef PrelevementData
@@ -15,6 +17,27 @@ import choicesDefaults from "choicesDefaults"
  * @property {string|null} especeEchantillon
  * @property {string|null} laboratoire
  */
+
+/**
+ * ******** Targets ********
+ * @property {HTMLButtonElement} addButtonTarget
+ * ******** Stores ********
+ * @property  {function(value: import("StimulusStore/dist/types/setCallback").SetCallback)}  setLieuxStoreValue
+ * @property  {import("StimulusStore/dist/types/updateMethod").UpdateMethod}  onLieuxStoreUpdate
+ * @property {Object} lieuxStoreValue
+ */
+class PrelevementController extends Controller {
+    static targets = ["addButton"]
+    static stores = [lieuxStore]
+
+    connect() {
+        useStore(this)
+    }
+
+    onLieuxStoreUpdate(lieux) {
+        this.addButtonTarget.disabled = Object.keys(lieux).length === 0
+    }
+}
 
 /** @type {PrelevementData[]} */
 document.prelevementCards = []
@@ -118,7 +141,6 @@ function displayPrelevementsCards() {
             it.addEventListener("click", duplicatePrelevement)
         }
     })
-    showOrHidePrelevementUI()
 }
 
 function populateLieuSelect(element) {
@@ -266,7 +288,6 @@ function handleModalClose(event) {
 }
 
 ;(() => {
-    showOrHidePrelevementUI()
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
     document
@@ -298,3 +319,5 @@ function handleModalClose(event) {
     })
     displayPrelevementsCards()
 })()
+
+applicationReady.then(app => app.register("prelevement-form", PrelevementController))

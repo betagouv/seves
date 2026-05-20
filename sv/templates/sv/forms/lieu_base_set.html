@@ -1,0 +1,66 @@
+{% load dsfr_tags set_context_var widget_tweaks %}
+
+{% partialdef form-dialog %}
+    <fieldset
+        class="fr-col-12 fr-col-md-6 fr-col-xl-3 with-empty-placeholder--item"
+        data-controller="lieu-form"
+        data-lieu-form-form-prefix-value="{{ form.prefix }}"
+        data-lieu-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        {# form.is_bound is important: we don't want to accidentally trigger on empty form #}
+        {% if form.is_bound and form.errors %}data-lieu-form-is-valid-value="false"{% endif %}
+        data-action="dsfr.conceal->lieu-form#onCloseForm"
+        data-lieu-form-communes-search-outlet="[data-controller*='communes-search']"
+    >
+        <button
+            class="fr-btn fr-hidden"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="fr-modal-{{ form.prefix }}"
+        ></button>
+        {% include 'sv/_fichedetection_form__lieux_modal.html' %}
+    </fieldset>
+{% endpartialdef %}
+
+<div data-controller="lieu-formset">
+    <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+        <h2 class="fr-h6 fr-m-0">Lieux</h2>
+        <div class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-mb-n4v fr-ml-4v">
+            <button
+                type="button"
+                class="fr-btn fr-btn--secondary fr-icon-add-line"
+                title="Ajouter un lieu"
+                data-action="lieu-formset#onAddForm:prevent:stop"
+                data-testid="add-lieu"
+            >
+                Ajouter
+            </button>
+        </div>
+    </div>
+
+    {{ formset.non_form_errors }}
+
+    <div
+        class="fr-grid-row fr-grid-row--gutters with-empty-placeholder"
+        data-lieu-formset-target="formsetContainer"
+    >
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"lieu-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        <p class="fr-col-12 fr-m-0 with-empty-placeholder--placeholder">
+            Aucun lieu.
+        </p>
+
+        {% for form in formset %}
+            {% partial form-dialog %}
+        {% endfor %}
+    </div>
+
+    <template data-lieu-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
+    </template>
+</div>

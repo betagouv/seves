@@ -75,7 +75,6 @@ def test_new_fiche_detection_form_content(
     expect(form_elements.lieux_title).to_be_visible()
     expect(form_elements.prelevements_title).to_be_visible()
     expect(form_elements.mesures_gestion_title).to_be_visible()
-    expect(form_elements.publish_btn).to_be_visible()
     expect(form_elements.add_lieu_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_disabled()
 
@@ -209,14 +208,15 @@ def test_create_fiche_detection_with_lieu(
         position_chaine_distribution_etablissement=position,
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
-    page.wait_for_timeout(200)
+    expect(lieu_form_elements.empty_message).to_be_visible()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.fill_lieu_address("251 Rue de Vaugirard 75015 Paris", search="251 Rue de Vaugirard")
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -224,18 +224,16 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, lieu.adresse_etablissement)
+    lieu_form_elements.force_etablissement_address(lieu.adresse_etablissement)
     lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
     lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
     lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
     )
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     expect(form_elements.add_prelevement_btn).to_be_enabled()
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(1000)
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()
@@ -329,7 +327,7 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
     form_elements.add_lieu_btn.click()
     page.wait_for_timeout(200)
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.force_adresse(lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.lieu_site_inspection_input.select_option(lieu.site_inspection)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
@@ -895,9 +893,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
     form_elements.add_lieu_btn.click()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    choice_js_fill_from_element(
-        page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
-    )
+    lieu_form_elements.fill_lieu_address("251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris")
     assert call_count["count"] == 1
 
     lieu_form_elements.save_btn.click()

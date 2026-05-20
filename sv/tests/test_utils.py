@@ -1,9 +1,11 @@
+import contextlib
 import json
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
+from core.tests.pages import ChoiceJSPage, playwright_repeatable
 from sv.models import FicheDetection, FicheZoneDelimitee, Prelevement, ZoneInfestee
 
 
@@ -13,10 +15,6 @@ class FicheDetectionFormDomElements:
 
     def __init__(self, page: Page):
         self.page = page
-
-    @property
-    def title(self) -> Locator:
-        return self.page.locator("#fiche-detection-form-header")
 
     @property
     def informations_title(self) -> Locator:
@@ -43,12 +41,8 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_test_id("bottom-action-btns").get_by_test_id("fiche-detection-save-btn")
 
     @property
-    def publish_btn(self) -> Locator:
-        return self.page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer")
-
-    @property
     def add_lieu_btn(self) -> Locator:
-        return self.page.locator("#lieux-header").get_by_role("button", name="Ajouter")
+        return self.page.get_by_test_id("add-lieu")
 
     @property
     def add_prelevement_btn(self) -> Locator:
@@ -146,53 +140,62 @@ class FicheDetectionFormDomElements:
 class LieuFormDomElements:
     """Classe contenant les éléments du DOM de la modal de création/modification d'un lieu"""
 
-    def __init__(self, page: Page):
-        self.page = page
+    @property
+    def block(self):
+        return self.page.get_by_test_id("lieux")
 
-    def force_adresse(self, element, adresse: str, extra_str: str = ""):
-        self.page.route(
-            "https://api-adresse.data.gouv.fr/search/?*",
-            lambda route: route.fulfill(
-                status=200, content_type="application/json", body="""{"type": "FeatureCollection","features": []}"""
-            ),
-        )
-        element.click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-        self.page.locator("*:focus").fill(f"{adresse}{extra_str}")
-        self.page.get_by_role("option", name=f"{adresse}{extra_str} (Forcer la valeur)", exact=True).click()
+    @property
+    def add_button(self):
+        return self.block.get_by_test_id("add-lieu")
 
-    def force_commune(self, config=None):
-        if not config:
-            response_body = [
-                {
-                    "codesPostaux": ["59000", "59160", "59260", "59777", "59800"],
-                    "nom": "Lille",
-                    "code": "59350",
-                    "_score": 1.8082078747980779,
-                    "departement": {"code": "59", "nom": "Nord"},
-                }
-            ]
-            config = {
-                "search_text": "Lille",
-                "option_name": f"Lille ({response_body[0]['codesPostaux'][0]})",
-                "response_body": json.dumps(response_body),
-            }
+    @property
+    def dialogs(self):
+        return self.block.get_by_test_id("form-dialog")
 
-        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+    @property
+    def opened_dialog(self):
+        return self.block.get_by_test_id("form-dialog").filter(visible=True)
 
-        self.page.route(
-            url,
-            lambda route: route.fulfill(
-                status=200,
-                content_type="application/json",
-                body=config["response_body"],
-            ),
-        )
+    @property
+    def fieldset(self):
+        return self.opened_dialog.get_by_test_id("fieldset")
 
-        self.page.locator(".fr-modal__content .commune .choices__list--single").locator("visible=true").click()
-        self.page.wait_for_selector("input:focus", state="visible", timeout=2000)
-        self.page.locator("*:focus").fill(config["search_text"])
-        self.page.get_by_role("option", name=config["option_name"], exact=True).click()
+    @property
+    def dialog_action_buttons(self):
+        return self.opened_dialog.get_by_test_id("action-btns")
+
+    @property
+    def empty_message(self):
+        return self.block.get_by_text("Aucun lieu.")
+
+    @property
+    def elements_cards(self):
+        return self.block.get_by_test_id("element-card").filter(visible=True)
+
+    @property
+    def deletion_confimation_dialogs(self):
+        return self.block.get_by_test_id("deletion-confirmation")
+
+    @property
+    def opened_deletion_confimation_dialog(self):
+        return self.deletion_confimation_dialogs.filter(visible=True)
+
+    def close_with(self, *, action: Literal["save", "cancel"]):
+        if action == "save":
+            self.dialog_action_buttons.get_by_role("button", name="Enregistrer").click()
+        else:
+            self.dialog_action_buttons.get_by_role("button", name="Annuler").click()
+        expect(self.dialogs.filter(visible=True)).to_have_count(0)
+
+    @playwright_repeatable
+    def open_new_form(self):
+        if self.opened_dialog.count() == 1:
+            return
+
+        self.add_button.click()
+        expect(self.opened_dialog).to_be_visible()
+
+    ####
 
     @property
     def close_btn(self) -> Locator:
@@ -205,10 +208,6 @@ class LieuFormDomElements:
     @property
     def title(self) -> Locator:
         return self.page.locator('[id^="modal-add-edit-lieu-title-"]').locator("visible=true")
-
-    @property
-    def save_btn(self) -> Locator:
-        return self.page.locator('[data-testid^="lieu-save-btn-"]').locator("visible=true")
 
     @property
     def nom_label(self) -> Locator:
@@ -236,7 +235,7 @@ class LieuFormDomElements:
 
     @property
     def adresse_choicesjs(self) -> Locator:
-        return self.page.locator(".adresse-lieu .choices__list--single").locator("visible=true").locator("..")
+        return self.page.get_by_test_id("ban-search")
 
     @property
     def commune_label(self) -> Locator:
@@ -307,10 +306,6 @@ class LieuFormDomElements:
         )
 
     @property
-    def adresse_etablissement_input(self) -> Locator:
-        return self.page.locator(".adresse-etablissement .choices__list--single").locator("visible=true").locator("..")
-
-    @property
     def siret_etablissement_input(self) -> Locator:
         return self.page.locator('[id^="id_lieux-"][id$="siret_etablissement"]').locator("visible=true")
 
@@ -325,6 +320,70 @@ class LieuFormDomElements:
     @property
     def position_etablissement_input(self) -> Locator:
         return self.page.locator('[id^="id_lieux-"][id$="distribution_etablissement"]').locator("visible=true")
+
+    def __init__(self, page: Page):
+        self.page = page
+        # Mock BAN search by default
+        self._address_choicejs = ChoiceJSPage(self.page, self.page.get_by_test_id("ban-search"))
+        self._address_etablissement_choicejs = ChoiceJSPage(
+            self.page, self.page.get_by_test_id("ban-search-etablissement")
+        )
+
+    @contextlib.contextmanager
+    def mock_ban(self):
+        ban_url = "https://api-adresse.data.gouv.fr/search/?*"
+        self.page.route(
+            ban_url,
+            lambda route: route.fulfill(
+                status=200, content_type="application/json", body="""{"type": "FeatureCollection","features": []}"""
+            ),
+        )
+        yield
+        self.page.unroute(ban_url)
+
+    def force_lieu_address(self, adresse: str):
+        with self.mock_ban():
+            self._address_choicejs.try_select_option(f"{adresse} (Forcer la valeur)", search=adresse)
+
+    def force_etablissement_address(self, adresse: str):
+        with self.mock_ban():
+            self._address_etablissement_choicejs.try_select_option(f"{adresse} (Forcer la valeur)", search=adresse)
+
+    def force_commune(self, config=None):
+        if not config:
+            response_body = [
+                {
+                    "codesPostaux": ["59000", "59160", "59260", "59777", "59800"],
+                    "nom": "Lille",
+                    "code": "59350",
+                    "_score": 1.8082078747980779,
+                    "departement": {"code": "59", "nom": "Nord"},
+                }
+            ]
+            config = {
+                "search_text": "Lille",
+                "option_name": f"Lille ({response_body[0]['codesPostaux'][0]})",
+                "response_body": json.dumps(response_body),
+            }
+
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+
+        self.page.route(
+            url,
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=config["response_body"],
+            ),
+        )
+
+        ChoiceJSPage(self.page, self.page.get_by_test_id("communes-search")).try_select_option(
+            config["option_name"], search=config["search_text"]
+        )
+        self.page.unroute(url)
+
+    def fill_lieu_address(self, exact_name, *, search=None):
+        self._address_choicejs.try_select_option(exact_name, search=search)
 
     def set_supply_chain(self, name):
         # Using set_checked(True, force=True) because Playwright tests that checkbox isn't obscured as part of
