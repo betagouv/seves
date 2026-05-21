@@ -278,7 +278,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         choices=InvestigationFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée", required=True
     )
 
-    nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
+    nb_sick_persons = forms.IntegerField(required=True, label="Nombre de malades total")
     nb_sick_persons_to_hospital = forms.IntegerField(required=False, label="Dont conduits à l'hôpital")
     nb_dead_persons = forms.IntegerField(required=False, label="Dont décédés")
     datetime_first_symptoms = forms.DateTimeField(

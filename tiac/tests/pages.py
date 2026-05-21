@@ -577,6 +577,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def fill_required_fields(self, obj: InvestigationTiac):
         self.contenu.fill(obj.contenu)
         self.set_follow_up(obj.follow_up)
+        self.nb_sick_persons.fill(str(obj.nb_sick_persons))
 
     def fill_context_block(self, obj: InvestigationTiac):
         self.fill_required_fields(obj)
@@ -587,7 +588,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.set_will_trigger_inquiry(obj.will_trigger_inquiry)
         self.numero_sivss.fill(obj.numero_sivss)
 
-        self.nb_sick_persons.fill(str(obj.nb_sick_persons))
         self.nb_sick_persons_to_hospital.fill(str(obj.nb_sick_persons_to_hospital))
         self.nb_dead_persons.fill(str(obj.nb_dead_persons))
         self.datetime_first_symptoms.fill(obj.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))

@@ -314,7 +314,7 @@ class InvestigationTiac(
     )
 
     # Cas
-    nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total", null=True)
+    nb_sick_persons = models.IntegerField(verbose_name="Nombre de malades total")
     nb_sick_persons_to_hospital = models.IntegerField(verbose_name="Dont conduits à l'hôpital", null=True)
     nb_dead_persons = models.IntegerField(verbose_name="Dont décédés", null=True)
     datetime_first_symptoms = models.DateTimeField(
