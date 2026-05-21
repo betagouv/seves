@@ -8,6 +8,7 @@ from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.models import Contact, Departement, LienLibre
+from ssa.constants import Source
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import Etablissement, EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
@@ -751,3 +752,19 @@ def test_categorie_danger_dont_show(live_server, mocked_authentification_user, p
     page.keyboard.type("Sal")
     expect(dropdown.locator(".categorie-danger-header")).to_be_hidden()
     assert "Dangers les plus courants" not in dropdown.inner_text()
+
+
+def test_can_create_evenement_produit_with_maestro_reference(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate(extra_url="?maestro_reference=123456")
+
+    expect(creation_page.source).to_have_value(Source.PRELEVEMENT_PSPC)
+    expect(creation_page.description).to_have_value("Référence Maestro : 123456")
+    creation_page.type_evenement.select_option(input_data.type_evenement)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    assert evenement_produit.source == Source.PRELEVEMENT_PSPC
+    assert evenement_produit.description == "Référence Maestro : 123456"
+    assert evenement_produit.maestro_reference == "123456"
