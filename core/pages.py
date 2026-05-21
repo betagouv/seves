@@ -105,21 +105,24 @@ class BaseDocumentPage(ABC):
         if close:
             self.validate_document_modal()
 
+    def get_accordion(self, document_name):
+        return (
+            self.page.get_by_test_id("document-upload-title")
+            .get_by_text(document_name, exact=True)
+            .locator('xpath=./ancestor::*[@data-testid="document-upload"]')
+        )
+
     def remove_document_by_name_from_modal(self, document_name):
         self.open_document_modal()
         accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
         count = accordions.count()
-        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        self.get_accordion(document_name).get_by_role(role="button", name="Supprimer").click()
         expect(accordions).to_have_count(count - 1)
         self.validate_document_modal()
 
     @contextmanager
     def modify_document_by_name(self, document_name, *, validate_modal=True) -> Generator[Locator, None, None]:
-        accordion = (
-            self.page.get_by_test_id("document-upload-title")
-            .get_by_text(document_name, exact=True)
-            .locator('xpath=./ancestor::*[@data-testid="document-upload"]')
-        )
+        accordion = self.get_accordion(document_name)
         # Setting a temporary data-testid to resist `nom` field changes
         # language=javascript
         accordion.evaluate('el => el.setAttribute("data-testid", "document-upload-tmp")')
