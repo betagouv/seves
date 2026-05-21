@@ -125,7 +125,7 @@ gunicorn==26.0.0
     # via -r requirements.in
 identify==2.5.35
     # via pre-commit
-idna==3.7
+idna==3.15
     # via requests
 iniconfig==2.0.0
     # via pytest
