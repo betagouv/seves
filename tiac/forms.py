@@ -49,11 +49,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         label="Date de réception",
         widget=forms.DateInput(
             format="%Y-%m-%d",
-            attrs={
-                "type": "date",
-                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
-                "max": timezone.localtime(timezone.now()).date().isoformat(),
-            },
+            attrs={"type": "date"},
         ),
     )
     numero_rasff = forms.CharField(
@@ -108,6 +104,10 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
         self._add_free_links()
+
+        today = timezone.localtime(timezone.now()).date().isoformat()
+        self.fields["date_reception"].initial = today
+        self.fields["date_reception"].widget.attrs["max"] = today
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -248,11 +248,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         label="Date de réception",
         widget=forms.DateInput(
             format="%Y-%m-%d",
-            attrs={
-                "type": "date",
-                "value": timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d"),
-                "max": timezone.localtime(timezone.now()).date().isoformat(),
-            },
+            attrs={"type": "date"},
         ),
     )
     numero_rasff = forms.CharField(
@@ -404,6 +400,10 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             )
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
+
+        today = timezone.localtime(timezone.now()).date().isoformat()
+        self.fields["date_reception"].initial = today
+        self.fields["date_reception"].widget.attrs["max"] = today
 
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
