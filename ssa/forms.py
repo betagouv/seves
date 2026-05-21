@@ -40,11 +40,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         label="Date de réception",
         widget=forms.DateInput(
             format="%Y-%m-%d",
-            attrs={
-                "type": "date",
-                "value": timezone.localtime(timezone.now()).date().isoformat(),
-                "max": timezone.localtime(timezone.now()).date().isoformat(),
-            },
+            attrs={"type": "date"},
         ),
     )
     numero_rasff = forms.CharField(
@@ -99,6 +95,12 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
             CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
             CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE,
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        today = timezone.localtime(timezone.now()).date().isoformat()
+        self.fields["date_reception"].initial = today
+        self.fields["date_reception"].widget.attrs["max"] = today
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
