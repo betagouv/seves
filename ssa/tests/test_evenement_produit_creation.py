@@ -2,6 +2,7 @@ import json
 from unittest import mock
 from unittest.mock import Mock
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
@@ -384,7 +385,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
 
@@ -432,7 +433,7 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=Mon%20addresse%20qui%20n%27existe%20pas&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=Mon%20addresse%20qui%20n%27existe%20pas&limit=15",
         handle,
     )
 
