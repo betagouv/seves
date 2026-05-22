@@ -71,7 +71,6 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     assert message_page.message_type_in_table() == "Message"
 
     new_page = message_page.open_message()
-    message_page.page.wait_for_timeout(20000)
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert (
         '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-blue-france-sun-113-625">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
