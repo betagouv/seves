@@ -881,7 +881,7 @@ def test_can_add_lieu_with_adresse_auto_complete(
         call_count["count"] += 1
 
     form_elements.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
     OrganismeNuisible.objects.get_or_create(
@@ -1011,7 +1011,7 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
         call_count["count"] += 1
 
     form_elements.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
     OrganismeNuisible.objects.get_or_create(

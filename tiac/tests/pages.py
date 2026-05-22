@@ -2,6 +2,7 @@ import json
 import re
 from urllib.parse import quote
 
+from django.conf import settings
 from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
@@ -55,7 +56,7 @@ class WithEtablissementMixin:
                 route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
 
             self.page.route(
-                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                f"{settings.GEOCODE_URL}/search/?q={quote(adresse)}&limit=15",
                 handle,
             )
 
