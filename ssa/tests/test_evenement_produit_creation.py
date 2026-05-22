@@ -1,6 +1,6 @@
 import json
 from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -755,7 +755,11 @@ def test_categorie_danger_dont_show(live_server, mocked_authentification_user, p
     assert "Dangers les plus courants" not in dropdown.inner_text()
 
 
-def test_can_create_evenement_produit_with_maestro_reference(live_server, mocked_authentification_user, page: Page):
+def test_can_create_evenement_produit_with_maestro_reference(
+    live_server, mocked_authentification_user, page: Page, settings
+):
+    settings.MAESTRO_WEBHOOK_URL = "https://example.com/webhook/"
+    settings.CELERY_TASK_ALWAYS_EAGER = True
     input_data = EvenementProduitFactory.build()
     creation_page = EvenementProduitFormPage(page, live_server.url)
     creation_page.navigate(extra_url="?maestro_reference=123456")
@@ -763,9 +767,22 @@ def test_can_create_evenement_produit_with_maestro_reference(live_server, mocked
     expect(creation_page.source).to_have_value(Source.PRELEVEMENT_PSPC)
     expect(creation_page.description).to_have_value("Référence Maestro : 123456")
     creation_page.type_evenement.select_option(input_data.type_evenement)
-    creation_page.submit_as_draft()
+
+    mock_post = MagicMock(status_code=200)
+    with mock.patch("ssa.maestro.requests.post", mock.Mock(return_value=mock_post)) as mocked_post:
+        creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()
+    mocked_post.assert_called_once_with(
+        "https://example.com/webhook/",
+        json={
+            "maestro_reference": "123456",
+            "seved_id": evenement_produit.id,
+            "seves_numero": evenement_produit.numero,
+        },
+        timeout=15,
+    )
+
     assert evenement_produit.source == Source.PRELEVEMENT_PSPC
     assert evenement_produit.description == "Référence Maestro : 123456"
     assert evenement_produit.maestro_reference == "123456"
