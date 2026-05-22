@@ -198,6 +198,9 @@ class StructureQueryset(QuerySet):
     def only_DD(self):
         return self.filter(libelle__startswith="DD").can_be_contacted()
 
+    def get_mus(self):
+        return self.get(niveau2=MUS_STRUCTURE)
+
 
 class EvenementManagerMixin:
     def _with_nb_liens_libres(self, model_class):
