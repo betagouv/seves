@@ -52,3 +52,27 @@ def test_send_email_document_uploaded(mailoutbox, mus_contact):
     # Make sure the emails are sent only once
     call_command("send_document_emails_batch")
     assert len(mailoutbox) == 2
+
+
+@pytest.mark.django_db
+def test_send_email_document_uploaded_when_sender_is_not_mus(mailoutbox, mus_contact):
+    contact_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP,), agent__structure=mus_contact.structure
+    )
+    evenement_produit = EvenementProduitFactory()
+    evenement_produit.contacts.add(contact_agent)
+    doc_1 = DocumentFactory(content_object=evenement_produit, document_type=Document.TypeDocument.RAPPORT_ANALYSE)
+    doc_2 = DocumentFactory(
+        content_object=evenement_produit,
+        created_by_structure=mus_contact.structure,
+        document_type=Document.TypeDocument.ANALYSE_RISQUE,
+    )
+    evenement_produit.documents.add(doc_1, doc_2)
+
+    call_command("send_document_emails_batch")
+    assert len(mailoutbox) == 1
+
+    mail = mailoutbox[0]
+    assert "Ajout de document" in mail.subject
+    assert doc_1.nom in mail.body
+    assert doc_2.nom not in mail.body
