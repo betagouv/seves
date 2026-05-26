@@ -494,7 +494,6 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin, WithActionsPage, WithSy
             ".choices:has(#id_recipients)",
             contact,
             contact,
-            use_locator_as_parent_element=True,
         )
 
     def add_message_content_and_send(self):
@@ -832,7 +831,6 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
             ".choices:has(#id_recipients)",
             contact,
             contact,
-            use_locator_as_parent_element=True,
         )
 
     def add_message_content_and_send(self):

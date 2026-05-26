@@ -223,7 +223,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 self.recipients_locator,
                 contact.nom,
                 contact.contact_set.get().display_with_agent_unit,
-                use_locator_as_parent_element=True,
             )
         elif isinstance(contact, Structure):
             choice_js_fill(
@@ -231,7 +230,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 self.recipients_locator,
                 contact.libelle,
                 contact.libelle,
-                use_locator_as_parent_element=True,
             )
         else:
             raise NotImplementedError
@@ -243,7 +241,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
                 contact.nom,
                 contact.contact_set.get().display_with_agent_unit,
-                use_locator_as_parent_element=True,
             )
         elif isinstance(contact, Structure):
             choice_js_fill(
@@ -251,7 +248,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
                 contact.libelle,
                 contact.libelle,
-                use_locator_as_parent_element=True,
             )
         else:
             raise NotImplementedError

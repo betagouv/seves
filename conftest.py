@@ -85,7 +85,6 @@ def choice_js_fill():
         sel_or_locator,
         fill_content,
         exact_name,
-        use_locator_as_parent_element=None,
         *,
         check_selection=None,
     ):
