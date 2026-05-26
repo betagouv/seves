@@ -122,6 +122,7 @@ def test_can_add_admin_permissions_to_user_with_existing_permissions(
     page.locator(".white-container").get_by_text("Alim", exact=True).check()
     page.locator(".white-container").get_by_text("SV", exact=True).uncheck()
     page.get_by_role("button", name="Accorder le rôle administrateur").click()
+    expect(page.locator("#fr-modal-add-user")).to_be_visible()
     page.get_by_role("button", name="Confirmer le rôle d’administrateur").click()
     expect(page.get_by_text("Le rôle administrateur a été accordé")).to_be_visible()
 
