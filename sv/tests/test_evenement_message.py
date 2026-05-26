@@ -128,14 +128,12 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy_agent.agent.nom,
         contact_copy_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy_structure.structure.libelle,
         contact_copy_structure.structure.libelle,
-        use_locator_as_parent_element=True,
     )
     page.get_by_test_id("fildesuivi-add-submit").click()
 
@@ -176,14 +174,12 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         'label[for="id_recipients"] ~ div.choices',
         agents[0].nom,
         agents[0].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         agents[1].nom,
         agents[1].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
 
     page.keyboard.press("Escape")
@@ -194,14 +190,12 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         'label[for="id_recipients_copy"] ~ div.choices',
         agents[2].nom,
         agents[2].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
         agents[3].nom,
         agents[3].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
 
     page.locator("#id_title").fill("Title of the message")
@@ -367,7 +361,7 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "FOO", "FOO", use_locator_as_parent_element=True)
+    choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "FOO", "FOO")
     choice_js_cant_pick(page, 'label[for="id_recipients"] ~ div.choices', "BAR", "BAR")
 
 
@@ -456,7 +450,6 @@ def test_create_message_adds_agent_and_structure_contacts(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
     # Ajout de la copie
@@ -465,7 +458,6 @@ def test_create_message_adds_agent_and_structure_contacts(
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy.agent.nom,
         contact_copy.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
     page.locator("#id_title").fill("Title of the message")
@@ -523,7 +515,6 @@ def test_create_multiple_messages_adds_contacts_once(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 1")
     page.locator("#rich-text-editor .ql-editor").fill("Message de test 1")
@@ -538,7 +529,6 @@ def test_create_multiple_messages_adds_contacts_once(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 2")
     page.locator("#rich-text-editor .ql-editor").fill("Message de test 2")
@@ -591,7 +581,6 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#rich-text-editor .ql-editor").fill("Message de test")
@@ -626,7 +615,6 @@ def test_create_message_from_locale_from_same_structure_does_not_changes_visibil
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#rich-text-editor .ql-editor").fill("Message de test")
@@ -664,7 +652,6 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#rich-text-editor .ql-editor").fill("Message de test")
@@ -748,7 +735,6 @@ def test_message_with_national_referent_does_not_add_structure(live_server, page
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national")
     page.locator("#rich-text-editor .ql-editor").fill("Test avec référent national")
@@ -783,14 +769,12 @@ def test_message_with_two_national_referents_in_same_structure_does_not_add_stru
         'label[for="id_recipients"] ~ div.choices',
         national_referent1.agent.nom,
         national_referent1.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         national_referent2.agent.nom,
         national_referent2.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour deux référents nationaux")
     page.locator("#rich-text-editor .ql-editor").fill("Test avec deux référents nationaux")
@@ -821,14 +805,12 @@ def test_message_with_national_referent_and_regular_agent_add_structure(live_ser
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         regular_agent.agent.nom,
         regular_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national et agent normal")
     page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires")
@@ -858,14 +840,12 @@ def test_message_with_national_referent_and_regular_agent_in_different_structure
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         regular_agent.agent.nom,
         regular_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour agents de structures différentes")
     page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires de structures différentes")
@@ -889,7 +869,6 @@ def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutb
         'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
     page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
@@ -958,7 +937,6 @@ def test_can_add_draft_demande_intervention(
         'label[for="id_recipients"] ~ div.choices',
         active_contact.display_with_agent_unit,
         active_contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the demande d'intervention")
     page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
