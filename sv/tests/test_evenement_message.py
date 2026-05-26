@@ -395,7 +395,9 @@ def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(live_server, page: Page):
+def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(
+    live_server, page: Page, choice_js_fill
+):
     evenement = EvenementFactory()
     nb_structure = 20
     for i in range(nb_structure):
@@ -411,28 +413,14 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     page.get_by_role("link", name="Message").click()
 
     # Test le champ Destinataires
-    page.locator('label[for="id_recipients"] ~ div.choices').click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(
-            page.locator('label[for="id_recipients"] ~ div.choices')
-            .locator(".choices__list")
-            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
-        ).to_be_visible()
+        choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "Structure", f"Structure {i + 1}")
 
     page.locator(".fr-select").first.press("Escape")
 
     # Test le champ Copie
-    page.locator('label[for="id_recipients_copy"] ~ div.choices').click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(
-            page.locator('label[for="id_recipients_copy"] ~ div.choices')
-            .locator(".choices__list")
-            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
-        ).to_be_visible()
+        choice_js_fill(page, 'label[for="id_recipients_copy"] ~ div.choices', "Structure", f"Structure {i + 1}")
 
 
 def test_create_message_adds_agent_and_structure_contacts(
