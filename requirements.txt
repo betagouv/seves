@@ -73,6 +73,7 @@ django==6.0.5
     #   django-reversion-compare
     #   django-storages
     #   django-waffle
+    #   django-widget-tweaks
     #   mozilla-django-oidc
     #   sentry-sdk
 django-countries==8.2.0
@@ -101,7 +102,7 @@ django-storages[s3]==1.14.6
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
-django-widget-tweaks==1.5.0
+django-widget-tweaks==1.5.1
     # via django-dsfr
 djhtml==3.0.11
     # via -r requirements.in
