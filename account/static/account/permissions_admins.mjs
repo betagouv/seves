@@ -45,7 +45,10 @@ class PermissionsAdminsFormController extends Controller {
             "Vous êtes sur le point de donner à "
             + getSelectedLabel(this.selectUserTarget)
             + " la possibilité de donner les droits d’accès à Sèves pour sa structure, êtes-vous sûr de vouloir poursuivre ? "
-        dsfr(this.confirmModalTarget).modal.disclose()
+
+        requestAnimationFrame(() => {
+            dsfr(this.confirmModalTarget).modal.disclose()
+        })
     }
 
     onConfirm() {
