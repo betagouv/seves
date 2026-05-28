@@ -1,4 +1,6 @@
+import {applicationReady} from "Application"
 import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
+import {Controller} from "Stimulus"
 
 const NOTICE_TEXT = "Il existe des sous catégories pour « __value__ » : pensez à préciser dès que possible."
 
@@ -7,15 +9,10 @@ function handleValueChangeCategorieDanger(value, options) {
         .map(n => n.name)
         .join(" > ")
 
-    document.getElementById("id_categorie_danger").value = value
+    const input = document.getElementById("id_categorie_danger")
+    input.value = value
+    input.dispatchEvent(new Event("input"))
     document.querySelector("#categorie-danger .treeselect-input__tags-count").innerText = fullPath
-    if (document.getElementById("pam-container")) {
-        if (fullPath.includes("Bactérie >") && document.getElementById("pam-container")) {
-            document.getElementById("pam-container").classList.remove("fr-hidden")
-        } else {
-            document.getElementById("pam-container").classList.add("fr-hidden")
-        }
-    }
 }
 
 function handleNoticeDangerDisplay(options, value) {
@@ -95,10 +92,6 @@ function setupCategorieDanger() {
     treeselect.srcElement.addEventListener("input", e => {
         if (e.detail) {
             handleValueChangeCategorieDanger(e.detail, options)
-        } else {
-            if (document.getElementById("pam-container")) {
-                document.getElementById("pam-container").classList.add("fr-hidden")
-            }
         }
     })
 
@@ -106,6 +99,47 @@ function setupCategorieDanger() {
         handleNoticeDangerDisplay(options, e.detail)
     })
     handleNoticeDangerDisplay(options, selectedValue)
+    document.querySelector("#id_categorie_danger").dispatchEvent(new Event("input"))
 }
 
-setupCategorieDanger()
+/**
+ * @property {HTMLInputElement} categorieDangerInputTarget
+ * @property {HTMLElement} pamContainerTarget
+ */
+class RisqueController extends Controller {
+    static targets = ["categorieDangerInput", "pamContainer"]
+
+    #dangersBacteriens = new Set()
+
+    initialize() {
+        this.#dangersBacteriens = new Set(JSON.parse(this.element.querySelector("#dangers-bacteriens").innerText))
+    }
+
+    /** @param {HTMLInputElement} el */
+    async categorieDangerInputTargetConnected(el) {
+        if (el.type === "radio" && el.checked) {
+            el.dispatchEvent(new Event("change"))
+        }
+    }
+
+    onCategorieDangerSelected({target}) {
+        let show = false
+        if (target.type === "radio") {
+            // new treeselect
+            show = target.checked && this.#dangersBacteriens.has(target.value)
+        } else {
+            show = this.#dangersBacteriens.has(target.value)
+        }
+
+        if (show) {
+            this.pamContainerTarget.classList.remove("fr-hidden")
+        } else {
+            this.pamContainerTarget.classList.add("fr-hidden")
+        }
+    }
+}
+
+applicationReady.then(app => {
+    app.register("risque-fieldset", RisqueController)
+    setupCategorieDanger()
+})
