@@ -104,6 +104,8 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
+    CategorieDanger = CategorieDanger
+
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     source = SEVESChoiceField(choices=Source.choices, required=True)
 
