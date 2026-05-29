@@ -168,8 +168,12 @@
                                                         </li>
                                                     {% endif %}
                                                 </ul>
-                                                {% include "core/_modale_edition_document.html" %}
-                                                {% include "core/_modale_suppression_document.html" %}
+                                                {% if can_update_document %}
+                                                    {% include "core/_modale_edition_document.html" %}
+                                                {% endif %}
+                                                {% if can_delete_document %}
+                                                    {% include "core/_modale_suppression_document.html" %}
+                                                {% endif %}
                                             {% endif %}
 
                                         </td>
