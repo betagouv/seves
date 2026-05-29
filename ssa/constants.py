@@ -1122,8 +1122,11 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Substitut de dessert lacté, de yaourt",
         "Analogue végétal > Substitut de dessert lacté, de yaourt",
     )
-    SUBTITUT_DE_PRODUIT_CARNE = "Subtitut de produit carné", "Analogue végétal > Subtitut de produit carné"
-    SUBTITUT_DE_PRODUIT_AQUATIQUE = "Subtitut de produit aquatique", "Analogue végétal > Subtitut de produit aquatique"
+    SUBTITUT_DE_PRODUIT_CARNE = "Substitut de produit carné", "Analogue végétal > Substitut de produit carné"
+    SUBTITUT_DE_PRODUIT_AQUATIQUE = (
+        "Substitut de produit aquatique",
+        "Analogue végétal > Substitut de produit aquatique",
+    )
     SUBSTITUT_D_OEUF = "Substitut d'oeuf", "Analogue végétal > Substitut d'oeuf"
     SANDWICH = "Sandwich (avec ou sans DAOA)", "Composé ou cuisiné > Sandwich (avec ou sans DAOA)"
     PIZZA = "Pizza (avec ou sans DAOA)", "Composé ou cuisiné > Pizza (avec ou sans DAOA)"
@@ -1259,8 +1262,8 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Séché, cuit, fermenté  (yc aromatisé) (hors germé) (hors farine)",
     )
     GC_PREPARATION_A_BASE_DE_CEREALE_ET_D_EAU = (
-        "GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermiGClle, sans œuf)",
-        "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermiGClle, sans œuf)",
+        "GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermicelle, sans œuf)",
+        "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermicelle, sans œuf)",
     )
     GC_PRODUIT_DE_LA_BOULANGERIE = (
         "GC - Produit de la boulangerie (pain et viennoiserie)",

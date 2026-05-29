@@ -917,7 +917,7 @@ class WithExportHeterogeneousQuerysetMixin:
         task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
         self.get_export_task().delay_on_commit(task.id)
         messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+            request, "Votre demande d'export a bien été enregistrée, vous recevrez un mail quand le fichier sera prêt."
         )
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
