@@ -135,7 +135,7 @@ def test_can_add_admin_permissions_to_user_with_existing_permissions(
 
 
 @pytest.mark.django_db
-def test_can_filter_table_on_structure(live_server, page, mocked_authentification_user):
+def test_can_filter_table_on_structure(live_server, page, mocked_authentification_user, choice_js_fill):
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
     mocked_authentification_user.agent.structure = structure
@@ -151,7 +151,7 @@ def test_can_filter_table_on_structure(live_server, page, mocked_authentificatio
     expect(page.locator("table").get_by_text(agent_already_admin_1.agent_with_structure, exact=True)).to_be_visible()
     expect(page.locator("table").get_by_text(agent_already_admin_2.agent_with_structure, exact=True)).to_be_visible()
 
-    page.get_by_label("Structure").select_option("DDPP1")
+    choice_js_fill(page, page.locator(".fr-table .choices"), "DDPP1", "DDPP1")
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.locator("table").get_by_text(agent_already_admin_1.agent_with_structure, exact=True)).to_be_visible()

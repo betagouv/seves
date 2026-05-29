@@ -4,7 +4,16 @@ import {getSelectedLabel} from "Forms"
 import {Controller} from "Stimulus"
 
 class PermissionsAdminsFormController extends Controller {
-    static targets = ["selectUser", "submitBtn", "confirmModal", "modalContent", "form", "SSACheckbox", "SVCheckbox"]
+    static targets = [
+        "selectUser",
+        "submitBtn",
+        "confirmModal",
+        "modalContent",
+        "form",
+        "SSACheckbox",
+        "SVCheckbox",
+        "structureFilter",
+    ]
     static values = {config: Object}
 
     connect() {
@@ -19,6 +28,14 @@ class PermissionsAdminsFormController extends Controller {
             this.checkCheckboxesIfNeeded()
             this.handleButtonState()
         })
+
+        const optionsFilter = {
+            ...choicesDefaults,
+            removeItemButton: true,
+            placeholderValue: "Choisir dans la liste",
+            searchPlaceholderValue: "Choisir dans la liste",
+        }
+        new Choices(this.structureFilterTarget, optionsFilter)
     }
 
     checkCheckboxesIfNeeded() {
