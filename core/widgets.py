@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 import dataclasses
 import itertools
 import re
@@ -74,6 +74,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         return context
 
     def optgroups(self, name, value, attrs=None):
+        attr = attrs or {}
         has_selected = False
         for option_label, option_value in self.choices.items():
             if self._is_dunder(option_label):
@@ -81,6 +82,8 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
             if isinstance(option_value, Mapping):
                 yield TreeselectGroupWidget(self.parent, option_label, option_value).get_context(name, value, attrs)
             else:
+                if categorised_label := self.parent.field_choices.get(option_value):
+                    attr["data-categorised-label"] = categorised_label
                 selected = (not has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
                 has_selected |= selected
                 yield self.create_option(
@@ -121,6 +124,11 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     def choices(self, value):
         if not self._choices:
             self._choices = self._choices_as_dict(value)
+        self._field_choices = dict(value)
+
+    @property
+    def field_choices(self) -> dict[Any, str]:
+        return self._field_choices
 
     @property
     def media(self):
@@ -138,19 +146,29 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         choices: Iterable[tuple[Any, Any] | tuple[str, Iterable[tuple[Any, Any]]]] | Iterable[TreeselectGroup] = (),
         *,
         input_type: Literal["checkbox", "radio"] = None,
-        has_search_bar=_UNSET,
-        category_separator=_UNSET,
+        has_search_bar: bool = _UNSET,
+        category_separator: str = _UNSET,
     ):
-        self._choices = {}
-        self._widget_choices = None
-
         if input_type is not None:
             self.input_type = input_type
         if has_search_bar is not _UNSET:
             self.has_search_bar = has_search_bar
         if category_separator is not _UNSET:
             self.category_separator = category_separator
-        super().__init__(attrs, choices)
+
+        # Here, we want to avoid triggering the self.choices setter. The rationale is that if constructor is called
+        # with a value for the 'choices' parameter, it's most likely to specify categories and subcategories that are
+        # different from the 'choices' that is passed to the field. So we want to detect that case and recover
+        # the field's choices in self._field_choices instead.
+        self._choices = self._choices_as_dict(choices)
+        self._field_choices = {}
+        super().__init__(attrs, choices=())
+
+    def __deepcopy__(self, memo):
+        field_choices = copy(self._field_choices)
+        result = super().__deepcopy__(memo)
+        result._field_choices = field_choices
+        return result
 
     def get_next_id(self):
         if not hasattr(self, "_id_stream"):
