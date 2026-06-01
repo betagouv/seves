@@ -12,7 +12,15 @@ from sv.factories import (
     StructurePreleveuseFactory,
     ZoneInfesteeFactory,
 )
-from sv.models import Evenement, FicheZoneDelimitee, Lieu, Prelevement, StatutReglementaire, StructurePreleveuse
+from sv.models import (
+    Evenement,
+    FicheDetection,
+    FicheZoneDelimitee,
+    Lieu,
+    Prelevement,
+    StatutReglementaire,
+    StructurePreleveuse,
+)
 from sv.tests.pages import EvenementUpdatePage
 from sv.tests.test_utils import FicheDetectionFormDomElements, FicheZoneDelimiteeFormPage, PrelevementFormDomElements
 
@@ -287,3 +295,46 @@ def test_evenement_history_only_one_entry_when_lieu_is_deleted(
     deletion_text = "Objet supprimé : Lieu Mon lieu"
     expect(page.get_by_text(deletion_text, exact=True)).to_be_visible()
     expect(page.get_by_text(deletion_text, exact=True)).to_have_count(1)
+
+
+def test_evenement_history_content_add_and_edit_zone_infestee_with_detection(
+    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+):
+    statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
+    organisme_nuisible = OrganismeNuisibleFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    evenement = Evenement.objects.get()
+    detection = FicheDetection.objects.get()
+
+    page.get_by_role("tab", name="Zone").click()
+    page.get_by_role("button", name="Ajouter une zone").click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    fiche_zone = FicheZoneDelimitee.objects.get()
+    form_page = FicheZoneDelimiteeFormPage(page, choice_js_fill)
+    page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    form_page.add_zone_infestee_btn.click()
+    page.locator("#id_zones_infestees-0-nom").fill("Test")
+    form_page.submit_update_form()
+
+    form_page.page.goto(f"{live_server.url}{fiche_zone.get_update_url()}")
+    form_page.select_detections_in_zone_infestee(0, [detection])
+    form_page.submit_update_form()
+
+    content_type = ContentType.objects.get_for_model(Evenement)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+
+    creation_text = "Objet ajouté : FicheZoneDelimitee"
+    update_text = f"Fiche Détection ({detection}) - Zone Infestee"
+    expect(page.get_by_text(creation_text, exact=True)).to_be_visible()
+    expect(page.get_by_text(update_text, exact=True)).to_be_visible()
