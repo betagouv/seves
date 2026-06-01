@@ -338,3 +338,48 @@ def test_evenement_history_content_add_and_edit_zone_infestee_with_detection(
     update_text = f"Fiche Détection ({detection}) - Zone Infestee"
     expect(page.get_by_text(creation_text, exact=True)).to_be_visible()
     expect(page.get_by_text(update_text, exact=True)).to_be_visible()
+
+
+def test_evenement_history_content_prelevement_shows_even_when_added_with_lieu(
+    live_server, page, form_elements: FicheDetectionFormDomElements, lieu_form_elements, choice_js_fill
+):
+    statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
+    StructurePreleveuseFactory()
+    organisme_nuisible = OrganismeNuisibleFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    evenement = Evenement.objects.get()
+    detection = evenement.detections.get()
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+
+    form_elements.add_lieu_btn.click()
+    lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.save_btn.click()
+
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements = PrelevementFormDomElements(page)
+    prelevement_form_elements.date_prelevement_input.click()
+    prelevement_form_elements.structure_input.select_option(value=str(StructurePreleveuse.objects.first().id))
+    prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
+    prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.save_btn.click()
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    prelevement = Prelevement.objects.get()
+    content_type = ContentType.objects.get_for_model(Evenement)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+
+    creation_text = f"Objet ajouté : Prélèvement {str(prelevement)}"
+    expect(page.get_by_text(creation_text)).to_be_visible()
