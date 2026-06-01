@@ -128,4 +128,4 @@ class Lieu(WithLocalisableMixin, models.Model):
         with transaction.atomic():
             with reversion.create_revision():
                 super().save(*args, **kwargs)
-                force_update_on_version(self.fiche_detection)
+                transaction.on_commit(lambda: force_update_on_version(self.fiche_detection))

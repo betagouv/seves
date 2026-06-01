@@ -99,13 +99,18 @@ def create_manual_version(obj, comment, user=None):
 
 
 def force_update_on_version(object):
+    print("IN force_update_on_version" + str(object))
     last_version = Version.objects.get_for_object(object).first()
     if last_version:
         data = json.loads(last_version.serialized_data)
         if isinstance(data, list) and len(data) > 0:
+            print("IN IFF INSTANCE")
             data[0]["fields"]["_forced_update_trigger"] = str(timezone.now())
             last_version.serialized_data = json.dumps(data)
             last_version.save(update_fields=["serialized_data"])
+    else:
+        # Conclusion ça ne marche pas car on n'a pas de version sur l'object lieu à la base
+        print("NO last version for" + str(object))
 
 
 @cache
@@ -445,6 +450,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     self.handled_qs.append(str(sub_object_queryset.query))
 
                     for i in range(1, len(sub_object_queryset)):
+                        print("IN " + prefix)
+                        print(sub_object_queryset[i])
                         nested_diff, _ = self.compare(
                             item_1._object_version.object, sub_object_queryset[i], sub_object_queryset[i - 1]
                         )

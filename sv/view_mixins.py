@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import Http404
 import reversion
@@ -94,8 +95,11 @@ class WithPrelevementHandlingMixin:
                     lieu = prelevement.lieu
                     reversion.add_to_revision(lieu)
                     reversion.set_user(self.request.user)
-                force_update_on_version(lieu)
-                force_update_on_version(lieu.fiche_detection)
+                print("oooooooooooooo")
+                print(lieu)
+                print("oooooooooooooo")
+                transaction.on_commit(lambda: force_update_on_version(lieu))
+                transaction.on_commit(lambda: force_update_on_version(lieu.fiche_detection))
             else:
                 error_msg = ""
                 for field, error in prelevement_form.errors.items():
