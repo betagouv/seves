@@ -902,8 +902,8 @@ def test_can_add_lieu_with_adresse_auto_complete(
 
     lieu_form_elements.save_btn.click()
 
-    with page.expect_navigation(url="**/sv/evenement/**/**"):
-        form_elements.publish_btn.click()
+    form_elements.publish_btn.click()
+    page.wait_for_url("**/sv/evenement/**/**", timeout=10_000)
 
     lieu = Lieu.objects.get()
     assert lieu.adresse_lieu_dit == "251 Rue de Vaugirard"
