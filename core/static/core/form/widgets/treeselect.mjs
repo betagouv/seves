@@ -254,13 +254,14 @@ class Treeselect extends Controller {
 
     onChange({target}) {
         const label = target.labels[0].textContent.trim() || target.ariaLabel
+        const categorisedLabel = target.dataset.categorisedLabel || label
         // If inputs are radio buttons, we allow only one value
         if (target.type === "radio") {
             this.clearChoices()
         }
 
         if (target.checked) {
-            this.selectChoice(target.value, label)
+            this.selectChoice(target.value, label, categorisedLabel)
         } else {
             this.unselectChoice(target.value)
         }
@@ -285,8 +286,8 @@ class Treeselect extends Controller {
         this.dispatch(UNSELECT_EVENT, {detail: {value: "__all__"}})
     }
 
-    selectChoice(value, label) {
-        this.choices.set(value, label)
+    selectChoice(value, label, categorisedLabel) {
+        this.choices.set(value, categorisedLabel)
         this.selectedGroupTarget.insertAdjacentHTML(
             "beforeend",
             this.selectedTagTplTarget.innerHTML.replaceAll("__label__", label).replaceAll("__value__", value),
