@@ -28,6 +28,7 @@ from reversion.models import Version
 
 from core.audit import audit_log
 from core.constants import Visibilite
+from core.diffs import force_update_on_version
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     MediaDefiningMixin,
@@ -696,6 +697,11 @@ class FicheZoneDelimiteeUpdateView(
                 self.object = form.save()
                 formset.instance = self.object
                 formset.save()
+
+                for f in formset.forms:
+                    for d in f.cleaned_data["detections"].all():
+                        force_update_on_version(d)
+
                 self.add_user_contacts(self.object.evenement)
                 reversion.add_to_revision(self.object.evenement)
                 reversion.set_user(self.request.user)
