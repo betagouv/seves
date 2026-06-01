@@ -451,7 +451,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                         if getattr(item_1._object_version.object, "show_nested_diff_in_revision_list", True):
                             for change in nested_diff:
                                 pretty_field = self._get_pretty_field(change.field, prefix=prefix)
-                                diff.append(Diff(pretty_field, change.old, change.new, version2.revision))
+                                diff.append(Diff(pretty_field, change.old, change.new, sub_object_queryset[i].revision))
+
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:
