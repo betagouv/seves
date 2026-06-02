@@ -179,8 +179,9 @@ Pour le processus plus détaillé de mise en production:
 - Une fois toutes les PR déployées et testées sur la recette, la décision est prise de déployer le lot en cours en production.
 - Sur un repo à jour lancer la commande `git log --pretty=format:"%s" origin/production..main` ce qui permet de récupérer le titre des commits qui sont dans `main` mais pas dans `production`.
 - Copier le changelog et vérifier que tous les points sont OK.
-- Sur Github [créer une nouvelle PR](https://github.com/betagouv/seves/compare/production...main). Vérifiez que la base soit sur `production` et compare sur `main`. Nommer la PR avec comme titre "Mise en production DATE" et ouvrir la PR
-- Une fois la CI OK, merger la PR dans la branche `production`
+- Sur Github [créer une nouvelle PR](https://github.com/betagouv/seves/compare/production...main).
+- Vérifiez que la base soit sur `production` et compare sur `main`. Nommer la PR avec comme titre "Mise en production DATE" et ouvrir la PR
+- Une fois la CI OK, **en utilisant un merge-commit** (le dépôt est configuré sur merge-rebase par défaut), merger la PR dans la branche `production`,
 - Le déploiement se fait automatiquement dans Scalingo, suivre que tout se passe bien dans l'interface de Scalingo
 - Vérifier que la mise en production s'est bien déroulée
 - Annoncer la liste des changements à l'équipe
