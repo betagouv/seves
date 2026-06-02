@@ -49,14 +49,20 @@ def test_duplicate_commune_appears_only_once(live_server, page: Page):
     expect(page.get_by_text("La Rochelle et 1 autre Bordeaux", exact=True)).to_be_visible()
 
 
-def test_list_ordered_by_most_recent_date_derniere_modification(live_server, page: Page):
+def test_list_ordered_by_most_recent_date_derniere_modification(live_server, page: Page, form_elements):
     fiche_detection_1, fiche_detection_2, fiche_detection_3 = FicheDetectionFactory.create_batch(3)
-    fiche_detection_2.commentaire = "commentaire"
-    fiche_detection_2.save()
-    fiche_detection_1.evenement.numero_europhyt = 12345
-    fiche_detection_1.evenement.save()
-    fiche_detection_3.commentaire = "un commentaire"
-    fiche_detection_3.save()
+
+    page.goto(f"{live_server.url}{fiche_detection_2.get_update_url()}")
+    form_elements.commentaire_input.fill("commentaire")
+    form_elements.save_update_btn.click()
+
+    page.goto(f"{live_server.url}{fiche_detection_1.get_update_url()}")
+    form_elements.commentaire_input.fill("commentaire 2")
+    form_elements.save_update_btn.click()
+
+    page.goto(f"{live_server.url}{fiche_detection_3.get_update_url()}")
+    form_elements.commentaire_input.fill("commentaire 3")
+    form_elements.save_update_btn.click()
 
     page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
 

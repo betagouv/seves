@@ -4,7 +4,17 @@ import {getSelectedLabel} from "Forms"
 import {Controller} from "Stimulus"
 
 class PermissionsAdminsFormController extends Controller {
-    static targets = ["selectUser", "submitBtn", "confirmModal", "modalContent", "form"]
+    static targets = [
+        "selectUser",
+        "submitBtn",
+        "confirmModal",
+        "modalContent",
+        "form",
+        "SSACheckbox",
+        "SVCheckbox",
+        "structureFilter",
+    ]
+    static values = {config: Object}
 
     connect() {
         const options = {
@@ -15,12 +25,33 @@ class PermissionsAdminsFormController extends Controller {
         }
         this.choices = new Choices(this.selectUserTarget, options)
         this.choices.passedElement.element.addEventListener("choice", () => {
+            this.checkCheckboxesIfNeeded()
             this.handleButtonState()
         })
+
+        const optionsFilter = {
+            ...choicesDefaults,
+            removeItemButton: true,
+            placeholderValue: "Choisir dans la liste",
+            searchPlaceholderValue: "Choisir dans la liste",
+        }
+        new Choices(this.structureFilterTarget, optionsFilter)
+    }
+
+    checkCheckboxesIfNeeded() {
+        const userId = this.choices.getValue(true)
+        this.SSACheckboxTarget.checked = false
+        this.SVCheckboxTarget.checked = false
+        if (this.configValue[userId]) {
+            this.configValue[userId].forEach(group => {
+                if (group) {
+                    this[group + "CheckboxTarget"].checked = true
+                }
+            })
+        }
     }
 
     handleButtonState() {
-        this.submitBtnTarget.disabled = !(!!this.choices.getValue(true) && this.element.qu)
         const hasChoice = this.choices.getValue(true)?.length > 0
         const hasChecked = this.element.querySelectorAll('input[type="checkbox"]:checked').length > 0
         this.submitBtnTarget.disabled = !(hasChoice && hasChecked)
@@ -31,7 +62,10 @@ class PermissionsAdminsFormController extends Controller {
             "Vous êtes sur le point de donner à "
             + getSelectedLabel(this.selectUserTarget)
             + " la possibilité de donner les droits d’accès à Sèves pour sa structure, êtes-vous sûr de vouloir poursuivre ? "
-        dsfr(this.confirmModalTarget).modal.disclose()
+
+        requestAnimationFrame(() => {
+            dsfr(this.confirmModalTarget).modal.disclose()
+        })
     }
 
     onConfirm() {

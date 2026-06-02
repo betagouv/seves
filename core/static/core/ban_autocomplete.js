@@ -19,7 +19,7 @@ export function fetchAddress(query, {abortController = undefined} = {}) {
     if (abortController !== undefined) {
         init.signal = abortController.signal
     }
-    return fetch(`https://api-adresse.data.gouv.fr/search/?q=${query}&limit=15`, init)
+    return fetch(`https://data.geopf.fr/geocodage/search/?q=${query}&limit=15`, init)
         .then(response => response.json())
         .then(data =>
             data.features.map(item => ({

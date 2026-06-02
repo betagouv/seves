@@ -2,6 +2,7 @@ import pytest
 
 from core.factories import ContactStructureFactory, DocumentFactory, MessageFactory
 from sv.factories import (
+    ElementInfesteFactory,
     EvenementFactory,
     FicheDetectionFactory,
     FicheZoneFactory,
@@ -9,8 +10,9 @@ from sv.factories import (
     PrelevementFactory,
     ZoneInfesteeFactory,
 )
+from sv.models import FicheDetection
 
-BASE_NUM_QUERIES = 26  # Please note a first call is made without assertion to warm up any possible cache
+BASE_NUM_QUERIES = 25  # Please note a first call is made without assertion to warm up any possible cache
 
 
 @pytest.mark.django_db
@@ -72,11 +74,11 @@ def test_evenement_performances_with_lieux(client, django_assert_num_queries):
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
         client.get(evenement.get_absolute_url())
 
     LieuFactory.create_batch(3, fiche_detection=fiche_detection)
-    with django_assert_num_queries(BASE_NUM_QUERIES + 11):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 12):
         client.get(evenement.get_absolute_url())
 
 
@@ -100,12 +102,31 @@ def test_evenement_performances_with_prelevement(client, django_assert_num_queri
     fiche_detection = FicheDetectionFactory(evenement=evenement)
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 6):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
         client.get(evenement.get_absolute_url())
 
     PrelevementFactory.create_batch(3, lieu__fiche_detection=fiche_detection)
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 12):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 13):
+        client.get(evenement.get_absolute_url())
+
+
+@pytest.mark.django_db
+def test_evenement_performances_with_elements_infestes(client, django_assert_num_queries):
+    evenement = EvenementFactory()
+    fiche_detection: FicheDetection = FicheDetectionFactory(evenement=evenement)
+    assert fiche_detection.elements_infestes.count() == 0
+    client.get(evenement.get_absolute_url())
+
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
+        client.get(evenement.get_absolute_url())
+
+    ElementInfesteFactory.create_batch(3, fiche_detection=fiche_detection)
+    fiche_detection.refresh_from_db()
+    assert fiche_detection.elements_infestes.count() == 3
+    client.get(evenement.get_absolute_url())
+
+    with django_assert_num_queries(BASE_NUM_QUERIES + 7):
         client.get(evenement.get_absolute_url())
 
 
@@ -146,5 +167,5 @@ def test_fiche_zone_delimitee_with_multiple_zone_infestee(
 
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(BASE_NUM_QUERIES + 23):
+    with django_assert_num_queries(BASE_NUM_QUERIES + 24):
         client.get(evenement.get_absolute_url())

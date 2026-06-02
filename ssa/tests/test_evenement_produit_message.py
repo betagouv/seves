@@ -1,7 +1,6 @@
 from django.conf import settings
 from playwright.sync_api import Page, expect
 import pytest
-from waffle.testutils import override_flag
 
 from core.factories import ContactAgentFactory, ContactStructureFactory, MessageFactory
 from core.models import Message
@@ -44,13 +43,11 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement_produit)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, mocked_authentification_user):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_send_draft_message_with_rich_text_editor(
@@ -137,7 +134,6 @@ def test_can_preview_image_from_message_details(live_server, page: Page, mocked_
     generic_test_can_preview_image_from_message_details(live_server, page, evenement_produit)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_attachments_of_message(live_server, page: Page, mocked_authentification_user):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_can_download_zip_attachments_of_message(live_server, page, evenement_produit)

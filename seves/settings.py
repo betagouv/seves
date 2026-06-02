@@ -324,7 +324,6 @@ SECURE_CSP = {
         "geo.api.gouv.fr",
         "api.insee.fr",
         "data.economie.gouv.fr",
-        "api-adresse.data.gouv.fr",
         "fichiers-publics.agriculture.gouv.fr",
         "openmaptiles.data.gouv.fr",
         "data.geopf.fr",
@@ -362,3 +361,6 @@ REPLY_PREFIX = "[Rép]"
 
 USERS_NOT_ACTIVE_BY_DEFAULT = env("USERS_NOT_ACTIVE_BY_DEFAULT", default=True)
 USERS_DEFAULT_GROUPS = env.list("USERS_DEFAULT_GROUPS", default=[])
+
+GEOCODE_URL = "https://data.geopf.fr/geocodage"
+MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)

@@ -1,7 +1,6 @@
 {% extends "ssa/base.html" %}
-{% load waffle_tags %}
-{% load static %}
-{% load render_field dsfr_tags %}
+{% load dsfr_tags render_field static widget_tweaks %}
+
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_form.css' %}">
 {% endblock %}
@@ -68,10 +67,10 @@
                                 <input type="text" id="date-publication-input" class="fr-input fr-mt-0" value="{% if form.instance.date_publication %}{{ form.instance.date_publication|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                             </div>
                             <div>
-                                {% render_field form.date_reception %}
+                                {% seves_render_field form.date_reception %}
                             </div>
                             {% if form.numero_rasff %}
-                                <div class="rasff">{% render_field form.numero_rasff %}</div>
+                                <div class="rasff">{% seves_render_field form.numero_rasff %}</div>
                             {% endif %}
                             {{ form.aliments_animaux.label_tag }}
                             <div class="radio-inline-container radio-inline-container--wrap">
@@ -79,11 +78,11 @@
                             </div>
                         </div>
                         <div class="fr-col-12 fr-col-lg-4 flex-column">
-                            <div>{% render_field form.type_evenement %}</div>
-                            <div class="source">{% render_field form.source %}</div>
+                            <div>{% seves_render_field form.type_evenement %}</div>
+                            <div class="source">{% seves_render_field form.source %}</div>
                         </div>
                         <div class="fr-col-12 fr-col-lg-4">
-                            {% render_field form.description %}
+                            {% seves_render_field form.description %}
                         </div>
                     </div>
                 </div>
@@ -98,25 +97,25 @@
                                 <label>Catégorie de produit</label>
                                 <div id="categorie-produit"></div>
                                 <div>
-                                    {% flag "new_treeselect" %}
+                                    {% if flag_new_treeselect %}
                                         <div class="fr-mb-2w">
-                                            {{ form.categorie_produit  }}
+                                            {{ form.categorie_produit }}
                                         </div>
                                     {% else %}
                                         <div class="fr-mt-2w">
-                                            {{ form.categorie_produit  }}
+                                            {{ form.categorie_produit }}
                                         </div>
-                                    {% endflag %}
+                                    {% endif %}
 
                                     <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
                                         {% dsfr_notice title="__content__" %}
                                     </div>
                                     <div class="fr-mt-4v">
-                                        {% render_field form.denomination %}
+                                        {% seves_render_field form.denomination %}
                                     </div>
-                                    {% render_field form.marque %}
-                                    {% render_field form.lots %}
-                                    {% render_field form.description_complementaire %}
+                                    {% seves_render_field form.marque %}
+                                    {% seves_render_field form.lots %}
+                                    {% seves_render_field form.description_complementaire %}
                                     {{ form.temperature_conservation.label_tag }}
                                     <div class="radio-inline-container radio-inline-container--wrap">
                                         {{ form.temperature_conservation }}
@@ -126,17 +125,27 @@
                         </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
-                        <div class="white-container--lite tall-column risk-column">
+                        <div
+                            class="white-container--lite tall-column risk-column"
+                            data-controller="risque-fieldset"
+                        >
                             <h3>Risque</h3>
                             <div>
                                 <label>Catégorie de danger</label>
-                                <div id="categorie-danger"></div>
-                                {{ form.categorie_danger }}
+                                {% if flag_new_treeselect %}
+                                    {{ form.categorie_danger|set_data:"action:change->risque-fieldset#onCategorieDangerSelected"|set_data:"risque-fieldset-target:categorieDangerInput" }}
+                                {% else %}
+                                    <div id="categorie-danger"></div>
+                                    {{ form.categorie_danger|set_data:"action:risque-fieldset#onCategorieDangerSelected" }}
+                                {% endif %}
+
+                                {{ form.CategorieDanger.dangers_bacteriens|json_script:"dangers-bacteriens" }}
+
                                 <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
                                     {% dsfr_notice title="__content__" %}
                                 </div>
                                 <div class="fr-mt-4v">
-                                    {% render_field form.precision_danger %}
+                                    {% seves_render_field form.precision_danger %}
                                 </div>
                                 <div class="fr-mt-2w">
                                     <div class="fr-grid-row fr-grid-row--gutters">
@@ -146,19 +155,19 @@
                                             {{ form.quantification }}
                                         </div>
                                         <div class="fr-col-lg-4 fr-my-auto">
-                                            {% render_field form.quantification_unite %}
+                                            {% seves_render_field form.quantification_unite %}
                                         </div>
                                     </div>
                                 </div>
-                                {% render_field form.evaluation %}
-                                <div class="radio-inline-container fr-hidden" id="pam-container">
+                                {% seves_render_field form.evaluation %}
+                                <div class="radio-inline-container fr-hidden" data-risque-fieldset-target="pamContainer">
                                     {{ form.produit_pret_a_manger.label_tag }}
                                     <div class="radio-inline-container fr-ml-4w">
                                         {{ form.produit_pret_a_manger }}
                                     </div>
                                 </div>
-                                {% render_field form.reference_souches %}
-                                {% render_field form.reference_clusters %}
+                                {% seves_render_field form.reference_souches %}
+                                {% seves_render_field form.reference_clusters %}
                                 <div class="fr-notice fr-notice--info">
                                     <div class="fr-container">
                                         <div class="fr-notice__body">

@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Count
 
-from core.models import Document
+from core.models import Document, Structure
 from core.notifications import notify_document_upload
 from ssa.models import EvenementInvestigationCasHumain, EvenementProduit
 
@@ -14,6 +14,7 @@ class Command(BaseCommand):
         content_type_2 = ContentType.objects.get_for_model(EvenementInvestigationCasHumain)
 
         base_queryset = Document.objects.filter(notification_sent=False, document_type__in=Document.NEED_NOTIFICATION)
+        base_queryset = base_queryset.exclude(created_by_structure=Structure.objects.get_mus())
         base_queryset = base_queryset.filter(content_type_id__in=[content_type_1.id, content_type_2.id])
         groups = base_queryset.values("content_type", "object_id").annotate(count=Count("id"))
         for group in groups:

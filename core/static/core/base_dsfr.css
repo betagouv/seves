@@ -104,6 +104,14 @@
     align-self: flex-end;
 }
 
+.fr-flex--align-items-start {
+    align-items: flex-start !important;
+}
+
+.fr-flex--gap-2v {
+    gap: 0.5rem;
+}
+
 .fr-container-xxl {
     width: 100%;
     max-width: 90rem;

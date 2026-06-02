@@ -1,4 +1,5 @@
 import contextlib
+from email.parser import BytesParser
 import mimetypes
 import re
 
@@ -70,6 +71,16 @@ class AnyOfValidator:
 class MagicMimeValidator:
     def __call__(self, file):
         file.seek(0)
+
+        if file.name.endswith(".eml"):
+            try:
+                email = BytesParser().parsebytes(file.read())
+                if email.get("from") and email.get("to") and email.get("message-id"):
+                    return AllowedMimeTypes.MESSAGE_RFC822
+                file.seek(0)
+            except Exception:
+                file.seek(0)
+
         file_mime = magic.from_buffer(file.read(), mime=True)
         if file_mime == "application/octet-stream" and magic.version() < 546:
             # There's a knwon bug with libmagic where MS Office documents (xslx, docx, etc.) are detected as

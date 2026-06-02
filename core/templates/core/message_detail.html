@@ -1,10 +1,8 @@
 {% extends 'core/base.html' %}
 {% load static waffle_tags %}
 {% block extrahead %}
-    {% flag "rich_text_editor" %}
-        <link rel="stylesheet" href="{% static 'core/message_detail.css' %}">
-        <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
-    {% endflag %}
+    <link rel="stylesheet" href="{% static 'core/message_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'core/message_colors.css' %}">
 {% endblock %}
 {% block content %}
     {% for document in documents %}
@@ -87,27 +85,21 @@
                                     </div>
 
                                     <hr class="fr-hr-or fr-mt-2w">
-                                    {% flag "rich_text_editor" %}
-                                        {{ message.safe_message_content|linebreaksbr }}
-                                    {% else %}
-                                        {{ message.content|linebreaksbr }}
-                                    {% endflag %}
+                                    {{ message.safe_message_content|linebreaksbr }}
                                 </div>
                             </div>
                             <div class="fr-col-4 white-container">
                                 <h5>Documents</h5>
                                 {% if documents %}
                                     <p class="fr-hint-text">Pièces jointes. Retrouvez l'ensemble des documents dans l'onglet "Documents" du bloc de suivi.</p>
-                                    {% flag "download_zip" %}
-                                        {% if document_count_for_download > 1 %}
-                                            <form method="post" action="{% url 'document-zip' %}" class="zip-download">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
-                                                <input type="hidden" name="pk" value="{{ message.pk }}">
-                                                <button type="submit" class="fr-btn fr-icon-download-line fr-btn--icon-left fr-my-6v fr-btn--secondary">Télécharger les pièces jointes (zip)</button>
-                                            </form>
-                                        {% endif %}
-                                    {% endflag %}
+                                    {% if document_count_for_download > 1 %}
+                                        <form method="post" action="{% url 'document-zip' %}" class="zip-download">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                            <input type="hidden" name="pk" value="{{ message.pk }}">
+                                            <button type="submit" class="fr-btn fr-icon-download-line fr-btn--icon-left fr-my-6v fr-btn--secondary">Télécharger les pièces jointes (zip)</button>
+                                        </form>
+                                    {% endif %}
                                     {% for document in documents %}
                                         <div class="fr-card--shadow fr-mb-1w">
                                             <div class="fr-px-2w fr-py-1w message-document-container">

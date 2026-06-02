@@ -1,11 +1,10 @@
 from django.db import models
 from django.db.models import Count, Func, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
-from django.db.models.functions import Cast, Greatest
+from django.db.models.functions import Cast
 
 from core.constants import Visibilite
 from core.managers import EvenementManagerMixin
 from core.models import user_is_referent_national
-from sv.managers_mixins import WithDerniereMiseAJourManagerMixin
 
 
 class SplitPart(Func):
@@ -23,7 +22,7 @@ class StructurePreleveuseManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
-class FicheDetectionManager(WithDerniereMiseAJourManagerMixin, models.Manager):
+class FicheDetectionManager(models.Manager):
     def get_queryset(self):
         return FicheDetectionQuerySet(self.model, using=self._db).filter(is_deleted=False)
 
@@ -81,7 +80,7 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
         return self.filter(query)
 
     def optimized_for_export(self, contact):
-        from sv.models import Evenement
+        from sv.models import ElementInfeste, Evenement
 
         evenement_qs = (
             Evenement.objects.all()
@@ -105,10 +104,11 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
             "lieux__prelevements__matrice_prelevee",
             "lieux__prelevements__laboratoire",
             Prefetch("evenement", queryset=evenement_qs),
+            Prefetch("elements_infestes", queryset=ElementInfeste.objects.select_related("espece")),
         )
 
 
-class FicheZoneManager(WithDerniereMiseAJourManagerMixin, models.Manager):
+class FicheZoneManager(models.Manager):
     def get_queryset(self):
         return FicheZoneQuerySet(self.model, using=self._db)
 
@@ -124,7 +124,7 @@ class FicheZoneQuerySet(FichesCommonQueryset):
         )
 
 
-class EvenementManager(WithDerniereMiseAJourManagerMixin, models.Manager):
+class EvenementManager(models.Manager):
     def get_queryset(self):
         return EvenementQueryset(self.model, using=self._db).filter(is_deleted=False)
 
@@ -132,26 +132,6 @@ class EvenementManager(WithDerniereMiseAJourManagerMixin, models.Manager):
 class EvenementQueryset(EvenementManagerMixin, models.QuerySet):
     def order_by_numero(self):
         return self.order_by("-numero_annee", "-numero_evenement")
-
-    def with_date_derniere_mise_a_jour(self):
-        """
-        Calcule la date la plus récente de modification parmi l'événement,
-        ses détections et sa fiche zone délimitée, puis trie le queryset par cette date.
-        """
-        return self.annotate(
-            date_derniere_mise_a_jour_detections=models.Max(
-                "detections__date_derniere_mise_a_jour",
-            ),
-            date_derniere_mise_a_jour_zone=models.F(
-                "fiche_zone_delimitee__date_derniere_mise_a_jour",
-            ),
-            date_derniere_mise_a_jour_globale=Greatest(
-                "date_derniere_mise_a_jour",
-                "date_derniere_mise_a_jour_detections",
-                "date_derniere_mise_a_jour_zone",
-                output_field=models.DateTimeField(),
-            ),
-        )
 
     def get_user_can_view(self, user):
         from sv.models import Evenement

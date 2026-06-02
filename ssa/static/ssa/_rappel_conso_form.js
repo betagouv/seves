@@ -24,11 +24,13 @@ document.documentElement.addEventListener("dsfr.ready", () => {
 
     function showRappelConso() {
         const rappelContainer = document.getElementById("rappel-container")
-        let innerHtml = ""
+        rappelContainer.innerHTML = ""
         rappelConso.forEach(numero => {
-            innerHtml += `<button class="fr-tag fr-mr-2v fr-mb-1w fr-tag--dismiss">${numero}</button>`
+            const btn = document.createElement("button")
+            btn.className = "fr-tag fr-mr-2v fr-mb-1w fr-tag--dismiss"
+            btn.textContent = numero
+            rappelContainer.appendChild(btn)
         })
-        rappelContainer.innerHTML = innerHtml
 
         rappelContainer.querySelectorAll(".fr-tag--dismiss").forEach(tagElement => {
             tagElement.addEventListener("click", event => {

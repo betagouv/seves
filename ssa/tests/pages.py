@@ -2,6 +2,7 @@ import json
 import re
 from urllib.parse import quote
 
+from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
@@ -99,7 +100,7 @@ class WithEtablissementMixin:
                 route.fulfill(status=200, content_type="application/json", body=json.dumps({"features": []}))
 
             self.page.route(
-                f"https://api-adresse.data.gouv.fr/search/?q={quote(adresse)}&limit=15",
+                f"{settings.GEOCODE_URL}/search/?q={quote(adresse)}&limit=15",
                 handle,
             )
 
@@ -194,8 +195,8 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         self.numero_rappel_part_3 = page.locator("#rappel-3")
         self.numero_rappel_submit = page.locator("#rappel-submit")
 
-    def navigate(self):
-        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}")
+    def navigate(self, extra_url=""):
+        self.page.goto(f"{self.base_url}{reverse('ssa:evenement-produit-creation')}{extra_url}")
 
     def navigate_update_page(self, evenement):
         self.page.goto(f"{self.base_url}{evenement.get_update_url()}")

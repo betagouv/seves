@@ -15,7 +15,6 @@ from sv.managers import (
 
 from ..validators import validate_numero_detection
 from .lieux import Lieu
-from .models_mixins import WithDerniereMiseAJourMixin
 from .prelevements import Prelevement
 
 
@@ -42,10 +41,9 @@ class StatutEvenement(models.Model):
         return self.libelle
 
 
-@reversion.register(follow=["lieux"])
+@reversion.register(follow=["lieux", "elements_infestes"])
 class FicheDetection(
     AllowsSoftDeleteMixin,
-    WithDerniereMiseAJourMixin,
     models.Model,
 ):
     class Meta:
@@ -122,19 +120,8 @@ class FicheDetection(
     def numero(self):
         return self.numero_detection
 
-    def _handle_hors_zone_infestee_change(self):
-        from . import FicheZoneDelimitee
-
-        if self.hors_zone_infestee_id and self._original_state["hors_zone_infestee"] is None:
-            FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(self.hors_zone_infestee.id)
-        elif self._original_state["hors_zone_infestee"] and self.hors_zone_infestee_id is None:
-            with transaction.atomic():
-                fiche_zone_delimitee = FicheZoneDelimitee.objects.get(pk=self._original_state["hors_zone_infestee"])
-                FicheZoneDelimitee.objects.update_date_derniere_mise_a_jour(fiche_zone_delimitee.id)
-
     def save(self, *args, **kwargs):
         if self.hors_zone_infestee_id != self._original_state["hors_zone_infestee"]:
-            self._handle_hors_zone_infestee_change()
             self._save(*args, **kwargs)
         if self.zone_infestee_id != self._original_state["zone_infestee"]:
             self._save(*args, **kwargs)
@@ -194,3 +181,8 @@ class FicheDetection(
 
     def get_soft_delete_attribute_error_message(self):
         return f"La détection {self.numero} ne peut pas être supprimée"
+
+    def prelevements(self):
+        for lieu in self.lieux.all():
+            for prelevement in lieu.prelevements.all():
+                yield prelevement

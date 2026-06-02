@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
-from waffle.testutils import override_flag
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE, Visibilite
 from core.factories import (
@@ -61,13 +60,11 @@ def test_can_add_and_see_message_without_document(live_server, page: Page, choic
     generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page, choice_js_fill, evenement)
 
 
-@override_flag("rich_text_editor", active=True)
 def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     generic_test_can_send_draft_message_with_rich_text_editor(
@@ -125,20 +122,18 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy_agent.agent.nom,
         contact_copy_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy_structure.structure.libelle,
         contact_copy_structure.structure.libelle,
-        use_locator_as_parent_element=True,
     )
     page.get_by_test_id("fildesuivi-add-submit").click()
 
@@ -179,14 +174,12 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         'label[for="id_recipients"] ~ div.choices',
         agents[0].nom,
         agents[0].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         agents[1].nom,
         agents[1].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
 
     page.keyboard.press("Escape")
@@ -197,18 +190,16 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
         'label[for="id_recipients_copy"] ~ div.choices',
         agents[2].nom,
         agents[2].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients_copy"] ~ div.choices',
         agents[3].nom,
         agents[3].contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
 
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert page.url == f"{live_server.url}{evenement.get_absolute_url()}#tabpanel-messages-panel"
@@ -233,7 +224,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     new_page = new_page_info.value
 
     expect(new_page.get_by_role("heading", name="Title of the message")).to_be_visible()
-    assert "My content <br> with a line return" in new_page.content()
+    assert "<p>My content </p><p> with a line return</p>" in new_page.content()
 
     # Check that all the recipients / copies were added as contact
     new_page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
@@ -282,7 +273,7 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
 
     message_page.page.locator(".destinataires-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
-    message_page.page.locator("#id_content").fill("My content \n with a line return")
+    message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     message_page.page.get_by_test_id("fildesuivi-add-submit").click()
 
     message_page.page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
@@ -312,7 +303,7 @@ def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
 
     message_page.page.locator(".destinataires-contacts-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
-    message_page.page.locator("#id_content").fill("My content \n with a line return")
+    message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     message_page.page.get_by_test_id("fildesuivi-add-submit").click()
     message_page.page.wait_for_url(f"**{evenement.get_absolute_url()}#tabpanel-messages-panel")
 
@@ -370,7 +361,7 @@ def test_cant_only_pick_structure_with_email(live_server, page: Page, choice_js_
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
 
-    choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "FOO", "FOO", use_locator_as_parent_element=True)
+    choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "FOO", "FOO")
     choice_js_cant_pick(page, 'label[for="id_recipients"] ~ div.choices', "BAR", "BAR")
 
 
@@ -398,7 +389,9 @@ def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification
     assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
 
 
-def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(live_server, page: Page):
+def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(
+    live_server, page: Page, choice_js_fill
+):
     evenement = EvenementFactory()
     nb_structure = 20
     for i in range(nb_structure):
@@ -414,28 +407,14 @@ def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_fie
     page.get_by_role("link", name="Message").click()
 
     # Test le champ Destinataires
-    page.locator('label[for="id_recipients"] ~ div.choices').click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(
-            page.locator('label[for="id_recipients"] ~ div.choices')
-            .locator(".choices__list")
-            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
-        ).to_be_visible()
+        choice_js_fill(page, 'label[for="id_recipients"] ~ div.choices', "Structure", f"Structure {i + 1}")
 
     page.locator(".fr-select").first.press("Escape")
 
     # Test le champ Copie
-    page.locator('label[for="id_recipients_copy"] ~ div.choices').click()
-    page.wait_for_selector("input:focus", state="visible", timeout=2_000)
-    page.locator("*:focus").fill("Structure")
     for i in range(nb_structure):
-        expect(
-            page.locator('label[for="id_recipients_copy"] ~ div.choices')
-            .locator(".choices__list")
-            .get_by_role("option", name=f"Structure {i + 1}", exact=True)
-        ).to_be_visible()
+        choice_js_fill(page, 'label[for="id_recipients_copy"] ~ div.choices', "Structure", f"Structure {i + 1}")
 
 
 def test_create_message_adds_agent_and_structure_contacts(
@@ -471,7 +450,6 @@ def test_create_message_adds_agent_and_structure_contacts(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
     # Ajout de la copie
@@ -480,17 +458,16 @@ def test_create_message_adds_agent_and_structure_contacts(
         'label[for="id_recipients_copy"] ~ div.choices',
         contact_copy.agent.nom,
         contact_copy.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.keyboard.press("Escape")
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que le message a été créé
     assert evenement.messages.count() == 1
     message = evenement.messages.get()
-    assert message.content == "Message de test"
+    assert message.content == "<p>Message de test</p>"
     assert message.message_type == Message.MESSAGE
 
     # Vérification des contacts dans l'interface
@@ -538,10 +515,9 @@ def test_create_multiple_messages_adds_contacts_once(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 1")
-    page.locator("#id_content").fill("Message de test 1")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test 1")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Ajout du second message
@@ -553,10 +529,9 @@ def test_create_multiple_messages_adds_contacts_once(
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message 2")
-    page.locator("#id_content").fill("Message de test 2")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test 2")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que les deux messages ont été créés
@@ -606,10 +581,9 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     evenement.refresh_from_db()
@@ -641,10 +615,9 @@ def test_create_message_from_locale_from_same_structure_does_not_changes_visibil
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     evenement.refresh_from_db()
@@ -679,10 +652,9 @@ def test_create_message_from_visibilite_limitee_add_structures_in_allowed_struct
         'label[for="id_recipients"] ~ div.choices',
         contact.agent.nom,
         contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("Message de test")
+    page.locator("#rich-text-editor .ql-editor").fill("Message de test")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     # Vérification que le message a été créé
@@ -763,10 +735,9 @@ def test_message_with_national_referent_does_not_add_structure(live_server, page
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national")
-    page.locator("#id_content").fill("Test avec référent national")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec référent national")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -798,17 +769,15 @@ def test_message_with_two_national_referents_in_same_structure_does_not_add_stru
         'label[for="id_recipients"] ~ div.choices',
         national_referent1.agent.nom,
         national_referent1.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         national_referent2.agent.nom,
         national_referent2.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour deux référents nationaux")
-    page.locator("#id_content").fill("Test avec deux référents nationaux")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux référents nationaux")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent1.agent).exists()
@@ -836,17 +805,15 @@ def test_message_with_national_referent_and_regular_agent_add_structure(live_ser
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         regular_agent.agent.nom,
         regular_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour référent national et agent normal")
-    page.locator("#id_content").fill("Test avec deux destinataires")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -873,17 +840,15 @@ def test_message_with_national_referent_and_regular_agent_in_different_structure
         'label[for="id_recipients"] ~ div.choices',
         national_referent.agent.nom,
         national_referent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
         regular_agent.agent.nom,
         regular_agent.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Message pour agents de structures différentes")
-    page.locator("#id_content").fill("Test avec deux destinataires de structures différentes")
+    page.locator("#rich-text-editor .ql-editor").fill("Test avec deux destinataires de structures différentes")
     page.get_by_test_id("fildesuivi-add-submit").click()
 
     assert evenement.contacts.filter(agent=national_referent.agent).exists()
@@ -904,10 +869,9 @@ def test_can_add_draft_message(live_server, page: Page, choice_js_fill, mailoutb
         'label[for="id_recipients"] ~ div.choices',
         active_contact.nom,
         active_contact.contact_set.get().display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -924,8 +888,9 @@ def test_can_add_draft_note(live_server, page: Page, choice_js_fill, mailoutbox)
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Note").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
     page.locator("#id_title").fill("Title of the note")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -943,7 +908,7 @@ def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill,
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Point de situation").click()
     page.locator("#id_title").fill("Title of the point de situation")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -973,10 +938,9 @@ def test_can_add_draft_demande_intervention(
         'label[for="id_recipients"] ~ div.choices',
         active_contact.display_with_agent_unit,
         active_contact.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#id_title").fill("Title of the demande d'intervention")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -1000,7 +964,7 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
-    page.locator("#id_content").fill("My content \n with a line return")
+    page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
 
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
@@ -1021,7 +985,6 @@ def test_can_preview_image_from_message_details(live_server, page: Page, mocked_
     generic_test_can_preview_image_from_message_details(live_server, page, evenement)
 
 
-@override_flag("download_zip", active=True)
 def test_can_download_zip_attachments_of_message(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     generic_test_can_download_zip_attachments_of_message(live_server, page, evenement)

@@ -104,6 +104,8 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
 
 
 class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
+    CategorieDanger = CategorieDanger
+
     type_evenement = SEVESChoiceField(choices=TypeEvenement.choices, label="Type d'événement")
     source = SEVESChoiceField(choices=Source.choices, required=True)
 
@@ -160,11 +162,15 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
+        self.maestro_reference = kwargs.pop("maestro_reference", "")
         super().__init__(*args, **kwargs)
         self._add_free_links(model=EvenementProduitReadOnly)
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
+        if not self.instance.pk and self.maestro_reference:
+            self.fields["source"].initial = Source.PRELEVEMENT_PSPC.value
+            self.fields["description"].initial = f"Référence Maestro : {self.maestro_reference}"
 
     def clean(self):
         super().clean()
@@ -178,6 +184,10 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
 
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
+
+        if self.maestro_reference:
+            self.instance.maestro_reference = self.maestro_reference
+
         instance = super().save(commit)
         self.save_free_links(instance)
         return instance

@@ -37,6 +37,7 @@ from ssa.models import Etablissement, EvenementProduit
 
 from ..constants import TypeEvenement
 from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
+from ..tasks import notify_maestro
 from .mixins import EvenementProduitValuesMixin
 
 
@@ -67,6 +68,7 @@ class EvenementProduitCreateView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        kwargs["maestro_reference"] = self.request.GET.get("maestro_reference")
         return kwargs
 
     def post(self, request, *args, **kwargs):
@@ -88,6 +90,8 @@ class EvenementProduitCreateView(
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
         self.add_user_contacts(self.object)
+        if self.object.maestro_reference:
+            transaction.on_commit(lambda: notify_maestro.delay(self.object.pk))
 
         messages.success(self.request, "La fiche produit a été créée avec succès.")
         return HttpResponseRedirect(self.object.get_absolute_url())

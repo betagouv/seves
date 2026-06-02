@@ -24,7 +24,7 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     expect(message_page.message_form_title).to_have_text("Nouveau message")
 
     message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
@@ -37,7 +37,7 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
     new_page = message_page.open_message()
 
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
-    assert "My content <br> with a line return" in new_page.content()
+    assert "<p>My content </p><p> with a line return</p>" in new_page.content()
     assert object.messages.get().status == Message.Status.FINALISE
 
 
@@ -53,13 +53,13 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
 
     message_page.message_title.fill("Title of the message")
     message_page.page.locator(".ql-bold").click()
-    message_page.message_content_in_rich_text_editor.type("My content \n with a line return\n")
+    message_page.message_content.type("My content \n with a line return\n")
     message_page.page.locator(".ql-color.ql-picker.ql-color-picker").click()
     message_page.page.locator(".ql-primary").nth(1).click()
-    message_page.message_content_in_rich_text_editor.type("Text in color\n")
+    message_page.message_content.type("Text in color\n")
     message_page.page.locator(".ql-list").click()
-    message_page.message_content_in_rich_text_editor.type("Item 1\n")
-    message_page.message_content_in_rich_text_editor.type("Item 2\n")
+    message_page.message_content.type("Item 1\n")
+    message_page.message_content.type("Item 2\n")
 
     message_page.submit_message()
 
@@ -71,7 +71,6 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     assert message_page.message_type_in_table() == "Message"
 
     new_page = message_page.open_message()
-    message_page.page.wait_for_timeout(20000)
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     assert (
         '<p><strong>My content </strong></p><p> with a line return</p><p><span class="text-color-blue-france-sun-113-625">Text in color</span></p><ul><li><span class="ql-ui"></span>Item 1</li><li><span class="ql-ui"></span>Item 2</li><li><span class="ql-ui"></span><br></li></ul>'
@@ -126,7 +125,8 @@ def generic_test_can_update_draft_message_in_new_tab(
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc_to_add.agent, choice_js_fill)
     message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
     message_page.save_as_draft_message()
 
     message.refresh_from_db()
@@ -137,7 +137,7 @@ def generic_test_can_update_draft_message_in_new_tab(
     assert set(message.recipients_copy.all()) == {contact_cc, contact_cc_to_add}
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
+    assert message.content == "<p>Contenu mis à jour</p>"
     assert len(mailoutbox) == 0
 
 
@@ -170,14 +170,15 @@ def generic_test_can_update_draft_note_in_new_tab(
     message_page.open_message()
 
     message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
     message_page.save_as_draft_message()
 
     message.refresh_from_db()
     assert message.message_type == Message.NOTE
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
+    assert message.content == "<p>Contenu mis à jour</p>"
     assert len(mailoutbox) == 0
 
 
@@ -196,14 +197,15 @@ def generic_test_can_update_draft_point_situation_in_new_tab(
     message_page.open_message()
 
     message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
     message_page.save_as_draft_message()
 
     message.refresh_from_db()
     assert message.message_type == Message.POINT_DE_SITUATION
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
+    assert message.content == "<p>Contenu mis à jour</p>"
     assert len(mailoutbox) == 0
 
 
@@ -230,7 +232,8 @@ def generic_test_can_update_draft_demande_intervention_in_new_tab(
     page.keyboard.press("Escape")
     message_page.pick_recipient_copy(contact_cc_to_add.structure, choice_js_fill)
     message_page.message_title.fill("Titre mis à jour")
-    message_page.message_content.fill("Contenu mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
     message_page.save_as_draft_message()
 
     message.refresh_from_db()
@@ -241,7 +244,7 @@ def generic_test_can_update_draft_demande_intervention_in_new_tab(
     assert set(message.recipients_copy.all()) == {contact_cc, contact_cc_to_add}
     assert message.status == Message.Status.BROUILLON
     assert message.title == "Titre mis à jour"
-    assert message.content == "Contenu mis à jour"
+    assert message.content == "<p>Contenu mis à jour</p>", f"{message.content} différent de <p>Contenu mis à jour</p>"
     assert len(mailoutbox) == 0
 
 
@@ -359,7 +362,7 @@ def generic_test_handle_document_validation_error(live_server, page: Page, choic
     message_page.pick_recipient(active_contact, choice_js_fill)
     expect(message_page.message_form_title).to_have_text("Nouveau message")
     message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.message_content.type("My content \n with a line return")
 
     message_page.add_basic_document(close=False)
     message_page.document_type_input.select_option("Choisir dans la liste")
@@ -479,7 +482,7 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
@@ -520,7 +523,7 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     expect((message_page.page.get_by_text("Nouvelle demande d'intervention"))).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
@@ -555,7 +558,7 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
     expect((message_page.page.get_by_text("Nouveau point de situation"))).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
-    message_page.message_content.fill("My content \n with a line return")
+    message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()
 
     page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
@@ -665,9 +668,12 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     message_page.page.get_by_text("Répondre", exact=True).click()
 
     assert message_page.message_title.input_value() == f"{settings.REPLY_PREFIX} {message.title}"
-    assert message_page.message_content.input_value() == message.get_reply_intro_text()
+    assert message_page.message_content.inner_text().replace("\n", "") == message.get_reply_intro_text().replace(
+        "\n", ""
+    )
 
-    message_page.message_content.fill("Ma réponse")
+    message_page.erase_message_content()
+    message_page.message_content.type("Ma réponse")
     message_page.pick_recipient_copy(contact.agent, choice_js_fill)
     message_page.submit_message()
 
@@ -675,7 +681,7 @@ def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, o
     reply = Message.objects.first()
 
     expected_title = f"{settings.REPLY_PREFIX} {message.title}"
-    expected_content = "Ma réponse"
+    expected_content = "<p>Ma réponse</p>"
     expected_recipients = [contact_sender_structure]
 
     assert reply.title == expected_title, f"{reply.title=!r} != {expected_title=!r}"

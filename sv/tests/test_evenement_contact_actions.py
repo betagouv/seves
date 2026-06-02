@@ -148,7 +148,6 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
         "#add-contact-agent-form",
         contact_agent_1.agent.nom,
         contact_agent_1.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     goto_contacts(page)
     page.wait_for_timeout(1000)
@@ -157,7 +156,6 @@ def test_add_multiple_agent_contacts_adds_structure_contact_once(live_server, pa
         "#add-contact-agent-form",
         contact_agent_2.agent.nom,
         contact_agent_2.display_with_agent_unit,
-        use_locator_as_parent_element=True,
     )
     page.locator("#add-contact-agent-form").get_by_role("button", name="Ajouter").click()
 

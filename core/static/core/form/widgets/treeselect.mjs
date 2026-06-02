@@ -111,6 +111,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
 
         for (const it of this.element.querySelectorAll("& > .fr-treeselect__group-header input")) {
             it.setAttribute(`data-${this.identifier}-target`, "input")
+            const actions = (it.dataset.action || "").split(/\s+/)
+            it.dataset.action = [`${this.identifier}#onSelect`, ...actions].join(" ")
         }
     }
 
@@ -157,6 +159,15 @@ class TreeselectGroup extends TreeselectGroupConnectable {
             this.element.setAttribute("hidden", "hidden")
         } else {
             this.element.removeAttribute("hidden")
+        }
+    }
+
+    onSelect({target: {checked}}) {
+        if (checked) {
+            this.collapseTargets.forEach(async it => {
+                await dsfrDisclosePromise(dsfr(it).collapse)
+                it.scrollIntoView({block: "center"})
+            })
         }
     }
 }
@@ -243,13 +254,14 @@ class Treeselect extends Controller {
 
     onChange({target}) {
         const label = target.labels[0].textContent.trim() || target.ariaLabel
+        const categorisedLabel = target.dataset.categorisedLabel || label
         // If inputs are radio buttons, we allow only one value
         if (target.type === "radio") {
             this.clearChoices()
         }
 
         if (target.checked) {
-            this.selectChoice(target.value, label)
+            this.selectChoice(target.value, label, categorisedLabel)
         } else {
             this.unselectChoice(target.value)
         }
@@ -274,8 +286,8 @@ class Treeselect extends Controller {
         this.dispatch(UNSELECT_EVENT, {detail: {value: "__all__"}})
     }
 
-    selectChoice(value, label) {
-        this.choices.set(value, label)
+    selectChoice(value, label, categorisedLabel) {
+        this.choices.set(value, categorisedLabel)
         this.selectedGroupTarget.insertAdjacentHTML(
             "beforeend",
             this.selectedTagTplTarget.innerHTML.replaceAll("__label__", label).replaceAll("__value__", value),

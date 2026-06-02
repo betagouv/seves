@@ -1,5 +1,6 @@
 from enum import auto, property as enum_property
 
+from django.conf import settings
 from django.db.models import TextChoices
 from django.utils.functional import classproperty
 
@@ -230,3 +231,27 @@ class SiteInspection(TextChoices):
     @enum_property
     def label_with_group(self):
         return f"{self.named_group} > {self.label}"
+
+
+class ElementInfesteType(TextChoices):
+    VEGETAUX_A_REPLANTER = auto(), "Végétaux destinés à être (re)plantés ou reproduits"
+    VEGETAUX_DEJA_PLANTES = auto(), "Végétaux déjà plantés, ne devant pas être reproduits ni déplacés"
+    AUTRES_VEGETAUX = auto(), "Autres végétaux, parties de végétaux ou produits végétaux"
+    VEGETAUX_NON_SPECIFIES = auto(), "Végétaux : non spécifiés"
+    PIEGE = auto(), "Objet : piège"
+    SOL = auto(), "Objet : sol"
+    EAU = auto(), "Objet : eau"
+    AUTRES_OBJETS = auto(), "Autres objets"
+    AUCUN = auto(), "Aucun"
+    INCONNU = auto(), "Inconnu"
+
+    __empty__ = settings.SELECT_EMPTY_CHOICE
+
+
+class ElementInfesteQuantiteUnite(TextChoices):
+    METRE_CARRE = auto(), "m²"
+    KILOMETRE_CARRE = auto(), "km²"
+    HECTAR = auto(), "ha"
+    METRE_CUBE = auto(), "m³"
+    KILOGRAMME = auto(), "kg"
+    PIECE = auto(), "pièce"

@@ -56,7 +56,7 @@
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Évènement' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='organisme' display_name='Organisme nuisible' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='publication' display_name='Publication' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Dernière MAJ descripteurs' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maj' display_name='Date de dernière MAJ' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
                             <th scope="col">Commune</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
@@ -80,7 +80,7 @@
                                 <td>
                                     {{ evenement.date_publication|date:"d/m/Y" }}
                                 </td>
-                                <td>{{ evenement.date_derniere_mise_a_jour_globale|date:"d/m/Y" }}</td>
+                                <td>{{ evenement.last_updated|date:"d/m/Y" }}</td>
                                 <td>
                                     {{ evenement.createur|truncatechars:30 }}
                                 </td>

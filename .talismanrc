@@ -112,7 +112,7 @@ fileignoreconfig:
   checksum: 8dec0a69adf36ebd32de735115d68d83f492b1356b17bcef8d37db362cb00697
 - filename: seves/auth.py
   checksum: 783b605ce4242e1c04e58a4220ba63875303501b6573339e374aa6c81084e102
-- filename: account/static/account/permissions_admins.js
+- filename: account/static/account/permissions_admins.mjs
   checksum: fdeac6dc4a079cc9c2fdb65f7008793f9980fd4c3f68e1bcec3dc36538814fbc
 - filename: core/migrations/0046_alter_document_document_type.py
   checksum: d98b145d7469d9773d9d6cd7a162f6bd9e7a104e174612bb14385d0fd0b5ed08
@@ -132,5 +132,8 @@ fileignoreconfig:
   checksum: bd7eecb56935ccb9d5bdabe237b49cee84550fc7bf0294b2c9bcffb9c3117c3e
 - filename: core/templatetags/and_more_ellipsis_tooltip.py
   checksum: 9bb7dec4fbad7b8e2cc194a176314f55d4363fa0d1bae405653710f15200ab62
+- filename: core/static/core/stimulus_app.mjs
+  checksum: aaa529f0e3a3259250c195c4c90de3f77f4afd29b43d3097fcb6c6c2aac7e4b1
+
 
 version: "1.0"

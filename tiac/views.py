@@ -290,6 +290,8 @@ class EvenementTransformView(UpdateView):
         for field in fields_to_copy:
             setattr(self.investigation, field, getattr(self.object, field))
         self.investigation.follow_up = InvestigationFollowUp.INVESTIGATION_DD
+        if self.investigation.nb_sick_persons is None:
+            self.investigation.nb_sick_persons = 0
         self.investigation.save()
         revision = create_manual_version(
             self.investigation,

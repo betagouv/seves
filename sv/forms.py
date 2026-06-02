@@ -17,7 +17,7 @@ from core.fields import AdresseLieuDitField, DSFRCheckboxSelectMultiple, DSFRRad
 from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, VisibiliteUpdateBaseForm
 from core.models import Contact, Structure
-from sv.constants import SiteInspection
+from sv.constants import ElementInfesteQuantiteUnite, SiteInspection
 from sv.form_mixins import (
     WithDataRequiredConversionMixin,
     WithEvenementFreeLinksMixin,
@@ -34,6 +34,7 @@ from sv.models import (
     StatutReglementaire,
     ZoneInfestee,
 )
+from sv.models.elements_infestes import ElementInfeste
 
 
 class EvenementVisibiliteUpdateForm(VisibiliteUpdateBaseForm, forms.ModelForm):
@@ -272,10 +273,53 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
             self.cleaned_data["laboratoire"] = None
 
 
-class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
-    vegetaux_infestes = forms.CharField(
-        label="Quantité de végétaux infestés", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": ""})
+class ElementInfesteForm(DsfrBaseForm, forms.ModelForm):
+    template_name = "sv/forms/element_infeste.html"
+
+    quantite_unite = forms.TypedChoiceField(
+        label="Unité",
+        choices=ElementInfesteQuantiteUnite,
+        required=False,
+        widget=forms.RadioSelect,
     )
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/espece_search.mjs"),), css={"all": ("sv/element_infeste.css",)})
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prevent forms initialised in formsets from not requiring fields
+        self.empty_permitted = False
+        self.use_required_attribute = True
+
+        self.fields["espece"].empty_label = settings.SELECT_EMPTY_CHOICE
+        try:  # Try to filter the queryset with provided value
+            self.fields["espece"].queryset = self.fields["espece"].queryset.filter(pk=self["espece"].value())
+        except Exception:
+            self.fields["espece"].queryset = self.fields["espece"].queryset.none()
+
+    class Meta:
+        model = ElementInfeste
+        exclude = ("fiche_detection",)
+        widgets = {"comments": forms.Textarea(attrs={"cols": None, "rows": 4})}
+
+
+class ElementInfesteBaseFormSet(forms.BaseInlineFormSet):
+    template_name = "sv/forms/element_infeste_base_set.html"
+    deletion_widget = forms.HiddenInput
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/elements_infestes.mjs"),))
+
+
+ElementInfesteFormSet = inlineformset_factory(
+    FicheDetection, ElementInfeste, ElementInfesteForm, ElementInfesteBaseFormSet, extra=0, can_delete=True
+)
+
+
+class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
     commentaire = forms.CharField(
         widget=forms.Textarea(attrs={"rows": ""}),
         required=False,
@@ -315,7 +359,6 @@ class FicheDetectionForm(DSFRForm, WithLatestVersionLocking, forms.ModelForm):
             "statut_reglementaire",
             "contexte",
             "date_premier_signalement",
-            "vegetaux_infestes",
             "commentaire",
             "mesures_conservatoires_immediates",
             "mesures_consignation",

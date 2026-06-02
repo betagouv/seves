@@ -1,8 +1,10 @@
-{% load set_context_var %}
+{% load dsfr_tags get_item set_context_var %}
 
 {% partialdef input %}
     <div class="fr-{{ widget.type }}-group{% if parent_index %} fr-treeselect__group-selectable{% endif %}">
-        {% set_context_var widget.attrs "data-action" "change->treeselect#onChange" %}
+        {% with data_action=widget.attrs|get_item:"data-action"|default:"" %}
+            {% set_context_var widget.attrs "data-action" data_action|strfmt:"{} change->treeselect#onChange" %}
+        {% endwith %}
         {% include "django/forms/widgets/input.html" %}
         <label class="fr-label" for="{{ widget.attrs.id }}">
             {% if parent_index %}

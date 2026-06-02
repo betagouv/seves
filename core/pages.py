@@ -105,21 +105,24 @@ class BaseDocumentPage(ABC):
         if close:
             self.validate_document_modal()
 
+    def get_accordion(self, document_name):
+        return (
+            self.page.get_by_test_id("document-upload-title")
+            .get_by_text(document_name, exact=True)
+            .locator('xpath=./ancestor::*[@data-testid="document-upload"]')
+        )
+
     def remove_document_by_name_from_modal(self, document_name):
         self.open_document_modal()
         accordions = self.page.get_by_test_id("document-upload").filter(visible=True)
         count = accordions.count()
-        accordions.filter(has_text=document_name).get_by_role(role="button", name="Supprimer").click()
+        self.get_accordion(document_name).get_by_role(role="button", name="Supprimer").click()
         expect(accordions).to_have_count(count - 1)
         self.validate_document_modal()
 
     @contextmanager
     def modify_document_by_name(self, document_name, *, validate_modal=True) -> Generator[Locator, None, None]:
-        accordion = (
-            self.page.get_by_test_id("document-upload-title")
-            .get_by_text(document_name, exact=True)
-            .locator('xpath=./ancestor::*[@data-testid="document-upload"]')
-        )
+        accordion = self.get_accordion(document_name)
         # Setting a temporary data-testid to resist `nom` field changes
         # language=javascript
         accordion.evaluate('el => el.setAttribute("data-testid", "document-upload-tmp")')
@@ -172,7 +175,6 @@ class ListOfMessagesPage:
 
 class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     TITLE_ID = "#id_title"
-    CONTENT_ID = "#id_content"
     DRAFT_BTN_TEST_ID = "draft-fildesuivi-add-submit"
     SUBMIT_BTN_TEST_ID = "fildesuivi-add-submit"
 
@@ -221,7 +223,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 self.recipients_locator,
                 contact.nom,
                 contact.contact_set.get().display_with_agent_unit,
-                use_locator_as_parent_element=True,
             )
         elif isinstance(contact, Structure):
             choice_js_fill(
@@ -229,7 +230,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 self.recipients_locator,
                 contact.libelle,
                 contact.libelle,
-                use_locator_as_parent_element=True,
             )
         else:
             raise NotImplementedError
@@ -241,7 +241,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
                 contact.nom,
                 contact.contact_set.get().display_with_agent_unit,
-                use_locator_as_parent_element=True,
             )
         elif isinstance(contact, Structure):
             choice_js_fill(
@@ -249,7 +248,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
                 f'{self.container_id} label[for="id_recipients_copy"] ~ div.choices',
                 contact.libelle,
                 contact.libelle,
-                use_locator_as_parent_element=True,
             )
         else:
             raise NotImplementedError
@@ -264,11 +262,14 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     @property
     def message_content(self):
-        return self.page.locator(f"{self.CONTENT_ID}")
-
-    @property
-    def message_content_in_rich_text_editor(self):
         return self.page.locator("#rich-text-editor .ql-editor")
+
+    def erase_message_content(self):
+        self.message_content.click()
+        expect(self.message_content).to_be_focused()
+        self.page.keyboard.press("Control+A")
+        self.page.keyboard.press("Backspace")
+        expect(self.message_content).to_have_text("")
 
     @property
     def submit_button(self):

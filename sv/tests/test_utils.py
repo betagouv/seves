@@ -1,6 +1,7 @@
 import json
 from typing import Optional, Tuple, Union
 
+from django.conf import settings
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
@@ -111,14 +112,6 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Commentaire")
 
     @property
-    def vegetaux_infestes_label(self) -> Locator:
-        return self.page.get_by_text("Végétaux infestés")
-
-    @property
-    def vegetaux_infestes_input(self) -> Locator:
-        return self.page.get_by_label("Végétaux infestés")
-
-    @property
     def mesures_conservatoires_immediates_label(self) -> Locator:
         return self.page.get_by_text("Mesures conservatoires immédiates")
 
@@ -159,7 +152,7 @@ class LieuFormDomElements:
 
     def force_adresse(self, element, adresse: str, extra_str: str = ""):
         self.page.route(
-            "https://api-adresse.data.gouv.fr/search/?*",
+            f"{settings.GEOCODE_URL}/search/?*",
             lambda route: route.fulfill(
                 status=200, content_type="application/json", body="""{"type": "FeatureCollection","features": []}"""
             ),

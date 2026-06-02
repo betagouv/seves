@@ -73,6 +73,7 @@ django==6.0.5
     #   django-reversion-compare
     #   django-storages
     #   django-waffle
+    #   django-widget-tweaks
     #   mozilla-django-oidc
     #   sentry-sdk
 django-countries==8.2.0
@@ -91,7 +92,7 @@ django-post-office==3.11.2
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
-django-reversion==6.1.0
+django-reversion==6.2.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
@@ -101,7 +102,7 @@ django-storages[s3]==1.14.6
     # via -r requirements.in
 django-waffle==5.0.0
     # via -r requirements.in
-django-widget-tweaks==1.5.0
+django-widget-tweaks==1.5.1
     # via django-dsfr
 djhtml==3.0.11
     # via -r requirements.in
@@ -121,11 +122,11 @@ filelock==3.20.3
     # via virtualenv
 greenlet==3.1.1
     # via playwright
-gunicorn==25.3.0
+gunicorn==26.0.0
     # via -r requirements.in
 identify==2.5.35
     # via pre-commit
-idna==3.7
+idna==3.15
     # via requests
 iniconfig==2.0.0
     # via pytest
@@ -164,7 +165,7 @@ packaging==24.0
     #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.59.0
+playwright==1.60.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -201,9 +202,9 @@ pytest-django==4.12.0
     # via -r requirements.in
 pytest-env==1.6.0
     # via -r requirements.in
-pytest-playwright==0.7.2
+pytest-playwright==0.8.0
     # via -r requirements.in
-pytest-rerunfailures==16.1
+pytest-rerunfailures==16.3
     # via -r requirements.in
 pytest-split==0.11.0
     # via -r requirements.in
@@ -236,11 +237,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.12
+ruff==0.15.14
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.59.0
+sentry-sdk[django]==2.60.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -266,7 +267,7 @@ tzdata==2025.2
     #   kombu
 tzlocal==5.3.1
     # via celery
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests

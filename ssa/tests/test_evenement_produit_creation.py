@@ -1,13 +1,15 @@
 import json
 from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from core.constants import AC_STRUCTURE
 from core.models import Contact, Departement, LienLibre
+from ssa.constants import Source
 from ssa.factories import EtablissementFactory, EvenementProduitFactory
 from ssa.models import Etablissement, EvenementProduit
 from ssa.tests.pages import EvenementProduitFormPage
@@ -383,7 +385,7 @@ def test_can_create_etablissement_with_ban_auto_complete(
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
 
@@ -431,7 +433,7 @@ def test_can_create_etablissement_force_ban_auto_complete(live_server, page: Pag
     creation_page.navigate()
     creation_page.fill_required_fields(evenement)
     creation_page.page.route(
-        "https://api-adresse.data.gouv.fr/search/?q=Mon%20addresse%20qui%20n%27existe%20pas&limit=15",
+        f"{settings.GEOCODE_URL}/search/?q=Mon%20addresse%20qui%20n%27existe%20pas&limit=15",
         handle,
     )
 
@@ -751,3 +753,36 @@ def test_categorie_danger_dont_show(live_server, mocked_authentification_user, p
     page.keyboard.type("Sal")
     expect(dropdown.locator(".categorie-danger-header")).to_be_hidden()
     assert "Dangers les plus courants" not in dropdown.inner_text()
+
+
+def test_can_create_evenement_produit_with_maestro_reference(
+    live_server, mocked_authentification_user, page: Page, settings
+):
+    settings.MAESTRO_WEBHOOK_URL = "https://example.com/webhook/"
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    input_data = EvenementProduitFactory.build()
+    creation_page = EvenementProduitFormPage(page, live_server.url)
+    creation_page.navigate(extra_url="?maestro_reference=123456")
+
+    expect(creation_page.source).to_have_value(Source.PRELEVEMENT_PSPC)
+    expect(creation_page.description).to_have_value("Référence Maestro : 123456")
+    creation_page.type_evenement.select_option(input_data.type_evenement)
+
+    mock_post = MagicMock(status_code=200)
+    with mock.patch("ssa.maestro.requests.post", mock.Mock(return_value=mock_post)) as mocked_post:
+        creation_page.submit_as_draft()
+
+    evenement_produit = EvenementProduit.objects.get()
+    mocked_post.assert_called_once_with(
+        "https://example.com/webhook/",
+        json={
+            "maestro_reference": "123456",
+            "seved_id": evenement_produit.id,
+            "seves_numero": evenement_produit.numero,
+        },
+        timeout=15,
+    )
+
+    assert evenement_produit.source == Source.PRELEVEMENT_PSPC
+    assert evenement_produit.description == "Référence Maestro : 123456"
+    assert evenement_produit.maestro_reference == "123456"
