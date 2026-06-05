@@ -90,11 +90,11 @@ class WithPrelevementHandlingMixin:
             prelevement_form.fields["lieu"].queryset = allowed_lieux
 
             if prelevement_form.is_valid():
-                with reversion.create_revision():
-                    prelevement = prelevement_form.save()
-                    lieu = prelevement.lieu
-                    reversion.add_to_revision(lieu)
-                    reversion.set_user(self.request.user)
+                # with reversion.create_revision():
+                prelevement = prelevement_form.save()
+                lieu = prelevement.lieu
+                reversion.add_to_revision(lieu)
+                reversion.set_user(self.request.user)
                 print("oooooooooooooo")
                 print(lieu)
                 print("oooooooooooooo")

@@ -429,18 +429,37 @@ class FicheDetectionUpdateView(
             return self.form_invalid(form)
 
         with transaction.atomic():
-            self.object = form.save()
-            lieu_formset.save()
-            allowed_lieux = self.object.lieux.all()
-            elements_infestes.save()
-            try:
-                self._save_prelevement_if_not_empty(
-                    request.POST.copy(), allowed_lieux, check_for_inactive_values=True, detection=self.object
-                )
-            except ValidationError as e:
-                for message in e.messages:
-                    messages.error(self.request, message)
-                return self.form_invalid(form)
+            with reversion.create_revision():
+                reversion.set_user(self.request.user)
+                reversion.set_comment("Création/Modification des lieux")
+
+                self.object = form.save()
+                reversion.add_to_revision(self.object)
+
+                lieux_sauvegardes = lieu_formset.save()
+                for lieu in lieux_sauvegardes:
+                    reversion.add_to_revision(lieu)
+
+                elements_infestes.save()
+
+            with reversion.create_revision():
+                reversion.set_user(self.request.user)
+                reversion.set_comment("Ajout des prélèvements")
+
+                # On ré-associe la fiche et les lieux à cette seconde révision
+                reversion.add_to_revision(self.object)
+                allowed_lieux = self.object.lieux.all()
+                for lieu in allowed_lieux:
+                    reversion.add_to_revision(lieu)
+
+                try:
+                    self._save_prelevement_if_not_empty(
+                        request.POST.copy(), allowed_lieux, check_for_inactive_values=True, detection=self.object
+                    )
+                except ValidationError as e:
+                    for message in e.messages:
+                        messages.error(self.request, message)
+                    return self.form_invalid(form)
             self.add_user_contacts(self.object.evenement)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())

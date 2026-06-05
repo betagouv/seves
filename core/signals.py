@@ -123,6 +123,9 @@ def log_user_login(sender, request, user, **kwargs):
 
 @receiver(post_revision_commit)
 def update_last_revision(sender, revision, versions, **kwargs):
+    print(revision.id)
+    print(revision)
+    print(versions)
     for v in versions:
         model = apps.get_model(v.content_type.app_label, v.content_type.model)
         if getattr(model, "_update_last_updated_on_revision", False):
