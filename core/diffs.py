@@ -440,26 +440,20 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                             .select_related("revision")
                             .exclude(serialized_data={})
                         )
-                        # TODO de we need this
-                        if str(sub_object_queryset.query) in self.handled_added_qs:
-                            continue
-                        self.handled_added_qs.append(str(sub_object_queryset.query))
 
-                        # S'il n'y a qu'UNE SEULE version (l'objet parent vient d'être créé dans cette révision)
-                        if len(sub_object_queryset) == 1:
-                            for f in obj_instance._meta.get_fields():
-                                if f.one_to_many:
-                                    related_model = f.related_model
-                                    remote_field_name = f.remote_field.name
+                        for f in obj_instance._meta.get_fields():
+                            if f.one_to_many:
+                                related_model = f.related_model
+                                remote_field_name = f.remote_field.name
 
-                                    filter_kwargs = {remote_field_name: obj_instance}
-                                    children = related_model.objects.filter(**filter_kwargs)
+                                filter_kwargs = {remote_field_name: obj_instance}
+                                children = related_model.objects.filter(**filter_kwargs)
 
-                                    for child in children:
-                                        child_model_name = related_model._meta.verbose_name.title()
-                                        new_line = f"Objet ajouté : {child_model_name} {str(child)}"
-                                        field_label = self._get_pretty_field(f, prefix=prefix)
-                                        diff.append(Diff(field_label, "", new_line, version2.revision))
+                                for child in children:
+                                    child_model_name = related_model._meta.verbose_name.title()
+                                    new_line = f"Objet ajouté : {child_model_name} {str(child)}"
+                                    field_label = self._get_pretty_field(f, prefix=prefix)
+                                    diff.append(Diff(field_label, "", new_line, version2.revision))
 
                 for item_1, _item_2 in change["changed_items"]:
                     model_name = item_1._object_version.object._meta.verbose_name.title()
