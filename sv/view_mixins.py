@@ -95,9 +95,6 @@ class WithPrelevementHandlingMixin:
                 lieu = prelevement.lieu
                 reversion.add_to_revision(lieu)
                 reversion.set_user(self.request.user)
-                print("oooooooooooooo")
-                print(lieu)
-                print("oooooooooooooo")
                 transaction.on_commit(lambda: force_update_on_version(lieu))
                 transaction.on_commit(lambda: force_update_on_version(lieu.fiche_detection))
             else:

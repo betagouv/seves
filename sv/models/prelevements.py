@@ -171,5 +171,5 @@ class Prelevement(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()
-        # with reversion.create_revision():
-        super().save(*args, **kwargs)
+        with reversion.create_revision():
+            super().save(*args, **kwargs)
