@@ -381,5 +381,5 @@ def test_evenement_history_content_prelevement_shows_even_when_added_with_lieu(
     url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
     page.goto(f"{live_server.url}{url}")
 
-    creation_text = f"Objet ajouté : Prelevement {str(prelevement)}"
+    creation_text = f"Objet ajouté : Prélèvement {str(prelevement)}"
     expect(page.get_by_text(creation_text)).to_be_visible()
