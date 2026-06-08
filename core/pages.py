@@ -143,6 +143,9 @@ class ListOfMessagesPage:
     def __init__(self, page: Page):
         self.page = page
 
+    def message_date_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(1) a")
+
     def message_sender_in_table(self, index=1):
         return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
 
@@ -255,6 +258,10 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     @property
     def message_form_title(self):
         return self.page.locator("h1")
+
+    @property
+    def message_date(self):
+        return self.page.locator(f"{self.container_id}").locator("#id_date_picked")
 
     @property
     def message_title(self):

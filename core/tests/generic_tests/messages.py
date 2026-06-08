@@ -499,6 +499,36 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
 
 
+def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_note()
+    expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_date.fill("2026-02-02T11:33")
+    message_page.message_content.type("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_date_in_table() == "2 février 2026 11:33"
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == ""
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Note"
+
+    new_page = message_page.open_message()
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("2 février 2026 11:33", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+    message = Message.objects.get()
+    assert message.date_picked.strftime("%Y-%m-%dT%H:%M") == "2026-02-02T10:33"
+
+
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, object, mocked_authentification_user
 ):
