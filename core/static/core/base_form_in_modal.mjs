@@ -12,9 +12,17 @@ import {Controller} from "Stimulus"
  */
 export class BaseFormInModal extends Controller {
     static targets = ["fieldset", "deleteInput", "dialog", "cardContainer", "deleteModal"]
-    static values = {formPrefix: String, shouldImmediatelyShow: {type: Boolean, default: false}}
+    static values = {
+        formPrefix: String,
+        shouldImmediatelyShow: {type: Boolean, default: false},
+        keepChanges: {type: Boolean, default: false},
+    }
 
     openDialog() {
+        this.initialValues = collectFormValues(this.fieldsetTarget, {
+            nameTransform: name => name,
+            skipValidation: true,
+        })
         dsfr(this.dialogTarget).modal.disclose()
     }
 
@@ -38,6 +46,7 @@ export class BaseFormInModal extends Controller {
             return
         }
         if (!this.clean(formValues)) return
+        this.keepChangesValue = true
         this.initCard(formValues)
     }
 
@@ -62,6 +71,41 @@ export class BaseFormInModal extends Controller {
         this.deleteInputTarget.value = "on"
         removeRequired(this.fieldsetTarget)
         this.element.classList.add("fr-hidden")
+    }
+
+    restoreForm() {
+        for (const [name, value] of Object.entries(this.initialValues)) {
+            const elements = this.fieldsetTarget.querySelectorAll(`[name="${name}"]`)
+
+            for (const el of elements) {
+                if (el.type === "checkbox") {
+                    if (Array.isArray(value)) {
+                        el.checked = value.includes(el.labels?.[0]?.textContent?.trim())
+                    } else {
+                        el.checked = false
+                    }
+                } else if (el.type === "radio") {
+                    el.checked = el.labels?.[0]?.textContent?.trim() === value
+                } else if (el instanceof HTMLSelectElement) {
+                    for (const option of el.options) {
+                        if (Array.isArray(value)) {
+                            option.selected = value.includes(option.textContent.trim())
+                        } else {
+                            option.selected = option.textContent.trim() === value
+                        }
+                    }
+                } else {
+                    el.value = value ?? ""
+                }
+            }
+        }
+    }
+
+    resetChoiceJs(choice, key) {
+        const labelKey = Object.keys(this.initialValues).find(k => k.endsWith(`${key}Label`))
+        const valueKey = Object.keys(this.initialValues).find(k => k.endsWith(key))
+        choice.setValue([{value: this.initialValues[valueKey], label: this.initialValues[labelKey]}])
+        choice.setChoiceByValue(this.initialValues[valueKey])
     }
 
     /**

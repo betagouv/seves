@@ -132,6 +132,8 @@ fileignoreconfig:
   checksum: 9bb7dec4fbad7b8e2cc194a176314f55d4363fa0d1bae405653710f15200ab62
 - filename: core/static/core/stimulus_app.mjs
   checksum: aaa529f0e3a3259250c195c4c90de3f77f4afd29b43d3097fcb6c6c2aac7e4b1
+- filename: core/static/core/base_form_in_modal.mjs
+  checksum: d4543d7e8aa6872236a78583c5f9b719d56fd2e2cb24a8025bd3d41e874ce0f5
 
 
 version: "1.0"
