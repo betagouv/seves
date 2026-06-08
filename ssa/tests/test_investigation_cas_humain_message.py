@@ -38,8 +38,8 @@ from ssa.models import EvenementInvestigationCasHumain
 
 
 def test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement_produit)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_and_see_message_without_document(live_server, page, choice_js_fill, evenement)
 
 
 def test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill):
@@ -57,41 +57,39 @@ def test_can_send_draft_message_with_rich_text_editor(live_server, page: Page, m
 def test_can_add_and_see_message_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_add_and_see_message_in_new_tab_without_document(
-        live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user
     )
 
 
 def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, choice_js_fill):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_add_see_message_in_new_tab_without_document_in_draft(
-        live_server, page, choice_js_fill, evenement_produit
-    )
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_see_message_in_new_tab_without_document_in_draft(live_server, page, choice_js_fill, evenement)
 
 
 def test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement_produit)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement)
 
 
 def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement_produit)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page, evenement)
 
 
 def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, mocked_authentification_user
 ):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
-        live_server, page, choice_js_fill, evenement_produit, mocked_authentification_user
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user
     )
 
 
 def test_cant_see_drafts_from_other_users(live_server, page: Page):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_cant_see_drafts_from_other_users(live_server, page, evenement_produit)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_cant_see_drafts_from_other_users(live_server, page, evenement)
 
 
 def test_message_ordering(live_server, page: Page, mocked_authentification_user):
@@ -112,41 +110,41 @@ def test_can_download_zip_attachments_of_message(live_server, page: Page, mocked
 def test_can_update_draft_note_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_update_draft_note_in_new_tab(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
     )
 
 
 def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation_in_new_tab(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
     )
 
 
 def test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, mocked_authentification_user, mailoutbox
 ):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation_in_new_tab(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
     )
 
 
 def test_can_send_draft_message_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_send_draft_message_in_new_tab(
-        live_server, page, mocked_authentification_user, evenement_produit, mailoutbox
+        live_server, page, mocked_authentification_user, evenement, mailoutbox
     )
 
 
 def test_can_send_draft_compte_rendu(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     contact = mocked_authentification_user.agent.structure.contact_set.get()
-    evenement_produit.contacts.add(contact)
+    evenement.contacts.add(contact)
     message = MessageFactory(
-        content_object=evenement_produit,
+        content_object=evenement,
         status=Message.Status.BROUILLON,
         sender=mocked_authentification_user.agent.contact_set.get(),
         message_type=Message.COMPTE_RENDU,
@@ -155,7 +153,7 @@ def test_can_send_draft_compte_rendu(live_server, page: Page, mocked_authentific
         [ContactStructureFactory(structure__libelle="BAMRA"), ContactStructureFactory(structure__libelle="BEPIAS")]
     )
 
-    page.goto(f"{live_server.url}{evenement_produit.get_absolute_url()}")
+    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     message_page = UpdateMessagePage(page)
     message_page.open_message()
     message_page.submit_message()
@@ -196,48 +194,42 @@ def test_handle_document_validation_error(live_server, page: Page, choice_js_fil
 
 
 def test_only_displays_ssa_contacts(live_server, page: Page, mocked_authentification_user):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_only_displays_app_contacts(live_server, page, evenement_produit, "ssa")
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_only_displays_app_contacts(live_server, page, evenement, "ssa")
 
 
 def test_structure_show_only_one_entry_in_select(live_server, page: Page):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement_produit)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement)
 
 
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_add_message_in_new_tab_with_documents(
-        live_server, page, choice_js_fill, evenement_produit, mailoutbox
-    )
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, evenement, mailoutbox)
 
 
 def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_delete_my_own_message(
-        live_server, page, evenement_produit, mocked_authentification_user, mailoutbox
-    )
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_delete_my_own_message(live_server, page, evenement, mocked_authentification_user, mailoutbox)
 
 
 def test_can_delete_my_own_draft_message(live_server, page: Page, mocked_authentification_user, mailoutbox):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_delete_my_own_draft_message(
-        live_server, page, evenement_produit, mocked_authentification_user, mailoutbox
-    )
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_delete_my_own_draft_message(live_server, page, evenement, mocked_authentification_user, mailoutbox)
 
 
 @pytest.mark.parametrize(
     "type_message", [Message.MESSAGE, Message.POINT_DE_SITUATION, Message.DEMANDE_INTERVENTION, Message.COMPTE_RENDU]
 )
 def test_can_reply_to_message(live_server, page: Page, choice_js_fill, type_message):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement_produit, type_message)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_can_reply_to_message(live_server, page, choice_js_fill, evenement, type_message)
 
 
 def test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(live_server, page: Page, choice_js_get_values):
-    evenement_produit = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
-        live_server, page, choice_js_get_values, evenement_produit
+        live_server, page, choice_js_get_values, evenement
     )
 
 

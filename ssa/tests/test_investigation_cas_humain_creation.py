@@ -513,11 +513,11 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementInvestigationCasHumain.objects.get()
-    assert evenement_produit.contacts.count() == 2
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    assert evenement.contacts.count() == 2
 
     user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
-    assert user_contact_agent in evenement_produit.contacts.all()
+    assert user_contact_agent in evenement.contacts.all()
 
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
-    assert user_contact_structure in evenement_produit.contacts.all()
+    assert user_contact_structure in evenement.contacts.all()
