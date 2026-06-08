@@ -65,7 +65,7 @@ class EtablissementFormController extends BaseFormInModal {
     connect() {
         this.raisonSocialeInputTarget.required = true
         this.addressChoices = setUpAddressChoices(this.adresseInputTarget)
-        setUpSiretChoices(this.siretInputTarget, "bottom")
+        this.siretChoices = setUpSiretChoices(this.siretInputTarget, "bottom")
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -140,6 +140,13 @@ class EtablissementFormController extends BaseFormInModal {
     }
 
     onCloseForm() {
+        if (!this.keepChangesValue) {
+            this.restoreForm()
+            this.resetChoiceJs(this.addressChoices, "adresse_lieu_dit")
+            this.resetChoiceJs(this.siretChoices, "siret")
+        }
+        this.keepChangesValue = false
+
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()

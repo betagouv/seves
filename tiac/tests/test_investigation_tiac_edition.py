@@ -17,7 +17,7 @@ from tiac.factories import (
 )
 
 from ..constants import DangersSyndromiques, SuspicionConclusion
-from ..models import Analyses, EvenementSimple, InvestigationFollowUp, InvestigationTiac
+from ..models import Analyses, Etablissement, EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from .pages import InvestigationTiacEditPage
 
 pytestmark = pytest.mark.usefixtures("mus_contact")
@@ -199,6 +199,58 @@ def test_can_edit_investigation_elements(live_server, page: Page, ensure_departe
         to_exclude=[*COMMON_FIELDS_TO_EXCLUDE],
         ignore_array_order=True,
     )
+
+
+def test_cancel_edit_on_etablissement_reset_all_value(
+    live_server, page: Page, ensure_departements, assert_models_are_equal
+):
+    departement, *_ = ensure_departements("Paris")
+    departement_2, *_ = ensure_departements("Nord")
+
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_etablissements=1,
+        with_etablissements__departement=departement,
+        with_etablissements__inspection=True,
+    )
+    initial_etablissement: Etablissement = investigation.etablissements.get()
+
+    new_etablissement = EtablissementFactory.build(departement=departement_2)
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_etablissement_card()
+    card.locator(".modify-button").click()
+    edit_page.fill_etablissement(edit_page.current_modal, new_etablissement)
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    card.locator(".modify-button").click()
+
+    modal = edit_page.current_modal
+    expect(modal.locator('[id$="type_etablissement"]')).to_have_value(initial_etablissement.type_etablissement)
+    expect(modal.locator('[id$="raison_sociale"]')).to_have_value(initial_etablissement.raison_sociale)
+    expect(modal.locator('[id$="numero_agrement"]')).to_have_value(initial_etablissement.numero_agrement)
+    expect(modal.locator('[id$="autre_identifiant"]')).to_have_value(initial_etablissement.autre_identifiant)
+    expect(modal.locator('[id$="enseigne_usuelle"]')).to_have_value(initial_etablissement.enseigne_usuelle)
+    expect(modal.locator('[id$="adresse_lieu_dit"]')).to_have_value(initial_etablissement.adresse_lieu_dit)
+    expect(modal.locator('[id$="siret"]')).to_have_value(initial_etablissement.siret)
+    expect(modal.locator('[id$="-commune"]')).to_have_value(initial_etablissement.commune)
+    expect(modal.locator('[id$="-departement"]')).to_have_value(initial_etablissement.departement.numero)
+    expect(modal.locator('[id$="-pays"]')).to_have_value(initial_etablissement.pays.code)
+
+    expect(modal.get_by_text("Inspection", exact=True)).to_be_checked()
+    expect(modal.locator('[id$="-numero_resytal"]')).to_have_value(initial_etablissement.numero_resytal)
+    expect(modal.locator('[id$="-date_inspection"]')).to_have_value(
+        initial_etablissement.date_inspection.strftime("%Y-%m-%d")
+    )
+    expect(modal.locator('[id$="-evaluation"]')).to_have_value(initial_etablissement.evaluation)
+    expect(modal.locator('[id$="-commentaire"]')).to_have_value(initial_etablissement.commentaire)
+
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.etablissements.count() == 1
+    assert initial_etablissement == investigation.etablissements.get()
 
 
 def test_can_edit_etiologie_conclusion_and_freelinks(
