@@ -351,3 +351,20 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
                 },
             )
         }
+
+
+class InvestigationCasHumainTreeselectForm(InvestigationCasHumainForm):
+    categorie_danger = ChoiceField(
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectRadio(
+            choices=(
+                TreeselectGroup(
+                    value=None,
+                    label="Dangers les plus courants",
+                    choices=[(it.value, it.uncategorized_label) for it in DANGERS_COURANTS],
+                ),
+                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
+            )
+        ),
+    )
