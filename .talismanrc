@@ -43,7 +43,7 @@ fileignoreconfig:
 - filename: conftest.py
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
-  checksum: c6f0500223f30de6c1cb487534c00b27344e83c7a076abb8f3f404480134380e
+  checksum: f2d6a16f14efcfbc4856ad3485cb4c9a4e41ad483c20a596a5e6c5273f204d49
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: ssa/forms.py

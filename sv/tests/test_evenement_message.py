@@ -22,6 +22,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_add_and_see_message_in_new_tab_without_document,
     generic_test_can_add_and_see_message_with_rich_text_editor,
     generic_test_can_add_and_see_message_without_document,
+    generic_test_can_add_and_see_note_in_new_tab_with_specific_date,
     generic_test_can_add_and_see_note_in_new_tab_without_document,
     generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document,
     generic_test_can_add_message_in_new_tab_with_documents,
@@ -89,6 +90,11 @@ def test_can_add_in_new_tab_without_document_in_draft(live_server, page: Page, c
 def test_can_add_and_see_note_in_new_tab_without_document(live_server, page: Page):
     evenement = EvenementFactory()
     generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, page, evenement)
+
+
+def test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page: Page):
+    evenement = EvenementFactory()
+    generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page, evenement)
 
 
 def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page):

@@ -449,8 +449,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.FINALISE, verbose_name="Statut")
     title = models.CharField(max_length=512, verbose_name="Titre")
     content = models.TextField()
+
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
+    date_picked = models.DateTimeField(verbose_name="Date sélectionnée par le créateur", blank=True, null=True)
 
     sender = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="messages", null=True)
     sender_structure = models.ForeignKey(Structure, on_delete=models.PROTECT, related_name="messages", null=False)
@@ -480,6 +482,12 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
             models.Index(fields=["content_type", "object_id"]),
         ]
         ordering = ["status", "-date_creation"]
+        constraints = [
+            models.CheckConstraint(
+                name="date_picked_only_for_note",
+                condition=(Q(message_type="note") | Q(date_picked__isnull=True)),
+            ),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -598,6 +606,9 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
 
     @property
     def displayed_date(self):
+        if self.message_type == self.NOTE and self.date_picked:
+            return timezone.localtime(self.date_picked)
+
         if self.is_finalise:
             displayed_date = self.date_publication
         else:
