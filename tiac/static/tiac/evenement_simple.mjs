@@ -2,7 +2,17 @@ import {applicationReady} from "Application"
 import {Controller} from "Stimulus"
 
 class EvenementSimpleController extends Controller {
-    static targets = ["notice", "noticeEvenementProduit", "noticeTransfer"]
+    static targets = [
+        "notice",
+        "noticeEvenementProduit",
+        "noticeTransfer",
+        "noticeNumberOfSickPersons",
+        "nbSickPersonsInput",
+    ]
+
+    connect() {
+        this.updateNoticeNumberOfSickPersons(this.nbSickPersonsInputTarget.value)
+    }
 
     onFollowUpChange(event) {
         if (event.target.value === "investigation tiac") {
@@ -20,6 +30,18 @@ class EvenementSimpleController extends Controller {
         } else {
             this.noticeTransferTarget.classList.add("fr-hidden")
         }
+    }
+
+    updateNoticeNumberOfSickPersons(value) {
+        if (value > 9) {
+            this.noticeNumberOfSickPersonsTarget.classList.remove("fr-hidden")
+        } else {
+            this.noticeNumberOfSickPersonsTarget.classList.add("fr-hidden")
+        }
+    }
+
+    onNumberOfSickPersonsChange(event) {
+        this.updateNoticeNumberOfSickPersons(event.target.value)
     }
 }
 
