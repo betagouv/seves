@@ -5,7 +5,7 @@ import waffle
 
 from core.mixins import WithOrderingMixin
 from ssa.constants import CategorieDanger, CategorieProduit
-from ssa.filters import EvenementFilter
+from ssa.filters import EvenementFilter, EvenementFilterTreeselect
 from ssa.models import EvenementInvestigationCasHumain, EvenementProduit
 from ssa.models.evenement_produit import EvenementProduitReadOnly
 
@@ -45,8 +45,11 @@ class WithFilteredListMixin(WithOrderingMixin):
         return QuerySetSequence(evenement_produit_qs, ich_qs, model=EvenementProduit)
 
     def get_queryset(self):
+        filter_klass = (
+            EvenementFilterTreeselect if waffle.flag_is_active(self.request, "new_treeselect") else EvenementFilter
+        )
         queryset = self.apply_ordering(self.get_raw_queryset())
-        self.filter = EvenementFilter(self.request.GET, queryset=queryset)
+        self.filter = filter_klass(self.request.GET, queryset=queryset)
         return self.filter.qs
 
 

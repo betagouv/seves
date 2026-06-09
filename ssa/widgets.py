@@ -18,7 +18,7 @@ class PositionDossierWidget(forms.Select):
 
 class CategorieProduitLegacyTreeselect(widgets.TextInput):
     Choices = CategorieProduit
-    template_name = "ssa/form/widgets/legacy_treeselect.html"
+    template_name = "ssa/forms/widgets/legacy_treeselect.html"
 
     @property
     def media(self):
