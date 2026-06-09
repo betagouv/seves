@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.forms import CheckboxInput, TextInput
 from django_countries import Countries
 import django_filters
-from django_filters.filters import BaseInFilter, CharFilter
+from django_filters.filters import BaseInFilter, CharFilter, MultipleChoiceFilter
 from dsfr.forms import DsfrBaseForm
 from queryset_sequence import QuerySetSequence
 
@@ -18,7 +18,8 @@ from core.filters_mixins import (
     WithStructureContactFilterMixin,
 )
 from core.models import Departement, LienLibre
-from ssa.constants import Source, SourceInvestigationCasHumain, TypeEvenement
+from core.widgets import TreeselectCheckbox
+from ssa.constants import CategorieDanger, CategorieProduit, Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
 from ssa.widgets import CategorieDangerLegacyTreeselect, CategorieProduitLegacyTreeselect
 
@@ -227,3 +228,18 @@ class EvenementFilter(
             ids.extend(subqueryset.values_list("id", flat=True))
 
         return self.with_free_links_filtered(ids)
+
+
+class EvenementFilterTreeselect(EvenementFilter):
+    categorie_produit = MultipleChoiceFilter(
+        field_name="categorie_produit",
+        choices=CategorieProduit,
+        widget=TreeselectCheckbox,
+        label="Catégorie de produit",
+    )
+    categorie_danger = MultipleChoiceFilter(
+        field_name="categorie_danger",
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox,
+        label="Catégorie de danger",
+    )
