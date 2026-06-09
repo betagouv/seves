@@ -20,6 +20,7 @@ from core.forms import DSFRForm
 from core.models import Departement, LienLibre
 from ssa.constants import Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
+from ssa.widgets import CategorieDangerLegacyTreeselect, CategorieProduitLegacyTreeselect
 
 
 class StrInFilter(BaseInFilter, CharFilter):
@@ -122,8 +123,18 @@ class EvenementFilter(
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
-    categorie_produit = CharInFilter(field_name="categorie_produit", lookup_expr="in")
-    categorie_danger = CharInFilter(field_name="categorie_danger", lookup_expr="in")
+    categorie_produit = CharInFilter(
+        field_name="categorie_produit",
+        lookup_expr="in",
+        widget=CategorieProduitLegacyTreeselect,
+        label="Catégorie de produit",
+    )
+    categorie_danger = CharInFilter(
+        field_name="categorie_danger",
+        lookup_expr="in",
+        widget=CategorieDangerLegacyTreeselect,
+        label="Catégorie de danger",
+    )
 
     class Meta:
         model = EvenementProduit

@@ -77,7 +77,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         return super().media + Media(
             css={
                 "all": (
-                    "ssa/_custom_tree_select.css",
+                    "ssa/form/widgets/_custom_tree_select.css",
                     "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
                 )
             },

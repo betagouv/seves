@@ -18,7 +18,7 @@ importmaps = {
     "Commune": static("core/commune.mjs"),
     "Forms": static("core/forms.mjs"),
     "ViewManager": static("core/view_manager.js"),
-    "CustomTreeSelect": static("ssa/_custom_tree_select.js"),
+    "CustomTreeSelect": static("ssa/form/widgets/_custom_tree_select.js"),
     "siret": static("core/siret.mjs"),
     "TreeSelect": static("ssa/treeselectjs.umd.js"),
     "Freelinks": static("core/free_links.js"),
