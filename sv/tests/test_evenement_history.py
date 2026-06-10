@@ -382,10 +382,10 @@ def test_evenement_history_content_prelevement_shows_even_when_added_with_lieu(
 
     page.goto(f"{live_server.url}{detection.get_update_url()}")
 
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Mon lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
 
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements = PrelevementFormDomElements(page)
