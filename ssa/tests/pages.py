@@ -282,10 +282,6 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     def date_creation(self):
         return self.page.locator("#date-creation-input")
 
-    @property
-    def error_messages(self):
-        return self.page.locator(".fr-alert__title").all_text_contents()
-
 
 class SsaBaseDetailPage(WithActionsPage):
     def __init__(self, page: Page, base_url):

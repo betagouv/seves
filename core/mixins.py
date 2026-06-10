@@ -18,7 +18,6 @@ from django.db import models, transaction
 from django.forms import BaseModelFormSet, Media
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import FormView
@@ -527,17 +526,6 @@ class PreventActionIfVisibiliteBrouillonMixin(GetFicheObjectMixin):
             return safe_redirect(request.POST.get("next") or obj.get_absolute_url() or "/")
 
         return super().dispatch(request, *args, **kwargs)
-
-
-class WithObjectFromContentTypeMixin:
-    def _get_object_from_content_type(self, *, object_id, content_type_id):
-        if hasattr(self, "_object"):
-            return self._object
-
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        self._object = get_object_or_404(ModelClass, pk=object_id)
-        return self._object
 
 
 class EmailNotificationMixin:

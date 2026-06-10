@@ -18,7 +18,6 @@ class WithFilteredListMixin(WithOrderingMixin):
             "publication": "date_publication",
             "createur": "createur__libelle",
             "etat": "etat",
-            "liens": "nb_liens_libre",
         }
 
     def get_default_order_by(self):

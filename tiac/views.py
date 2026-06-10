@@ -403,15 +403,6 @@ class InvestigationTiacBaseView(
 
         return InvestigationTiacEtablissementFormSet(**kwargs)
 
-    def get_analyse_alimentaire_formset(self):
-        kwargs = {}
-        if hasattr(self, "object"):
-            kwargs.update({"instance": self.object})
-        if self.request.POST:
-            kwargs["data"] = self.request.POST
-
-        return AnalysesAlimentairesFormSet(**kwargs)
-
     def get_success_url(self):
         return self.object.get_absolute_url()
 
