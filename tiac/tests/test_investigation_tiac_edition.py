@@ -46,7 +46,6 @@ def test_can_edit_required_fields(live_server, page: Page, assert_models_are_equ
             "modalites_declaration",
             "contenu",
             "notify_ars",
-            "will_trigger_inquiry",
             "numero_sivss",
             "follow_up",
             "nb_sick_persons",
@@ -69,8 +68,6 @@ def test_can_edit_etiologie(live_server, page: Page, assert_models_are_equal, ch
     new_danger_syndromique = choose_different_values(
         DangersSyndromiques.values, investigation.danger_syndromiques_suspectes, singleton=True
     )
-    new_analyses_sur_les_malades = Analyses.OUI
-    new_precision = Faker().sentence()
 
     previous_count = InvestigationTiac.objects.count()
     expected_danger_syndromique = [*investigation.danger_syndromiques_suspectes[:-1], new_danger_syndromique]
@@ -83,25 +80,10 @@ def test_can_edit_etiologie(live_server, page: Page, assert_models_are_equal, ch
     assert edit_page.get_dangers_syndromiques().count() == 2
     edit_page.add_danger_syndromique(DangersSyndromiques(new_danger_syndromique).label)
     assert edit_page.get_dangers_syndromiques().count() == 3
-    edit_page.set_analyses(new_analyses_sur_les_malades.value)
-    edit_page.precisions.fill(new_precision)
-
     edit_page.submit()
 
     investigation.refresh_from_db()
-    assert_models_are_equal(
-        investigation,
-        {
-            "danger_syndromiques_suspectes": expected_danger_syndromique,
-            "analyses_sur_les_malades": new_analyses_sur_les_malades.label,
-            "precisions": new_precision,
-        },
-        fields=[
-            "danger_syndromiques_suspectes",
-            "analyses_sur_les_malades",
-            "precisions",
-        ],
-    )
+    assert investigation.danger_syndromiques_suspectes == expected_danger_syndromique
     assert previous_count == InvestigationTiac.objects.count()
 
 
@@ -113,6 +95,39 @@ COMMON_FIELDS_TO_EXCLUDE = [
     "investigation_id",
     "evenement_simple_id",
 ]
+
+
+def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, choose_different_values):
+    investigation = InvestigationTiacFactory(analyses_sur_les_malades=Analyses.INCONNU, agents_confirmes_ars=[])
+
+    new_analyses_sur_les_malades = Analyses.OUI
+    new_precision = Faker().sentence()
+
+    previous_count = InvestigationTiac.objects.count()
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    edit_page.set_analyses(new_analyses_sur_les_malades.value)
+    edit_page.precisions.fill(new_precision)
+    edit_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+    assert_models_are_equal(
+        investigation,
+        {
+            "agents_confirmes_ars": ["Shigella"],
+            "analyses_sur_les_malades": new_analyses_sur_les_malades.label,
+            "precisions": new_precision,
+        },
+        fields=[
+            "agents_confirmes_ars",
+            "analyses_sur_les_malades",
+            "precisions",
+        ],
+    )
+    assert previous_count == InvestigationTiac.objects.count()
 
 
 def test_can_edit_investigation_elements(live_server, page: Page, ensure_departements, assert_models_are_equal):
@@ -287,10 +302,8 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
     assert "TIAC à agent confirmé" in mail.body
 
 
-def test_can_update_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
-    input_data: InvestigationTiac = InvestigationTiacFactory(
-        precisions="Precisions", analyses_sur_les_malades=Analyses.OUI
-    )
+def test_can_update_ars_block_only_when_analysis_is_true(live_server, mocked_authentification_user, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory(analyses_sur_les_malades=Analyses.NON)
 
     creation_page = InvestigationTiacEditPage(
         page,
@@ -299,9 +312,16 @@ def test_can_update_investigation_tiac_etiologie(live_server, mocked_authentific
     )
     creation_page.navigate()
 
+    expect(creation_page.precisions).to_be_disabled()
+    expect(page.locator(".treeselect--disabled")).to_have_count(1)
+
+    creation_page.set_analyses("Oui")
     expect(creation_page.precisions).to_be_enabled()
+    expect(page.locator(".treeselect--disabled")).to_have_count(0)
+
     creation_page.set_analyses("Non")
     expect(creation_page.precisions).to_be_disabled()
+    expect(page.locator(".treeselect--disabled")).to_have_count(1)
 
 
 def test_investigation_tiac_update_has_locking_protection(

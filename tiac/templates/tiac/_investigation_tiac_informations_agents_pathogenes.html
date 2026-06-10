@@ -1,6 +1,13 @@
 {% load or_empty_value_tag %}
 <div class="white-container detail-content fr-mt-2w">
-    <h2 class="fr-h6">Agents pathogènes confirmés par l'ARS</h2>
+    <h2 class="fr-h6">Informations apportées par l’ARS</h2>
+    <div class="bold fr-mb-2v">Analyses engagées sur les malades</div>
+    <div>{{ object.get_analyses_sur_les_malades_display|or_empty_value_tag  }}</div>
+
+    <div class="bold fr-mb-2v fr-mt-4v">Précisions</div>
+    <div>{{ object.precisions|or_empty_value_tag }}</div>
+
+    <div class="bold fr-mb-2v fr-mt-4v">Agent pathogène détecté sur les malades</div>
     {% if object.agents_confirmes_ars %}
         {{ object.agents_confirmes_ars|join:", " }}
     {% else %}

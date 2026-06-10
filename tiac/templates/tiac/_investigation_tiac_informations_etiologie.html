@@ -20,10 +20,4 @@
     {% empty %}
         <div class="empty-value fr-mb-2w">Vide</div>
     {% endfor %}
-
-    <div class="bold fr-mb-2v">Analyses engagées sur les malades</div>
-    <div>{{ object.get_analyses_sur_les_malades_display|or_empty_value_tag  }}</div>
-
-    <div class="bold fr-mb-2v fr-mt-4v">Précisions</div>
-    <div>{{ object.precisions|or_empty_value_tag }}</div>
 </div>

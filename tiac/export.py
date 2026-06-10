@@ -26,7 +26,6 @@ class TiacExport(BaseExport):
         ("numero_rasff", "N° RASFF/AAC"),
         ("contenu", "Contenu du signalement"),
         ("notify_ars", "ARS informée"),
-        ("will_trigger_inquiry", "Enquête auprès des cas"),
         ("numero_sivss", "N° SIVSS de l'ARS"),
         ("type_evenement", "Type d'événement"),
         ("follow_up", "Suite donnée"),
