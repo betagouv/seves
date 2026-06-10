@@ -759,6 +759,7 @@ def test_can_create_evenement_produit_with_maestro_reference(
     live_server, mocked_authentification_user, page: Page, settings
 ):
     settings.MAESTRO_WEBHOOK_URL = "https://example.com/webhook/"
+    settings.MAESTRO_TOKEN = "NOT_REAL"
     settings.CELERY_TASK_ALWAYS_EAGER = True
     input_data = EvenementProduitFactory.build()
     creation_page = EvenementProduitFormPage(page, live_server.url)
@@ -769,16 +770,20 @@ def test_can_create_evenement_produit_with_maestro_reference(
     creation_page.type_evenement.select_option(input_data.type_evenement)
 
     mock_post = MagicMock(status_code=200)
-    with mock.patch("ssa.maestro.requests.post", mock.Mock(return_value=mock_post)) as mocked_post:
+    with mock.patch("ssa.maestro.requests.put", mock.Mock(return_value=mock_post)) as mocked_put:
         creation_page.submit_as_draft()
 
     evenement_produit = EvenementProduit.objects.get()
-    mocked_post.assert_called_once_with(
+    mocked_put.assert_called_once_with(
         "https://example.com/webhook/",
         json={
             "maestro_reference": "123456",
-            "seved_id": evenement_produit.id,
+            "seves_id": evenement_produit.id,
             "seves_numero": evenement_produit.numero,
+        },
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "NOT_REAL",
         },
         timeout=15,
     )

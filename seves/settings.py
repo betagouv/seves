@@ -364,3 +364,4 @@ USERS_DEFAULT_GROUPS = env.list("USERS_DEFAULT_GROUPS", default=[])
 
 GEOCODE_URL = "https://data.geopf.fr/geocodage"
 MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
+MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)
