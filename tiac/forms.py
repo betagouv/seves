@@ -309,12 +309,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     danger_syndromiques_suspectes = SimpleArrayField(
         forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput
     )
+    agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
     analyses_sur_les_malades = forms.ChoiceField(
         choices=Analyses.choices,
         widget=forms.RadioSelect(
             attrs={
-                "data-action": "change->etiologie-form#onAnalyseChange",
-                "data-etiologie-form-target": "analyses",
+                "data-action": "change->agents-pathogene#onAnalyseChange",
+                "data-agents-pathogene-target": "analyses",
             }
         ),
         label="Analyses engagées sur les malades",
@@ -323,8 +324,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     precisions = forms.CharField(
         widget=forms.TextInput(attrs={"disabled": True}), required=False, label="Précisions", help_text="Type d'analyse"
     )
-    agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
-
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
     )
@@ -339,7 +338,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "numero_rasff",
             "contenu",
             "notify_ars",
-            "will_trigger_inquiry",
             "numero_sivss",
             "follow_up",
             "nb_sick_persons",
@@ -361,7 +359,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         )
         widgets = {
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
-            "will_trigger_inquiry": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
 
     @property

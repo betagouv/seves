@@ -212,19 +212,6 @@ def test_can_create_investigation_tiac_conlusion(
     )
 
 
-def test_can_create_investigation_tiac_with_agents_pathogenes_shortcut(live_server, page: Page):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build()
-
-    creation_page = InvestigationTiacFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.fill_required_fields(input_data)
-    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
-    creation_page.submit_as_draft()
-
-    investigation = InvestigationTiac.objects.last()
-    assert investigation.agents_confirmes_ars == ["Shigella"]
-
-
 def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 
@@ -234,11 +221,25 @@ def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentific
     creation_page.add_danger_syndromique(DangersSyndromiques.TOXINE_DES_POISSONS.label)
     assert creation_page.nb_dangers == 1
 
-    creation_page.set_analyses("Oui")
-    creation_page.precisions.fill("Mes précisions")
     creation_page.submit_as_draft()
     investigation = InvestigationTiac.objects.last()
     assert investigation.danger_syndromiques_suspectes == ["toxine des poissons"]
+
+
+def test_can_create_investigation_tiac_ars(live_server, mocked_authentification_user, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+
+    creation_page.set_analyses("Oui")
+    creation_page.precisions.fill("Mes précisions")
+    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert investigation.agents_confirmes_ars == ["Shigella"]
     assert investigation.precisions == "Mes précisions"
     assert investigation.analyses_sur_les_malades == "oui"
 

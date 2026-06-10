@@ -10,8 +10,6 @@ class EtiologieFormController extends Controller {
         "etiologieCardContainer",
         "hiddenField",
         "jsonConfig",
-        "precisions",
-        "analyses",
     ]
     static values = {
         currentOption: String,
@@ -24,11 +22,6 @@ class EtiologieFormController extends Controller {
         this.config = JSON.parse(this.jsonConfigTarget.textContent)
         this.selectedValuesValue = this.hiddenFieldTarget.value.split("||").filter(value => value.length > 0)
         this.hasConnectedValue = true
-        const currentValue = this.analysesTargets.find(el => el.checked)
-
-        if (currentValue) {
-            this.precisionsTarget.disabled = !(currentValue.value === "oui")
-        }
     }
 
     onShowFirstModal() {
@@ -105,15 +98,6 @@ class EtiologieFormController extends Controller {
         dsfr(this.etiologieModalConfirmationTarget).modal.conceal()
         this.selectedValuesValue = [...this.selectedValuesValue, this.currentOption]
         this.currentOption = null
-    }
-
-    onAnalyseChange(event) {
-        if (event.target.value === "oui") {
-            this.precisionsTarget.disabled = false
-        } else {
-            this.precisionsTarget.disabled = true
-            this.precisionsTarget.value = ""
-        }
     }
 }
 

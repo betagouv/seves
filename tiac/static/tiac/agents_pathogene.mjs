@@ -4,14 +4,42 @@ import {hideHeader, patchItems, shortcutClicked, showHeader, tsDefaultOptions} f
 import {Controller} from "Stimulus"
 
 class AgentsPathogeneController extends Controller {
-    static targets = ["jsonConfig", "categorieDangerInput", "categorieDangerContainer", "categorieDangerHeader"]
+    static targets = [
+        "jsonConfig",
+        "categorieDangerInput",
+        "categorieDangerContainer",
+        "categorieDangerHeader",
+        "precisions",
+        "analyses",
+    ]
 
     connect() {
         this.setupCategorieDanger()
+        const currentValue = this.analysesTargets.find(el => el.checked)
+
+        if (currentValue) {
+            const disabled = !(currentValue.value === "oui")
+            this.precisionsTarget.disabled = disabled
+            if (disabled) {
+                this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
+            }
+        }
     }
 
     onShortcut(event) {
         shortcutClicked(event, this.treeselect, this.categorieDangerInputTarget)
+    }
+
+    onAnalyseChange(event) {
+        if (event.target.value === "oui") {
+            this.precisionsTarget.disabled = false
+            this.categorieDangerContainerTarget.classList.remove("treeselect--disabled")
+        } else {
+            this.precisionsTarget.disabled = true
+            this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
+            this.precisionsTarget.value = ""
+            this.treeselect.updateValue()
+        }
     }
 
     setupCategorieDanger() {

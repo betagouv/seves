@@ -526,7 +526,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "modalites_declaration",
         "numero_rasff",
         "contenu",
-        "will_trigger_inquiry",
         "numero_sivss",
         "follow_up",
         "notify_ars",
@@ -556,11 +555,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
             force=True
         )
 
-    def set_will_trigger_inquiry(self, value):
-        self.page.locator("#radio-id_will_trigger_inquiry").locator(f"input[type='radio'][value='{value}']").check(
-            force=True
-        )
-
     def set_notify_ars(self, value):
         self.page.locator("#radio-id_notify_ars").locator(f"input[type='radio'][value='{value}']").check(force=True)
 
@@ -585,7 +579,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.evenement_origin.select_option(obj.evenement_origin)
         self.set_modalites_declaration(obj.modalites_declaration)
         self.set_notify_ars(obj.notify_ars)
-        self.set_will_trigger_inquiry(obj.will_trigger_inquiry)
         self.numero_sivss.fill(obj.numero_sivss)
 
         self.nb_sick_persons_to_hospital.fill(str(obj.nb_sick_persons_to_hospital))
