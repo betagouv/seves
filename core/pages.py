@@ -1,4 +1,3 @@
-import abc
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
@@ -17,11 +16,6 @@ class BaseDocumentPage(ABC):
 
     def __init__(self, page: Page):
         self.page = page
-
-    @property
-    @abc.abstractmethod
-    def add_document_button(self):
-        pass
 
     @property
     def document_modal(self):
@@ -309,10 +303,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
         expect(aside_card_list).to_have_count(count - 1)
 
     @property
-    def add_document_button(self):
-        return self.page.get_by_role("button", name="Ajouter un document")
-
-    @property
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
 
@@ -341,10 +331,6 @@ class WithDocumentsPage(BaseDocumentPage):
     @property
     def container_id(self):
         return "#tabpanel-documents-panel"
-
-    @property
-    def add_document_button(self):
-        return self.page.get_by_role("button", name="Ajouter des documents")
 
     @property
     def download_documents_zip(self):

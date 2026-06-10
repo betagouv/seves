@@ -115,10 +115,6 @@ class FicheDetectionFormDomElements:
         return self.page.get_by_label("Mesures conservatoires immédiates")
 
     @property
-    def mesures_consignation_label(self) -> Locator:
-        return self.page.get_by_text("Mesures de consignation")
-
-    @property
     def mesures_consignation_input(self) -> Locator:
         return self.page.get_by_label("Mesures de consignation")
 
@@ -209,10 +205,6 @@ class LieuFormDomElements:
         )
 
     @property
-    def adresse_choicesjs(self) -> Locator:
-        return self.page.get_by_test_id("ban-search")
-
-    @property
     def commune_label(self) -> Locator:
         return self.page.get_by_text("Commune", exact=True).locator("visible=true")
 
@@ -251,10 +243,6 @@ class LieuFormDomElements:
     @property
     def is_etablissement_checkbox(self) -> Locator:
         return self.page.locator(".fr-modal__content").locator("visible=true").locator('[for$="is_etablissement"]')
-
-    @property
-    def is_etablissement_checkbox_checked(self) -> bool:
-        return self.page.locator('[id^="id_lieux-"][id$="is_etablissement"]').is_checked()
 
     @property
     def activite_etablissement_input(self) -> Locator:
@@ -434,10 +422,6 @@ class PrelevementFormDomElements:
         return self.deletion_confimation_dialogs.filter(visible=True)
 
     @property
-    def close_btn(self) -> Locator:
-        return self.page.get_by_role("link", name="Fermer")
-
-    @property
     def cancel_btn(self) -> Locator:
         return self.page.locator('[id^="modal-add-edit-prelevement-"][open="true"]').get_by_role("link", name="Annuler")
 
@@ -512,10 +496,6 @@ class PrelevementFormDomElements:
     @property
     def laboratoire_input(self) -> Locator:
         return self.page.locator('[id^="id_prelevements-"][id$="laboratoire"]').locator("visible=true")
-
-    @property
-    def laboratoire_label(self) -> Locator:
-        return self.page.get_by_text("Laboratoire")
 
     @property
     def date_rapport_analyse_input(self) -> Locator:

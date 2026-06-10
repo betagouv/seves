@@ -250,9 +250,6 @@ class CommonMessageForm(forms.ModelForm):
     def _get_recipients_structures_only_label(self, obj):
         return self._build_label_with_shortcuts(mark_safe('<span class="label-marked">Destinataires</span>'), obj)
 
-    def _get_recipients_copy_structures_only_label(self, obj):
-        return self._build_label_with_shortcuts("Copie", obj, prefix="copie")
-
     def _add_related_objects(self):
         self.instance.status = self.status
         self.instance.sender = self.sender

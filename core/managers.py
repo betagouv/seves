@@ -9,7 +9,6 @@ from django.db.models import (
     DateTimeField,
     Exists,
     F,
-    Func,
     IntegerField,
     Manager,
     OuterRef,
@@ -203,21 +202,6 @@ class StructureQueryset(QuerySet):
 
 
 class EvenementManagerMixin:
-    def _with_nb_liens_libres(self, model_class):
-        from .models import LienLibre
-
-        content_type = ContentType.objects.get_for_model(model_class)
-
-        liens = (
-            LienLibre.objects.filter(
-                Q(content_type_1=content_type, object_id_1=OuterRef("pk"))
-                | Q(content_type_2=content_type, object_id_2=OuterRef("pk"))
-            )
-            .annotate(count=Func(F("id"), function="Count"))
-            .values("count")
-        )
-        return self.annotate(nb_liens_libre=Subquery(liens))
-
     def with_fin_de_suivi(self, contact):
         from .models import FinSuiviContact
 
