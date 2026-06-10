@@ -1,10 +1,6 @@
 ALLOWED_TAGS = ["h2", "p", "ol", "li", "span", "strong", "br", "s", "em", "u", "ul"]
 
 
-def _get_style_value(style, selector):
-    return style.split(selector)[-1].replace(";", "").strip()
-
-
 def filter_tags_and_attributes(soup):
     for tag in soup.find_all(True):
         if tag.name not in ALLOWED_TAGS:
