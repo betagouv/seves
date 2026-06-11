@@ -6,6 +6,7 @@ from django.forms import CheckboxInput, TextInput
 from django_countries import Countries
 import django_filters
 from django_filters.filters import BaseInFilter, CharFilter
+from dsfr.forms import DsfrBaseForm
 from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
@@ -16,7 +17,6 @@ from core.filters_mixins import (
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
 )
-from core.forms import DSFRForm
 from core.models import Departement, LienLibre
 from ssa.constants import Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
@@ -34,23 +34,7 @@ class CharInFilter(CharFilter):
         return super().filter(qs, value)
 
 
-class EvenementProduitFilterForm(DSFRForm):
-    manual_render_fields = [
-        "etat",
-        "aliments_animaux",
-        "temperature_conservation",
-        "produit_pret_a_manger",
-        "reference_souches",
-        "reference_clusters",
-        "actions_engagees",
-        "numeros_rappel_conso",
-        "siret",
-        "numero_agrement",
-        "commune",
-        "departement",
-        "pays",
-    ]
-
+class EvenementProduitFilterForm(DsfrBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["type_evenement"].choices = [(k, v) for k, v in TypeEvenement.choices] + [
