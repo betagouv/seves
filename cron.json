@@ -2,27 +2,27 @@
 	"jobs": [
 	  {
 		"command": "*/10 * * * * python manage.py scan_documents",
-	    "size": "2XL"
+	    "size": "M"
 	  },
 	  {
 		"command": "*/10 * * * * python manage.py send_queued_mail",
-	    "size": "2XL"
+	    "size": "M"
 	  },
 	  {
 		"command": "*/10 * * * * python manage.py send_document_emails_batch",
-	    "size": "2XL"
+	    "size": "M"
 	  },
 	  {
 		"command": "0 5 * * * ./bin/backup_db.sh",
-	    "size": "2XL"
+	    "size": "M"
 	  },
 	  {
 		"command": "0 3 * * * ./bin/copy_s3_to_s3.sh",
-	    "size": "2XL"
+	    "size": "M"
 	  },
 	  {
 		"command": "0 4 * * * ./bin/fetch_and_import_contacts.sh",
-	    "size": "2XL"
+	    "size": "M"
 	  }
 	]
   }
