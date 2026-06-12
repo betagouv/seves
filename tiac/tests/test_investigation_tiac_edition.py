@@ -365,15 +365,15 @@ def test_can_update_ars_block_only_when_analysis_is_true(live_server, mocked_aut
     creation_page.navigate()
 
     expect(creation_page.precisions).to_be_disabled()
-    expect(page.locator(".treeselect--disabled")).to_have_count(1)
+    expect(page.locator("#agents-pathogene .treeselect--disabled")).to_have_count(1)
 
     creation_page.set_analyses("Oui")
     expect(creation_page.precisions).to_be_enabled()
-    expect(page.locator(".treeselect--disabled")).to_have_count(0)
+    expect(page.locator("#agents-pathogene .treeselect--disabled")).to_have_count(0)
 
     creation_page.set_analyses("Non")
     expect(creation_page.precisions).to_be_disabled()
-    expect(page.locator(".treeselect--disabled")).to_have_count(1)
+    expect(page.locator("#agents-pathogene .treeselect--disabled")).to_have_count(1)
 
 
 def test_investigation_tiac_update_has_locking_protection(
