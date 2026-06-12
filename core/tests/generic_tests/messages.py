@@ -50,6 +50,11 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.pick_recipient(active_contact, choice_js_fill)
     expect(message_page.page.get_by_text(f"Ouvrir la fiche {object.numero}", exact=True)).to_be_visible()
     expect(message_page.message_form_title).to_have_text("Nouveau message")
+    expect(
+        message_page.page.locator(
+            '[data-placeholder="Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l\'évènement et le lien vers la fiche Sèves."]'
+        )
+    ).to_have_count(1)
 
     message_page.message_title.fill("Title of the message")
     message_page.page.locator(".ql-bold").click()
