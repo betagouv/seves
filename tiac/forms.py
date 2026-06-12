@@ -244,7 +244,7 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     DangersSyndromiques = DangersSyndromiques
 
     date_reception = forms.DateField(
-        required=False,
+        required=True,
         label="Date de réception",
         widget=forms.DateInput(
             format="%Y-%m-%d",
