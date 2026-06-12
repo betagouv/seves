@@ -20,6 +20,7 @@ class EvenementDisplay:
     categorie_produit: str
     categorie_danger: str
     type_evenement: str
+    tooltip_str: str
 
     @staticmethod
     def from_evenement(evenement: "EvenementProduit | EvenementInvestigationCasHumain"):
@@ -28,9 +29,11 @@ class EvenementDisplay:
         if isinstance(evenement, EvenementProduit):
             categorie_produit = evenement.get_categorie_produit_display() or "-"
             categorie_danger = evenement.get_categorie_danger_display() or "-"
+            tooltip_str = f"tooltip-produit-{evenement.pk}"
         else:
             categorie_produit = "-"
             categorie_danger = "-"
+            tooltip_str = f"tooltip-investigation-{evenement.pk}"
 
         etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
 
@@ -46,4 +49,5 @@ class EvenementDisplay:
             categorie_danger=categorie_danger,
             type_evenement=evenement.get_type_evenement_display(),
             last_update=evenement.last_updated,
+            tooltip_str=tooltip_str,
         )

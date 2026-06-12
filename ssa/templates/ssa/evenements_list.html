@@ -104,8 +104,11 @@
                                 <td><div class="ellipsis"><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></div></td>
                                 <td><div class="ellipsis">{{ evenement.date_publication|date:"d/m/Y" }}</div></td>
                                 <td><div class="ellipsis">{{ evenement.last_update|date:"d/m/Y" }}</div></td>
-                                <td>
-                                    <div class="ellipsis">{{ evenement.description }}</div>
+                                <td class="ellipsis">
+                                    <div class="ellipsis">
+                                        <span aria-describedby="{{ evenement.tooltip_str }}">{{ evenement.description }}</span>
+                                    </div>
+                                    <span class="fr-tooltip fr-placement" id="{{ evenement.tooltip_str }}" role="tooltip">{{ evenement.description }}</span>
                                 </td>
                                 <td><div class="ellipsis">{{ evenement.categorie_produit }}</div></td>
                                 <td><div class="ellipsis">{{ evenement.categorie_danger }}</div></td>
