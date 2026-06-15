@@ -234,12 +234,12 @@ class EvenementFilterTreeselect(EvenementFilter):
     categorie_produit = MultipleChoiceFilter(
         field_name="categorie_produit",
         choices=CategorieProduit,
-        widget=TreeselectCheckbox,
+        widget=TreeselectCheckbox(choices=CategorieProduit.treeselect_groups),
         label="Catégorie de produit",
     )
     categorie_danger = MultipleChoiceFilter(
         field_name="categorie_danger",
         choices=CategorieDanger,
-        widget=TreeselectCheckbox,
+        widget=TreeselectCheckbox(choices=CategorieDanger.treeselect_groups),
         label="Catégorie de danger",
     )
