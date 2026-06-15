@@ -5,11 +5,54 @@ import {search} from "Utils"
 const WIDGET_IDENTIFIER = "treeselect"
 const GROUP_IDENTIFIER = "treeselect-group"
 const UNSELECT_EVENT = "unselected"
+const SELECT_EVENT = "selected"
+
+const VALUE_ALL_PLACEHOLDER = "__all__"
 
 let counter = 0
 
+/**
+ * *** Targets ***
+ * @property {HTMLInputElement[]} inputTargets
+ * *** Targets ***
+ * @property {HTMLInputElement} inputTarget
+ */
 class TreeselectGroupConnectable extends Controller {
+    static targets = ["input"]
+
+    get checked() {
+        return this.inputTargets.findIndex(it => !it.checked) === -1
+    }
+
+    #selectAllOfSameValue = async ({detail: {value}}) => {
+        if (value === VALUE_ALL_PLACEHOLDER) return
+        this.inputTargets.forEach(it => {
+            if (it.value.trim() === value.trim() && it.checked === false) {
+                it.setAttribute("data-implicit-check", "")
+            }
+        })
+    }
+
+    #unselectAllOfSameValue = async ({detail: {value}}) => {
+        if (value === VALUE_ALL_PLACEHOLDER) return
+        this.inputTargets.forEach(it => {
+            if (it.value.trim() === value.trim() && it.checked === true) {
+                it.checked = false
+                it.removeAttribute("data-implicit-check")
+            }
+        })
+    }
+
     connect() {
+        /**@type {Controller}*/
+        this.treeselect = this.application.getControllerForElementAndIdentifier(
+            this.element.closest(`[data-controller~="${WIDGET_IDENTIFIER}"]`),
+            WIDGET_IDENTIFIER,
+        )
+
+        this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${SELECT_EVENT}`, this.#selectAllOfSameValue)
+        this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${UNSELECT_EVENT}`, this.#unselectAllOfSameValue)
+
         const enclosingGroup = this.element.parentElement.closest(
             `[data-controller~="${WIDGET_IDENTIFIER}"], [data-controller~="${GROUP_IDENTIFIER}"]`,
         )
@@ -25,18 +68,20 @@ class TreeselectGroupConnectable extends Controller {
 
     disconnect() {
         this._parentGroup?.unregisterChild(this._childId, this)
+        this.treeselect.element.removeEventListener(`${WIDGET_IDENTIFIER}:${SELECT_EVENT}`, this.#selectAllOfSameValue)
+        this.treeselect.element.removeEventListener(
+            `${WIDGET_IDENTIFIER}:${UNSELECT_EVENT}`,
+            this.#unselectAllOfSameValue,
+        )
     }
 }
 
 /**
- * *** Targets ***
- * @property {HTMLInputElement} inputTarget
  * *** Values ***
  * @property {Boolean} hiddenValue
  */
 class TreeselectElement extends TreeselectGroupConnectable {
     static values = {hidden: {type: Boolean, default: false}}
-    static targets = ["input"]
 
     get labels() {
         return [
@@ -82,7 +127,6 @@ class TreeselectElement extends TreeselectGroupConnectable {
 /**
  * *** Targets ***
  * @property {HTMLElement[]} collapseTargets
- * @property {HTMLInputElement[]} inputTargets
  * @property {HTMLInputElement[]} accordionBtnTargets
  * *** Values ***
  * @property {Boolean} hiddenValue
@@ -95,7 +139,7 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         selfMatchesSearch: {type: Boolean, default: true},
         hasChildrenMatching: {type: Boolean, default: true},
     }
-    static targets = ["input", "accordionBtn", "collapse"]
+    static targets = ["accordionBtn", "collapse"]
 
     get labels() {
         const result = []
@@ -107,13 +151,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
     }
 
     initialize() {
+        /** @type {Map<string, TreeselectGroupConnectable>} */
         this.children = new Map()
-
-        for (const it of this.element.querySelectorAll("& > .fr-treeselect__group-header input")) {
-            it.setAttribute(`data-${this.identifier}-target`, "input")
-            const actions = (it.dataset.action || "").split(/\s+/)
-            it.dataset.action = [`${this.identifier}#onSelect`, ...actions].join(" ")
-        }
     }
 
     registerChild(id, child) {
@@ -162,13 +201,51 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         }
     }
 
-    onSelect({target: {checked}}) {
-        if (checked) {
+    /**
+     * @param param0
+     * @param {HTMLInputElement} param0.target
+     * @param param0.detail
+     * @param {boolean} [param0.detail.implicit] Parameter that indecate that this event
+     *      was emitted by clicking another input. Since this method may itself emit an
+     *      change event, this parameter is necessary to prevent infinite recusrsion
+     */
+    onSelect({target, detail}) {
+        if (detail?.implicit === true) return
+
+        if (target.checked) {
             this.collapseTargets.forEach(async it => {
                 await dsfrDisclosePromise(dsfr(it).collapse)
                 it.scrollIntoView({block: "center"})
             })
         }
+        if (target.type === "checkbox") {
+            this.children.values().forEach(child => {
+                child.inputTargets.forEach(it => {
+                    it.checked = target.checked
+                    it.dispatchEvent(new CustomEvent("change", {detail: {implicit: true}}))
+                })
+            })
+        }
+    }
+
+    /**
+     * @param param0
+     * @param {HTMLInputElement} param0.target
+     * @param param0.detail
+     * @param {boolean} [param0.detail.implicit] Parameter that indecate that this event
+     *      was emitted by clicking another input. Since this method may itself emit an
+     *      change event, this parameter is necessary to prevent infinite recusrsion
+     */
+    onChildCheckboxChange({target, detail}) {
+        if (detail?.implicit === true || target.type !== "checkbox") return
+
+        const newCheck = !(!target.checked || this.children.values().find(it => !it.checked) !== undefined)
+        this.inputTargets.forEach(it => {
+            if (it.checked !== newCheck) {
+                it.checked = newCheck
+                it.dispatchEvent(new CustomEvent("change", {detail: {implicit: true}}))
+            }
+        })
     }
 }
 
@@ -192,7 +269,7 @@ class TreeselectSelectedBadge extends Controller {
     }
 
     onUnselected({detail: {value}}) {
-        if (value === this.formvalValue || value === "__all__") {
+        if (value === this.formvalValue || value === VALUE_ALL_PLACEHOLDER) {
             this.element.remove()
         }
     }
@@ -252,7 +329,7 @@ class Treeselect extends Controller {
         await Promise.all(this.children.values().map(it => it.search(search, this.minSearchLengthValue)))
     }
 
-    onChange({target}) {
+    onChange({target, detail}) {
         const label = target.labels[0].textContent.trim() || target.ariaLabel
         const categorisedLabel = target.dataset.categorisedLabel || label
         // If inputs are radio buttons, we allow only one value
@@ -261,7 +338,7 @@ class Treeselect extends Controller {
         }
 
         if (target.checked) {
-            this.selectChoice(target.value, label, categorisedLabel)
+            this.selectChoice(target.value, label, categorisedLabel, detail?.implicit)
         } else {
             this.unselectChoice(target.value)
         }
@@ -271,8 +348,7 @@ class Treeselect extends Controller {
         } else if (size === 1) {
             this.buttonTarget.textContent = `${this.choices.values().next().value}`
         } else {
-            const additionnal = this.choices.size - 1
-            this.buttonTarget.textContent = `${this.choices.values().next().value} +${additionnal} élément${additionnal > 1 ? "s" : ""}`
+            this.buttonTarget.textContent = `${this.choices.size} éléments`
         }
     }
 
@@ -283,10 +359,11 @@ class Treeselect extends Controller {
 
     clearChoices() {
         this.choices.clear()
-        this.dispatch(UNSELECT_EVENT, {detail: {value: "__all__"}})
+        this.dispatch(UNSELECT_EVENT, {detail: {value: VALUE_ALL_PLACEHOLDER}})
     }
 
     selectChoice(value, label, categorisedLabel) {
+        this.dispatch(SELECT_EVENT, {detail: {value}})
         this.choices.set(value, categorisedLabel)
         this.selectedGroupTarget.insertAdjacentHTML(
             "beforeend",
@@ -295,8 +372,10 @@ class Treeselect extends Controller {
     }
 
     unselectChoice(value) {
-        this.choices.delete(value)
-        this.dispatch(UNSELECT_EVENT, {detail: {value}})
+        if (this.choices.has(value)) {
+            this.choices.delete(value)
+            this.dispatch(UNSELECT_EVENT, {detail: {value}})
+        }
     }
 }
 
