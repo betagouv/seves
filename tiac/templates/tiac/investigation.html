@@ -177,31 +177,29 @@
                 </div>
 
                 {% dsfr_form_field form.analyses_sur_les_malades|dsfr_inline %}
-                <div class="fr-container--fluid">
-                    <div class="fr-grid-row fr-grid-row--gutters">
-                        <div class="fr-col-4">{% dsfr_form_field form.precisions|set_data:"agents-pathogene-target:precisions" %}</div>
-                        <div class="fr-col-8">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-4">{% dsfr_form_field form.precisions|set_data:"agents-pathogene-target:precisions" %}</div>
+                    <div class="fr-col-8">
 
-                            {% dsfr_form_field form.agents_confirmes_ars|set_data:"agents-pathogene-target:categorieDangerInput" %}
+                        {% dsfr_form_field form.agents_confirmes_ars|set_data:"agents-pathogene-target:categorieDangerInput" %}
 
-                            <label for="id_agents_confirmes_ars" class="fr-label">Agent pathogène détecté sur les malades</label>
-                            <span class="fr-hint-text fr-mb-3v">Confirmation obtenue par examen clinique ou analytique des malades</span>
-                            <div data-agents-pathogene-target="categorieDangerContainer"></div>
+                        <label for="id_agents_confirmes_ars" class="fr-label">Agent pathogène détecté sur les malades</label>
+                        <span class="fr-hint-text fr-mb-3v">Confirmation obtenue par examen clinique ou analytique des malades</span>
+                        <div data-agents-pathogene-target="categorieDangerContainer"></div>
 
-                            <template data-agents-pathogene-target="categorieDangerHeader">
-                                <div class="categorie-danger-header">
-                                    <div class="fr-ml-1v">Dangers les plus courants</div>
-                                    {% for danger in danger_plus_courant %}
-                                        <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
-                                            <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
-                                            <label class="treeselect-list__item-label shortcut" for="shortcut_{{ forloop.counter0 }}">{{ danger }}</label>
-                                        </div>
-                                    {% endfor %}
-                                    <div class="fr-ml-1v">Liste complète des dangers</div>
-                                </div>
-                            </template>
+                        <template data-agents-pathogene-target="categorieDangerHeader">
+                            <div class="categorie-danger-header">
+                                <div class="fr-ml-1v">Dangers les plus courants</div>
+                                {% for danger in danger_plus_courant %}
+                                    <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
+                                        <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
+                                        <label class="treeselect-list__item-label shortcut" for="shortcut_{{ forloop.counter0 }}">{{ danger }}</label>
+                                    </div>
+                                {% endfor %}
+                                <div class="fr-ml-1v">Liste complète des dangers</div>
+                            </div>
+                        </template>
 
-                        </div>
                     </div>
                 </div>
 

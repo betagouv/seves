@@ -17,12 +17,12 @@ class AgentsPathogeneController extends Controller {
         this.setupCategorieDanger()
         const currentValue = this.analysesTargets.find(el => el.checked)
 
-        if (currentValue) {
-            const disabled = !(currentValue.value === "oui")
-            this.precisionsTarget.disabled = disabled
-            if (disabled) {
-                this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
-            }
+        this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
+        this.precisionsTarget.disabled = true
+
+        if (currentValue && currentValue.value === "oui") {
+            this.categorieDangerContainerTarget.classList.remove("treeselect--disabled")
+            this.precisionsTarget.disabled = false
         }
     }
 
