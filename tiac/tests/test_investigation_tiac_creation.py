@@ -35,6 +35,7 @@ from ..constants import (
 from ..models import (
     AlimentSuspect,
     AnalyseAlimentaire,
+    Analyses,
     Etablissement,
     EvenementSimple,
     InvestigationFollowUp,
@@ -112,11 +113,15 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 def test_can_create_investigation_tiac_with_all_fields(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build(danger_syndromiques_suspectes=[])
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(
+        danger_syndromiques_suspectes=[], analyses_sur_les_malades=Analyses.OUI
+    )
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_context_block(input_data)
+    creation_page.set_analyses(input_data.analyses_sur_les_malades)
+    creation_page.precisions.fill(input_data.precisions)
 
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
@@ -139,7 +144,6 @@ def test_can_create_investigation_tiac_with_all_fields(
             "date_creation",
             "date_publication",
             "analyses_sur_les_malades",
-            "precisions",
             "last_updated",
         ],
         ignore_array_order=True,
