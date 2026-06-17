@@ -168,13 +168,17 @@ class MessageFactory(DjangoModelFactory):
     message_type = FuzzyChoice([choice[0] for choice in Message.MESSAGE_TYPE_CHOICES])
     title = factory.Faker("sentence", nb_words=4)
     content = factory.Faker("paragraph")
+    status = Message.Status.FINALISE
 
     sender = factory.SubFactory(ContactAgentFactory)
-    date_publication = factory.LazyFunction(timezone.now)
 
     @factory.lazy_attribute
     def sender_structure(self):
         return self.sender.agent.structure
+
+    @factory.lazy_attribute
+    def date_publication(self):
+        return timezone.now() if self.status == Message.Status.FINALISE else None
 
     @factory.post_generation
     def recipients(self, create, extracted, **kwargs):

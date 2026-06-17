@@ -260,6 +260,7 @@ class MessageQueryset(QuerySet):
 
         return self.annotate(
             displayed_date_orm=Case(
+                When(date_picked__isnull=False, then=F("date_picked")),
                 When(status=Message.Status.FINALISE, then=F("date_publication")),
                 default=Case(
                     When(last_updated__isnull=False, then=F("last_updated")),

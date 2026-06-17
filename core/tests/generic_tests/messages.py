@@ -867,20 +867,26 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     finalise_oldest = MessageFactory(
         title="finalisé le plus ancien",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_oldest.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0))
     )
     brouillon_older = MessageFactory(
         title="Brouillon ancien",
         status=Message.Status.BROUILLON,
-        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=brouillon_older.pk).update(
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0))
     )
     finalise_recent = MessageFactory(
         title="finalisé récent",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_recent.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0))
     )
     brouillon_newest = MessageFactory(
         title="Brouillon le plus récent",
@@ -888,24 +894,40 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
         date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
         **common_kwargs,
     )
+    Message.objects.filter(pk=brouillon_newest.pk).update(
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0))
+    )
     finalise_newest = MessageFactory(
         title="finalisé le plus récent",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_newest.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0))
     )
     old_draft_updated_recently = MessageFactory(
         title="Brouillon ancien mis à jour",
         status=Message.Status.BROUILLON,
-        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
         last_updated=timezone.now(),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_newest.pk).update(
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0))
     )
     old_draft_recently_published = MessageFactory(
         title="Brouillon ancien mais envoyé récemment",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
         date_publication=timezone.now(),
+        **common_kwargs,
+    )
+    Message.objects.filter(pk=old_draft_recently_published.pk).update(
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0))
+    )
+    note_with_specific_picked_date = MessageFactory(
+        title="Note avec une date choisie à la main dans l'interface",
+        message_type=Message.NOTE,
+        date_picked=timezone.make_aware(datetime(2025, 1, 1, 15, 0, 0)),
+        status=Message.Status.FINALISE,
         **common_kwargs,
     )
 
@@ -918,7 +940,8 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     assert message_page.message_title_in_table(4) == old_draft_recently_published.title
     assert message_page.message_title_in_table(5) == finalise_newest.title
     assert message_page.message_title_in_table(6) == finalise_recent.title
-    assert message_page.message_title_in_table(7) == finalise_oldest.title
+    assert message_page.message_title_in_table(7) == note_with_specific_picked_date.title
+    assert message_page.message_title_in_table(8) == finalise_oldest.title
 
 
 def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):
