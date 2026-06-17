@@ -230,6 +230,7 @@ OIDC_OP_LOGOUT_URL_METHOD = "core.auth_views.logout"
 OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
 OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_TIMEOUT = env("OIDC_RP_TIMEOUT", int, default=20)
 
