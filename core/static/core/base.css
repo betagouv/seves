@@ -124,6 +124,16 @@ fieldset {
     }
 }
 
+.blue-container {
+    padding: 1.5rem !important;
+    background-color: var(--background-open-blue-france);
+}
+@media (min-width: 992px) {
+    .grey-container {
+        padding: 2rem !important;
+    }
+}
+
 .white-container--lite {
     padding: 1rem !important;
     background-color: white;
