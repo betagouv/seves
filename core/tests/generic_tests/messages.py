@@ -486,6 +486,11 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     message_page.new_note()
     expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
 
+    expect(
+        message_page.page.locator(
+            '[data-placeholder="Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l\'évènement et le lien vers la fiche Sèves."]'
+        )
+    ).to_have_count(0)
     message_page.message_title.fill("Title of the message")
     message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()

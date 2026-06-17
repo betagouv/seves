@@ -135,6 +135,8 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
 
 
 class CommonMessageForm(forms.ModelForm):
+    show_placeholder = True
+
     def __init__(
         self,
         sender,
@@ -339,6 +341,8 @@ class NoteForm(CommonMessageForm, DsfrBaseForm):
             },
         ),
     )
+
+    show_placeholder = False
 
     def __init__(self, *args, sender, obj, **kwargs):
         super().__init__(*args, sender=sender, obj=obj, **kwargs)
