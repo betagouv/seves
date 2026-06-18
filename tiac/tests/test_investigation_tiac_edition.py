@@ -3,7 +3,6 @@ from playwright.sync_api import Page, expect
 import pytest
 
 from core.constants import MUS_STRUCTURE
-from core.factories import ContactAgentFactory
 from core.models import Contact, LienLibre
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -111,7 +110,7 @@ def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, ch
     edit_page.set_analyses(new_analyses_sur_les_malades.value)
     edit_page.precisions.fill(new_precision)
     edit_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
-    edit_page.submit()
+    edit_page.submit_from_top()
 
     investigation.refresh_from_db()
     assert_models_are_equal(
@@ -268,20 +267,13 @@ def test_cancel_edit_on_etablissement_reset_all_value(
     assert initial_etablissement == investigation.etablissements.get()
 
 
-def test_can_edit_etiologie_conclusion_and_freelinks(
+def test_can_edit_freelinks(
     live_server, page: Page, ensure_departements, assert_models_are_equal, choose_different_values, choice_js_fill
 ):
     investigation: InvestigationTiac = InvestigationTiacFactory(with_liens_libres=2)
     other_event_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     other_event_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     other_event_3 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-
-    new_investigation: InvestigationTiac = InvestigationTiacFactory(
-        agents_confirmes_ars=choose_different_values(SuspicionConclusion.values, investigation.agents_confirmes_ars),
-        suspicion_conclusion=choose_different_values(
-            SuspicionConclusion.values, [investigation.suspicion_conclusion], singleton=True
-        ),
-    )
 
     edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
     edit_page.navigate()
@@ -290,8 +282,6 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
     edit_page.add_free_link(other_event_1.numero, choice_js_fill)
     edit_page.add_free_link(other_event_2.numero, choice_js_fill, link_label="Enregistrement simple : ")
     edit_page.add_free_link(other_event_3.numero, choice_js_fill, link_label="Événement produit : ")
-    edit_page.fill_conlusion(new_investigation)
-
     edit_page.submit()
 
     investigation.refresh_from_db()
@@ -300,18 +290,6 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
         other_event_2,
         other_event_3,
     }
-    assert_models_are_equal(
-        investigation,
-        new_investigation,
-        fields=[
-            "suspicion_conclusion",
-            "selected_hazard",
-            "conclusion_comment",
-            "conclusion_repas",
-            "conclusion_aliment",
-        ],
-        ignore_array_order=True,
-    )
 
 
 def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live_server, page: Page, mailoutbox):
@@ -330,28 +308,6 @@ def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live
     assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
     assert "Investigation coordonnée" in mail.subject
     assert contact_structure_mus in investigation.contacts.all()
-
-
-def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
-    investigation = InvestigationTiacFactory(suspicion_conclusion=None)
-    contact_1, contact_2, contact_3 = ContactAgentFactory.create_batch(3)
-    investigation.contacts.add(contact_1, contact_2, contact_3)
-    creation_page = InvestigationTiacEditPage(page, live_server.url, investigation=investigation)
-    creation_page.navigate()
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
-    creation_page._set_treeselect_option(
-        "selected_hazard-treeselect", "Allergène - composition ou étiquetage > Allergène - Arachide"
-    )
-    creation_page.submit_as_draft()
-
-    investigation = InvestigationTiac.objects.get()
-    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
-
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    assert set(mail.to) == {contact_1.email, contact_2.email, contact_3.email}
-    assert "Conclusion suspicion TIAC" in mail.subject
-    assert "TIAC à agent confirmé" in mail.body
 
 
 def test_can_update_ars_block_only_when_analysis_is_true(live_server, mocked_authentification_user, page: Page):

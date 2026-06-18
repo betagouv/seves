@@ -38,6 +38,14 @@ class WithTreeSelect:
         self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')
         expect(self.page.locator(f"#{container_id} .treeselect-list"), "Treeselect wasn't closed").to_have_count(0)
 
+    def _set_treeselect_option_by_search_term(self, container_id, search_term, label):
+        self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").click(force=True)
+        self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").fill(search_term)
+        element = self.page.get_by_title(label, exact=True)
+        element.locator(".treeselect-list__item-checkbox-icon").locator("visible=true").click(force=True)
+        self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')
+        expect(self.page.locator(f"#{container_id} .treeselect-list"), "Treeselect wasn't closed").to_have_count(0)
+
     def get_treeselect_options(self, container_id):
         elements = self.page.locator(f"#{container_id} .treeselect-input__tags-count")
         return [elements.nth(i).inner_text() for i in range(elements.count())]
