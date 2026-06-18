@@ -259,8 +259,11 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         return context
 
 
-class EvenementSimpleTransferView(UpdateView):
+class EvenementSimpleTransferView(UpdateView, UserPassesTestMixin):
     form_class = EvenementSimpleTransferForm
+
+    def test_func(self):
+        return self.get_object().can_be_transfered(self.request.user)
 
     def get_queryset(self):
         return EvenementSimple.objects.all().get_user_can_view(user=self.request.user)
@@ -273,7 +276,10 @@ class EvenementSimpleTransferView(UpdateView):
         return response
 
 
-class EvenementTransformView(UpdateView):
+class EvenementTransformView(UserPassesTestMixin, UpdateView):
+    def test_func(self):
+        return self.get_object().can_be_changed_in_investigation(self.request.user)
+
     def get_queryset(self):
         return EvenementSimple.objects.all().get_user_can_view(user=self.request.user)
 
@@ -497,7 +503,7 @@ class InvestigationTiacCreationView(InvestigationTiacBaseView, CreateView):
             messages.success(self.request, "L’évènement a été créé avec succès.")
 
 
-class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
+class InvestigationTiacUpdateView(InvestigationTiacBaseView, UserPassesTestMixin, UpdateView):
     template_name = "tiac/investigation.html"
 
     def form_valid(self, form):
@@ -510,6 +516,9 @@ class InvestigationTiacUpdateView(InvestigationTiacBaseView, UpdateView):
             if self.object_was_draft and not self.object.is_draft
             else "L’évènement a été mis à jour avec succès."
         )
+
+    def test_func(self):
+        return self.get_object().can_be_modified(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
