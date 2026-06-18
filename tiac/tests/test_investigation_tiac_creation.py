@@ -1,6 +1,5 @@
 import datetime
 import json
-import random
 from unittest import mock
 
 from django.http import JsonResponse
@@ -24,11 +23,9 @@ from tiac.factories import (
 )
 
 from ..constants import (
-    DANGERS_COURANTS,
     DangersSyndromiques,
     ModaliteDeclarationEvenement,
     MotifAliment,
-    SuspicionConclusion,
     TypeCollectivite,
     TypeRepas,
 )
@@ -126,8 +123,6 @@ def test_can_create_investigation_tiac_with_all_fields(
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
 
-    creation_page.fill_conlusion(input_data)
-
     creation_page.submit_as_draft()
 
     investigation = InvestigationTiac.objects.last()
@@ -145,70 +140,9 @@ def test_can_create_investigation_tiac_with_all_fields(
             "date_publication",
             "analyses_sur_les_malades",
             "last_updated",
-        ],
-        ignore_array_order=True,
-    )
-
-
-test_data = [
-    pytest.param(
-        SuspicionConclusion.CONFIRMED.value,
-        random.sample(CategorieDanger.values, k=1),
-        id=f"{SuspicionConclusion.CONFIRMED}-single",
-    ),
-    pytest.param(
-        SuspicionConclusion.CONFIRMED.value,
-        random.sample(CategorieDanger.values, k=2),
-        id=f"{SuspicionConclusion.CONFIRMED}-multiple",
-    ),
-    pytest.param(
-        SuspicionConclusion.CONFIRMED.value,
-        random.sample(DANGERS_COURANTS, k=1),
-        id=f"{SuspicionConclusion.CONFIRMED}-common-choices",
-    ),
-    pytest.param(
-        SuspicionConclusion.SUSPECTED.value,
-        random.sample(DangersSyndromiques.values, k=1),
-        id=f"{SuspicionConclusion.SUSPECTED}-single",
-    ),
-    pytest.param(
-        SuspicionConclusion.SUSPECTED.value,
-        random.sample(DangersSyndromiques.values, k=2),
-        id=f"{SuspicionConclusion.SUSPECTED}-multiple",
-    ),
-    *[(item.value, []) for item in SuspicionConclusion.no_clue],
-]
-
-
-@pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
-def test_can_create_investigation_tiac_conlusion(
-    live_server,
-    mocked_authentification_user,
-    page: Page,
-    assert_models_are_equal,
-    suspicion_conclusion,
-    selected_hazard,
-):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build(
-        danger_syndromiques_suspectes=[], suspicion_conclusion=suspicion_conclusion, selected_hazard=selected_hazard
-    )
-
-    creation_page = InvestigationTiacFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.fill_required_fields(input_data)
-
-    creation_page.fill_conlusion(input_data)
-
-    creation_page.submit_as_draft()
-
-    investigation = InvestigationTiac.objects.last()
-    assert_models_are_equal(
-        input_data,
-        investigation,
-        fields=[
+            "conclusion_comment",
             "suspicion_conclusion",
             "selected_hazard",
-            "conclusion_comment",
             "conclusion_repas",
             "conclusion_aliment",
         ],
@@ -240,7 +174,7 @@ def test_can_create_investigation_tiac_ars(live_server, mocked_authentification_
     creation_page.set_analyses("Oui")
     creation_page.precisions.fill("Mes précisions")
     creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
-    creation_page.submit_as_draft()
+    creation_page.submit_from_top_as_draft()
 
     investigation = InvestigationTiac.objects.last()
     assert investigation.agents_confirmes_ars == ["Shigella"]

@@ -10,7 +10,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from docxtpl import DocxTemplate
@@ -46,7 +48,7 @@ from tiac.tasks import export_tiac_task
 from .constants import DangersSyndromiques, EvenementFollowUp
 from .display import DisplayItem
 from .filters import TiacFilter
-from .forms import EvenementSimpleTransferForm
+from .forms import ConclusionForm, EvenementSimpleTransferForm
 from .formsets import (
     AlimentFormSet,
     AnalysesAlimentairesFormSet,
@@ -472,8 +474,6 @@ class InvestigationTiacBaseView(
             if "follow_up" in dirty_fields and self.object.follow_up == InvestigationFollowUp.INVESTIGATION_COORDONNEE:
                 notify_investigation_coordonnee(self.object, self.request.user)
                 self.object.contacts.add(Contact.objects.get_mus())
-            if "suspicion_conclusion" in dirty_fields:
-                notify_conclusion(self.object, self.request.user)
 
     def form_valid(self, form):
         dirty_fields = None
@@ -580,10 +580,14 @@ class InvestigationTiacDetailView(
         ]
         context["etablissements"] = list(self.get_object().etablissements.all())
         context["dates_repas"] = [r.datetime_repas for r in self.get_object().repas.all() if r.datetime_repas]
+        context["conclusion_form"] = ConclusionForm(instance=self.get_object())
         return context
 
     def get_publish_success_message(self):
         return "L’évènement a été publié avec succès."
+
+    def get_media(self, **context_data) -> Media:
+        return super().get_media(**context_data) + context_data["conclusion_form"].media
 
 
 class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
@@ -668,3 +672,27 @@ class TiacExportView(WithFilteredListMixin, WithExportHeterogeneousQuerysetMixin
 
     def get_success_url(self):
         return reverse("tiac:evenement-liste")
+
+
+@method_decorator(require_POST, name="dispatch")
+class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, UpdateView):
+    form_class = ConclusionForm
+
+    def get_queryset(self):
+        return InvestigationTiac.objects.all().get_user_can_view(user=self.request.user)
+
+    def test_func(self):
+        return self.get_object().can_be_modified(self.request.user)
+
+    def form_valid(self, form):
+        dirty_fields = self.object.get_dirty_fields()
+        self.object = form.save()
+        self.add_user_contacts(self.object)
+        if "suspicion_conclusion" in dirty_fields:
+            notify_conclusion(self.object, self.request.user)
+        messages.success(self.request, "L’évènement a été mis à jour avec succès.")
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+    def form_invalid(self, form):
+        super().form_invalid(form)
+        return HttpResponseRedirect(form.instance.get_absolute_url())

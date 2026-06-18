@@ -26,6 +26,11 @@ urlpatterns = [
         name="investigation-tiac-edition",
     ),
     path(
+        "investigation-tiac/edition/<int:pk>/conclusion/",
+        views.ConclusionUpdateView.as_view(),
+        name="investigation-tiac-edition-conclusion",
+    ),
+    path(
         "evenement-simple/<str:numero>/",
         views.EvenementSimpleDetailView.as_view(),
         name="evenement-simple-details",

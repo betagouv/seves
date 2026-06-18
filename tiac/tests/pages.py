@@ -494,9 +494,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "datetime_last_symptoms",
         "analyses_sur_les_malades",
         "precisions",
-        "suspicion_conclusion",
-        "selected_hazard",
-        "conclusion_comment",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -670,8 +667,18 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def nb_aliments(self):
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
+    def submit_from_top(self):
+        self.page.get_by_test_id("top-action-btns").get_by_test_id("submit-publish").click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
     def submit(self, btn_label="Enregistrer"):
         self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
+    def submit_from_top_as_draft(self):
+        self.page.get_by_test_id("top-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
@@ -686,17 +693,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def remove_free_link(self, index):
         self.page.locator("#liens-libre").get_by_role("button", name="Remove item").nth(index).click()
 
-    def fill_conlusion(self, input_data):
-        self.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
-        if input_data.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
-            for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", CategorieDanger(item).label)
-        elif input_data.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
-            for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
-
-        self.conclusion_comment.fill(input_data.conclusion_comment)
-
 
 class InvestigationTiacEditPage(InvestigationTiacFormPage):
     def __init__(self, page: Page, base_url, investigation: InvestigationTiac):
@@ -709,7 +705,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin, WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -777,3 +773,32 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    @property
+    def add_conclusion_button(self):
+        return self.page.get_by_role("button", name="Enregistrer la conclusion")
+
+    @property
+    def edit_conclusion_button(self):
+        return self.page.get_by_role("button", name="Modifier la conclusion")
+
+    def fill_conclusion(self, input_data):
+        self.add_conclusion_button.click()
+        self.page.locator("#id_suspicion_conclusion").select_option(input_data["suspicion_conclusion"])
+        if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
+            for item in input_data["selected_hazard"]:
+                final_label = CategorieDanger(item).label.split(">")[-1].strip()
+                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
+        elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
+            for item in input_data["selected_hazard"]:
+                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
+
+        self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
+
+        if input_data["suspicion_conclusion"] not in (SuspicionConclusion.DISCARDED, SuspicionConclusion.UNKNOWN):
+            if input_data.get("conclusion_repas"):
+                self.page.locator("#id_conclusion_repas").select_option(str(input_data["conclusion_repas"]))
+            if input_data.get("conclusion_aliment"):
+                self.page.locator("#id_conclusion_aliment").select_option(str(input_data["conclusion_aliment"]))
+
+        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Enregistrer").click()
