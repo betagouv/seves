@@ -1421,13 +1421,11 @@ def test_elements_infestes_add_to_existing(live_server, page: Page, assert_model
             expect(generated_card.locator(".fr-card__desc")).to_contain_text(
                 f"Quantité d’éléments infestés : {element.quantite_with_unite}"
             )
-
         if element == to_add_and_delete:
             evenement_page.remove_last_card()
 
     assert fiche.elements_infestes.count() == len(existing)
     expect(evenement_page.empty_message).not_to_be_visible()
-
     evenement_page.save()
 
     fiche.refresh_from_db()
@@ -1481,3 +1479,23 @@ def test_elements_infestes_edit(live_server, page: Page, assert_models_are_equal
     assert_models_are_equal(
         elements_infeste, new_data, fields=("type", "espece", "quantite", "quantite_unite", "comments")
     )
+
+
+def test_elements_infestes_edit_close_modal_reset_values(live_server, page: Page, choice_js_get_values):
+    fiche: FicheDetection = FicheDetectionFactory()
+    element_infeste = ElementInfesteFactory(fiche_detection=fiche, espece__libelle="Espece test")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    new_data = ElementInfesteFactory.create()
+
+    evenement_page.navigate(fiche)
+    evenement_page.edit_card(0, new_data, close_with_action="cancel")
+
+    evenement_page.elements_cards.nth(0).get_by_role("button", name="Modifier").click()
+
+    expect(evenement_page.fieldset.get_by_label("Type")).to_have_value(element_infeste.type)
+    expect(evenement_page.fieldset.locator('[name$="quantite"]')).to_have_value(element_infeste.quantite)
+    expect(
+        evenement_page.fieldset.get_by_label(element_infeste.get_quantite_unite_display(), exact=True)
+    ).to_be_checked()
+    expect(evenement_page.fieldset.locator('[name$="comments"]')).to_have_value(element_infeste.comments)
+    assert choice_js_get_values(page, "#id_elements_infestes-0-espece", delete_remove_link=True) == ["Espece test\n"]

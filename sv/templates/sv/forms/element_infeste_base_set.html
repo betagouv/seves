@@ -10,7 +10,6 @@
         {% if form.is_bound and form.errors %}
             data-element-infeste-form-is-valid-value="false"
         {% endif %}
-        data-action="dsfr.conceal->element-infeste-form#onCloseForm"
     >
         <button
             class="fr-btn fr-hidden"
@@ -24,6 +23,7 @@
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-element-infeste-form-target="dialog"
             data-testid="form-dialog"
+            data-action="dsfr.conceal->element-infeste-form#onCloseForm"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">
