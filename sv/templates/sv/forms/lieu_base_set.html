@@ -8,7 +8,6 @@
         data-lieu-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
         {# form.is_bound is important: we don't want to accidentally trigger on empty form #}
         {% if form.is_bound and form.errors %}data-lieu-form-is-valid-value="false"{% endif %}
-        data-action="dsfr.conceal->lieu-form#onCloseForm"
     >
         {{ form }}
     </fieldset>
