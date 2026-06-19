@@ -414,3 +414,33 @@ def test_update_investigation_tiac_updates_last_updated_field(live_server, page)
     update_page.page.wait_for_url(f"**{evenement.numero_evenement}**")
     evenement.refresh_from_db()
     assert evenement.last_updated > initial_last_update
+
+
+def test_cancel_edit_on_repas_reset_values(live_server, page: Page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_repas=1,
+        with_repas__departement=departement,
+    )
+    initial_repas = investigation.repas.get()
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_repas_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator("visible=true").locator('[id$="denomination"]').fill("New value")
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.get_repas_card(0).locator(".modify-button").click()
+
+    modal = edit_page.current_modal
+    expect(modal.locator('[id$="denomination"]')).to_have_value(initial_repas.denomination)
+
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.repas.count() == 1
+    assert initial_repas == investigation.repas.get()
