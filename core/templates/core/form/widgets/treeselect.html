@@ -75,7 +75,6 @@
             {% endif %}
         >
             {% for optgroup in widget.optgroups %}
-                {% merge_data_action optgroup.attrs "change->treeselect-group#onChildCheckboxChange" %}
                 {% include optgroup.template_name with widget=optgroup %}
             {% endfor %}
         </div>
