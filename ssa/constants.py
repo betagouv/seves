@@ -19,9 +19,9 @@ class GroupedChoicesMixin:
             self._splitted_label_ = re.split(r"\s*>\s*", self.label)
         return self._splitted_label_
 
-    @enum_property
-    def treeselect_item(self):
-        return TreeselectItem(value=self.value, label=self.uncategorized_label, categorised_label=self.label)
+    def get_treeselect_item(self, **kwargs):
+        kwargs = {"value": self.value, "label": self.uncategorized_label, "categorised_label": self.label, **kwargs}
+        return TreeselectItem(**kwargs)
 
     @classproperty
     def treeselect_groups(cls):
@@ -39,6 +39,7 @@ class GroupedChoicesMixin:
             treeselect_kwargs = {"categorised_label": None}
             if group_item := item.pop("__self__", None):
                 treeselect_kwargs["value"] = group_item.value
+                treeselect_kwargs["categorised_label"] = group_item.categorised_label
             treeselect_kwargs["label"] = label
             treeselect_kwargs["choices"] = []
             for label, item in item.items():
@@ -689,7 +690,7 @@ class CategorieDanger(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
         return (
             TreeselectGroup(
                 label="Dangers les plus courants",
-                choices=tuple(it.treeselect_item for it in cls.danger_courants),
+                choices=tuple(it.get_treeselect_item(html_name_prefix="shortcut") for it in cls.danger_courants),
                 can_expand=False,
                 categorised_label=None,
             ),

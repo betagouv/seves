@@ -26,6 +26,7 @@ class TreeselectItem:
     value: Any
     label: str
     categorised_label: str | None
+    html_name_prefix: str | None = None
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -35,10 +36,6 @@ class TreeselectGroup(BaseChoiceIterator):
     choices: _Choices
     categorised_label: str | None
     can_expand: bool = True
-
-    @property
-    def has_option(self):
-        return self.value is not _UNSET
 
     def __post_init__(self):
         self.choices = normalize_choices(self.choices)
@@ -81,6 +78,11 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         else:
             super().__init__(self.parent.attrs, ((item.label, item.value),))
 
+    def get_selected(self, option_value, value):
+        selected = (not self.parent.has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
+        self.parent.has_selected |= selected
+        return selected
+
     def get_context(self, name, value, attrs):
         attrs = attrs or {}
         context = super().get_context(name, value, attrs)
@@ -93,12 +95,12 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
             context["can_expand"] = self.item.can_expand
             if self.item.categorised_label:
                 attrs["data-categorised-label"] = self.item.categorised_label
-            if self.item.has_option:
+            if self.item.value:
                 context["group_option"] = self.create_option(
                     name,
                     self.item.value,
                     self.group_label,
-                    str(self.group_label) in value,
+                    self.get_selected(self.item.value, value),
                     self.parent.get_next_id(),
                     None,
                     attrs,
@@ -108,7 +110,6 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
 
     def optgroups(self, name, value, attrs=None):
         attrs = attrs or {}
-        has_selected = False
         for choice in self.choices:
             if isinstance(choice, TreeselectGroup):
                 yield TreeselectGroupWidget(self.parent, choice).get_context(name, value, attrs)
@@ -117,10 +118,20 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     choice = TreeselectItem(value=choice[0], label=choice[1], categorised_label=None)
                 if choice.categorised_label:
                     attrs["data-categorised-label"] = choice.categorised_label
-                selected = (not has_selected or self.parent.allow_multiple_selected) and str(choice.value) in value
-                has_selected |= selected
+                if choice.html_name_prefix:
+                    name = f"{choice.html_name_prefix}-{name}"
+                    selected = str(choice.value) in value
+                else:
+                    selected = self.get_selected(choice.value, value)
+
                 yield self.create_option(
-                    name, choice.value, choice.label, selected, self.parent.get_next_id(), subindex=None, attrs=attrs
+                    name,
+                    choice.value,
+                    choice.label,
+                    selected,
+                    self.parent.get_next_id(),
+                    subindex=None,
+                    attrs=attrs,
                 )
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
@@ -185,6 +196,7 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         return context
 
     def optgroups(self, name, values, attrs=None):
+        self.has_selected = False
         for choice in self.choices:
             match choice:
                 case TreeselectGroup() | TreeselectItem():
