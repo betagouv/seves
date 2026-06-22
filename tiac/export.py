@@ -38,7 +38,7 @@ class TiacExport(BaseExport):
         ("danger_syndromiques_suspectes", "Danger syndromique suspectés"),
         ("analyses_sur_les_malades", "Analyses engagées sur les malades"),
         ("precisions", "Précisions"),
-        ("agents_confirmes_ars", "Agent pathogènes confirmés par l'ARS"),
+        ("agents_confirmes_ars", "Agent pathogène détecté sur les malades"),
         ("suspicion_conclusion", "Conclusion de la suspicion de TIAC"),
         ("selected_hazard", "Dangers retenus"),
         ("conclusion_comment", "Commentaire"),
