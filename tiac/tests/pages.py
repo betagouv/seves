@@ -553,6 +553,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         container.evaluate("el => el.scrollIntoView()")
         container.locator(".treeselect-input__edit").click()
         container.locator(".shortcut", has_text=label).locator("..").click()
+        self.page.keyboard.press("Escape")
 
     @property
     def current_modal(self):
