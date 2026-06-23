@@ -10,13 +10,7 @@
         {% if form.is_bound and form.errors %}data-lieu-form-is-valid-value="false"{% endif %}
         data-action="dsfr.conceal->lieu-form#onCloseForm"
     >
-        <button
-            class="fr-btn fr-hidden"
-            type="button"
-            data-fr-opened="false"
-            aria-controls="fr-modal-{{ form.prefix }}"
-        ></button>
-        {% include 'sv/_fichedetection_form__lieux_modal.html' %}
+        {{ form }}
     </fieldset>
 {% endpartialdef %}
 

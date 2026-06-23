@@ -73,6 +73,8 @@ class SiteInspectionSelect(forms.Select):
 
 
 class LieuForm(forms.ModelForm, DsfrBaseForm):
+    template_name = "sv/forms/lieu.html"
+
     nom = forms.CharField(widget=forms.TextInput(), required=True, label="Nom du lieu")
     adresse_lieu_dit = forms.CharField(
         label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
@@ -161,6 +163,13 @@ class LieuForm(forms.ModelForm, DsfrBaseForm):
             for field in Lieu.ETABLISSEMENT_FIELDS:
                 self.cleaned_data.pop(field)
 
+    def get_context(self):
+        return {
+            **super().get_context(),
+            "REVERSE_GEO_API": settings.REVERSE_GEO_API,
+            "GEO_API_ROOT": settings.GEO_API_ROOT,
+        }
+
     class Meta:
         model = Lieu
         exclude = ("fiche_detection",)
@@ -193,13 +202,6 @@ class LieuBaseFormSet(BaseInlineFormSet):
         form_kwargs = super().get_form_kwargs(index)
         form_kwargs["structure"] = self.structure
         return form_kwargs
-
-    def get_context(self):
-        return {
-            **super().get_context(),
-            "REVERSE_GEO_API": settings.REVERSE_GEO_API,
-            "GEO_API_ROOT": settings.GEO_API_ROOT,
-        }
 
 
 LieuFormSet = inlineformset_factory(
