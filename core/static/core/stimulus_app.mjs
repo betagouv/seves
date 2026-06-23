@@ -97,11 +97,8 @@ class AlertController extends Controller {
 
     /**@param {HTMLElement} target */
     closeTargetConnected(target) {
-        const action = `click->${this.identifier}#onClose`
-        const previous = target.dataset.action
-        if (previous === undefined || !previous.includes(action)) {
-            target.dataset.action = `${previous} ${action}`.trim()
-        }
+        const actions = [...(target.dataset.action ?? "").split(/s+/g), `click->${this.identifier}#onClose`]
+        target.dataset.action = actions.join(" ").trim()
     }
 
     /** @param {Event} evt */
