@@ -1,5 +1,6 @@
 from copy import copy
 import datetime
+from typing import Collection
 
 from django import forms
 from django.conf import settings
@@ -19,11 +20,9 @@ from core.forms import BaseCompteRenduDemandeInterventionForm, VisibiliteUpdateB
 from core.models import Contact, Departement, Structure
 from sv.constants import ElementInfesteQuantiteUnite, SiteInspection
 from sv.form_mixins import (
-    WithDataRequiredConversionMixin,
     WithEvenementFreeLinksMixin,
 )
 from sv.models import (
-    EspeceEchantillon,
     Evenement,
     FicheDetection,
     FicheZoneDelimitee,
@@ -190,13 +189,22 @@ class LieuBaseFormSet(BaseInlineFormSet):
 
     @property
     def media(self):
-        return super().media + Media(js=(js_module("sv/lieux.mjs"), js_module("core/address_search_autocomplete.mjs")))
+        return super().media + Media(
+            js=(
+                js_module("sv/lieux.mjs"),
+                js_module("core/address_search_autocomplete.mjs"),
+            ),
+            css={
+                "all": (
+                    "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css",
+                    "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css",
+                )
+            },
+        )
 
     def __init__(self, structure: Structure, *args, **kwargs):
         self.structure = structure
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            self.queryset = self.queryset.filter(fiche_detection=self.instance)
 
     def get_form_kwargs(self, index):
         form_kwargs = super().get_form_kwargs(index)
@@ -209,39 +217,37 @@ LieuFormSet = inlineformset_factory(
 )
 
 
-class SelectWithAttributeField(forms.Select):
-    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        option = super().create_option(name, value, label, selected, index, subindex, attrs)
-        if value:
-            confirmation_officielle = value.instance.confirmation_officielle
-            option["attrs"]["data-confirmation-officielle"] = "true" if confirmation_officielle else "false"
-            if (
-                self.form_instance.instance.type_analyse == Prelevement.TypeAnalyse.CONFIRMATION
-                and not confirmation_officielle
-            ):
-                option["attrs"]["disabled"] = "disabled"
-        return option
+class PrelevementForm(DsfrBaseForm, forms.ModelForm):
+    @property
+    def confirmation_officielle(self):
+        return getattr(self.instance, "type_analyse", None) == Prelevement.TypeAnalyse.CONFIRMATION
 
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/espece_search.mjs"),))
 
-class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm):
-    id = forms.IntegerField(widget=forms.HiddenInput, required=False)
-    resultat = forms.ChoiceField(
-        required=True,
-        choices=Prelevement.Resultat.choices,
-        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline"}),
-    )
-    type_analyse = forms.ChoiceField(
-        required=True,
-        choices=Prelevement.TypeAnalyse.choices,
-        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline fr-mb-0"}),
-    )
-    lieu = forms.ModelChoiceField(
-        queryset=Lieu.objects.none(),
-        to_field_name="nom",
-        required=True,
-        empty_label=None,
-    )
-    espece_echantillon = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+    def __init__(self, *args, **kwargs):
+        labo_values = kwargs.pop("labo_values", None)
+        structure_values = kwargs.pop("structure_values", None)
+        super().__init__(*args, **kwargs)
+
+        self.empty_permitted = False
+        self.use_required_attribute = True
+
+        field = self["espece_echantillon"].field
+        field.queryset = field.queryset.none()
+        field.empty_label = settings.SELECT_EMPTY_CHOICE
+
+        if labo_values:
+            self.fields["laboratoire"].queryset = labo_values
+        if structure_values:
+            self.fields["structure_preleveuse"].queryset = structure_values
+
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["is_officiel"]:
+            self.cleaned_data["numero_rapport_inspection"] = ""
+            self.cleaned_data["laboratoire"] = None
 
     class Meta:
         model = Prelevement
@@ -255,46 +261,46 @@ class PrelevementForm(DSFRForm, WithDataRequiredConversionMixin, forms.ModelForm
                     "title": "Format attendu : AA-XXXXXX où AA correspond à l'année sur 2 chiffres (ex: 24 pour 2024) et XXXXXX est un numéro à 6 chiffres",
                 }
             ),
-            "laboratoire": SelectWithAttributeField,
             "date_prelevement": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "date_rapport_analyse": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
-    def __init__(self, *args, **kwargs):
-        convert_required_to_data_required = kwargs.pop("convert_required_to_data_required", False)
-        cached_choices = kwargs.pop("cached_choices", {})
-        labo_values = kwargs.pop("labo_values", None)
-        structure_values = kwargs.pop("structure_values", None)
-        super().__init__(*args, **kwargs)
 
-        self.fields["laboratoire"].widget.form_instance = self
-        if self.instance and self.instance.pk:
-            self.fields["lieu"].queryset = self.instance.lieu.fiche_detection.lieux.all()
-            self.initial["lieu"] = self.instance.lieu.nom
+class PrelevementBaseFormSet(BaseInlineFormSet):
+    template_name = "sv/forms/prelevement_base_set.html"
+    deletion_widget = forms.HiddenInput
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sv/prelevement.mjs"),))
+
+    def __init__(
+        self,
+        fiche_detection: FicheDetection,
+        data=None,
+        files=None,
+        instance: Collection[Lieu] | Lieu | None = None,
+        save_as_new=False,
+        prefix=None,
+        queryset=None,
+        **kwargs,
+    ):
+        self.fiche_detection = fiche_detection
+        if not instance:
+            self.lieux = []
+        elif isinstance(instance, Collection):
+            self.lieux = instance
         else:
-            self.fields["date_prelevement"].required = True
+            self.lieux = [instance]
+        instance = None
+        super().__init__(data, files, instance, save_as_new, prefix, queryset, **kwargs)
+        if self.fiche_detection.pk:
+            self.queryset = self.queryset.filter(lieu__fiche_detection=self.fiche_detection)
 
-        for field_name, choices in cached_choices.items():
-            if choices is not None and field_name in self.fields:
-                self.fields[field_name].choices = choices
 
-        if labo_values:
-            self.fields["laboratoire"].queryset = labo_values
-        if structure_values:
-            self.fields["structure_preleveuse"].queryset = structure_values
-
-        if convert_required_to_data_required:
-            self._convert_required_to_data_required()
-
-    def clean_espece_echantillon(self):
-        if self.cleaned_data["espece_echantillon"]:
-            return EspeceEchantillon.objects.get(pk=self.cleaned_data["espece_echantillon"])
-
-    def clean(self):
-        super().clean()
-        if self.cleaned_data["is_officiel"] is False:
-            self.cleaned_data["numero_rapport_inspection"] = ""
-            self.cleaned_data["laboratoire"] = None
+PrelevementFormSet = inlineformset_factory(
+    Lieu, Prelevement, form=PrelevementForm, formset=PrelevementBaseFormSet, extra=0, can_delete=True
+)
 
 
 class ElementInfesteForm(DsfrBaseForm, forms.ModelForm):
