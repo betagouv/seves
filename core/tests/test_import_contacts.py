@@ -5,7 +5,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 import pytest
 
-from core.factories import UserFactory
+from core.constants import SEVES_STRUCTURE
+from core.factories import AgentFactory, UserFactory
 from core.models import Agent, Contact, Structure
 
 User = get_user_model()
@@ -56,6 +57,9 @@ def test_data_integrity(mock_csv_data):
     user = UserFactory(email="not_in_agricoll@test.com", username="not_in_agricoll@test.com")
     User.objects.filter(pk=user.pk).update(is_active=True)
     assert User.objects.get(pk=user.pk).is_active is True
+    seves_team_user = AgentFactory(structure__niveau1=SEVES_STRUCTURE).user
+    User.objects.filter(pk=seves_team_user.pk).update(is_active=True)
+    assert User.objects.get(pk=seves_team_user.pk).is_active is True
 
     call_command("import_contacts", mock_csv_data)
 
@@ -120,6 +124,7 @@ def test_data_integrity(mock_csv_data):
     assert contact3.agent.user.is_active is False
 
     assert User.objects.get(pk=user.pk).is_active is False
+    assert User.objects.get(pk=seves_team_user.pk).is_active is True
 
 
 @pytest.mark.django_db
