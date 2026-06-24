@@ -8,6 +8,7 @@ from django.core.validators import validate_email
 from django.db import transaction
 from django.db.utils import DataError
 
+from core.constants import SEVES_STRUCTURE
 from core.models import Agent, Contact, Structure
 
 User = get_user_model()
@@ -97,6 +98,8 @@ class Command(BaseCommand):
                     ligne += 1
                     self.save_contact(row, ligne)
 
-        User.objects.exclude(email__in=self.found_emails).update(is_active=False)
+        User.objects.exclude(email__in=self.found_emails).exclude(agent__structure__niveau1=SEVES_STRUCTURE).update(
+            is_active=False
+        )
         end_time = time.time()
         self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(end_time - start_time)} secondes"))
