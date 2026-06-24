@@ -110,7 +110,7 @@ def test_notification_demande_intervention(mailoutbox):
     )
     assert message.content in mail.body
     assert set(mail.to) == {structure_1.email}
-    assert set(mail.cc) == {structure_2.email}
+    assert set(mail.cc) == {structure_2.email, agent_2.email}
 
 
 @pytest.mark.django_db

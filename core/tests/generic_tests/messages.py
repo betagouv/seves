@@ -540,7 +540,7 @@ def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server,
 
 
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
-    live_server, page: Page, choice_js_fill, object, mocked_authentification_user
+    live_server, page: Page, choice_js_fill, object, mocked_authentification_user, mailoutbox
 ):
     structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
     ContactStructureFactory(structure=structure)
@@ -589,6 +589,12 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
             f"CC : {contact_cc.display_with_agent_unit}, {contact_cc_agent.display_with_agent_unit}", exact=True
         )
     ).to_be_visible()
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert "Title of the message" in mail.body
+    assert set(mail.to) == {contact.email}
+    assert set(mail.cc) == {contact_cc.email, contact_cc_agent.email}
 
 
 def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_server, page: Page, object):
