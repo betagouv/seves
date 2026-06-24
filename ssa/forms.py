@@ -232,7 +232,9 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
 
 
 class EvenementProduitTreeselectForm(EvenementProduitForm):
-    categorie_produit = ChoiceField(required=False, choices=CategorieProduit.treeselect_groups, widget=TreeselectRadio)
+    categorie_produit = ChoiceField(
+        required=False, choices=CategorieProduit, widget=TreeselectRadio(choices=CategorieProduit.treeselect_groups)
+    )
     categorie_danger = ChoiceField(
         required=False, choices=CategorieDanger, widget=TreeselectRadio(choices=CategorieDanger.treeselect_choices)
     )
