@@ -18,14 +18,6 @@ from sv.factories import EvenementFactory
 from sv.models import Evenement, Structure
 
 
-def _add_contacts(evenement, mocked_authentification_user):
-    """Ajoute l'agent et la structure de l'agent connecté aux contacts."""
-    user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
-    user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
-    evenement.contacts.add(user_contact_agent)
-    evenement.contacts.add(user_contact_structure)
-
-
 def test_can_cloturer_evenement(live_server, page, mocked_authentification_user, mailoutbox):
     evenement = EvenementFactory()
     generic_test_can_cloturer_evenement(live_server, page, evenement, mocked_authentification_user, mailoutbox)

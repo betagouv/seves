@@ -153,6 +153,14 @@ class WithLocalisableMixin(models.Model):
             value = f"{self.commune}{code_postal}"
         return value
 
+    @property
+    def commune_and_departement(self):
+        value = ""
+        if self.commune:
+            departement = f" ({departement})" if (departement := getattr(self.departement, "numero", None)) else ""
+            value = f"{self.commune}{departement}"
+        return value
+
     class Meta:
         abstract = True
 

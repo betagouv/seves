@@ -230,6 +230,7 @@ OIDC_OP_LOGOUT_URL_METHOD = "core.auth_views.logout"
 OIDC_CALLBACK_CLASS = "core.auth_views.CustomOIDCAuthenticationCallbackView"
 OIDC_CREATE_USER = False
 LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_TIMEOUT = env("OIDC_RP_TIMEOUT", int, default=20)
 
@@ -364,3 +365,4 @@ USERS_DEFAULT_GROUPS = env.list("USERS_DEFAULT_GROUPS", default=[])
 
 GEOCODE_URL = "https://data.geopf.fr/geocodage"
 MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
+MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)

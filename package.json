@@ -7,14 +7,16 @@
     "StimulusStore": "npm:stimulus-store@0.0.3",
     "Choices": "npm:choices.js@11.0.4",
     "BanAutocomplete": "file:./core/static/core/ban_autocomplete.js",
+    "Commune": "file:./core/static/core/commune.mjs",
     "siret": "file:./core/static/core/siret.mjs",
-    "CustomTreeSelect": "file:./ssa/static/ssa/_custom_tree_select.js",
+    "CustomTreeSelect": "file:./ssa/static/ssa/form/widgets/_custom_tree_select.js",
     "Forms": "file:./core/static/core/forms.mjs",
     "BaseFormset": "file:./core/static/core/base_formset.mjs",
     "BaseFormInModal": "file:./core/static/core/base_form_in_modal.mjs",
     "TreeSelect": "file:./ssa/static/ssa/treeselectjs.umd.js",
     "DocumentUploads": "file:./core/static/core/form/document_uploads.mjs",
     "FicheBlocCommun": "file:./core/static/core/fiche_bloc_commun.mjs",
-    "ObjectLazyLoad": "file:./core/static/core/object_lazy_load.mjs"
+    "ObjectLazyLoad": "file:./core/static/core/object_lazy_load.mjs",
+    "SvLieux": "file:./sv/static/sv/lieux.mjs"
   }
 }

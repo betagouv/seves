@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
+    <link rel="stylesheet" href="{% static 'ssa/form/widgets/_custom_tree_select.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
@@ -24,8 +24,12 @@
                 </button>
             </div>
             <div class="evenements_liste__search-form">
-                {% dsfr_form_field filter.form.annee|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:annee"  %}
-                {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.annee|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:annee"  %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.numero|set_data:"action:search-form#disableCheckboxIfNeeded"|set_data:"search-form-target:numero"  %}
+                </div>
                 {% for field in filter.form %}
                     {% if field.name in filter.form.main_filters %}
                         <div class="fr-fieldset__element">

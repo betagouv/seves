@@ -54,7 +54,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="id" value="{{ form.instance.pk }}">
                 <div class="white-container">
-                    <div data-controller="rich-text-editor">
+                    <div data-controller="rich-text-editor" data-rich-text-editor-show-placeholder-value="{{ form.show_placeholder|yesno:'true,false' }}">
                         {% for field in form %}
                             {% if field.name == "content" %}
                                 <div class="fr-fieldset__element fr-hidden">

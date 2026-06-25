@@ -1,5 +1,7 @@
-import {escapeHTML} from "Application"
-import choicesDefaults from "choicesDefaults"
+import {applicationReady, escapeHTML} from "Application"
+import {Controller} from "Stimulus"
+import {useStore} from "StimulusStore"
+import {lieuxStore, prelevementsStore} from "SvLieux"
 
 /**
  * @typedef PrelevementData
@@ -16,9 +18,67 @@ import choicesDefaults from "choicesDefaults"
  * @property {string|null} laboratoire
  */
 
+let lieuxCards = []
 /** @type {PrelevementData[]} */
 document.prelevementCards = []
 const modalHTMLContent = {}
+
+/**
+ * ******** Targets ********
+ * @property {HTMLButtonElement} addButtonTarget
+ * @property {HTMLElement[]} prelevementNoticeTargets
+ * ******** Stores ********
+ * @property  {function(value: import("StimulusStore/dist/types/setCallback").SetCallback)}  setLieuxStoreValue
+ * @property  {import("StimulusStore/dist/types/updateMethod").UpdateMethod}  onLieuxStoreUpdate
+ * @property {Object} lieuxStoreValue
+ *
+ * @property  {function(value: import("StimulusStore/dist/types/setCallback").SetCallback)}  setPrelevementsStoreValue
+ * @property  {import("StimulusStore/dist/types/updateMethod").UpdateMethod}  onPrelevementsStoreUpdate
+ * @property {Object} prelevementsStoreValue
+ */
+class PrelevementController extends Controller {
+    static targets = ["addButton", "prelevementNotice"]
+    static stores = [lieuxStore, prelevementsStore]
+
+    connect() {
+        useStore(this)
+        const prelevementCards = document.prelevementCards
+        const controller = this
+        Object.defineProperty(document, "prelevementCards", {
+            get() {
+                return controller.prelevementCardsProxy
+            },
+            set(value) {
+                controller.prelevementCardsProxy = new Proxy(value, {
+                    set(target, prop, value) {
+                        const result = Reflect.set(target, prop, value)
+                        controller.setPrelevementsStoreValue(target)
+                        return result
+                    },
+
+                    get(target, prop) {
+                        return (...args) => {
+                            const result = Reflect.get(target, prop).call(target, ...args)
+                            controller.setPrelevementsStoreValue(target)
+                            return result
+                        }
+                    },
+                })
+            },
+        })
+        document.prelevementCards = prelevementCards
+    }
+
+    onLieuxStoreUpdate(lieux) {
+        const hasLieux = Object.keys(lieux).length === 0
+        this.addButtonTarget.disabled = hasLieux
+        this.prelevementNoticeTargets.forEach(it => {
+            hasLieux ? it.classList.remove("fr-hidden") : it.classList.add("fr-hidden")
+        })
+
+        lieuxCards = Object.values(lieux)
+    }
+}
 
 /** @param {MouseEvent} evt */
 function duplicatePrelevement(evt) {
@@ -118,13 +178,12 @@ function displayPrelevementsCards() {
             it.addEventListener("click", duplicatePrelevement)
         }
     })
-    showOrHidePrelevementUI()
 }
 
 function populateLieuSelect(element) {
     const currentValue = element.value
     element.innerHTML = ""
-    document.lieuxCards.forEach(option => {
+    lieuxCards.forEach(option => {
         const opt = document.createElement("option")
         opt.value = option.nom
         opt.textContent = option.nom
@@ -265,8 +324,7 @@ function handleModalClose(event) {
     dsfr(modal).modal.conceal()
 }
 
-;(() => {
-    showOrHidePrelevementUI()
+function prelevementsinit() {
     document.getElementById("btn-add-prelevment").addEventListener("click", showAddPrelevementmodal)
     document.getElementById("delete-prelevement-confirm-btn").addEventListener("click", deletePrelevement)
     document
@@ -297,4 +355,9 @@ function handleModalClose(event) {
         }
     })
     displayPrelevementsCards()
-})()
+}
+
+applicationReady.then(app => {
+    app.register("prelevement-form", PrelevementController)
+    prelevementsinit()
+})

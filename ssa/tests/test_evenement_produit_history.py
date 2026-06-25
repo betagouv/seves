@@ -129,13 +129,13 @@ def test_can_evenement_produit_history_performances_with_messages(client, django
     with reversion.create_revision():
         MessageFactory.create(content_object=evenement)
         evenement.save()
-    with django_assert_max_num_queries(base_queries + 7):
+    with django_assert_max_num_queries(base_queries + 8):
         response = client.get(url)
         assert len(response.context["patches"]) == 2
 
     with reversion.create_revision():
         MessageFactory.create(content_object=evenement)
         evenement.save()
-    with django_assert_max_num_queries(base_queries + 16):
+    with django_assert_max_num_queries(base_queries + 18):
         response = client.get(url)
         assert len(response.context["patches"]) == 3

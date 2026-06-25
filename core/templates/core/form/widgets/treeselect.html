@@ -2,9 +2,8 @@
 
 {% partialdef input %}
     <div class="fr-{{ widget.type }}-group{% if parent_index %} fr-treeselect__group-selectable{% endif %}">
-        {% with data_action=widget.attrs|get_item:"data-action"|default:"" %}
-            {% set_context_var widget.attrs "data-action" data_action|strfmt:"{} change->treeselect#onChange" %}
-        {% endwith %}
+        {% merge_data_action widget.attrs "change->treeselect#onChange" %}
+        {% if parent_index %}{% set_context_var widget.attrs "data-treeselect-group-target" "input" %}{% endif %}
         {% include "django/forms/widgets/input.html" %}
         <label class="fr-label" for="{{ widget.attrs.id }}">
             {% if parent_index %}
@@ -51,6 +50,7 @@
                 >{{ widget.group }}</p>
             {% elif widget.group_option %}
                 {% with widget=widget.group_option parent_index=widget.group_index %}
+                    {% merge_data_action widget.attrs "change->treeselect-group#onSelect" %}
                     {% partial input %}
                 {% endwith %}
             {% else %}
@@ -130,7 +130,7 @@
                     >
                         <template data-treeselect-target="selectedTagTpl">
                             <div
-                                class="fr-tag fr-tag--dismiss"
+                                class="fr-tag fr-background-action-high--blue-france fr-text-inverted--blue-france"
                                 type="button"
                                 data-controller="treeselect-selected-badge"
                                 data-treeselect-selected-badge-formval-value="__value__"

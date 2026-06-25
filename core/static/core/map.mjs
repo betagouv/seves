@@ -13,7 +13,6 @@ class MapController extends BaseMapController {
         "mapDisplay",
         "latitudeInput",
         "longitudeInput",
-        "communeInput",
         "codeInseeInput",
         "codePostalInput",
         "departementInput",
@@ -80,7 +79,6 @@ class MapController extends BaseMapController {
             .then(json => {
                 const feature = json.features && json.features[0]
                 if (!feature) return null
-                this.communeInputTarget.value = feature.properties.city
                 this.communeSelectTarget.dispatchEvent(
                     new CustomEvent("forcedChoice", {
                         detail: {

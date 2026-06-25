@@ -1,21 +1,51 @@
-from copy import copy, deepcopy
+from __future__ import annotations
+
 import dataclasses
 import itertools
-import re
-from typing import Any, Collection, Iterable, Literal, Mapping
+import typing
 
-from django.db.models import Choices
 from django.forms import Media, widgets
-from django.utils.choices import normalize_choices
+from django.utils.choices import BaseChoiceIterator, normalize_choices
 
 from core.form_mixins import js_module
 
+if typing.TYPE_CHECKING:
+    from typing import Any, Iterable, Literal, TypeAlias
 
-@dataclasses.dataclass
-class TreeselectGroup:
+    from django.db.models import Choices
+
+    _Choice: TypeAlias = tuple[Any, Any]
+    _ChoiceNamedGroup: TypeAlias = tuple[str, Iterable[_Choice]]
+    _Choices: TypeAlias = Iterable["_Choice | _ChoiceNamedGroup | TreeselectGroup | TreeselectItem"] | type[Choices]
+
+_UNSET = type("UNSET", (), {"__bool__": lambda *args: False})()
+
+
+@dataclasses.dataclass(kw_only=True)
+class TreeselectItem:
     value: Any
     label: str
-    choices: type[Choices] | Iterable[tuple[Any, str]]
+    categorised_label: str | None
+    html_name_prefix: str | None = None
+
+
+@dataclasses.dataclass(kw_only=True)
+class TreeselectGroup(BaseChoiceIterator):
+    value: Any = _UNSET
+    label: str
+    choices: _Choices
+    categorised_label: str | None
+    can_expand: bool = True
+
+    def __post_init__(self):
+        self.choices = normalize_choices(self.choices)
+        self._choices_list = list(self.choices)
+
+    def __getitem__(self, index):
+        return self._choices_list[index]
+
+    def __iter__(self):
+        return iter(self.choices)
 
 
 class TreeselectGroupWidget(widgets.ChoiceWidget):
@@ -23,7 +53,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def template_name(self):
         return (
             "core/form/widgets/treeselect.html#group"
-            if self.group_label
+            if isinstance(self.item, TreeselectGroup)
             else "core/form/widgets/treeselect.html#nogroup"
         )
 
@@ -39,55 +69,69 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def option_template_name(self):
         return self.parent.option_template_name
 
-    @property
-    def choices(self):
-        return self._choices
-
-    @choices.setter
-    def choices(self, value):
-        self._choices = deepcopy(value)
-
-    def __init__(self, parent: "TreeselectCheckbox", label, choices):
+    def __init__(self, parent: "TreeselectCheckbox", item: TreeselectGroup | TreeselectItem):
         self.parent = parent
-        self.group_label = label
-        super().__init__(self.parent.attrs, choices)
+        self.item = item
+        self.group_label = item.label
+        if isinstance(item, TreeselectGroup):
+            super().__init__(self.parent.attrs, self.item.choices)
+        else:
+            super().__init__(self.parent.attrs, ((item.label, item.value),))
+
+    def get_selected(self, option_value, value):
+        selected = (not self.parent.has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
+        self.parent.has_selected |= selected
+        return selected
 
     def get_context(self, name, value, attrs):
+        attrs = attrs or {}
         context = super().get_context(name, value, attrs)
         context.update(context.pop("widget"))
         context["group"] = self.group_label
         context["group_index"] = self.parent.get_next_id()
-        context["can_expand"] = self.choices.get("__can_expand__", True)
+        context["can_expand"] = False
         context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
-        if "__self__" in self.choices:
-            group_value = self.choices["__self__"]
-            context["group_option"] = self.create_option(
-                name,
-                group_value,
-                self.group_label,
-                str(self.group_label) in value,
-                self.parent.get_next_id(),
-                None,
-                attrs,
-                group_option=True,
-            )
+        if isinstance(self.item, TreeselectGroup):
+            context["can_expand"] = self.item.can_expand
+            if self.item.categorised_label:
+                attrs["data-categorised-label"] = self.item.categorised_label
+            if self.item.value:
+                context["group_option"] = self.create_option(
+                    name,
+                    self.item.value,
+                    self.group_label,
+                    self.get_selected(self.item.value, value),
+                    self.parent.get_next_id(),
+                    None,
+                    attrs,
+                    group_option=True,
+                )
         return context
 
     def optgroups(self, name, value, attrs=None):
-        attr = attrs or {}
-        has_selected = False
-        for option_label, option_value in self.choices.items():
-            if self._is_dunder(option_label):
-                continue
-            if isinstance(option_value, Mapping):
-                yield TreeselectGroupWidget(self.parent, option_label, option_value).get_context(name, value, attrs)
+        attrs = attrs or {}
+        for choice in self.choices:
+            if isinstance(choice, TreeselectGroup):
+                yield TreeselectGroupWidget(self.parent, choice).get_context(name, value, attrs)
             else:
-                if categorised_label := self.parent.field_choices.get(option_value):
-                    attr["data-categorised-label"] = categorised_label
-                selected = (not has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
-                has_selected |= selected
+                if not isinstance(choice, TreeselectItem):
+                    choice = TreeselectItem(value=choice[0], label=choice[1], categorised_label=None)
+                if choice.categorised_label:
+                    attrs["data-categorised-label"] = choice.categorised_label
+                if choice.html_name_prefix:
+                    name = f"{choice.html_name_prefix}-{name}"
+                    selected = str(choice.value) in value
+                else:
+                    selected = self.get_selected(choice.value, value)
+
                 yield self.create_option(
-                    name, option_value, option_label, selected, self.parent.get_next_id(), subindex=None, attrs=attrs
+                    name,
+                    choice.value,
+                    choice.label,
+                    selected,
+                    self.parent.get_next_id(),
+                    subindex=None,
+                    attrs=attrs,
                 )
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
@@ -98,15 +142,6 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
             context["group_index"] = self.parent.get_next_id()
         return context
 
-    def _is_dunder(self, name):
-        """
-        Returns True if a __dunder__ name, False otherwise.
-        """
-        return len(name) > 4 and name[:2] == name[-2:] == "__" and name[2] != "_" and name[-3] != "_"
-
-
-_UNSET = object()
-
 
 class TreeselectCheckbox(widgets.ChoiceWidget):
     allow_multiple_selected = True
@@ -114,21 +149,15 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     template_name = "core/form/widgets/treeselect.html"
     option_template_name = "core/form/widgets/treeselect.html#option"
     has_search_bar = True
-    category_separator = ">"
 
     @property
-    def choices(self) -> dict:
+    def choices(self) -> _Choices:
         return self._choices
 
     @choices.setter
     def choices(self, value):
         if not self._choices:
-            self._choices = self._choices_as_dict(value)
-        self._field_choices = dict(value)
-
-    @property
-    def field_choices(self) -> dict[Any, str]:
-        return self._field_choices
+            self._choices = normalize_choices(value)
 
     @property
     def media(self):
@@ -143,32 +172,18 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     def __init__(
         self,
         attrs=None,
-        choices: Iterable[tuple[Any, Any] | tuple[str, Iterable[tuple[Any, Any]]]] | Iterable[TreeselectGroup] = (),
+        choices: _Choices = (),
         *,
-        input_type: Literal["checkbox", "radio"] = None,
+        input_type: Literal["checkbox", "radio"] = _UNSET,
         has_search_bar: bool = _UNSET,
-        category_separator: str = _UNSET,
     ):
-        if input_type is not None:
+        if input_type is not _UNSET:
             self.input_type = input_type
         if has_search_bar is not _UNSET:
             self.has_search_bar = has_search_bar
-        if category_separator is not _UNSET:
-            self.category_separator = category_separator
 
-        # Here, we want to avoid triggering the self.choices setter. The rationale is that if constructor is called
-        # with a value for the 'choices' parameter, it's most likely to specify categories and subcategories that are
-        # different from the 'choices' that is passed to the field. So we want to detect that case and recover
-        # the field's choices in self._field_choices instead.
-        self._choices = self._choices_as_dict(choices)
-        self._field_choices = {}
-        super().__init__(attrs, choices=())
-
-    def __deepcopy__(self, memo):
-        field_choices = copy(self._field_choices)
-        result = super().__deepcopy__(memo)
-        result._field_choices = field_choices
-        return result
+        self._choices = ()
+        super().__init__(attrs, choices=choices)
 
     def get_next_id(self):
         if not hasattr(self, "_id_stream"):
@@ -181,12 +196,16 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         return context
 
     def optgroups(self, name, values, attrs=None):
-        for label, group_values in self.choices.items():
-            if isinstance(values, dict):
-                yield TreeselectGroupWidget(self, label, group_values).get_context(name, values, attrs)
-            else:
-                # Here `group_values` actually represent a single value
-                yield TreeselectGroupWidget(self, None, {label: group_values}).get_context(name, values, attrs)
+        self.has_selected = False
+        for choice in self.choices:
+            match choice:
+                case TreeselectGroup() | TreeselectItem():
+                    yield TreeselectGroupWidget(self, choice).get_context(name, values, attrs)
+                case _:
+                    label, value = choice
+                    yield TreeselectGroupWidget(
+                        self, TreeselectItem(label=label, value=value, categorised_label="")
+                    ).get_context(name, values, attrs)
 
     def create_option(
         self,
@@ -198,46 +217,9 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         subindex=None,
         attrs=None,
     ):
-        return TreeselectGroupWidget(self, None, choices={label: value}).create_option(
-            name, value, label, selected, index, subindex, attrs
-        )
-
-    def _choices_as_dict(self, choices) -> dict:
-        result = {}
-
-        for item in choices:
-            if isinstance(item, TreeselectGroup):
-                result[item.label] = self._choices_as_dict(normalize_choices(item.choices))
-                if item.value is None:
-                    result[item.label]["__can_expand__"] = False
-                else:
-                    result[item.label]["__self__"] = item.value
-                continue
-
-            value, categorised_label = item
-            if isinstance(categorised_label, str):
-                if self.category_separator:
-                    *categories, label = re.split(rf"\s*{self.category_separator}\s*", categorised_label)
-                else:
-                    categories = []
-                    label = categorised_label
-            elif isinstance(categorised_label, Collection):
-                result[value] = self._choices_as_dict(categorised_label)
-                continue
-            else:
-                categories, label = [], categorised_label
-
-            curr_dict = result
-            for part in categories:
-                if not part:
-                    continue
-                curr_dict.setdefault(part, {})
-                if not isinstance(curr_dict[part], dict):
-                    new_dict = {"__self__": curr_dict[part]}
-                    curr_dict[part] = new_dict
-                curr_dict = curr_dict[part]
-            curr_dict[label] = value
-        return result
+        return TreeselectGroupWidget(
+            self, TreeselectItem(label=str(label), value=value, categorised_label="")
+        ).create_option(name, value, label, selected, index, subindex, attrs)
 
     def render(self, name, value, attrs=None, renderer=None):
         return super().render(name, value, attrs, renderer)

@@ -12,7 +12,7 @@ from core.form_mixins import DSFRForm, WithLatestVersionLocking, js_module
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithCommonContextVars, WithEtatMixin
 from core.models import Contact
-from core.widgets import TreeselectGroup, TreeselectRadio
+from core.widgets import TreeselectRadio
 from ssa.constants import (
     CategorieDanger,
     CategorieProduit,
@@ -32,7 +32,6 @@ from ssa.models import (
 )
 from ssa.models.evenement_produit import EvenementProduitReadOnly, QuantificationUnite
 from ssa.widgets import PositionDossierWidget
-from tiac.constants import DANGERS_COURANTS
 
 
 class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
@@ -77,7 +76,7 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         return super().media + Media(
             css={
                 "all": (
-                    "ssa/_custom_tree_select.css",
+                    "ssa/form/widgets/_custom_tree_select.css",
                     "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
                 )
             },
@@ -233,20 +232,11 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
 
 
 class EvenementProduitTreeselectForm(EvenementProduitForm):
-    categorie_produit = ChoiceField(required=False, choices=CategorieProduit, widget=TreeselectRadio)
+    categorie_produit = ChoiceField(
+        required=False, choices=CategorieProduit, widget=TreeselectRadio(choices=CategorieProduit.treeselect_groups)
+    )
     categorie_danger = ChoiceField(
-        required=False,
-        choices=CategorieDanger,
-        widget=TreeselectRadio(
-            choices=(
-                TreeselectGroup(
-                    value=None,
-                    label="Dangers les plus courants",
-                    choices=[(it.value, it.uncategorized_label) for it in DANGERS_COURANTS],
-                ),
-                TreeselectGroup(value=None, label="Liste complète des dangers", choices=CategorieDanger),
-            )
-        ),
+        required=False, choices=CategorieDanger, widget=TreeselectRadio(choices=CategorieDanger.treeselect_choices)
     )
 
 
@@ -351,3 +341,9 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
                 },
             )
         }
+
+
+class InvestigationCasHumainTreeselectForm(InvestigationCasHumainForm):
+    categorie_danger = ChoiceField(
+        required=False, choices=CategorieDanger, widget=TreeselectRadio(choices=CategorieDanger.treeselect_choices)
+    )

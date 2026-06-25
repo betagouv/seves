@@ -177,7 +177,7 @@ class TiacFilter(
         field_name="repas__type_repas",
     )
     numero_resytal = django_filters.CharFilter(
-        field_name="etablissements__numero_resytal", lookup_expr="contains", distinct=True, label="Numéro Résystal"
+        field_name="etablissements__numero_resytal", lookup_expr="contains", distinct=True, label="Numéro Resytal"
     )
 
     INVESTIGATION_TIAC_FILTERS = [

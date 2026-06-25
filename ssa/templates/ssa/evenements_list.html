@@ -3,13 +3,10 @@
 {% load etat_tags dsfr_tags %}
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'ssa/evenement_produit_list.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/_custom_tree_select.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 {% block scripts %}
-    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
     <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
     <script type="module" src="{% static 'ssa/evenement_produit_list.js' %}"></script>
@@ -28,10 +25,10 @@
             </div>
             <div class="filter-grid">
 
-                <div>
+                <div class="filter-grid-2">
                     {% dsfr_form_field filter.form.annee %}
                 </div>
-                <div>
+                <div class="filter-grid-2">
                     {% dsfr_form_field filter.form.numero %}
                 </div>
                 <div class="filter-grid-2 fr-flex--align-end with_free_links">
@@ -61,19 +58,11 @@
                 <div class="filter-grid-2">
                     {% dsfr_form_field filter.form.full_text_search %}
                 </div>
-                <div class="fr-hidden">
+                <div class="filter-grid-4">
                     {% dsfr_form_field filter.form.categorie_produit %}
+                </div>
+                <div class="filter-grid-4">
                     {% dsfr_form_field filter.form.categorie_danger %}
-                </div>
-                <div class="filter-grid-4">
-                    <label for="categorie-produit">Catégorie de produit</label>
-                    <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
-                    <div id="categorie-produit" data-selected="{{ request.GET.categorie_produit }}"></div>
-                </div>
-                <div class="filter-grid-4">
-                    <label for="categorie-danger">Catégorie de danger</label>
-                    <div id="categorie-danger-data" class="fr-hidden">{{ categorie_danger_data|safe }}</div>
-                    <div id="categorie-danger" data-selected="{{ request.GET.categorie_danger }}"></div>
                 </div>
                 <div class="filter-grid-2 fr-flex fr-flex--row fr-flex--align-end">
                     <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w fr-ml-auto" id="reset-btn">Effacer</button>
@@ -115,8 +104,11 @@
                                 <td><div class="ellipsis"><a href="{{ evenement.absolute_url }}" class="fr-link">{{ evenement.numero }}</a></div></td>
                                 <td><div class="ellipsis">{{ evenement.date_publication|date:"d/m/Y" }}</div></td>
                                 <td><div class="ellipsis">{{ evenement.last_update|date:"d/m/Y" }}</div></td>
-                                <td>
-                                    <div class="ellipsis">{{ evenement.description }}</div>
+                                <td class="ellipsis">
+                                    <div class="ellipsis">
+                                        <span aria-describedby="{{ evenement.tooltip_str }}">{{ evenement.description }}</span>
+                                    </div>
+                                    <span class="fr-tooltip fr-placement" id="{{ evenement.tooltip_str }}" role="tooltip">{{ evenement.description }}</span>
                                 </td>
                                 <td><div class="ellipsis">{{ evenement.categorie_produit }}</div></td>
                                 <td><div class="ellipsis">{{ evenement.categorie_danger }}</div></td>

@@ -150,12 +150,6 @@ class FicheDetection(
     def is_linked_to_fiche_zone_delimitee(self):
         return self.hors_zone_infestee is not None or self.zone_infestee is not None
 
-    def get_fiche_zone_delimitee(self):
-        if self.hors_zone_infestee:
-            return self.hors_zone_infestee
-        if self.zone_infestee and self.zone_infestee.fiche_zone_delimitee:
-            return self.zone_infestee.fiche_zone_delimitee
-
     @cached_property
     def latest_version(self):
         lieu_versions = get_versions_from_ids([lieu.id for lieu in self.lieux.all()], Lieu)

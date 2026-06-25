@@ -430,6 +430,25 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                     else:
                         new = f"Objet ajouté : {item}"
                     diff.append(Diff(self._get_pretty_field(field), "", new, version2.revision))
+                    for item in change["added_items"]:
+                        obj_instance = item._object_version.object
+                        model_name = obj_instance._meta.verbose_name.title()
+                        prefix = f"{model_name} ({str(obj_instance)})"
+
+                        for field in obj_instance._meta.get_fields():
+                            if field.one_to_many:
+                                related_model = field.related_model
+                                remote_field_name = field.remote_field.name
+
+                                filter_kwargs = {remote_field_name: obj_instance}
+                                children = related_model.objects.filter(**filter_kwargs)
+
+                                for child in children:
+                                    child_model_name = related_model._meta.verbose_name.title()
+                                    new_line = f"Objet ajouté : {child_model_name} {str(child)}"
+                                    field_label = self._get_pretty_field(field, prefix=prefix)
+                                    diff.append(Diff(field_label, "", new_line, version2.revision))
+
                 for item_1, _item_2 in change["changed_items"]:
                     model_name = item_1._object_version.object._meta.verbose_name.title()
                     prefix = f"{model_name} ({str(item_1._object_version.object)})"
@@ -451,7 +470,8 @@ class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
                         if getattr(item_1._object_version.object, "show_nested_diff_in_revision_list", True):
                             for change in nested_diff:
                                 pretty_field = self._get_pretty_field(change.field, prefix=prefix)
-                                diff.append(Diff(pretty_field, change.old, change.new, version2.revision))
+                                diff.append(Diff(pretty_field, change.old, change.new, sub_object_queryset[i].revision))
+
             elif hasattr(field, "get_internal_type") and field.get_internal_type() == "ManyToManyField":
                 change = obj_compare.get_m2m_change_info()
                 if change["removed_items"]:

@@ -2,11 +2,16 @@ import csv
 import time
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
+from django.core.validators import validate_email
 from django.db import transaction
 from django.db.utils import DataError
 
+from core.constants import SEVES_STRUCTURE
 from core.models import Agent, Contact, Structure
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -48,8 +53,14 @@ class Command(BaseCommand):
             Contact.objects.get_or_create(structure=structure)
 
             # Contact pour agent
-            User = get_user_model()
-            user, _ = User.objects.get_or_create(username=row["Mail"], email=row["Mail"], defaults={"is_active": False})
+            try:
+                validate_email(row["Mail"])
+                email = row["Mail"]
+            except ValidationError:
+                return
+
+            user, _ = User.objects.get_or_create(username=email, email=email, defaults={"is_active": False})
+            self.found_emails.append(email)
 
             agent, _ = Agent.objects.update_or_create(
                 user=user,
@@ -68,7 +79,7 @@ class Command(BaseCommand):
             Contact.objects.update_or_create(
                 agent=agent,
                 defaults={
-                    "email": row["Mail"],
+                    "email": email,
                 },
             )
         except DataError as e:
@@ -79,11 +90,16 @@ class Command(BaseCommand):
         start_time = time.time()
         csv_file_path = kwargs["csv_file"]
         ligne = 1
+        self.found_emails = []
         with open(csv_file_path, mode="r", encoding="utf-8") as csv_file:
             reader = csv.DictReader(csv_file, delimiter=",")
             with transaction.atomic():
                 for row in self.clean_contacts_data(reader):
                     ligne += 1
                     self.save_contact(row, ligne)
+
+        User.objects.exclude(email__in=self.found_emails).exclude(agent__structure__niveau1=SEVES_STRUCTURE).update(
+            is_active=False
+        )
         end_time = time.time()
         self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(end_time - start_time)} secondes"))

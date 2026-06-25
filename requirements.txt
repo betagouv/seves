@@ -14,7 +14,7 @@ async-timeout==5.0.1
     # via -r requirements.in
 babel==2.17.0
     # via docxcompose3
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
     # via -r requirements.in
 billiard==4.2.1
     # via celery
@@ -48,18 +48,15 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==46.0.7
-    # via
-    #   josepy
-    #   mozilla-django-oidc
-    #   pyopenssl
+cryptography==49.0.0
+    # via mozilla-django-oidc
 diff-match-patch==20241021
     # via django-reversion-compare
 distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==6.0.5
+django==6.0.6
     # via
     #   -r requirements.in
     #   dj-importmap
@@ -78,13 +75,13 @@ django==6.0.5
     #   sentry-sdk
 django-countries==8.2.0
     # via -r requirements.in
-django-debug-toolbar==6.3.0
+django-debug-toolbar==7.0.0
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
-django-dsfr==3.4.2
+django-dsfr==3.5.2
     # via -r requirements.in
-django-environ==0.13.0
+django-environ==0.14.0
     # via -r requirements.in
 django-filter==25.2
     # via -r requirements.in
@@ -92,7 +89,7 @@ django-post-office==3.11.2
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
-django-reversion==6.2.0
+django-reversion==6.3.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
@@ -136,8 +133,6 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-josepy==1.14.0
-    # via mozilla-django-oidc
 kombu==5.6.1
     # via celery
 lxml==6.1.0
@@ -151,7 +146,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-mozilla-django-oidc==4.0.1
+mozilla-django-oidc==5.0.2
     # via -r requirements.in
 nh3==0.3.2
     # via django-post-office
@@ -185,8 +180,8 @@ pygments==2.20.0
     # via
     #   pytest
     #   rich
-pyopenssl==26.0.0
-    # via josepy
+pyjwt==2.13.0
+    # via mozilla-django-oidc
 pytest==9.0.3
     # via
     #   pytest-base-url
@@ -226,7 +221,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==7.4.0
+redis==8.0.0
     # via -r requirements.in
 requests==2.33.0
     # via
@@ -237,11 +232,11 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.14
+ruff==0.15.18
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.60.0
+sentry-sdk[django]==2.63.0
     # via -r requirements.in
 six==1.16.0
     # via

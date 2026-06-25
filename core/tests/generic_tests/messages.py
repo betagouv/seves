@@ -50,6 +50,11 @@ def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page
     message_page.pick_recipient(active_contact, choice_js_fill)
     expect(message_page.page.get_by_text(f"Ouvrir la fiche {object.numero}", exact=True)).to_be_visible()
     expect(message_page.message_form_title).to_have_text("Nouveau message")
+    expect(
+        message_page.page.locator(
+            '[data-placeholder="Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l\'évènement et le lien vers la fiche Sèves."]'
+        )
+    ).to_have_count(1)
 
     message_page.message_title.fill("Title of the message")
     message_page.page.locator(".ql-bold").click()
@@ -481,6 +486,11 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     message_page.new_note()
     expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
 
+    expect(
+        message_page.page.locator(
+            '[data-placeholder="Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l\'évènement et le lien vers la fiche Sèves."]'
+        )
+    ).to_have_count(0)
     message_page.message_title.fill("Title of the message")
     message_page.message_content.type("My content \n with a line return")
     message_page.submit_message()
@@ -497,6 +507,36 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
     expect(new_page.get_by_text("My content with a line return")).to_be_visible()
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+
+def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_note()
+    expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.message_date.fill("2026-02-02T11:33")
+    message_page.message_content.type("My content \n with a line return")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    assert message_page.message_date_in_table() == "2 février 2026 11:33"
+    assert message_page.message_sender_in_table() == "Structure Test"
+    assert message_page.message_recipient_in_table() == ""
+    assert message_page.message_title_in_table() == "Title of the message"
+    assert message_page.message_type_in_table() == "Note"
+
+    new_page = message_page.open_message()
+
+    expect(new_page.get_by_text("Title of the message", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("2 février 2026 11:33", exact=True)).to_be_visible()
+    expect(new_page.get_by_text("My content with a line return")).to_be_visible()
+    expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+    message = Message.objects.get()
+    assert message.date_picked.strftime("%Y-%m-%dT%H:%M") == "2026-02-02T10:33"
 
 
 def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
@@ -827,20 +867,26 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     finalise_oldest = MessageFactory(
         title="finalisé le plus ancien",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_oldest.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 1, 1, 10, 0, 0))
     )
     brouillon_older = MessageFactory(
         title="Brouillon ancien",
         status=Message.Status.BROUILLON,
-        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=brouillon_older.pk).update(
+        date_creation=timezone.make_aware(datetime(2025, 2, 1, 10, 0, 0))
     )
     finalise_recent = MessageFactory(
         title="finalisé récent",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_recent.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 3, 1, 10, 0, 0))
     )
     brouillon_newest = MessageFactory(
         title="Brouillon le plus récent",
@@ -848,24 +894,40 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
         date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0)),
         **common_kwargs,
     )
+    Message.objects.filter(pk=brouillon_newest.pk).update(
+        date_creation=timezone.make_aware(datetime(2025, 4, 1, 10, 0, 0))
+    )
     finalise_newest = MessageFactory(
         title="finalisé le plus récent",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0)),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_newest.pk).update(
+        date_publication=timezone.make_aware(datetime(2025, 5, 1, 10, 0, 0))
     )
     old_draft_updated_recently = MessageFactory(
         title="Brouillon ancien mis à jour",
         status=Message.Status.BROUILLON,
-        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
         last_updated=timezone.now(),
         **common_kwargs,
+    )
+    Message.objects.filter(pk=finalise_newest.pk).update(
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0))
     )
     old_draft_recently_published = MessageFactory(
         title="Brouillon ancien mais envoyé récemment",
         status=Message.Status.FINALISE,
-        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0)),
         date_publication=timezone.now(),
+        **common_kwargs,
+    )
+    Message.objects.filter(pk=old_draft_recently_published.pk).update(
+        date_creation=timezone.make_aware(datetime(2024, 2, 1, 10, 0, 0))
+    )
+    note_with_specific_picked_date = MessageFactory(
+        title="Note avec une date choisie à la main dans l'interface",
+        message_type=Message.NOTE,
+        date_picked=timezone.make_aware(datetime(2025, 1, 1, 15, 0, 0)),
+        status=Message.Status.FINALISE,
         **common_kwargs,
     )
 
@@ -878,7 +940,8 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     assert message_page.message_title_in_table(4) == old_draft_recently_published.title
     assert message_page.message_title_in_table(5) == finalise_newest.title
     assert message_page.message_title_in_table(6) == finalise_recent.title
-    assert message_page.message_title_in_table(7) == finalise_oldest.title
+    assert message_page.message_title_in_table(7) == note_with_specific_picked_date.title
+    assert message_page.message_title_in_table(8) == finalise_oldest.title
 
 
 def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):

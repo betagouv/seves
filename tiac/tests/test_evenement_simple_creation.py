@@ -236,6 +236,22 @@ def test_evenement_simple_follow_up_evement_produit_notice(live_server, mocked_a
     ).to_have_count(2)
 
 
+def test_evenement_simple_nb_sick_persons_shows_notice(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementSimpleFactory.build()
+    creation_page = EvenementSimpleFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.nb_sick_persons.fill("11")
+    expect(
+        creation_page.page.get_by_text(
+            "Le nombre de malade parait important pour un enregistrement simple.",
+        )
+    ).to_be_visible()
+    creation_page.submit_as_draft()
+    evenement = EvenementSimple.objects.get()
+    assert evenement.nb_sick_persons == 11
+
+
 def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
     structure = mocked_authentification_user.agent.structure
     structure.niveau1 = AC_STRUCTURE

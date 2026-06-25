@@ -282,10 +282,6 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     def date_creation(self):
         return self.page.locator("#date-creation-input")
 
-    @property
-    def error_messages(self):
-        return self.page.locator(".fr-alert__title").all_text_contents()
-
 
 class SsaBaseDetailPage(WithActionsPage):
     def __init__(self, page: Page, base_url):
@@ -484,10 +480,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_pays")
 
     def set_categorie_produit(self, term):
-        self._set_treeselect_option("categorie-produit", term)
+        self._set_treeselect_option("id_categorie_produit-wrapper", term)
 
     def set_categorie_danger(self, term):
-        self._set_treeselect_option("categorie-danger", term)
+        self._set_treeselect_option("id_categorie_danger-wrapper", term)
 
     @property
     def full_text_field(self):

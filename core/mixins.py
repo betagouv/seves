@@ -18,7 +18,6 @@ from django.db import models, transaction
 from django.forms import BaseModelFormSet, Media
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import FormView
@@ -529,17 +528,6 @@ class PreventActionIfVisibiliteBrouillonMixin(GetFicheObjectMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-class WithObjectFromContentTypeMixin:
-    def _get_object_from_content_type(self, *, object_id, content_type_id):
-        if hasattr(self, "_object"):
-            return self._object
-
-        content_type = ContentType.objects.get(pk=content_type_id)
-        ModelClass = content_type.model_class()
-        self._object = get_object_or_404(ModelClass, pk=object_id)
-        return self._object
-
-
 class EmailNotificationMixin:
     """Mixin pour les modèles qui peuvent être notifiés par email."""
 
@@ -917,7 +905,7 @@ class WithExportHeterogeneousQuerysetMixin:
         task = Export.objects.create(queryset_sequence=serialized_queryset_sequence, user=request.user)
         self.get_export_task().delay_on_commit(task.id)
         messages.success(
-            request, "Votre demande d'export a bien été enregistrée, vous receverez un mail quand le fichier sera prêt."
+            request, "Votre demande d'export a bien été enregistrée, vous recevrez un mail quand le fichier sera prêt."
         )
         allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
         allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}

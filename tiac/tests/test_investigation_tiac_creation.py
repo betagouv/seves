@@ -35,6 +35,7 @@ from ..constants import (
 from ..models import (
     AlimentSuspect,
     AnalyseAlimentaire,
+    Analyses,
     Etablissement,
     EvenementSimple,
     InvestigationFollowUp,
@@ -112,11 +113,15 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 def test_can_create_investigation_tiac_with_all_fields(
     live_server, mocked_authentification_user, page: Page, assert_models_are_equal
 ):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build(danger_syndromiques_suspectes=[])
+    input_data: InvestigationTiac = InvestigationTiacFactory.build(
+        danger_syndromiques_suspectes=[], analyses_sur_les_malades=Analyses.OUI
+    )
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
     creation_page.fill_context_block(input_data)
+    creation_page.set_analyses(input_data.analyses_sur_les_malades)
+    creation_page.precisions.fill(input_data.precisions)
 
     for danger in input_data.agents_confirmes_ars:
         creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
@@ -139,7 +144,6 @@ def test_can_create_investigation_tiac_with_all_fields(
             "date_creation",
             "date_publication",
             "analyses_sur_les_malades",
-            "precisions",
             "last_updated",
         ],
         ignore_array_order=True,
@@ -212,19 +216,6 @@ def test_can_create_investigation_tiac_conlusion(
     )
 
 
-def test_can_create_investigation_tiac_with_agents_pathogenes_shortcut(live_server, page: Page):
-    input_data: InvestigationTiac = InvestigationTiacFactory.build()
-
-    creation_page = InvestigationTiacFormPage(page, live_server.url)
-    creation_page.navigate()
-    creation_page.fill_required_fields(input_data)
-    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
-    creation_page.submit_as_draft()
-
-    investigation = InvestigationTiac.objects.last()
-    assert investigation.agents_confirmes_ars == ["Shigella"]
-
-
 def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 
@@ -234,11 +225,25 @@ def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentific
     creation_page.add_danger_syndromique(DangersSyndromiques.TOXINE_DES_POISSONS.label)
     assert creation_page.nb_dangers == 1
 
-    creation_page.set_analyses("Oui")
-    creation_page.precisions.fill("Mes précisions")
     creation_page.submit_as_draft()
     investigation = InvestigationTiac.objects.last()
     assert investigation.danger_syndromiques_suspectes == ["toxine des poissons"]
+
+
+def test_can_create_investigation_tiac_ars(live_server, mocked_authentification_user, page: Page):
+    input_data: InvestigationTiac = InvestigationTiacFactory.build()
+
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+
+    creation_page.set_analyses("Oui")
+    creation_page.precisions.fill("Mes précisions")
+    creation_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.last()
+    assert investigation.agents_confirmes_ars == ["Shigella"]
     assert investigation.precisions == "Mes précisions"
     assert investigation.analyses_sur_les_malades == "oui"
 

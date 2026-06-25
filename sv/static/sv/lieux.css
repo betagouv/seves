@@ -1,0 +1,46 @@
+[id^="lieu-form"] .character-counter {
+    text-align: right;
+}
+.etablissement-fields {
+    display: none;
+}
+.fr-modal__content:has(input[type="checkbox"][id$="-is_etablissement"]:checked) .etablissement-fields {
+    display: block;
+}
+
+@media (min-width: 48em) {
+    /* MD */
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-input-group,
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-select-group,
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-checkbox-group {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-select,
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-input,
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .choices {
+        flex-grow: 1;
+        align-self: center;
+        width: 0;
+        max-width: unset;
+        height: 100%;
+        margin-top: 0;
+    }
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .choices .fr-select,
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .choices .fr-input {
+        width: 100%;
+    }
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-label {
+        /* .fr-col-4 */
+        flex: 0 0 33.33333%;
+        align-self: center;
+        width: 33.33333%;
+        max-width: 33.33333%;
+        margin-right: 0.5rem;
+    }
+    .fr-fieldset.fr-fieldset--block-inline .fr-fieldset__element .fr-hint-text {
+        width: 100%;
+        margin-bottom: 0;
+    }
+}

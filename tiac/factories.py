@@ -161,7 +161,6 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
         model = InvestigationTiac
 
     # Contexte
-    will_trigger_inquiry = factory.Faker("boolean")
     numero_sivss = factory.Faker("numerify", text="######")
     follow_up = FuzzyChoice(InvestigationFollowUp.values)
 

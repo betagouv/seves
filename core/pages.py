@@ -1,4 +1,3 @@
-import abc
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
@@ -17,11 +16,6 @@ class BaseDocumentPage(ABC):
 
     def __init__(self, page: Page):
         self.page = page
-
-    @property
-    @abc.abstractmethod
-    def add_document_button(self):
-        pass
 
     @property
     def document_modal(self):
@@ -143,6 +137,9 @@ class ListOfMessagesPage:
     def __init__(self, page: Page):
         self.page = page
 
+    def message_date_in_table(self, index=1):
+        return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(1) a")
+
     def message_sender_in_table(self, index=1):
         return self.page.text_content(f"#table-sm-row-key-{index} td:nth-child(2) a")
 
@@ -257,6 +254,10 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
         return self.page.locator("h1")
 
     @property
+    def message_date(self):
+        return self.page.locator(f"{self.container_id}").locator("#id_date_picked")
+
+    @property
     def message_title(self):
         return self.page.locator(f"{self.container_id}").locator(f"{self.TITLE_ID}")
 
@@ -302,10 +303,6 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
         expect(aside_card_list).to_have_count(count - 1)
 
     @property
-    def add_document_button(self):
-        return self.page.get_by_role("button", name="Ajouter un document")
-
-    @property
     def recipents_dropdown_items(self):
         return self.page.locator(f"{self.recipients_locator} .choices__item")
 
@@ -334,10 +331,6 @@ class WithDocumentsPage(BaseDocumentPage):
     @property
     def container_id(self):
         return "#tabpanel-documents-panel"
-
-    @property
-    def add_document_button(self):
-        return self.page.get_by_role("button", name="Ajouter des documents")
 
     @property
     def download_documents_zip(self):

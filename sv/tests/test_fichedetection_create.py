@@ -22,6 +22,7 @@ from ..factories import (
     LieuFactory,
     OrganismeNuisibleFactory,
     PositionChaineDistributionFactory,
+    PrelevementFactory,
     StatutReglementaireFactory,
     StructurePreleveuseFactory,
 )
@@ -37,7 +38,8 @@ from ..models import (
     StatutEvenement,
     StatutReglementaire,
 )
-from .pages import EvenementCreationPage
+from .generic_tests.test_fichedetection import generic_test_cant_delete_lieu_with_associated_prelevement
+from .pages import EvenementCreationPage, EvenementUpdatePage
 from .test_utils import FicheDetectionFormDomElements, LieuFormDomElements, PrelevementFormDomElements
 
 
@@ -66,7 +68,11 @@ def test_page_title(live_server, page: Page, form_elements: FicheDetectionFormDo
 
 
 def test_new_fiche_detection_form_content(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, check_select_options
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    check_select_options,
 ):
     """Test que la page de création de fiche de détection contient bien les labels et les champs attendus."""
     page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
@@ -75,8 +81,6 @@ def test_new_fiche_detection_form_content(
     expect(form_elements.lieux_title).to_be_visible()
     expect(form_elements.prelevements_title).to_be_visible()
     expect(form_elements.mesures_gestion_title).to_be_visible()
-    expect(form_elements.publish_btn).to_be_visible()
-    expect(form_elements.add_lieu_btn).to_be_visible()
     expect(form_elements.add_prelevement_btn).to_be_disabled()
 
     expect(form_elements.date_creation_label).to_be_visible()
@@ -145,6 +149,36 @@ def test_update_detection_form_show_date_creation(
     expect(form_elements.date_creation_input).to_have_value(detection.date_creation.strftime("%d/%m/%Y"))
 
 
+def test_fiche_detection_create_lieu_hides_prelevement_notice(
+    live_server, page: Page, lieu_form_elements: LieuFormDomElements
+):
+    """
+    Teste que la notice indiquant qu'au moins un lieu doit être renseigné avant de pouvoir ajouter un
+    prélèvement est correctement cachée ou affichée en fonction des bonnes conditions.
+    """
+    lieu = LieuFactory.build()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+
+    notice_locator = page.get_by_test_id("prelevements-list").get_by_text(
+        "Pour ajouter un prélèvement, vous devez avoir renseigné au moins un lieu."
+    )
+
+    expect(notice_locator).to_be_visible()
+
+    lieu_form_elements.open_new_form()
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.close_with(action="save")
+
+    expect(notice_locator).not_to_be_visible()
+
+    lieu_form_elements.remove_card(by_idx=0)
+
+    expect(notice_locator).to_be_visible()
+
+
 @pytest.mark.django_db
 def test_fiche_detection_create_without_lieux_and_prelevement(
     live_server,
@@ -209,14 +243,15 @@ def test_create_fiche_detection_with_lieu(
         position_chaine_distribution_etablissement=position,
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
-    page.wait_for_timeout(200)
+    expect(lieu_form_elements.empty_message).to_be_visible()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.fill_lieu_address(f"{lieu.adresse_lieu_dit} (Forcer la valeur)", search=lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
@@ -224,18 +259,18 @@ def test_create_fiche_detection_with_lieu(
     lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
     lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
     lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_etablissement_input, lieu.adresse_etablissement)
-    lieu_form_elements.siret_etablissement_input.fill(lieu.siret_etablissement)
+    lieu_form_elements.force_etablissement_address(lieu.adresse_etablissement)
+    lieu_form_elements.fill_siret_etablissement(
+        f"{lieu.siret_etablissement} (Forcer la valeur)", search=lieu.siret_etablissement
+    )
     lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
     lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
     lieu_form_elements.position_etablissement_input.select_option(
         str(lieu.position_chaine_distribution_etablissement.id)
     )
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     expect(form_elements.add_prelevement_btn).to_be_enabled()
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(1000)
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()
@@ -267,12 +302,13 @@ def test_create_fiche_detection_with_lieu_in_corsica(
 ):
     ensure_departements("Corse-du-Sud")
     organisme_nuisible = OrganismeNuisibleFactory()
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option(organisme_nuisible.libelle_court)
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
-    page.wait_for_timeout(200)
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Test")
     response_body = [
         {
@@ -291,10 +327,8 @@ def test_create_fiche_detection_with_lieu_in_corsica(
         }
     )
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(1000)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()
@@ -322,23 +356,21 @@ def test_create_fiche_detection_with_lieu_not_etablissement(
         is_etablissement=False,
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
-    page.wait_for_timeout(200)
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill(lieu.nom)
-    lieu_form_elements.force_adresse(lieu_form_elements.adresse_choicesjs, lieu.adresse_lieu_dit)
+    lieu_form_elements.force_lieu_address(lieu.adresse_lieu_dit)
     lieu_form_elements.force_commune()
     lieu_form_elements.lieu_site_inspection_input.select_option(lieu.site_inspection)
     lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(lieu.wgs84_latitude))
     lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(lieu.wgs84_longitude))
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     expect(form_elements.add_prelevement_btn).to_be_enabled()
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(1000)
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()
@@ -371,10 +403,11 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.publish_btn.click()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     fiche_detection.evenement.visibilite = Visibilite.LOCALE
@@ -386,8 +419,6 @@ def test_structure_contact_is_add_to_contacts_list_when_fiche_detection_is_creat
     expect(
         page.get_by_test_id("contacts-agents").get_by_text(str(mocked_authentification_user.agent), exact=True)
     ).to_be_visible()
-
-    page.wait_for_timeout(600)
 
     fiche_detection = FicheDetection.objects.last()
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
@@ -403,12 +434,11 @@ def test_agent_contact_is_add_to_contacts_list_when_fiche_detection_is_created(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.publish_btn.click()
 
-    page.wait_for_timeout(600)
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.last()
     user_contact_agent = Contact.objects.get(agent=mocked_authentification_user.agent)
@@ -425,17 +455,15 @@ def test_add_lieu_with_name_only_and_save(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(600)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fiche = FicheDetection.objects.get()
     lieu = fiche.lieux.get()
@@ -514,14 +542,15 @@ def test_prelevements_are_always_linked_to_lieu(
         libelle_long="Mon ON",
     )
     structures = StructurePreleveuseFactory.create_batch(2)
-    page.wait_for_timeout(600)
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     for _ in range(2):
         form_elements.add_prelevement_btn.click()
         prelevement_form_elements.structure_input.select_option(str(structures[0].id))
@@ -529,8 +558,7 @@ def test_prelevements_are_always_linked_to_lieu(
         prelevement_form_elements.type_analyse_input("première intention").click()
         prelevement_form_elements.date_prelevement_input.fill("2021-01-01")
         prelevement_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     lieu = FicheDetection.objects.get().lieux.get()
     prelevements = lieu.prelevements.all()
@@ -563,14 +591,14 @@ def test_laboratoire_disable_in_prelevement_confirmation(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    EvenementCreationPage(page, live_server).navigate()
 
     # Ajouter un lieu
-    form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
 
     # Ajouter un prélèvement
     form_elements.add_prelevement_btn.click()
@@ -598,14 +626,14 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
     LaboratoireFactory.create_batch(3)
     LaboratoireFactory.create_batch(3, confirmation_officielle=True)
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    EvenementCreationPage(page, live_server).navigate()
 
     # Ajouter un lieu
-    form_elements.add_lieu_btn.click()
     lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
 
     # Ajouter un prélèvement
     form_elements.add_prelevement_btn.click()
@@ -639,18 +667,19 @@ def test_can_add_fiche_detection_when_open_and_closed_prelevement_form_modal(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
     lieu_form_elements = LieuFormDomElements(page)
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("test lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
     form_elements.add_prelevement_btn.click()
     prelevement_form_elements.cancel_btn.click()
-    form_elements.publish_btn.click()
-    page.wait_for_timeout(600)
+    evenement_page.save()
     assert FicheDetection.objects.count() == 1
 
 
@@ -699,30 +728,26 @@ def test_create_fiche_detection_with_lieu_using_siret(
         libelle_long="Mon ON",
     )
 
-    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
     expect(form_elements.add_prelevement_btn).to_be_disabled()
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
 
-    form_elements.add_lieu_btn.click()
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("Mon lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.is_etablissement_checkbox.click()
-    lieu_form_elements.sirene_btn.click()
-    ChoiceJSPage(page, "#header-search-0").try_select_option(
+
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
+    lieu_form_elements.fill_siret_etablissement(
         "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
         search="120 079 017",
-        check_selection=lambda: expect(
-            page.locator('#lieu-form [name$="siret_etablissement"]').locator("visible=true")
-        ).to_have_value(siret),
     )
     assert call_count["count"] == 1
 
-    lieu_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
-    page.wait_for_timeout(1000)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     fiche_detection = FicheDetection.objects.get()
     lieu_from_db = fiche_detection.lieux.get()
@@ -884,26 +909,23 @@ def test_can_add_lieu_with_adresse_auto_complete(
         f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
-    OrganismeNuisible.objects.get_or_create(
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
-    choice_js_fill_from_element(
-        page, lieu_form_elements.adresse_choicesjs, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
-    )
+    lieu_form_elements.fill_lieu_address("251 Rue de Vaugirard 75015 Paris", search="251 Rue de Vaugirard")
     assert call_count["count"] == 1
 
-    lieu_form_elements.save_btn.click()
-
-    form_elements.publish_btn.click()
-    page.wait_for_url("**/sv/evenement/**/**", timeout=10_000)
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     lieu = Lieu.objects.get()
     assert lieu.adresse_lieu_dit == "251 Rue de Vaugirard"
@@ -920,7 +942,6 @@ def test_lieu_map(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill_from_element,
     ensure_departements,
 ):
     ensure_departements("Paris")
@@ -943,19 +964,18 @@ def test_lieu_map(
         route.fulfill(status=200, content_type="application/json", body=json.dumps(response))
         call_count["count"] += 1
 
-    form_elements.page.route(
-        "https://data.geopf.fr/geocodage/reverse?lon=**",
-        handle,
-    )
-    OrganismeNuisible.objects.get_or_create(
+    page.route(lambda url: url.startswith(settings.REVERSE_GEO_API), handle)
+
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
 
@@ -964,11 +984,10 @@ def test_lieu_map(
     x = box["x"] + box["width"] / 2
     y = box["y"] + box["height"] / 2
     page.mouse.dblclick(x, y)
-    page.wait_for_timeout(1000)
     assert call_count["count"] == 1
 
-    lieu_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     lieu = Lieu.objects.get()
     assert lieu.commune == "Paris"
@@ -984,7 +1003,6 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
     page: Page,
     form_elements: FicheDetectionFormDomElements,
     lieu_form_elements: LieuFormDomElements,
-    choice_js_fill_from_element,
     ensure_departements,
 ):
     call_count = {"count": 0}
@@ -1014,24 +1032,23 @@ def test_can_add_lieu_with_adresse_etablissement_autocomplete(
         f"{settings.GEOCODE_URL}/search/?q=251%20Rue%20de%20Vaugirard&limit=15",
         handle,
     )
-    OrganismeNuisible.objects.get_or_create(
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(
         libelle_court="Mon ON",
         libelle_long="Mon ON",
     )
 
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.fill("un lieu")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.is_etablissement_checkbox.click(force=True)
-    choice_js_fill_from_element(
-        page, lieu_form_elements.adresse_etablissement_input, "251 Rue de Vaugirard", "251 Rue de Vaugirard 75015 Paris"
-    )
+    lieu_form_elements.fill_etablissement_address("251 Rue de Vaugirard 75015 Paris", search="251 Rue de Vaugirard")
     assert call_count["count"] == 1
-    lieu_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
 
     lieu = Lieu.objects.get()
     assert lieu.adresse_etablissement == "251 Rue de Vaugirard"
@@ -1052,26 +1069,58 @@ def test_add_lieu_with_supply_chain(
         libelle_long="Mon ON",
     )
     supply_chain_position = PositionChaineDistributionFactory()
-    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
-    ChoiceJSPage(page, "#organisme-nuisible").try_select_option("Mon ON")
-    form_elements.statut_reglementaire_input.select_option("organisme quarantaine")
-    form_elements.add_lieu_btn.click()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    lieu_form_elements.open_new_form()
     lieu_form_elements.nom_input.click()
     lieu_form_elements.nom_input.fill("Chez moi")
     lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
     lieu_form_elements.set_supply_chain(supply_chain_position.libelle)
-
-    lieu_form_elements.save_btn.click()
+    lieu_form_elements.close_with(action="save")
 
     expect(page.locator("#lieux")).to_contain_text(supply_chain_position.libelle)
-
-    form_elements.publish_btn.click()
-
-    page.wait_for_timeout(600)
+    evenement_page.save()
 
     fiche = FicheDetection.objects.get()
     lieu = fiche.lieux.get()
     assert lieu.position_chaine_distribution_etablissement.libelle == supply_chain_position.libelle
+
+
+def test_cant_delete_lieu_with_associated_prelevement(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    prelevement_form_elements: PrelevementFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+):
+    organisme_nuisible, _ = OrganismeNuisible.objects.get_or_create(libelle_court="Mon ON", libelle_long="Mon ON")
+    fiche_detection = FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible)
+    lieu = LieuFactory.build(fiche_detection=fiche_detection)
+    prelevement = PrelevementFactory.build(lieu=lieu)
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(fiche_detection)
+
+    lieu_form_elements.open_new_form()
+    lieu_form_elements.nom_input.fill(lieu.nom)
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.close_with(action="save")
+
+    form_elements.add_prelevement_btn.click()
+    prelevement_form_elements.lieu_input.select_option(lieu.nom)
+    prelevement_form_elements.structure_input.select_option(str(prelevement.structure_preleveuse.id))
+    prelevement_form_elements.numero_echantillon_input.fill(prelevement.numero_echantillon)
+    prelevement_form_elements.date_prelevement_input.fill(prelevement.date_prelevement.strftime("%Y-%m-%d"))
+    prelevement_form_elements.type_analyse_input("première intention").click()
+    prelevement_form_elements.resultat_input(prelevement.resultat).click()
+    prelevement_form_elements.date_rapport_analyse_input.fill(prelevement.date_rapport_analyse.strftime("%Y-%m-%d"))
+    prelevement_form_elements.save_btn.click()
+
+    generic_test_cant_delete_lieu_with_associated_prelevement(prelevement, evenement_page)
 
 
 @pytest.mark.django_db
@@ -1096,7 +1145,6 @@ def test_prelevement_espece_echantillon_is_preserved_in_template(
 def test_can_clone_prelevement_from_existing(
     live_server,
     page: Page,
-    form_elements: FicheDetectionFormDomElements,
     prelevement_form_elements: PrelevementFormDomElements,
 ):
     detection: FicheDetection = FicheDetectionFactory(with_prelevement=True)
@@ -1105,7 +1153,9 @@ def test_can_clone_prelevement_from_existing(
 
     assert prelevements.count() == 1
 
-    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(detection)
+
     page.get_by_test_id("prelevement-diplicate-btn").click()
     prelevement = prelevements.first()
     assert (
@@ -1121,7 +1171,7 @@ def test_can_clone_prelevement_from_existing(
     prelevement_form_elements.resultat_input(Prelevement.Resultat.DETECTE).click()
     prelevement_form_elements.type_analyse_input("première intention").click()
     prelevement_form_elements.save_btn.click()
-    form_elements.publish_btn.click()
+    evenement_page.save()
 
     assert prelevements.count() == 2
 

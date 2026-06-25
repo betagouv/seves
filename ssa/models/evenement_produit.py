@@ -179,7 +179,7 @@ class EvenementProduit(
     )
 
     actions_engagees = models.CharField(
-        max_length=100, choices=ActionEngagees.choices, verbose_name="Action engagées", blank=True
+        max_length=100, choices=ActionEngagees.choices, verbose_name="Actions engagées", blank=True
     )
 
     numeros_rappel_conso = ArrayField(

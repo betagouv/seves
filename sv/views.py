@@ -199,7 +199,11 @@ class EvenementUpdateView(
 
 class FicheDetectionViewMixin(FormMixin, MediaDefiningMixin):
     def get_media(self, **context_data) -> Media:
-        return super().get_media(**context_data) + context_data["element_infeste_formset"].media
+        return (
+            super().get_media(**context_data)
+            + context_data["element_infeste_formset"].media
+            + context_data["lieu_formset"].media
+        )
 
     def get_element_infeste_formset_kwargs(self):
         return super().get_form_kwargs()
@@ -210,10 +214,20 @@ class FicheDetectionViewMixin(FormMixin, MediaDefiningMixin):
             kwargs["instance"] = instance
         return ElementInfesteFormSet(**kwargs)
 
+    def get_lieu_formset_kwargs(self):
+        return {**super().get_form_kwargs(), "structure": self.request.user.agent.structure}
+
+    def get_lieu_formset(self, *, instance=None):
+        kwargs = self.get_lieu_formset_kwargs()
+        if instance:
+            kwargs["instance"] = instance
+        return LieuFormSet(**kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = context["form"]
         context["element_infeste_formset"] = self.get_element_infeste_formset(instance=form.instance)
+        context["lieu_formset"] = self.get_lieu_formset(instance=form.instance)
         return context
 
 
@@ -254,9 +268,6 @@ class FicheDetectionCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
-        formset = LieuFormSet()
-        formset.custom_kwargs = {"convert_required_to_data_required": True}
-        context["lieu_formset"] = formset
         forms = [
             PrelevementForm(
                 convert_required_to_data_required=True,
@@ -276,7 +287,7 @@ class FicheDetectionCreateView(
     def post(self, request, *args, **kwargs):
         self.object = None
         form = self.get_form()
-        lieu_formset = LieuFormSet(request.POST)
+        lieu_formset = self.get_lieu_formset(instance=form.instance)
         elements_infestes = self.get_element_infeste_formset(instance=form.instance)
 
         if self.evenement:
@@ -288,17 +299,7 @@ class FicheDetectionCreateView(
         else:
             evenement_form = EvenementForm(request.POST, user=self.request.user)
 
-        if not form.is_valid() or not elements_infestes.is_valid():
-            return self.form_invalid(form)
-
-        if not lieu_formset.is_valid():
-            for i, lieu_form in enumerate(lieu_formset):
-                if not lieu_form.is_valid():
-                    for field, errors in lieu_form.errors.items():
-                        for error in errors:
-                            messages.error(
-                                self.request, f"Erreur dans le formulaire de lieu #{i + 1} : '{field}': {error}"
-                            )
+        if not form.is_valid() or not elements_infestes.is_valid() or not lieu_formset.is_valid():
             return self.form_invalid(form)
 
         if not evenement_form.is_valid():
@@ -316,7 +317,6 @@ class FicheDetectionCreateView(
                 reversion.set_user(self.request.user)
 
             elements_infestes.save()
-            lieu_formset.instance = self.object
             allowed_lieux = lieu_formset.save()
             allowed_lieux = Lieu.objects.filter(pk__in=[lieu.id for lieu in allowed_lieux])
             try:
@@ -397,11 +397,6 @@ class FicheDetectionUpdateView(
             PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in possible_ids
         ]
         context["prelevement_forms"] = forms
-        formset = LieuFormSet(
-            instance=self.get_object(), queryset=Lieu.objects.filter(fiche_detection=self.get_object())
-        )
-        formset.custom_kwargs = {"convert_required_to_data_required": True}
-        context["lieu_formset"] = formset
         context["evenement"] = self.get_object().evenement
         return context
 
@@ -414,18 +409,10 @@ class FicheDetectionUpdateView(
     def post(self, request, pk):
         self.object = self.get_object()
         form = self.get_form()
-        lieu_formset = LieuFormSet(
-            request.POST,
-            instance=self.get_object(),
-            queryset=Lieu.objects.filter(fiche_detection=self.get_object()),
-        )
-
+        lieu_formset = self.get_lieu_formset(instance=self.object)
         elements_infestes = self.get_element_infeste_formset(instance=self.object)
 
-        if not form.is_valid() or not elements_infestes.is_valid():
-            return self.form_invalid(form)
-
-        if not lieu_formset.is_valid():
+        if not form.is_valid() or not elements_infestes.is_valid() or not lieu_formset.is_valid():
             return self.form_invalid(form)
 
         with transaction.atomic():

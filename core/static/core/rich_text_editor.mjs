@@ -4,6 +4,7 @@ import {Controller} from "Stimulus"
 
 class RichTextEditorController extends Controller {
     static targets = ["textarea", "container"]
+    static values = {showPlaceholder: Boolean}
 
     TEXT_PREFIX = "text-color"
     BACKGROUND_PREFIX = "background-color"
@@ -63,8 +64,12 @@ class RichTextEditorController extends Controller {
     }
 
     connect() {
+        const placeholder = this.showPlaceholderValue
+            ? "Seront automatiquement ajoutés à votre message : vos nom et prénom, structure, informations principales de l'évènement et le lien vers la fiche Sèves."
+            : ""
         const quill = new Quill(this.containerTarget, {
             theme: "snow",
+            placeholder: placeholder,
             modules: {
                 toolbar: "#toolbar",
             },

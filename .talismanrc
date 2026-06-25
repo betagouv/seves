@@ -27,8 +27,6 @@ fileignoreconfig:
 - filename: ssa/static/ssa/_rappel_conso_form.js
   checksum: f4384fa04004669d8a843d92e7a669d17bbd106895143b6539fe6868d32132be
 - filename: core/views.py
-  checksum: 68e3e95f73805f04542c15bca583e030d0e03ee74f03a415b4b0a308bbcb93d4
-- filename: sv/static/sv/fichedetection_lieux_form.js
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html
   checksum: a2e29ecc50a1417f69a383adb1228a8c26d35980fa3ee3d2dfb7f0f416f14186
@@ -43,7 +41,7 @@ fileignoreconfig:
 - filename: conftest.py
   checksum: 61c62e85a102c7c802e88cb3ecdf5563eae436a1faccca1eaaeafcd3816125e5
 - filename: core/pages.py
-  checksum: c6f0500223f30de6c1cb487534c00b27344e83c7a076abb8f3f404480134380e
+  checksum: f2d6a16f14efcfbc4856ad3485cb4c9a4e41ad483c20a596a5e6c5273f204d49
 - filename: ssa/static/ssa/treeselectjs.umd.js
   checksum: 95632fdc236933fdc829e1779cb7cee673aba57822df395f40e9aec51a880c2b
 - filename: ssa/forms.py
@@ -134,6 +132,8 @@ fileignoreconfig:
   checksum: 9bb7dec4fbad7b8e2cc194a176314f55d4363fa0d1bae405653710f15200ab62
 - filename: core/static/core/stimulus_app.mjs
   checksum: aaa529f0e3a3259250c195c4c90de3f77f4afd29b43d3097fcb6c6c2aac7e4b1
+- filename: core/static/core/base_form_in_modal.mjs
+  checksum: d4543d7e8aa6872236a78583c5f9b719d56fd2e2cb24a8025bd3d41e874ce0f5
 
 
 version: "1.0"

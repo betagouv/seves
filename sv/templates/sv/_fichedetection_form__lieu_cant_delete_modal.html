@@ -1,7 +1,12 @@
 <!-- Modal suppression lieu impossible -->
 <!-- bouton relié à la modal en display non -> https://github.com/GouvernementFR/dsfr/issues/728 -->
 <button type="button" class="fr-hidden" data-fr-opened="false" aria-controls="fr-modal-suppression-lieu"></button>
-<dialog aria-labelledby="fr-modal-suppression-lieu-title" id="fr-modal-suppression-lieu" class="fr-modal" role="dialog">
+<dialog
+    id="fr-modal-suppression-lieu"
+    class="fr-modal"
+    data-controller="modal"
+    aria-labelledby="fr-modal-suppression-lieu-title"
+>
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
             <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">

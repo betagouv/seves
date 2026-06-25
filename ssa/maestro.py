@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 def send_maestro_webhook(evenement_produit: EvenementProduit):
     if not settings.MAESTRO_WEBHOOK_URL:
         return
-
     payload = {
         "maestro_reference": evenement_produit.maestro_reference,
-        "seved_id": evenement_produit.id,
+        "seves_id": evenement_produit.id,
         "seves_numero": evenement_produit.numero,
     }
+    headers = {"Authorization": settings.MAESTRO_TOKEN, "Content-Type": "application/json"}
     try:
-        response = requests.post(settings.MAESTRO_WEBHOOK_URL, json=payload, timeout=15)
+        response = requests.put(settings.MAESTRO_WEBHOOK_URL, json=payload, headers=headers, timeout=15)
     except ConnectTimeout as e:
         logger.info(f"Cannot contact MAESTRO, timeout with {e}")
         return None

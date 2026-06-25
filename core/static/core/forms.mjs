@@ -49,6 +49,8 @@ export function collectFormValues(
 
         const inputName = nameTransform(element.name).trim()
 
+        if (inputName === "") continue
+
         if (element instanceof HTMLSelectElement && element.dataset.choice !== undefined) {
             // This is a ChoiceJS. We process them differently here. We may want both the value and the label
             // Maybe refactor this in the future so that we do that also for normal HTMLSelectElement to minimize code?

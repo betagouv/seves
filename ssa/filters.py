@@ -5,7 +5,8 @@ from django.db.models import Q
 from django.forms import CheckboxInput, TextInput
 from django_countries import Countries
 import django_filters
-from django_filters.filters import BaseInFilter, CharFilter
+from django_filters.filters import BaseInFilter, CharFilter, MultipleChoiceFilter
+from dsfr.forms import DsfrBaseForm
 from queryset_sequence import QuerySetSequence
 
 from core.filters_mixins import (
@@ -16,10 +17,11 @@ from core.filters_mixins import (
     WithNumeroFilterMixin,
     WithStructureContactFilterMixin,
 )
-from core.forms import DSFRForm
 from core.models import Departement, LienLibre
-from ssa.constants import Source, SourceInvestigationCasHumain, TypeEvenement
+from core.widgets import TreeselectCheckbox
+from ssa.constants import CategorieDanger, CategorieProduit, Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
+from ssa.widgets import CategorieDangerLegacyTreeselect, CategorieProduitLegacyTreeselect
 
 
 class StrInFilter(BaseInFilter, CharFilter):
@@ -33,23 +35,7 @@ class CharInFilter(CharFilter):
         return super().filter(qs, value)
 
 
-class EvenementProduitFilterForm(DSFRForm):
-    manual_render_fields = [
-        "etat",
-        "aliments_animaux",
-        "temperature_conservation",
-        "produit_pret_a_manger",
-        "reference_souches",
-        "reference_clusters",
-        "actions_engagees",
-        "numeros_rappel_conso",
-        "siret",
-        "numero_agrement",
-        "commune",
-        "departement",
-        "pays",
-    ]
-
+class EvenementProduitFilterForm(DsfrBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["type_evenement"].choices = [(k, v) for k, v in TypeEvenement.choices] + [
@@ -122,8 +108,18 @@ class EvenementFilter(
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
-    categorie_produit = CharInFilter(field_name="categorie_produit", lookup_expr="in")
-    categorie_danger = CharInFilter(field_name="categorie_danger", lookup_expr="in")
+    categorie_produit = CharInFilter(
+        field_name="categorie_produit",
+        lookup_expr="in",
+        widget=CategorieProduitLegacyTreeselect,
+        label="Catégorie de produit",
+    )
+    categorie_danger = CharInFilter(
+        field_name="categorie_danger",
+        lookup_expr="in",
+        widget=CategorieDangerLegacyTreeselect,
+        label="Catégorie de danger",
+    )
 
     class Meta:
         model = EvenementProduit
@@ -232,3 +228,18 @@ class EvenementFilter(
             ids.extend(subqueryset.values_list("id", flat=True))
 
         return self.with_free_links_filtered(ids)
+
+
+class EvenementFilterTreeselect(EvenementFilter):
+    categorie_produit = MultipleChoiceFilter(
+        field_name="categorie_produit",
+        choices=CategorieProduit,
+        widget=TreeselectCheckbox(choices=CategorieProduit.treeselect_groups),
+        label="Catégorie de produit",
+    )
+    categorie_danger = MultipleChoiceFilter(
+        field_name="categorie_danger",
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox(choices=CategorieDanger.treeselect_groups),
+        label="Catégorie de danger",
+    )

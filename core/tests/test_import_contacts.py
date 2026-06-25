@@ -5,7 +5,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 import pytest
 
+from core.constants import SEVES_STRUCTURE
+from core.factories import AgentFactory, UserFactory
 from core.models import Agent, Contact, Structure
+
+User = get_user_model()
 
 
 @pytest.fixture
@@ -14,6 +18,7 @@ def mock_csv_data(tmp_path):
     data = """Structure,Prénom,Nom,Mail,Fonction_hiérarchique,Complément_fonction,Téléphone,Mobile
 DDI/DDPP/DDPP17/SSA,John,Doe,test@example.com,Manager,,+33 5 46 00 00 00,+33 6 00 00 00 00
 AC/DAC/DGAL/MUS,John2,Doe2,test2@example2.com,Super Manager,,+33 5 46 01 00 00,,
+AC/DAC/DGAL/MUS,John3,Doe3,email_not_valid@example2.i,Super Manager,,+33 5 46 01 00 00,,
 SD/DAAF/DAAF973/SG,Prestataire,TEMPORAIRE,inconnu,,,,
 DDI/DDETSPP/DDETSPP2A/SVP,Sophie,Martin,sophie.martin@example.com,Responsable,Contrôle sanitaire,+33 5 57 01 02 03,+33 6 12 34 56 78"""
     p = tmp_path / "test.csv"
@@ -49,6 +54,13 @@ def test_import_contacts(mock_csv_data):
 def test_data_integrity(mock_csv_data):
     """Test pour vérifier l'intégrité des données après l'importation"""
     _reset_contacts()
+    user = UserFactory(email="not_in_agricoll@test.com", username="not_in_agricoll@test.com")
+    User.objects.filter(pk=user.pk).update(is_active=True)
+    assert User.objects.get(pk=user.pk).is_active is True
+    seves_team_user = AgentFactory(structure__niveau1=SEVES_STRUCTURE).user
+    User.objects.filter(pk=seves_team_user.pk).update(is_active=True)
+    assert User.objects.get(pk=seves_team_user.pk).is_active is True
+
     call_command("import_contacts", mock_csv_data)
 
     # vérification de l'enregistrement des structures
@@ -110,6 +122,9 @@ def test_data_integrity(mock_csv_data):
     assert contact3.agent.user.username == "sophie.martin@example.com"
     assert contact3.agent.user.email == "sophie.martin@example.com"
     assert contact3.agent.user.is_active is False
+
+    assert User.objects.get(pk=user.pk).is_active is False
+    assert User.objects.get(pk=seves_team_user.pk).is_active is True
 
 
 @pytest.mark.django_db

@@ -12,6 +12,7 @@ from django.views.generic import CreateView, DetailView, UpdateView
 from django.views.generic.detail import BaseDetailView
 from docxtpl import DocxTemplate
 from reversion.models import Version
+import waffle
 
 from core.audit import audit_log
 from core.mixins import (
@@ -31,7 +32,7 @@ from core.mixins import (
     WithMessageMixin,
 )
 
-from ..forms import InvestigationCasHumainForm
+from ..forms import InvestigationCasHumainForm, InvestigationCasHumainTreeselectForm
 from ..formsets import InvestigationCasHumainsEtablissementFormSet
 from ..models import EvenementInvestigationCasHumain
 from ..notifications import notify_souches_clusters
@@ -50,6 +51,10 @@ class InvestigationCasHumainCreateView(
     form_class = InvestigationCasHumainForm
     success_message = "L’évènement Investigation de cas humain a été créé avec succès."
 
+    @cached_property
+    def new_treeselect(self):
+        return waffle.flag_is_active(self.request, "new_treeselect")
+
     @property
     def etablissement_formset(self):
         if not hasattr(self, "_etablissement_formset"):
@@ -60,6 +65,9 @@ class InvestigationCasHumainCreateView(
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
+
+    def get_form_class(self):
+        return InvestigationCasHumainTreeselectForm if self.new_treeselect else super().get_form_class()
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(**kwargs, etablissement_formset=self.etablissement_formset)

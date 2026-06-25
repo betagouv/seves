@@ -2,11 +2,72 @@ from enum import auto, property as enum_property
 import re
 
 from django.db import models
+from django.utils.functional import classproperty
 
 from core.mixins import WithChoicesToJS
+from core.widgets import TreeselectGroup, TreeselectItem
 
 
-class CategorieDanger(WithChoicesToJS, models.TextChoices):
+class GroupedChoicesMixin:
+    @enum_property
+    def uncategorized_label(self):
+        return self.splitted_label[-1]
+
+    @enum_property
+    def splitted_label(self):
+        if not hasattr(self, "_splitted_label_"):
+            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
+        return self._splitted_label_
+
+    def get_treeselect_item(self, **kwargs):
+        kwargs = {"value": self.value, "label": self.uncategorized_label, "categorised_label": self.label, **kwargs}
+        return TreeselectItem(**kwargs)
+
+    @classproperty
+    def treeselect_groups(cls):
+        if hasattr(cls, "__treeselect_groups__"):
+            return cls.__treeselect_groups__
+
+        from core.widgets import TreeselectGroup, TreeselectItem
+
+        grouped_members = {}
+
+        def get_treeselect_group(*, label, item: TreeselectItem | dict):
+            if isinstance(item, TreeselectItem):
+                return item
+
+            treeselect_kwargs = {"categorised_label": None}
+            if group_item := item.pop("__self__", None):
+                treeselect_kwargs["value"] = group_item.value
+                treeselect_kwargs["categorised_label"] = group_item.categorised_label
+            treeselect_kwargs["label"] = label
+            treeselect_kwargs["choices"] = []
+            for label, item in item.items():
+                treeselect_kwargs["choices"].append(get_treeselect_group(label=label, item=item))
+
+            return TreeselectGroup(**treeselect_kwargs)
+
+        # First step: aggregate grouped choices in a dict structure
+        for member in cls:
+            *categories, label = member.splitted_label
+
+            curr_dict = grouped_members
+            for part in categories:
+                curr_dict.setdefault(part, {})
+                if not isinstance(curr_dict[part], dict):
+                    new_dict = {"__self__": curr_dict[part]}
+                    curr_dict[part] = new_dict
+                curr_dict = curr_dict[part]
+            curr_dict[label] = TreeselectItem(label=label, value=member.value, categorised_label=member.label)
+
+        cls.__treeselect_groups__ = [
+            get_treeselect_group(item=item, label=label) for label, item in grouped_members.items()
+        ]
+
+        return cls.__treeselect_groups__
+
+
+class CategorieDanger(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
     ALLERGENE_ARACHIDE = "Allergène - Arachide", "Allergène - composition ou étiquetage > Allergène - Arachide"
     ALLERGENE_CELERI = "Allergène - Céleri", "Allergène - composition ou étiquetage > Allergène - Céleri"
     ALLERGENE_CRUSTACES = "Allergène - Crustacés", "Allergène - composition ou étiquetage > Allergène - Crustacés"
@@ -607,18 +668,42 @@ class CategorieDanger(WithChoicesToJS, models.TextChoices):
     def dangers_bacteriens(cls):
         return [choice.value for choice in cls if choice.label.startswith("Bactérie >")]
 
-    @enum_property
-    def uncategorized_label(self):
-        return self.splitted_label[-1]
+    @classproperty
+    def danger_courants(cls):
+        return (
+            cls.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+            cls.BACILLUS_CEREUS,
+            cls.CLOSTRIDIUM_PERFRINGENS,
+            cls.CAMPYLOBACTER_COLI,
+            cls.CAMPYLOBACTER_JEJUNI,
+            cls.SALMONELLA_ENTERITIDIS,
+            cls.SALMONELLA_TYPHIMURIUM,
+            cls.SHIGELLA,
+            cls.YERSINIA_ENTEROCOLITICA,
+            cls.HISTAMINE,
+            cls.TOXINE_DSP,
+            cls.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+        )
 
-    @enum_property
-    def splitted_label(self):
-        if not hasattr(self, "_splitted_label_"):
-            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
-        return self._splitted_label_
+    @classproperty
+    def treeselect_choices(cls):
+        return (
+            TreeselectGroup(
+                label="Dangers les plus courants",
+                choices=tuple(it.get_treeselect_item(html_name_prefix="shortcut") for it in cls.danger_courants),
+                can_expand=False,
+                categorised_label=None,
+            ),
+            TreeselectGroup(
+                label="Liste complète des dangers",
+                choices=cls.treeselect_groups,
+                can_expand=False,
+                categorised_label=None,
+            ),
+        )
 
 
-class CategorieProduit(WithChoicesToJS, models.TextChoices):
+class CategorieProduit(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
     FROMAGE_AU_LAIT_CRU = "Fromage au lait cru", "Produit laitier > Fromage au lait cru"
     FROMAGE_LAIT_CRU_A_PATES_FRAICHES = (
         "Fromage lait cru à pâtes fraiches (caillé, fromage blanc, faisselle, tomme fraiche, brousse…)",
@@ -1122,8 +1207,11 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Substitut de dessert lacté, de yaourt",
         "Analogue végétal > Substitut de dessert lacté, de yaourt",
     )
-    SUBTITUT_DE_PRODUIT_CARNE = "Subtitut de produit carné", "Analogue végétal > Subtitut de produit carné"
-    SUBTITUT_DE_PRODUIT_AQUATIQUE = "Subtitut de produit aquatique", "Analogue végétal > Subtitut de produit aquatique"
+    SUBTITUT_DE_PRODUIT_CARNE = "Substitut de produit carné", "Analogue végétal > Substitut de produit carné"
+    SUBTITUT_DE_PRODUIT_AQUATIQUE = (
+        "Substitut de produit aquatique",
+        "Analogue végétal > Substitut de produit aquatique",
+    )
     SUBSTITUT_D_OEUF = "Substitut d'oeuf", "Analogue végétal > Substitut d'oeuf"
     SANDWICH = "Sandwich (avec ou sans DAOA)", "Composé ou cuisiné > Sandwich (avec ou sans DAOA)"
     PIZZA = "Pizza (avec ou sans DAOA)", "Composé ou cuisiné > Pizza (avec ou sans DAOA)"
@@ -1259,8 +1347,8 @@ class CategorieProduit(WithChoicesToJS, models.TextChoices):
         "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Séché, cuit, fermenté  (yc aromatisé) (hors germé) (hors farine)",
     )
     GC_PREPARATION_A_BASE_DE_CEREALE_ET_D_EAU = (
-        "GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermiGClle, sans œuf)",
-        "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermiGClle, sans œuf)",
+        "GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermicelle, sans œuf)",
+        "Fruit à coque, graine, céréale et dérivé > Céréale (riz, blé, avoine, épeautre…) > GC - Préparation à base de céréale et d'eau (pâte, nouille ou vermicelle, sans œuf)",
     )
     GC_PRODUIT_DE_LA_BOULANGERIE = (
         "GC - Produit de la boulangerie (pain et viennoiserie)",

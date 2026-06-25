@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.forms import Media
 from django.forms.utils import ErrorList
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
@@ -134,6 +135,8 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
 
 
 class CommonMessageForm(forms.ModelForm):
+    show_placeholder = True
+
     def __init__(
         self,
         sender,
@@ -247,9 +250,6 @@ class CommonMessageForm(forms.ModelForm):
     def _get_recipients_structures_only_label(self, obj):
         return self._build_label_with_shortcuts(mark_safe('<span class="label-marked">Destinataires</span>'), obj)
 
-    def _get_recipients_copy_structures_only_label(self, obj):
-        return self._build_label_with_shortcuts("Copie", obj, prefix="copie")
-
     def _add_related_objects(self):
         self.instance.status = self.status
         self.instance.sender = self.sender
@@ -327,6 +327,19 @@ class BasicMessageForm(CommonMessageForm, DsfrBaseForm):
 class NoteForm(CommonMessageForm, DsfrBaseForm):
     page_title = "Nouvelle note"
     content = MessageContentField()
+    date_picked = forms.DateTimeField(
+        required=False,
+        label="Date et heure pour la note",
+        help_text="Cette date détermine la position de la note dans le fil de suivi. Si elle n’est pas remplie elle sera fixée à la date de publication de la note",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={
+                "type": "datetime-local",
+            },
+        ),
+    )
+
+    show_placeholder = False
 
     def __init__(self, *args, sender, obj, **kwargs):
         super().__init__(*args, sender=sender, obj=obj, **kwargs)
@@ -335,6 +348,8 @@ class NoteForm(CommonMessageForm, DsfrBaseForm):
         self.handle_files(kwargs)
         self.set_labels()
 
+        self.fields["date_picked"].widget.attrs["max"] = f"{timezone.localdate():%Y-%m-%d}T23:59"
+
     def clean(self):
         super().clean()
         self.instance.message_type = Message.NOTE
@@ -342,7 +357,7 @@ class NoteForm(CommonMessageForm, DsfrBaseForm):
 
     class Meta:
         model = Message
-        fields = ["title", "content"]
+        fields = ["date_picked", "title", "content"]
 
 
 class PointDeSituationForm(CommonMessageForm, DsfrBaseForm):
