@@ -10,7 +10,7 @@ def assert_etablissement_card_is_correct():
         expect(locator.get_by_text(expected_values.pays.name, exact=True)).to_be_visible()
         expect(locator.get_by_text(f"Type exploitant : {expected_values.type_exploitant}", exact=True)).to_be_visible()
         expect(locator.get_by_text(f"{expected_values.commune}")).to_be_visible()
-        expect(locator.get_by_text(f"{expected_values.departement.nom}")).to_be_visible()
+        expect(locator.locator(".fr-card__desc").get_by_text(f"{expected_values.departement.nom}")).to_be_visible()
         expect(locator.get_by_text(expected_values.get_position_dossier_display(), exact=True)).to_be_visible()
 
     return _assert_etablissement_card_is_correct
