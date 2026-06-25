@@ -5,7 +5,8 @@ import itertools
 import typing
 
 from django.forms import Media, widgets
-from django.utils.choices import BaseChoiceIterator, normalize_choices
+from django.utils.choices import BaseChoiceIterator
+from django.utils.functional import Promise
 
 from core.form_mixins import js_module
 
@@ -18,11 +19,11 @@ if typing.TYPE_CHECKING:
     _ChoiceNamedGroup: TypeAlias = tuple[str, Iterable[_Choice]]
     _Choices: TypeAlias = Iterable["_Choice | _ChoiceNamedGroup | TreeselectGroup | TreeselectItem"] | type[Choices]
 
-_UNSET = type("UNSET", (), {"__bool__": lambda *args: False})()
+_UNSET = type("UNSET", (), {"__bool__": lambda *args: False, "__repr__": lambda *args: "UNSET"})()
 
 
 @dataclasses.dataclass(kw_only=True)
-class TreeselectItem:
+class TreeselectItem(Promise):
     value: Any
     label: str
     categorised_label: str | None
@@ -30,7 +31,7 @@ class TreeselectItem:
 
 
 @dataclasses.dataclass(kw_only=True)
-class TreeselectGroup(BaseChoiceIterator):
+class TreeselectGroup(BaseChoiceIterator, Promise):
     value: Any = _UNSET
     label: str
     choices: _Choices
@@ -38,7 +39,6 @@ class TreeselectGroup(BaseChoiceIterator):
     can_expand: bool = True
 
     def __post_init__(self):
-        self.choices = normalize_choices(self.choices)
         self._choices_list = list(self.choices)
 
     def __getitem__(self, index):
@@ -157,7 +157,7 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     @choices.setter
     def choices(self, value):
         if not self._choices:
-            self._choices = normalize_choices(value)
+            self._choices = value
 
     @property
     def media(self):

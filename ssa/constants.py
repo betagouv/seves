@@ -1,70 +1,10 @@
-from enum import auto, property as enum_property
-import re
+from enum import auto
 
 from django.db import models
 from django.utils.functional import classproperty
 
-from core.mixins import WithChoicesToJS
-from core.widgets import TreeselectGroup, TreeselectItem
-
-
-class GroupedChoicesMixin:
-    @enum_property
-    def uncategorized_label(self):
-        return self.splitted_label[-1]
-
-    @enum_property
-    def splitted_label(self):
-        if not hasattr(self, "_splitted_label_"):
-            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
-        return self._splitted_label_
-
-    def get_treeselect_item(self, **kwargs):
-        kwargs = {"value": self.value, "label": self.uncategorized_label, "categorised_label": self.label, **kwargs}
-        return TreeselectItem(**kwargs)
-
-    @classproperty
-    def treeselect_groups(cls):
-        if hasattr(cls, "__treeselect_groups__"):
-            return cls.__treeselect_groups__
-
-        from core.widgets import TreeselectGroup, TreeselectItem
-
-        grouped_members = {}
-
-        def get_treeselect_group(*, label, item: TreeselectItem | dict):
-            if isinstance(item, TreeselectItem):
-                return item
-
-            treeselect_kwargs = {"categorised_label": None}
-            if group_item := item.pop("__self__", None):
-                treeselect_kwargs["value"] = group_item.value
-                treeselect_kwargs["categorised_label"] = group_item.categorised_label
-            treeselect_kwargs["label"] = label
-            treeselect_kwargs["choices"] = []
-            for label, item in item.items():
-                treeselect_kwargs["choices"].append(get_treeselect_group(label=label, item=item))
-
-            return TreeselectGroup(**treeselect_kwargs)
-
-        # First step: aggregate grouped choices in a dict structure
-        for member in cls:
-            *categories, label = member.splitted_label
-
-            curr_dict = grouped_members
-            for part in categories:
-                curr_dict.setdefault(part, {})
-                if not isinstance(curr_dict[part], dict):
-                    new_dict = {"__self__": curr_dict[part]}
-                    curr_dict[part] = new_dict
-                curr_dict = curr_dict[part]
-            curr_dict[label] = TreeselectItem(label=label, value=member.value, categorised_label=member.label)
-
-        cls.__treeselect_groups__ = [
-            get_treeselect_group(item=item, label=label) for label, item in grouped_members.items()
-        ]
-
-        return cls.__treeselect_groups__
+from core.mixins import GroupedChoicesMixin, WithChoicesToJS
+from core.widgets import TreeselectGroup
 
 
 class CategorieDanger(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
