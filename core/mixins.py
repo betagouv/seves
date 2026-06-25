@@ -1,9 +1,11 @@
 import abc
 from collections import defaultdict
 import datetime
+from enum import property as enum_property
 from functools import cached_property, wraps
 import json
 import logging
+import re
 from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
@@ -20,6 +22,7 @@ from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import classproperty
 from django.views.generic import FormView
 from django.views.generic.base import ContextMixin
 from django.views.generic.detail import DetailView
@@ -50,6 +53,7 @@ from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
 from .html import html_to_simple_text
 from .notifications import notify_message, notify_object_cloture
 from .redirect import safe_redirect
+from .widgets import TreeselectItem
 
 logger = logging.getLogger(__name__)
 
@@ -922,3 +926,66 @@ class WithFormsetInvalidMixin:
                         messages.error(self.request, f"{msg_2} #{i + 1} : '{field}': {error}")
 
         return self.render_to_response(self.get_context_data())
+
+
+class GroupedChoicesMixin:
+    @enum_property
+    def uncategorized_label(self):
+        return self.splitted_label[-1]
+
+    @enum_property
+    def splitted_label(self):
+        if not hasattr(self, "_splitted_label_"):
+            self._splitted_label_ = re.split(r"\s*>\s*", self.label)
+        return self._splitted_label_
+
+    def get_treeselect_item(self, **kwargs):
+        kwargs = {"value": self.value, "label": self.uncategorized_label, "categorised_label": self.label, **kwargs}
+        return TreeselectItem(**kwargs)
+
+    @classproperty
+    def treeselect_groups(cls):
+        if hasattr(cls, "__treeselect_groups__"):
+            return cls.__treeselect_groups__
+
+        from core.widgets import TreeselectGroup, TreeselectItem
+
+        grouped_members = {}
+
+        def get_treeselect_group(*, label, item: TreeselectItem | dict):
+            if isinstance(item, TreeselectItem):
+                return item
+
+            treeselect_kwargs = {"categorised_label": None}
+            if group_item := item.pop("__self__", None):
+                treeselect_kwargs["value"] = group_item.value
+                treeselect_kwargs["categorised_label"] = group_item.categorised_label
+            treeselect_kwargs["label"] = label
+            treeselect_kwargs["choices"] = []
+            for label, item in item.items():
+                treeselect_kwargs["choices"].append(get_treeselect_group(label=label, item=item))
+
+            return TreeselectGroup(**treeselect_kwargs)
+
+        # First step: aggregate grouped choices in a dict structure
+        for member in cls:
+            *categories, label_ = member.splitted_label
+
+            curr_dict = grouped_members
+            for part in categories:
+                curr_dict.setdefault(part, {})
+                if not isinstance(curr_dict[part], dict):
+                    new_dict = {"__self__": curr_dict[part]}
+                    curr_dict[part] = new_dict
+                curr_dict = curr_dict[part]
+
+            if isinstance(curr_dict.get(label_), dict):
+                curr_dict = curr_dict[label_]
+                label_ = "__self__"
+            curr_dict[label_] = TreeselectItem(label=label_, value=member.value, categorised_label=member.label)
+
+        cls.__treeselect_groups__ = [
+            get_treeselect_group(item=item, label=label) for label, item in grouped_members.items()
+        ]
+
+        return cls.__treeselect_groups__
