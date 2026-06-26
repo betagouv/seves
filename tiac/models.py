@@ -540,7 +540,7 @@ class InvestigationTiac(
                 name="selected_hazard_constraints",
             ),
             models.CheckConstraint(
-                condition=~Q(suspicion_conclusion=SuspicionConclusion.UNKNOWN.value)
+                condition=~Q(suspicion_conclusion=SuspicionConclusion.DISCARDED.value)
                 | (Q(conclusion_repas__isnull=True) & Q(conclusion_aliment__isnull=True)),
                 name="repas_aliment_only_if_conclusion_known",
             ),
