@@ -1,22 +1,13 @@
 import choicesDefaults from "choicesDefaults"
+import {resetForm} from "Forms"
 
 document.addEventListener("DOMContentLoaded", () => {
     const choicesOrganismeNuisible = new Choices(document.getElementById("id_organisme_nuisible"), choicesDefaults)
-
-    const choicesAgentContact = new Choices(document.getElementById("id_agent_contact"), choicesDefaults)
-
-    document.getElementById("search-form").addEventListener("reset", function (e) {
+    const searchForm = document.getElementById("search-form")
+    searchForm.addEventListener("reset", e => {
         e.preventDefault()
-        this.elements.annee.value = ""
-        this.elements.numero.value = ""
-        this.elements.region.value = ""
-        this.elements.organisme_nuisible.value = ""
-        this.elements.start_date.value = ""
-        this.elements.end_date.value = ""
-        this.elements.etat.value = ""
+        resetForm(searchForm)
         choicesOrganismeNuisible.setChoiceByValue("")
-        this.elements.structure_contact.value = ""
-        choicesAgentContact.setChoiceByValue("")
-        e.target.closest("form").submit()
+        searchForm.submit()
     })
 })

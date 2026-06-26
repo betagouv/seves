@@ -87,6 +87,7 @@
         class="fr-treeselect fr-nav__item"
         data-controller="treeselect"
         data-action="dsfr.search->treeselect#onSearch"
+        {% if widget.attrs.min_search_length %}data-treeselect-min-search-length-value="{{ widget.attrs.min_search_length }}"{% endif %}
     >
         <div class="fr-treeselect__wrapper">
             <button
@@ -108,7 +109,7 @@
                                 id="search-input"
                                 class="fr-input"
                                 aria-describedby="search-input-messages"
-                                placeholder="Rechercher… (tapez au moins 3 caractères)"
+                                placeholder="{{ widget.attrs.placeholder|default:'Rechercher… (tapez au moins 3 caractères)' }}"
                                 type="search"
                                 data-treeselect-target="searchbar"
                             >
