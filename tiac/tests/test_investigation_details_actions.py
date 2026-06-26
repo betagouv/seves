@@ -228,3 +228,31 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
     assert set(mail.to) == {contact_1.email, contact_2.email, contact_3.email}
     assert "Conclusion suspicion TIAC" in mail.subject
     assert "TIAC à agent confirmé" in mail.body
+
+
+def test_edit_investigation_show_previous_danger_value(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion=SuspicionConclusion.CONFIRMED,
+        selected_hazard=[CategorieDanger.ALLERGENE_LAIT],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.edit_conclusion_button.click()
+    expect(detail_page.current_modal.get_by_text("Allergène - Lait")).to_be_visible()
+
+
+def test_edit_investigation_show_previous_danger_values(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion=SuspicionConclusion.CONFIRMED,
+        selected_hazard=[
+            CategorieDanger.ALLERGENE_LAIT,
+            CategorieDanger.ALLERGENE_SESAME,
+            CategorieDanger.ALLERGENE_SOJA,
+        ],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.edit_conclusion_button.click()
+    expect(detail_page.current_modal.get_by_text("3 éléments sélectionnés")).to_be_visible()

@@ -50,9 +50,6 @@ class ConclusionFormController extends Controller {
             },
         })
         patchItems(this.treeselect.srcElement)
-        if (this.suspicionConclusionValue !== "") {
-            this.suspicionConclusionValueChanged(this.suspicionConclusionChoicesValue)
-        }
     }
 
     selectedHazardTreeselectTargetDiconnected() {
@@ -156,7 +153,7 @@ class ConclusionFormController extends Controller {
 
         if (this.selectedHazardTreeselectInitializedValue) {
             this.treeselect.updateValue("")
-        } else {
+        } else if (value) {
             this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
             this.selectedHazardTreeselectInitializedValue = true
         }
