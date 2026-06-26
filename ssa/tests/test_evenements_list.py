@@ -57,13 +57,6 @@ def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, 
 
 def test_row_content(live_server, mocked_authentification_user, page: Page):
     evenement = EvenementProduitFactory()
-    other_structure = StructureFactory()
-    LienLibre.objects.create(
-        related_object_1=evenement, related_object_2=EvenementProduitFactory(createur=other_structure)
-    )
-    LienLibre.objects.create(
-        related_object_1=evenement, related_object_2=EvenementProduitFactory(createur=other_structure)
-    )
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
@@ -71,6 +64,24 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
     assert search_page.date_publication_cell().text_content() == evenement.date_publication.strftime("%d/%m/%Y")
     assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.produit_cell().inner_text() == evenement.get_categorie_produit_display()
+    assert search_page.danger_cell().inner_text() == evenement.get_categorie_danger_display()
+    assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
+    assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
+    assert search_page.etat_cell().text_content() == "Brouillon"
+
+
+def test_row_content_for_investigation_cas_humain(live_server, mocked_authentification_user, page: Page):
+    evenement = InvestigationCasHumainFactory()
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    assert search_page.numero_cell().text_content() == evenement.numero
+    assert search_page.date_publication_cell().text_content() == evenement.date_publication.strftime("%d/%m/%Y")
+    assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
+    assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.produit_cell().inner_text() == "-"
+    assert search_page.danger_cell().inner_text() == evenement.get_categorie_danger_display()
     assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.etat_cell().text_content() == "Brouillon"

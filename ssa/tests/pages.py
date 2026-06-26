@@ -386,6 +386,12 @@ class EvenementProduitListPage(WithTreeSelect):
     def description_cell(self, line_index=1):
         return self._cell_content(line_index, 4)
 
+    def produit_cell(self, line_index=1):
+        return self._cell_content(line_index, 5)
+
+    def danger_cell(self, line_index=1):
+        return self._cell_content(line_index, 6)
+
     def type_evenement_cell(self, line_index=1):
         return self._cell_content(line_index, 7)
 
