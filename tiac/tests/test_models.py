@@ -46,11 +46,11 @@ def test_investigation_tiac_selected_hazard_constraints(db):
 def test_investigation_tiac_conclusion_constraints(db):
     with pytest.raises(IntegrityError):
         InvestigationTiacFactory(
-            suspicion_conclusion=SuspicionConclusion.UNKNOWN, conclusion_repas=RepasSuspectFactory()
+            suspicion_conclusion=SuspicionConclusion.DISCARDED, conclusion_repas=RepasSuspectFactory()
         )
     with pytest.raises(IntegrityError):
         InvestigationTiacFactory(
-            suspicion_conclusion=SuspicionConclusion.UNKNOWN, conclusion_repas=AlimentSuspectFactory()
+            suspicion_conclusion=SuspicionConclusion.DISCARDED, conclusion_repas=AlimentSuspectFactory()
         )
 
 

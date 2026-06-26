@@ -155,7 +155,7 @@ def test_can_add_conclusion_to_investigation_tiac(
     assert investigation.conclusion_comment == "Mon commentaire"
     assert investigation.suspicion_conclusion == suspicion_conclusion
     assert sorted(investigation.selected_hazard) == sorted(selected_hazard)
-    if suspicion_conclusion not in (SuspicionConclusion.DISCARDED, SuspicionConclusion.UNKNOWN):
+    if suspicion_conclusion != SuspicionConclusion.DISCARDED:
         assert investigation.conclusion_repas == evenement.repas.get()
         assert investigation.conclusion_aliment == evenement.aliments.get()
     assert contact in evenement.contacts.all()
@@ -256,3 +256,32 @@ def test_edit_investigation_show_previous_danger_values(live_server, page: Page)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
     expect(detail_page.current_modal.get_by_text("3 éléments sélectionnés")).to_be_visible()
+
+
+def test_conclusion_investigation_tiac_conditional_ui(
+    live_server,
+    page: Page,
+):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+
+    detail_page.add_conclusion_button.click()
+
+    for conclusion in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.UNKNOWN, SuspicionConclusion.SUSPECTED):
+        detail_page.page.locator("#id_suspicion_conclusion").select_option(conclusion)
+        expect(detail_page.repas_field).to_be_enabled()
+        expect(detail_page.aliment_field).to_be_enabled()
+
+    detail_page.page.locator("#id_suspicion_conclusion").select_option(SuspicionConclusion.DISCARDED)
+    expect(detail_page.repas_field).to_be_disabled()
+    expect(detail_page.aliment_field).to_be_disabled()

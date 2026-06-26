@@ -782,6 +782,14 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     def edit_conclusion_button(self):
         return self.page.get_by_role("button", name="Modifier la conclusion")
 
+    @property
+    def repas_field(self):
+        return self.page.locator("#id_conclusion_repas")
+
+    @property
+    def aliment_field(self):
+        return self.page.locator("#id_conclusion_aliment")
+
     def fill_conclusion(self, input_data):
         self.add_conclusion_button.click()
         self.page.locator("#id_suspicion_conclusion").select_option(input_data["suspicion_conclusion"])
@@ -795,10 +803,10 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
 
         self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
 
-        if input_data["suspicion_conclusion"] not in (SuspicionConclusion.DISCARDED, SuspicionConclusion.UNKNOWN):
+        if input_data["suspicion_conclusion"] != SuspicionConclusion.DISCARDED:
             if input_data.get("conclusion_repas"):
-                self.page.locator("#id_conclusion_repas").select_option(str(input_data["conclusion_repas"]))
+                self.repas_field.select_option(str(input_data["conclusion_repas"]))
             if input_data.get("conclusion_aliment"):
-                self.page.locator("#id_conclusion_aliment").select_option(str(input_data["conclusion_aliment"]))
+                self.aliment_field.select_option(str(input_data["conclusion_aliment"]))
 
         self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Enregistrer").click()
