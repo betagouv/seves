@@ -720,18 +720,20 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
-def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
+def test_search_with_structure_contact(live_server, page: Page):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = EvenementProduitFactory()
     evenement_4 = InvestigationCasHumainFactory()
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_structure_2 = ContactStructureFactory(with_one_active_agent=True)
     evenement_2.contacts.add(contact_structure)
-    evenement_4.contacts.add(contact_structure)
+    evenement_4.contacts.add(contact_structure_2)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_structure_filter(str(contact_structure), choice_js_fill_from_element)
+    search_page.set_structure_filter(str(contact_structure))
+    search_page.set_structure_filter(str(contact_structure_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
@@ -740,18 +742,20 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
     expect(page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
 
 
-def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
+def test_search_with_agent_contact(live_server, page: Page):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = InvestigationCasHumainFactory()
     evenement_4 = InvestigationCasHumainFactory()
     contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_agent_2 = ContactAgentFactory(with_active_agent=True)
     evenement_2.contacts.add(contact_agent)
-    evenement_4.contacts.add(contact_agent)
+    evenement_4.contacts.add(contact_agent_2)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_agent_filter(str(contact_agent), choice_js_fill_from_element)
+    search_page.set_agent_filter(str(contact_agent))
+    search_page.set_agent_filter(str(contact_agent_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()

@@ -156,7 +156,8 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
 
     @choices.setter
     def choices(self, value):
-        if not self._choices:
+        # We don't want to forcibly evaluate BaseChoiceIterator here
+        if not isinstance(self._choices, (BaseChoiceIterator, Promise, bytes, str)) and not self._choices:
             self._choices = value
 
     @property

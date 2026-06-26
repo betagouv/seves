@@ -13,8 +13,6 @@ import {Controller} from "Stimulus"
 
 class SearchFormController extends Controller {
     static targets = [
-        "agent_contact",
-        "structure_contact",
         "sidebar",
         "counter",
         "dangerSyndromique",
@@ -38,8 +36,6 @@ class SearchFormController extends Controller {
 
     onReset() {
         resetForm(this.element)
-        this.choicesAgentContact.setChoiceByValue("")
-        this.choicesStructureContact.setChoiceByValue("")
         this.treeselectSelectedHazard.updateValue()
         this.element.submit()
     }
@@ -252,8 +248,6 @@ class SearchFormController extends Controller {
     }
 
     connect() {
-        this.choicesAgentContact = new Choices(this.agent_contactTarget, choicesDefaults)
-        this.choicesStructureContact = new Choices(this.structure_contactTarget, choicesDefaults)
         this.dangerSyndromique = new Choices(this.dangerSyndromiqueTarget, choicesDefaults)
         this.disableCheckboxIfNeeded()
         this.setupSelectedHazard()

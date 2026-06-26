@@ -4,6 +4,7 @@ import django_filters
 
 from core.mixins import WithEtatMixin
 from core.models import Contact, Structure
+from core.widgets import TreeselectCheckbox
 from seves import settings
 
 
@@ -42,37 +43,53 @@ class WithNumeroFilterMixin(django_filters.FilterSet):
 
 
 class WithStructureContactFilterMixin(django_filters.FilterSet):
-    structure_contact = django_filters.ModelChoiceFilter(
+    structure_contact = django_filters.ModelMultipleChoiceFilter(
         label="Structure en contact",
-        queryset=(
-            Contact.objects.structures_only()
-            .filter(structure__in=Structure.objects.can_be_contacted())
-            .order_by("structure__libelle")
-            .select_related("structure")
-        ),
-        empty_label=settings.SELECT_EMPTY_CHOICE,
+        queryset=Contact.objects.none(),
         method="filter_structure_contact",
+        widget=TreeselectCheckbox(
+            choices=(),
+            attrs={"min_search_length": 1, "placeholder": "Rechercher"},
+        ),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = (
+            Contact.objects.filter(structure__in=Structure.objects.can_be_contacted())
+            .order_by("structure__libelle")
+            .select_related("structure")
+        )
+        self.filters["structure_contact"].queryset = queryset
+
     def filter_structure_contact(self, queryset, name, value):
-        return queryset.filter(contacts=value)
+        if not value:
+            return queryset
+        return queryset.filter(contacts__in=value)
 
 
 class WithAgentContactFilterMixin(django_filters.FilterSet):
-    agent_contact = django_filters.ModelChoiceFilter(
+    agent_contact = django_filters.ModelMultipleChoiceFilter(
         label="Agent en contact",
-        queryset=(
+        queryset=Contact.objects.none(),
+        method="filter_agent_contact",
+        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = (
             Contact.objects.agents_only()
             .can_be_emailed()
             .select_related("agent", "agent__structure")
-            .order_by_structure_and_name()
-        ),
-        empty_label=settings.SELECT_EMPTY_CHOICE,
-        method="filter_agent_contact",
-    )
+            .order_by_contact_name()
+        )
+        self.filters["agent_contact"].queryset = queryset
 
     def filter_agent_contact(self, queryset, name, value):
-        return queryset.filter(contacts=value)
+        if not value:
+            return queryset
+        return queryset.filter(contacts__in=value)
 
 
 class WithEtatFilterMixin(django_filters.FilterSet):

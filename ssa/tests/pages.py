@@ -7,6 +7,7 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from core.pages import WithActionsPage
+from core.tests.pages import TreeselectPage
 from ssa.models import Etablissement
 
 
@@ -512,7 +513,7 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_full_text_search")
 
     def submit_search(self):
-        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+        return self.page.get_by_test_id("submit-search").click()
 
     def reset_search(self):
         return self.page.locator("#reset-btn").click()
@@ -527,13 +528,13 @@ class EvenementProduitListPage(WithTreeSelect):
     def filter_counter(self):
         return self.page.locator("#more-filters-btn-counter")
 
-    def set_agent_filter(self, value, choice_js_fill_from_element):
-        element = self.page.locator("#id_agent_contact").locator("..")
-        choice_js_fill_from_element(self.page, element, value, value)
+    def set_agent_filter(self, value):
+        element = self.page.locator("label", has_text="Agent en contact").locator("..")
+        TreeselectPage(self.page, element).check_option(value)
 
-    def set_structure_filter(self, value, choice_js_fill_from_element):
-        element = self.page.locator("#id_structure_contact").locator("..")
-        choice_js_fill_from_element(self.page, element, value, value)
+    def set_structure_filter(self, value):
+        element = self.page.locator("label", has_text="Structure en contact").locator("..")
+        TreeselectPage(self.page, element).check_option(value)
 
 
 class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):

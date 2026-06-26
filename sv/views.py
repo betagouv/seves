@@ -80,9 +80,12 @@ from .view_mixins import (
 )
 
 
-class EvenementListView(WithFilteredListMixin, ListView):
+class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
     model = Evenement
     paginate_by = 100
+
+    def get_media(self, **context_data) -> Media:
+        return context_data["filter"].form.media if "filter" in context_data else Media()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
