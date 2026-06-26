@@ -471,7 +471,8 @@ def test_can_filter_by_reference_souches(live_server, mocked_authentification_us
 
 
 def test_can_filter_by_reference_clusters(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(reference_clusters="FOO")
+    to_be_found_1 = EvenementProduitFactory(reference_clusters="FOO")
+    to_be_found_2 = EvenementProduitFactory(reference_clusters="fool")
     not_to_be_found_1 = EvenementProduitFactory(reference_clusters="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_clusters="BUZZ")
     not_to_be_found_3 = InvestigationCasHumainFactory()
@@ -483,7 +484,8 @@ def test_can_filter_by_reference_clusters(live_server, mocked_authentification_u
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
