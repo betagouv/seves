@@ -125,6 +125,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
 
     expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
+    expect(page.locator(".ql-italic")).to_be_visible()
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
@@ -173,6 +174,7 @@ def test_can_add_and_see_message_with_multiple_recipients_and_copies(live_server
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
 
     # Add multiple recipients
     choice_js_fill(
@@ -277,6 +279,7 @@ def test_can_click_on_shortcut_when_evenement_has_structure(live_server, page: P
     message_page = CreateMessagePage(page)
     message_page.new_message()
 
+    expect(page.locator(".ql-italic")).to_be_visible()
     message_page.page.locator(".destinataires-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
     message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
@@ -307,6 +310,7 @@ def test_can_click_on_add_all_contacts_shortcut_when_evenement_has_contact(
     message_page = CreateMessagePage(page)
     message_page.new_message()
 
+    expect(page.locator(".ql-italic")).to_be_visible()
     message_page.page.locator(".destinataires-contacts-shortcut").locator("visible=true").click()
     message_page.page.locator("#id_title").fill("Title of the message")
     message_page.page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
@@ -449,6 +453,7 @@ def test_create_message_adds_agent_and_structure_contacts(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
 
     # Ajout du destinataire
     choice_js_fill(
@@ -515,6 +520,7 @@ def test_create_multiple_messages_adds_contacts_once(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
 
     choice_js_fill(
         page,
@@ -580,6 +586,7 @@ def test_create_message_from_locale_changes_to_limitee_and_add_structures_in_all
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Message").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
 
     # Envoi du message
     choice_js_fill(
@@ -913,6 +920,7 @@ def test_can_add_draft_point_situtation(live_server, page: Page, choice_js_fill,
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Point de situation").click()
+    expect(page.locator(".ql-italic")).to_be_visible()
     page.locator("#id_title").fill("Title of the point de situation")
     page.locator("#rich-text-editor .ql-editor").fill("My content \n with a line return")
     page.get_by_role("button", name="Enregistrer comme brouillon").click()
@@ -939,6 +947,7 @@ def test_can_add_draft_demande_intervention(
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Demande d'intervention", exact=True).click()
+    expect(page.locator(".ql-italic")).to_be_visible()
     choice_js_fill(
         page,
         'label[for="id_recipients"] ~ div.choices',
@@ -967,6 +976,7 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     Contact.objects.create(structure=structure, email="foo@example.com")
     page.get_by_test_id("element-actions").click()
     page.get_by_role("link", name="Compte rendu sur demande d'intervention", exact=True).click()
+    expect(page.locator(".ql-italic")).to_be_visible()
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     page.locator("#id_title").fill("Title of the message")
