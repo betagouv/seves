@@ -41,6 +41,7 @@ class WithTreeSelect:
     def _set_treeselect_option_by_search_term(self, container_id, search_term, label):
         self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").click(force=True)
         self.page.locator(f"#{container_id} .treeselect-input__edit").locator("visible=true").fill(search_term)
+        self.page.wait_for_timeout(500)
         element = self.page.get_by_title(label, exact=True)
         element.locator(".treeselect-list__item-checkbox-icon").locator("visible=true").click(force=True)
         self.page.evaluate('document.querySelector("html").dispatchEvent(new Event("blur", {bubbles: true}))')

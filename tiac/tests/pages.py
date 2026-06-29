@@ -799,8 +799,8 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
                 self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
         elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
             for item in input_data["selected_hazard"]:
-                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
-
+                label = DangersSyndromiques(item).short_name
+                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", label, label)
         self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
 
         if input_data["suspicion_conclusion"] != SuspicionConclusion.DISCARDED:
