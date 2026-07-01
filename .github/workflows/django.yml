@@ -57,14 +57,6 @@ jobs:
         run: ./bin/check_html_format.sh
       - name: Run Biome
         run: biome ci .
-      - name: Diagnose CDN latency
-        run: |
-          for url in \
-            "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js" \
-            "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm" \
-            "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css"; do
-            curl -o /dev/null -s -w "%{http_code} dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s total:%{time_total}s  $url\n" "$url"
-          done
   test:
     needs: [build]
     runs-on: ubuntu-latest
@@ -114,6 +106,18 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
       - name: Install Playwright dependencies
         run: playwright install
+      - name: Diagnose CDN latency
+        run: |
+          for i in 1 2 3; do
+            for url in \
+              "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js" \
+              "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm" \
+              "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" \
+              "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.mjs" \
+              "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm"; do
+              curl -o /dev/null -s -w "%{http_code} dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s total:%{time_total}s  $url\n" "$url"
+            done
+          done
       - name: Run tests
         run: >-
           pytest
