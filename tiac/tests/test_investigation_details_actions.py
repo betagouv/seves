@@ -148,9 +148,8 @@ def test_can_add_conclusion_to_investigation_tiac(
         "conclusion_aliment": evenement.aliments.get().pk,
     }
 
-    with page.expect_event("framenavigated"):
-        detail_page.fill_conclusion(input_data)
-
+    detail_page.fill_conclusion(input_data)
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
     investigation = InvestigationTiac.objects.get()
     assert investigation.conclusion_comment == "Mon commentaire"
     assert investigation.suspicion_conclusion == suspicion_conclusion
@@ -201,6 +200,7 @@ def test_can_edit_existing_conclusion(live_server, page: Page):
     detail_page.page.locator(".fr-modal__body").locator("visible=true").get_by_role(
         "button", name="Enregistrer"
     ).click()
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
     investigation = InvestigationTiac.objects.get()
     assert investigation.conclusion_comment == "New comment"
 
@@ -217,9 +217,9 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
         "suspicion_conclusion": SuspicionConclusion.CONFIRMED,
         "selected_hazard": [CategorieDanger.ALLERGENE_LAIT],
     }
-    with page.expect_event("framenavigated"):
-        creation_page.fill_conclusion(input_data)
+    creation_page.fill_conclusion(input_data)
 
+    expect(creation_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
     investigation = InvestigationTiac.objects.get()
     assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
 
