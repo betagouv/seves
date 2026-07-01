@@ -1,9 +1,10 @@
+from django.conf import settings
 from importmap import static
 
 importmaps = {
     "Stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js",
     "StimulusStore": "https://cdn.jsdelivr.net/npm/stimulus-store@0.0.3/dist/bundle.esm.js",
-    "Choices": "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.mjs",
+    "Choices": settings.CHOICES_MJS,
     "Quill": "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
     "MapLibre": "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm",
     "MapStyleSwitcher": "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/+esm",

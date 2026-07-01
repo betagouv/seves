@@ -20,7 +20,7 @@
         <link rel="stylesheet" href="{% static 'core/contact_list.css' %}">
         <link rel="stylesheet" href="{% static 'core/contact_add_form.css' %}">
         <link rel="stylesheet" href="{% static 'core/document_form.css' %}">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/styles/choices.min.css" />
+        <link rel="stylesheet" href="{{ CHOICES_CSS }}" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css"/>
         {% if media %}{% for tag in media.render_css %}{{ tag }}{% endfor %}{% endif %}
         {% block base_override %}{% endblock %}
@@ -171,7 +171,7 @@
         <script type="text/javascript" src="{% static 'core/base.js' %}"></script>
         {% if media %}{% for tag in media.render_js %}{{ tag }}{% endfor %}{% endif %}
         {# Kept for compatibility for now #}
-        <script src="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js"></script>
+        <script src="{{ CHOICES_JS }}"></script>
         {% block scripts %}{% endblock %}
     </body>
 

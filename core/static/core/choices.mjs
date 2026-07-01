@@ -9,5 +9,6 @@ export const choicesDefaults = {
     fuseOptions: {
         threshold: 0.2,
     },
+    searchRenderSelectedChoices: false,
 }
 export default choicesDefaults

@@ -301,18 +301,22 @@ SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
+CHOICES_JS = "https://cdn.jsdelivr.net/npm/choices.js@11.2.3/public/assets/scripts/choices.min.js"
+CHOICES_MJS = "https://cdn.jsdelivr.net/npm/choices.js@11.2.3/public/assets/scripts/choices.mjs"
+CHOICES_CSS = "https://cdn.jsdelivr.net/npm/choices.js@11.2.3/public/assets/styles/choices.min.css"
+
 SECURE_CSP = {
     "default-src": (CSP.SELF,),
     "script-src": (
         CSP.SELF,
         CSP.NONCE,
-        "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js",
+        CHOICES_JS,
+        CHOICES_MJS,
         "https://cdn.jsdelivr.net/npm/stimulus-store@0.0.3/dist/bundle.esm.js",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
         "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm",
         "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/+esm",
         "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js",
-        "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.mjs",
         "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/+esm",
         "https://cdn.jsdelivr.net/npm/parchment@3.0.0/+esm",
         "https://cdn.jsdelivr.net/npm/quill-delta@5.1.0/+esm",
@@ -323,7 +327,7 @@ SECURE_CSP = {
     ),
     "style-src": (
         CSP.SELF,
-        "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/styles/choices.min.css",
+        CHOICES_CSS,
         "https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css",
         "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css",
         "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css",

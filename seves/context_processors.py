@@ -9,6 +9,8 @@ def common_settings(request):
         "COMMUNES_API": settings.COMMUNES_API,
         "GEO_API_ROOT": settings.GEO_API_ROOT,
         "REVERSE_GEO_API": settings.REVERSE_GEO_API,
+        "CHOICES_JS": settings.CHOICES_JS,
+        "CHOICES_CSS": settings.CHOICES_CSS,
         "siret_api_endpoint": reverse_lazy("siret-api", kwargs={"siret": "__siret__"}),
         "env": settings.ENVIRONMENT,
     }
