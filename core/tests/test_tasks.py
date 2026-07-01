@@ -16,8 +16,9 @@ def test_without_virus(settings):
 
     mock_post = MagicMock(status_code=200)
     mock_post.json.return_value = {"is_malware": False}
-    with mock.patch("core.antivirus.requests.post", mock.Mock(return_value=mock_post)):
+    with mock.patch("core.antivirus.requests.post", mock.Mock(return_value=mock_post)) as mocked_antivirus:
         scan_for_viruses(document.pk)
+    mocked_antivirus.assert_called_once()
 
     document.refresh_from_db()
     assert document.is_infected is False
@@ -32,8 +33,9 @@ def test_with_virus(settings):
 
     mock_post = MagicMock(status_code=200)
     mock_post.json.return_value = {"is_malware": True}
-    with mock.patch("core.antivirus.requests.post", mock.Mock(return_value=mock_post)):
+    with mock.patch("core.antivirus.requests.post", mock.Mock(return_value=mock_post)) as mocked_antivirus:
         scan_for_viruses(document.pk)
+    mocked_antivirus.assert_called_once()
 
     document.refresh_from_db()
     assert document.is_infected is True

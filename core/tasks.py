@@ -14,6 +14,6 @@ def scan_for_viruses(document_pk):
     document = Document.objects.get(pk=document_pk)
     is_infected = scan_document(document)
     if is_infected is not None:
-        document.is_infected = scan_document(document)
+        document.is_infected = is_infected
         document.save(update_fields=["is_infected"])
     logger.info(f"Will end scanning of {document_pk}")
