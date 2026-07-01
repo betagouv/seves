@@ -57,6 +57,14 @@ jobs:
         run: ./bin/check_html_format.sh
       - name: Run Biome
         run: biome ci .
+      - name: Diagnose CDN latency
+        run: |
+          for url in \
+            "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js" \
+            "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/+esm" \
+            "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css"; do
+            curl -o /dev/null -s -w "%{http_code} dns:%{time_namelookup}s connect:%{time_connect}s tls:%{time_appconnect}s total:%{time_total}s  $url\n" "$url"
+          done
   test:
     needs: [build]
     runs-on: ubuntu-latest
