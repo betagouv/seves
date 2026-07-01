@@ -15,7 +15,7 @@ class Command(BaseCommand):
         for document in documents_to_analyze:
             is_infected = scan_document(document)
             if is_infected is not None:
-                document.is_infected = scan_document(document)
+                document.is_infected = is_infected
                 document.save(update_fields=["is_infected"])
 
         self.stdout.write(f"Analyzed {documents_to_analyze.count()} documents")
