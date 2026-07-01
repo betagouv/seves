@@ -14,6 +14,8 @@ from faker import Faker
 from core.constants import DEPARTEMENTS, REGIONS
 from core.models import Agent, Contact, Departement, Document, Message, Region, Structure
 
+fake = Faker()
+
 
 class StructureFactory(DjangoModelFactory):
     class Meta:
@@ -133,7 +135,7 @@ class DocumentFactory(DjangoModelFactory):
     class Meta:
         model = Document
 
-    nom = factory.Faker("sentence", nb_words=2)
+    nom = factory.Sequence(lambda n: f"{fake.sentence(nb_words=2)} {n}")
     description = factory.Faker("paragraph")
 
     @factory.lazy_attribute
