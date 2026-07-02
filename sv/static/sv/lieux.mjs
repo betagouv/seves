@@ -288,6 +288,9 @@ class LieuFormController extends BaseFormInModal {
             this.resetChoiceJs(this.addressOutlet.addressWidget, "adresse_lieu_dit")
             this.resetChoiceJs(this.addressOutlet.communeWidget, "commune")
             this.restoreForm()
+            // Forces the reset of the map
+            const mapController = this.application.getControllerForElementAndIdentifier(this.mainFieldsTarget, "map")
+            mapController.onCoordinateChange()
         }
         this.keepChangesValue = false
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
