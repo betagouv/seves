@@ -32,7 +32,7 @@
         {% if display_warning_modification %}
           {% include "core/modal_warning_update.html" with url=object.get_update_url %}
         {% endif %}
-        {% if can_be_modified and object.is_published %}
+        {% if can_be_modified and object.can_add_or_edit_conclusion %}
           {% include "tiac/forms/conclusion.html" with form=conclusion_form nb_repas=object.repas.all|length nb_aliments=object.aliments.all|length %}
         {% endif %}
 
@@ -49,7 +49,7 @@
                 </form>
               </li>
             {% endif %}
-            {% if can_be_modified and object.is_published %}
+            {% if can_be_modified and object.can_add_or_edit_conclusion %}
               <li>
                 <button class="fr-btn fr-btn--secondary" data-fr-opened="false" aria-controls="modal-conclusion">
                   {% if object.suspicion_conclusion %}

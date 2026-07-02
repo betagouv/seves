@@ -290,6 +290,7 @@ class Analyses(models.TextChoices):
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
     AllowModificationMixin,
+    WithEtatMixin,
     WithContactPermissionMixin,
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
@@ -302,6 +303,14 @@ class InvestigationTiac(
     WithLastUpdatedDatetime,
     models.Model,
 ):
+    class Etat(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        EN_COURS = "en_cours", "En cours"
+        CLOTURE = "cloture", "Clôturé"
+        CONCLU = "conclu", "Conclu"
+
+    etat = models.CharField(max_length=100, choices=Etat, verbose_name="État de l'événement", default=Etat.BROUILLON)
+
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
     numero_sivss = models.CharField(
         max_length=6,
@@ -369,6 +378,13 @@ class InvestigationTiac(
                     annee, numero = InvestigationTiac._get_annee_and_numero()
                     self.numero_annee = annee
                     self.numero_evenement = numero
+
+                if (
+                    "suspicion_conclusion" in self.get_dirty_fields()
+                    and self.suspicion_conclusion
+                    and self.etat == self.Etat.EN_COURS
+                ):
+                    self.etat = self.Etat.CONCLU
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -512,6 +528,10 @@ class InvestigationTiac(
             ("_prefetched_aliments", AlimentSuspect.objects.filter(investigation=self)),
             ("_prefetched_analyses_alimentaires", AnalyseAlimentaire.objects.filter(investigation=self)),
         ]
+
+    @property
+    def can_add_or_edit_conclusion(self):
+        return self.etat in (self.Etat.EN_COURS, self.Etat.CONCLU)
 
     class Meta:
         constraints = (

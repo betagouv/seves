@@ -578,7 +578,7 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
 
     def get_initial_patch(self, versions):
         etat_value = json.loads(list(versions)[-1].serialized_data)[0]["fields"]["etat"]
-        readable_etat = WithEtatMixin.Etat(etat_value).label
+        readable_etat = self.object.Etat(etat_value).label
         return Diff(field="Statut", old="Vide", new=readable_etat, revision=list(versions)[-1].revision)
 
     def get_comment_versions(self):

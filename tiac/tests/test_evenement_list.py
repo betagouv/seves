@@ -293,7 +293,9 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
 
 
 def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
-    to_be_found_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, numero_annee=2020)
+    to_be_found_1 = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS, numero_annee=2020, suspicion_conclusion=None
+    )
     to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS, numero_annee=2021)
     not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
     not_to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.CLOTURE, numero_annee=2023)
@@ -307,6 +309,24 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
 
     expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_etat_conclu(live_server, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.CONCLU, numero_annee=2020)
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
+    not_to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.CLOTURE, numero_annee=2023)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.etat.select_option("Conclu")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.locator("td").get_by_text("Conclu", exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
