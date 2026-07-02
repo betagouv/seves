@@ -19,22 +19,12 @@ const dsfrInitialized = new Promise((resolve, reject) => {
 dsfrInitialized.then(dsfr => {
     // Imports (kind of)
     const {
-        core: {Instance, DisclosureEvent, CollapseSelector, Collapse},
-        internals: {
-            register,
-            ns,
-            dom: {uniqueId},
-        },
+        core: {Instance, DisclosureEvent},
+        internals: {register, ns},
     } = dsfr
 
     const WIDGET_IDENTIFIER = ns("treeselect")
-    const MAIN_BUTTON = ns.selector("treeselect__button")
-    const MAIN_COLLAPSE = ns.selector("treeselect__collapse")
-    const GROUP_SELECTOR = ns.selector("treeselect__group")
-    const WIDGET_WRAPPER_CLASS = `.${WIDGET_IDENTIFIER}__wrapper`
-    const WIDGET_WRAPPER = `.${WIDGET_IDENTIFIER} > ${WIDGET_WRAPPER_CLASS}`
     const MAIN_DROPDOWN = `.${WIDGET_IDENTIFIER}__collapse`
-    const WIDGET_GROUP = `${WIDGET_WRAPPER} .${WIDGET_IDENTIFIER}__group`
 
     /**
      * @property {HTMLElement} node

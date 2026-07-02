@@ -8,24 +8,36 @@ const CHOICES_CHANGED_EVENT = "choices"
 
 let counter = 0
 
-/**
- * *** Targets ***
- * @property {HTMLInputElement[]} inputTargets
- * @property {HTMLInputElement} inputTarget
- * @property {boolean} hasInputTarget
- */
-class TreeselectGroupConnectable extends Controller {
-    static targets = ["input"]
-
+class TreeselectChoicesListener extends Controller {
     connect() {
         /** @type {Treeselect} */
         this.treeselect = this.application.getControllerForElementAndIdentifier(
             this.element.closest(`[data-controller~="${WIDGET_IDENTIFIER}"]`),
             WIDGET_IDENTIFIER,
         )
-
         this.onChoicesChanged = this.onChoicesChanged.bind(this)
         this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`, this.onChoicesChanged)
+    }
+
+    disconnect() {
+        this.treeselect.element.removeEventListener(
+            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
+            this.onChoicesChanged,
+        )
+    }
+}
+
+/**
+ * *** Targets ***
+ * @property {HTMLInputElement[]} inputTargets
+ * @property {HTMLInputElement} inputTarget
+ * @property {boolean} hasInputTarget
+ */
+class TreeselectGroupConnectable extends TreeselectChoicesListener {
+    static targets = ["input"]
+
+    connect() {
+        super.connect()
 
         const enclosingGroup = this.element.parentElement.closest(
             `[data-controller~="${WIDGET_IDENTIFIER}"], [data-controller~="${GROUP_IDENTIFIER}"]`,
@@ -42,10 +54,7 @@ class TreeselectGroupConnectable extends Controller {
 
     disconnect() {
         this._parentGroup?.unregisterChild(this._childId, this)
-        this.treeselect.element.removeEventListener(
-            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
-            this.onChoicesChanged,
-        )
+        super.disconnect()
     }
 
     /**
@@ -79,10 +88,6 @@ class TreeselectElement extends TreeselectGroupConnectable {
             ...Array.from(this.inputTarget.labels).map(it => it.textContent.trim()),
             this.inputTarget.ariaLabel?.trim() ?? "",
         ]
-    }
-
-    get isHidden() {
-        return this.hiddenValue
     }
 
     initialize() {
@@ -121,8 +126,6 @@ class TreeselectElement extends TreeselectGroupConnectable {
  * @property {HTMLInputElement[]} accordionBtnTargets
  * *** Values ***
  * @property {Boolean} hiddenValue
- * @property {Boolean} hasChildrenMatchingValue
- * @property {Boolean} selfMatchesSearchValue
  */
 class TreeselectGroup extends TreeselectGroupConnectable {
     static values = {
@@ -248,24 +251,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
  * *** Values ***
  * @property {String} formvalValue
  */
-class TreeselectSelectedBadge extends Controller {
+class TreeselectSelectedBadge extends TreeselectChoicesListener {
     static values = {formval: String}
-
-    connect() {
-        this.treeselect = this.application.getControllerForElementAndIdentifier(
-            this.element.closest(`[data-controller~="${WIDGET_IDENTIFIER}"]`),
-            WIDGET_IDENTIFIER,
-        )
-        this.onChoicesChanged = this.onChoicesChanged.bind(this)
-        this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`, this.onChoicesChanged)
-    }
-
-    disconnect() {
-        this.treeselect.element.removeEventListener(
-            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
-            this.onChoicesChanged,
-        )
-    }
 
     /**
      * @param {CustomEvent} param0
