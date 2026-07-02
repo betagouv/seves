@@ -15,7 +15,7 @@ from tiac.factories import (
     RepasSuspectFactory,
 )
 
-from ..constants import DangersSyndromiques, SuspicionConclusion
+from ..constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from ..models import Analyses, Etablissement, EvenementSimple, InvestigationFollowUp, InvestigationTiac
 from .pages import InvestigationTiacEditPage
 
@@ -400,3 +400,23 @@ def test_cancel_edit_on_repas_reset_values(live_server, page: Page, ensure_depar
 
     assert investigation.repas.count() == 1
     assert initial_repas == investigation.repas.get()
+
+
+def test_cancel_edit_on_repas_show_correct_conditional_field(
+    live_server, page: Page, ensure_departements, assert_models_are_equal
+):
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_repas=1,
+        with_repas__type_repas=TypeRepas.DOMICILE,
+    )
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_repas_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator('[id$="type_repas"]').select_option(TypeRepas.RESTAURATION_COLLECTIVE)
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+
+    edit_page.get_repas_card(0).locator(".modify-button").click()
+    expect(edit_page.current_modal.locator('[id$="type_collectivite"]')).not_to_be_visible()

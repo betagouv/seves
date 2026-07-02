@@ -10,7 +10,7 @@
 </div>
 <div class="fr-input-group">
     {{ form.type_repas.label_tag }}
-    {{ form.type_repas|set_data:"action:change->repas-form#onTypeRepasChoice" }}
+    {{ form.type_repas|set_data:"action:change->repas-form#onTypeRepasChoice"|set_data:"repas-form-target:typeRepasInput" }}
 </div>
 <div class="fr-input-group fr-hidden" data-repas-form-target="typeCollectiviteInputContainer">
     {{ form.type_collectivite.label_tag }}
