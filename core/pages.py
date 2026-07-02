@@ -186,7 +186,7 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     def new_message(self):
         self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_role("link", name="Message").click()
+        self.page.locator(".fr-menu__list").get_by_role("link", name="Message", exact=True).click()
         self.page.wait_for_url("**/core/message-add/**")
 
     def delete_message(self):
@@ -287,6 +287,12 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
         self.save_as_draft_button.click()
 
     def add_basic_message_content(self):
+        self.page.wait_for_function("""
+        () => {
+            const editor = document.querySelector(".ql-editor");
+            return editor && editor.isContentEditable;
+        }
+        """)
         self.message_title.fill("Title of the message")
         self.message_content.fill("My content \n with a line return")
 
