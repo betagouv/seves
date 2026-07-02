@@ -120,9 +120,6 @@
 
 .fr-treeselect__group-header > .fr-treeselect__group-selectable > .fr-accordion__btn {
     padding-left: 0.5rem;
-}
-
-.fr-treeselect__group-header > .fr-treeselect__group-selectable > .fr-accordion__btn {
     background-color: transparent !important;
 }
 

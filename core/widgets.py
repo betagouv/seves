@@ -221,9 +221,6 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
             self, TreeselectItem(label=str(label), value=value, categorised_label="")
         ).create_option(name, value, label, selected, index, subindex, attrs)
 
-    def render(self, name, value, attrs=None, renderer=None):
-        return super().render(name, value, attrs, renderer)
-
 
 class TreeselectRadio(TreeselectCheckbox):
     allow_multiple_selected = False
