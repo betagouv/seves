@@ -96,6 +96,12 @@ class TiacFilter(
         widget=TextInput(attrs={"placeholder": "Aliment, analyse, repas, établissement..."}),
     )
 
+    etat = django_filters.ChoiceFilter(
+        method="filter_etat",
+        choices=(*InvestigationTiac.Etat.choices, ("fin de suivi", "Fin de suivi")),
+        label="État de l'événement",
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+    )
     numero_rasff = django_filters.CharFilter(
         label="Numéro RASFF/AAC",
         lookup_expr="contains",

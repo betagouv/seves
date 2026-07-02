@@ -151,7 +151,10 @@ def test_can_add_conclusion_to_investigation_tiac(
 
     detail_page.fill_conclusion(input_data)
     expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    expect(detail_page.page.get_by_text("Conclu", exact=True)).to_be_visible()
+
     investigation = InvestigationTiac.objects.get()
+    assert investigation.get_etat_display() == "Conclu"
     assert investigation.conclusion_comment == "Mon commentaire"
     assert investigation.suspicion_conclusion == suspicion_conclusion
     assert sorted(investigation.selected_hazard) == sorted(selected_hazard)
@@ -208,7 +211,7 @@ def test_can_edit_existing_conclusion(live_server, page: Page):
 
 def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
     investigation = InvestigationTiacFactory(
-        etat=InvestigationTiac.Etat.EN_COURS, suspicion_conclusion=None, with_repas=1
+        etat=InvestigationTiac.Etat.CONCLU, suspicion_conclusion=None, with_repas=1
     )
     contact_1, contact_2, contact_3 = ContactAgentFactory.create_batch(3)
     investigation.contacts.add(contact_1, contact_2, contact_3)
@@ -235,7 +238,7 @@ def test_edit_investigation_tiac_with_conclusion_notification(live_server, page:
 
 def test_edit_investigation_show_previous_danger_value(live_server, page: Page):
     evenement = InvestigationTiacFactory(
-        etat=InvestigationTiac.Etat.EN_COURS,
+        etat=InvestigationTiac.Etat.CONCLU,
         suspicion_conclusion=SuspicionConclusion.CONFIRMED,
         selected_hazard=[CategorieDanger.ALLERGENE_LAIT],
     )
@@ -247,7 +250,7 @@ def test_edit_investigation_show_previous_danger_value(live_server, page: Page):
 
 def test_edit_investigation_show_previous_danger_values(live_server, page: Page):
     evenement = InvestigationTiacFactory(
-        etat=InvestigationTiac.Etat.EN_COURS,
+        etat=InvestigationTiac.Etat.CONCLU,
         suspicion_conclusion=SuspicionConclusion.CONFIRMED,
         selected_hazard=[
             CategorieDanger.ALLERGENE_LAIT,
