@@ -102,6 +102,10 @@ class WithEtablissementMixin:
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)
 
+    def close_etablissement_modal_without_saving(self):
+        self.current_modal.get_by_text("Annuler", exact=True).click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
     def force_etablissement_adresse(self, adresse, mock_call=False):
         if mock_call:
 
@@ -155,11 +159,14 @@ class WithEtablissementMixin:
     def open_edit_etablissement(self, index=0):
         self.page.locator(".etablissement-edit-btn").nth(index).click()
 
-    def edit_etablissement_with_new_values(self, index, wanted_values: Etablissement):
+    def edit_etablissement_with_new_values(self, index, wanted_values: Etablissement, save=True):
         self.open_edit_etablissement(index=index)
         modal = self.current_modal
         self._fill_etablissement(modal, wanted_values)
-        self.close_etablissement_modal()
+        if save is True:
+            self.close_etablissement_modal()
+        else:
+            self.close_etablissement_modal_without_saving()
 
     def etablissement_card(self, index=0):
         return self.page.locator(".etablissement-card").nth(index)

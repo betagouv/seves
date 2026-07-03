@@ -1,8 +1,6 @@
 import {setUpAddressChoices} from "BanAutocomplete"
-import {formIsValid, removeRequired} from "Forms"
+import {collectFormValues, formIsValid, removeRequired, resetChoiceJsValue, restoreFormValues} from "Forms"
 import {setUpSiretChoices} from "siret"
-
-const modalEtablissementHTMLContent = {}
 
 const prefix = document.querySelector("#etablissement-template").dataset.prefix
 
@@ -75,16 +73,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             }
         })
+        return choicesSIRET
     }
 
     function setupSiretBlock(modal, addressChoices) {
         const siretSelect = modal.querySelector("[id^=search-siret-input-]")
-        configureSiretField(siretSelect, addressChoices, siretSelect.dataset.communesApi)
+        return configureSiretField(siretSelect, addressChoices, siretSelect.dataset.communesApi)
     }
 
     function setupEtablisementModal(modal) {
         const addressChoices = setupAdresseField(modal)
-        setupSiretBlock(modal, addressChoices)
+        const siretChoices = setupSiretBlock(modal, addressChoices)
+        let initialValues = {}
+        const fieldset = modal.querySelector("[data-etablissement-fieldset]")
+
+        modal.addEventListener("dsfr.disclose", () => {
+            modal.querySelector("[id$=raison_sociale]").required = true
+            initialValues = collectFormValues(fieldset, {nameTransform: name => name, skipValidation: true})
+        })
+
+        modal.addEventListener("dsfr.conceal", () => {
+            removeRequired(modal)
+            if (modal.dataset.saved === "true") {
+                modal.dataset.saved = ""
+                return
+            }
+            restoreFormValues(fieldset, initialValues)
+            resetChoiceJsValue(addressChoices, initialValues, "adresse_lieu_dit")
+            resetChoiceJsValue(siretChoices, initialValues, "siret_search")
+        })
 
         modal.querySelector("[id^=etablissement-save-btn-]").addEventListener("click", event => {
             event.preventDefault()
@@ -103,26 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById(`fr-modal-etablissement-${prefix}`)
         modal.querySelector("[id$=raison_sociale]").required = true
         modal.querySelector(".save-btn").dataset.etablissementPrefix = prefix
-
+        setupEtablisementModal(modal)
         setTimeout(() => {
             dsfr(modal).modal.disclose()
-            dsfr(modal).modal.node.addEventListener("dsfr.conceal", event => {
-                if (modal.dataset.needsRestoreBackup === "false") {
-                    modal.dataset.needsRestoreBackup = ""
-                    removeRequired(modal)
-                    return
-                }
-                removeRequired(modal)
-                if (modalEtablissementHTMLContent[nextIdToUse]) {
-                    event.target
-                        .querySelector(".fr-modal__content")
-                        .replaceWith(modalEtablissementHTMLContent[nextIdToUse])
-                    modalEtablissementHTMLContent[nextIdToUse] = null
-                }
-            })
         }, 10)
-
-        setupEtablisementModal(modal)
     }
 
     function getSelectedLabel(element) {
@@ -248,12 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         card.querySelector(".etablissement-edit-btn").setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
         card.querySelector(".raison-sociale").setAttribute("aria-controls", `fr-modal-etablissement-${prefix}`)
-        card.querySelector(".etablissement-edit-btn").addEventListener("click", () => {
-            modalEtablissementHTMLContent[etablissementId] = document
-                .querySelector(`#fr-modal-etablissement-${prefix} .fr-modal__content`)
-                .cloneNode(true)
-            document.querySelector(`#fr-modal-etablissement-${prefix} [id$=raison_sociale]`).required = true
-        })
         document.getElementById("etablissement-card-container").appendChild(card)
         const totalForm = document.querySelector('#etablissement-management-form [name$="TOTAL_FORMS"]')
         totalForm.value = parseInt(totalForm.value, 10) + 1
@@ -275,9 +270,8 @@ document.addEventListener("DOMContentLoaded", () => {
             existingCard.replaceWith(getEtablissementCard(existingCard, currentModal, etablissementId))
         }
 
+        currentModal.dataset.saved = "true"
         dsfr(currentModal).modal.conceal()
-        currentModal.dataset.needsRestoreBackup = "false"
-        removeRequired(currentModal)
     }
 
     document.getElementById("add-etablissement").addEventListener("click", event => {

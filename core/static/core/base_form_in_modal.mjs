@@ -1,4 +1,4 @@
-import {collectFormValues, removeRequired} from "Forms"
+import {collectFormValues, removeRequired, resetChoiceJsValue, restoreFormValues} from "Forms"
 import {Controller} from "Stimulus"
 
 /**
@@ -74,38 +74,11 @@ export class BaseFormInModal extends Controller {
     }
 
     restoreForm() {
-        for (const [name, value] of Object.entries(this.initialValues)) {
-            const elements = this.fieldsetTarget.querySelectorAll(`[name="${name}"]`)
-
-            for (const el of elements) {
-                if (el.type === "checkbox") {
-                    if (Array.isArray(value)) {
-                        el.checked = value.includes(el.labels?.[0]?.textContent?.trim())
-                    } else {
-                        el.checked = false
-                    }
-                } else if (el.type === "radio") {
-                    el.checked = el.labels?.[0]?.textContent?.trim() === value
-                } else if (el instanceof HTMLSelectElement) {
-                    for (const option of el.options) {
-                        if (Array.isArray(value)) {
-                            option.selected = value.includes(option.textContent.trim())
-                        } else {
-                            option.selected = option.textContent.trim() === value
-                        }
-                    }
-                } else {
-                    el.value = value ?? ""
-                }
-            }
-        }
+        restoreFormValues(this.fieldsetTarget, this.initialValues)
     }
 
     resetChoiceJs(choice, key) {
-        const labelKey = Object.keys(this.initialValues).find(k => k.endsWith(`${key}Label`))
-        const valueKey = Object.keys(this.initialValues).find(k => k.endsWith(key))
-        choice.setValue([{value: this.initialValues[valueKey], label: this.initialValues[labelKey]}])
-        choice.setChoiceByValue(this.initialValues[valueKey])
+        resetChoiceJsValue(choice, this.initialValues, key)
     }
 
     /**

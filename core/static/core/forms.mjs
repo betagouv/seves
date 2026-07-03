@@ -137,3 +137,38 @@ export function resetForm(element) {
         }
     })
 }
+
+export function restoreFormValues(fieldset, initialValues) {
+    for (const [name, value] of Object.entries(initialValues)) {
+        const elements = fieldset.querySelectorAll(`[name="${name}"]`)
+
+        for (const el of elements) {
+            if (el.type === "checkbox") {
+                if (Array.isArray(value)) {
+                    el.checked = value.includes(el.labels?.[0]?.textContent?.trim())
+                } else {
+                    el.checked = false
+                }
+            } else if (el.type === "radio") {
+                el.checked = el.labels?.[0]?.textContent?.trim() === value
+            } else if (el instanceof HTMLSelectElement) {
+                for (const option of el.options) {
+                    if (Array.isArray(value)) {
+                        option.selected = value.includes(option.textContent.trim())
+                    } else {
+                        option.selected = option.textContent.trim() === value
+                    }
+                }
+            } else {
+                el.value = value ?? ""
+            }
+        }
+    }
+}
+
+export function resetChoiceJsValue(choice, initialValues, key) {
+    const labelKey = Object.keys(initialValues).find(k => k.endsWith(`${key}Label`))
+    const valueKey = Object.keys(initialValues).find(k => k.endsWith(key))
+    choice.setValue([{value: initialValues[valueKey], label: initialValues[labelKey]}])
+    choice.setChoiceByValue(initialValues[valueKey])
+}
