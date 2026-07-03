@@ -22,6 +22,7 @@ class ConclusionFormController extends Controller {
         "selectedHazardTreeselect",
         "selectedHazardTreeselectInput",
         "selectedHazardTreeselectHeader",
+        "notice",
     ]
     static values = {
         suspicionConclusionChoices: Object,
@@ -33,6 +34,11 @@ class ConclusionFormController extends Controller {
 
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
+        let disabled = false
+        if (this.selectedHazardTreeselectInputTarget.disabled) {
+            disabled = true
+        }
+
         this.treeselect = new Treeselect({
             ...tsDefaultOptions,
             parentHtmlContainer: el,
@@ -40,6 +46,7 @@ class ConclusionFormController extends Controller {
             options: [],
             isSingleSelect: false,
             isIndependentNodes: true,
+            disabled: disabled,
             openCallback: this.treeselectOpenCallback.bind(this),
             searchCallback: item => {
                 if (item.length === 0) {
@@ -156,6 +163,12 @@ class ConclusionFormController extends Controller {
         } else if (value) {
             this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
             this.selectedHazardTreeselectInitializedValue = true
+        }
+
+        if (this.suspicionConclusionTarget.selectedOptions?.[0]?.dataset?.needsNotice === "true") {
+            this.noticeTarget.classList.remove("fr-hidden")
+        } else {
+            this.noticeTarget.classList.add("fr-hidden")
         }
     }
 

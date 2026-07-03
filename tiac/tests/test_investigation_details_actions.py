@@ -134,6 +134,7 @@ def test_can_add_conclusion_to_investigation_tiac(
         conclusion_aliment=None,
         with_repas=1,
         with_aliment_suspect=1,
+        agents_confirmes_ars=[],
     )
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
@@ -278,10 +279,156 @@ def test_conclusion_investigation_tiac_conditional_ui(
     detail_page.add_conclusion_button.click()
 
     for conclusion in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.UNKNOWN, SuspicionConclusion.SUSPECTED):
-        detail_page.page.locator("#id_suspicion_conclusion").select_option(conclusion)
+        detail_page.suspicion_conclusion_field.select_option(conclusion)
         expect(detail_page.repas_field).to_be_enabled()
         expect(detail_page.aliment_field).to_be_enabled()
 
-    detail_page.page.locator("#id_suspicion_conclusion").select_option(SuspicionConclusion.DISCARDED)
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
     expect(detail_page.repas_field).to_be_disabled()
     expect(detail_page.aliment_field).to_be_disabled()
+
+
+def test_can_conclusion_form_is_initialized_when_agent_pathogene_is_set(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        agents_confirmes_ars=[CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
+    assert sorted(investigation.selected_hazard) == sorted(
+        [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
+    )
+
+
+def test_can_conclusion_form_shows_notice_when_user_try_to_force_choice(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        agents_confirmes_ars=[CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
+    expect(
+        detail_page.page.get_by_text("Êtes vous sûr qu'il ne s'agit pas d'une tiac à agent confirmé ?")
+    ).to_be_visible()
+
+
+def test_can_conclusion_form_is_initialized_when_dangers_detectes_is_set(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_analyse_alimentaires=2,
+        agents_confirmes_ars=[],
+    )
+    analyse = evenement.analyses_alimentaires.first()
+    analyse.categorie_danger = [CategorieDanger.ALLERGENE_ARACHIDE]
+    analyse.save()
+    analyse = evenement.analyses_alimentaires.last()
+    analyse.categorie_danger = [CategorieDanger.ALLERGENE_CELERI]
+    analyse.save()
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
+    assert sorted(investigation.selected_hazard) == sorted(
+        [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
+    )
+
+
+def test_can_conclusion_form_is_initialized_when_both_dangers_detectes_and_agents_confirmes_are_set(
+    live_server, page: Page
+):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_analyse_alimentaires=1,
+        agents_confirmes_ars=[CategorieDanger.ALLERGENE_CELERI],
+    )
+    analyse = evenement.analyses_alimentaires.first()
+    analyse.categorie_danger = [CategorieDanger.ALLERGENE_ARACHIDE]
+    analyse.save()
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
+    assert sorted(investigation.selected_hazard) == sorted(
+        [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
+    )
+
+
+def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_set(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        agents_confirmes_ars=[],
+        danger_syndromiques_suspectes=[
+            DangersSyndromiques.INTOXINATION_BACILLUS,
+            DangersSyndromiques.TOXI_INFECTION_BACILLUS,
+        ],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.SUSPECTED
+    assert sorted(investigation.selected_hazard) == sorted(
+        [DangersSyndromiques.INTOXINATION_BACILLUS, DangersSyndromiques.TOXI_INFECTION_BACILLUS]
+    )
+
+
+def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_set(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        agents_confirmes_ars=[],
+        danger_syndromiques_suspectes=[],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    expect(detail_page.suspicion_conclusion_field).to_have_value("")
+    expect(detail_page.page.locator("#selected_hazard-treeselect .treeselect--disabled")).to_have_count(1)
