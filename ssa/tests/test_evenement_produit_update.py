@@ -430,3 +430,22 @@ def test_evenement_produit_updates_last_updated_field(live_server, page):
     update_page.publish()
     evenement.refresh_from_db()
     assert evenement.last_updated > initial_last_update
+
+
+def test_cancel_edit_on_etablissement_reset_values(live_server, page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+
+    evenement = EvenementProduitFactory()
+    etablissement = EtablissementFactory(evenement_produit=evenement)
+    other_etablissement = EtablissementFactory()
+
+    update_page = EvenementProduitFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.edit_etablissement_with_new_values(0, other_etablissement, save=False)
+
+    update_page.open_edit_etablissement()
+    expect(update_page.current_modal.locator('[id$="raison_sociale"]')).to_have_value(etablissement.raison_sociale)
+    update_page.close_etablissement_modal_without_saving()
+    update_page.publish()
+
+    assert_models_are_equal(etablissement, Etablissement.objects.get(pk=etablissement.pk), to_exclude=["_state"])
