@@ -452,10 +452,11 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
 
 
 def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(reference_souches="FOO")
+    to_be_found_1 = EvenementProduitFactory(reference_souches="FOO")
+    to_be_found_2 = EvenementProduitFactory(reference_souches="fool")
     not_to_be_found_1 = EvenementProduitFactory(reference_souches="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_souches="BUZZ")
-    not_to_be_found_3 = InvestigationCasHumainFactory()
+    not_to_be_found_3 = InvestigationCasHumainFactory(reference_souches="Yet another value")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -464,7 +465,8 @@ def test_can_filter_by_reference_souches(live_server, mocked_authentification_us
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
