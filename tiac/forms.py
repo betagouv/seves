@@ -30,7 +30,7 @@ from tiac.constants import (
     TypeCollectivite,
     TypeRepas,
 )
-from tiac.fields import SelectWithAttributeField
+from tiac.fields import SelectConclusionWithAttributeField, SelectWithAttributeField
 from tiac.models import (
     AlimentSuspect,
     AnalyseAlimentaire,
@@ -626,6 +626,25 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
             self[field].field.queryset = (
                 queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
             )
+
+        if not self.instance.suspicion_conclusion:
+            categories_danger = list(
+                danger for analyse in self.instance.analyses_alimentaires.all() for danger in analyse.categorie_danger
+            )
+            hazards = categories_danger + self.instance.agents_confirmes_ars
+            if hazards:
+                self.fields["suspicion_conclusion"].widget = SelectConclusionWithAttributeField(
+                    attrs={},
+                    choices=self.fields["suspicion_conclusion"].choices,
+                )
+                self.initial["suspicion_conclusion"] = SuspicionConclusion.CONFIRMED
+                self.initial["selected_hazard"] = categories_danger + self.instance.agents_confirmes_ars
+            else:
+                if self.instance.danger_syndromiques_suspectes:
+                    self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
+                    self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
+                else:
+                    self.fields["selected_hazard"].widget.attrs["disabled"] = True
 
     @cached_property
     def selected_hazard_confirmed_choices(self):

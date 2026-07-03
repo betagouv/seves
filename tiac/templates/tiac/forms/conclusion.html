@@ -24,7 +24,14 @@
                                 data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
                                 data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
                             >
+                                <p>Certains champs ont été préremplis à partir des éléments de la fiche. Vous pouvez les modifier.</p>
+
                                 {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
+
+                                <div class="fr-hidden fr-mb-4v" data-conclusion-form-target="notice">
+                                    {% dsfr_notice title="Êtes vous sûr qu'il ne s'agit pas d'une tiac à agent confirmé ? Un danger détecté sur les malades ou les aliments est enregistré dans la fiche. Pour rappel, un agent peut être confirmé soit par des analyses effectuées sur les malades, soit par des analyses effectuées sur les aliments ou leur environnement de production." %}
+                                </div>
+
                                 <div id="selected_hazard-treeselect" class="fr-input-group">
                                     {{ form.selected_hazard.label_tag }}
                                     <div

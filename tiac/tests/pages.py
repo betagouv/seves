@@ -790,14 +790,23 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     def aliment_field(self):
         return self.page.locator("#id_conclusion_aliment")
 
+    def save_conclusion(self):
+        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Enregistrer").click()
+
+    @property
+    def suspicion_conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
+
     def fill_conclusion(self, input_data):
         self.add_conclusion_button.click()
-        self.page.locator("#id_suspicion_conclusion").select_option(input_data["suspicion_conclusion"])
+        self.suspicion_conclusion_field.select_option(input_data["suspicion_conclusion"])
         if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
+            self.clear_treeselect("selected_hazard-treeselect")
             for item in input_data["selected_hazard"]:
                 final_label = CategorieDanger(item).label.split(">")[-1].strip()
                 self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
         elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
+            self.clear_treeselect("selected_hazard-treeselect")
             for item in input_data["selected_hazard"]:
                 label = DangersSyndromiques(item).short_name
                 self._set_treeselect_option_by_search_term("selected_hazard-treeselect", label, label)
@@ -809,4 +818,4 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
             if input_data.get("conclusion_aliment"):
                 self.aliment_field.select_option(str(input_data["conclusion_aliment"]))
 
-        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Enregistrer").click()
+        self.save_conclusion()
