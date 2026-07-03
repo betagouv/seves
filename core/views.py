@@ -14,10 +14,8 @@ from django.http import HttpResponseRedirect
 from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 from django.utils.translation import ngettext
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import FormView, UpdateView
 import requests
@@ -54,7 +52,6 @@ from .redirect import safe_redirect
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class DocumentUploadView(GetFicheObjectMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView):
     form_class = DocumentUploadForm
     template_name = "core/form/document_upload.html#form_content"
@@ -95,7 +92,6 @@ class DocumentUploadView(GetFicheObjectMixin, WithAddUserContactsMixin, UserPass
         return super().render_to_response(self.get_context_data(form=form))
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class DocumentDeleteView(GetFicheObjectMixin, UserPassesTestMixin, View):
     def get_fiche_object(self):
         self.document = get_object_or_404(Document, pk=self.kwargs.get("pk", self.request.POST.get("pk")))
