@@ -477,7 +477,7 @@ def test_can_filter_by_reference_clusters(live_server, mocked_authentification_u
     to_be_found_2 = EvenementProduitFactory(reference_clusters="fool")
     not_to_be_found_1 = EvenementProduitFactory(reference_clusters="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_clusters="BUZZ")
-    not_to_be_found_3 = InvestigationCasHumainFactory()
+    not_to_be_found_3 = InvestigationCasHumainFactory(reference_clusters="Not related")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
