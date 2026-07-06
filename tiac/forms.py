@@ -578,6 +578,9 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
             "conclusion_repas",
             "conclusion_aliment",
         )
+        labels = {
+            "conclusion_repas": "Repas retenu",
+        }
 
     @property
     def media(self):
@@ -615,8 +618,35 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
             )
 
     def clean(self):
+        cleaned_data = super().clean()
         self.clean_suspicion_conclusion_and_selected_hazard()
-        return super().clean()
+
+        needs_repas = (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED)
+        if cleaned_data.get("suspicion_conclusion") in needs_repas and not cleaned_data.get("conclusion_repas"):
+            self.add_error(
+                "conclusion_repas",
+                f"Le champ repas est obligatoire lorsque la conclusion est {SuspicionConclusion.CONFIRMED.label} ou {SuspicionConclusion.SUSPECTED.label}.",
+            )
+        return cleaned_data
+
+    def _init_conclusion(self):
+        categories_danger = list(
+            danger for analyse in self.instance.analyses_alimentaires.all() for danger in analyse.categorie_danger
+        )
+        hazards = categories_danger + self.instance.agents_confirmes_ars
+        if hazards:
+            self.fields["suspicion_conclusion"].widget = SelectConclusionWithAttributeField(
+                attrs={},
+                choices=self.fields["suspicion_conclusion"].choices,
+            )
+            self.initial["suspicion_conclusion"] = SuspicionConclusion.CONFIRMED
+            self.initial["selected_hazard"] = categories_danger + self.instance.agents_confirmes_ars
+        else:
+            if self.instance.danger_syndromiques_suspectes:
+                self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
+                self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
+            else:
+                self.fields["selected_hazard"].widget.attrs["disabled"] = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -628,23 +658,11 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
             )
 
         if not self.instance.suspicion_conclusion:
-            categories_danger = list(
-                danger for analyse in self.instance.analyses_alimentaires.all() for danger in analyse.categorie_danger
-            )
-            hazards = categories_danger + self.instance.agents_confirmes_ars
-            if hazards:
-                self.fields["suspicion_conclusion"].widget = SelectConclusionWithAttributeField(
-                    attrs={},
-                    choices=self.fields["suspicion_conclusion"].choices,
-                )
-                self.initial["suspicion_conclusion"] = SuspicionConclusion.CONFIRMED
-                self.initial["selected_hazard"] = categories_danger + self.instance.agents_confirmes_ars
-            else:
-                if self.instance.danger_syndromiques_suspectes:
-                    self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
-                    self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
-                else:
-                    self.fields["selected_hazard"].widget.attrs["disabled"] = True
+            self._init_conclusion()
+
+        repas = self.instance.repas.all()
+        if len(repas) == 1:
+            self.initial["conclusion_repas"] = repas[0]
 
     @cached_property
     def selected_hazard_confirmed_choices(self):

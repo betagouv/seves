@@ -127,14 +127,17 @@ class ConclusionFormController extends Controller {
         if (this.treeselect === undefined) return
 
         this.conclusionRepasTarget.disabled = false
+        this.conclusionRepasTarget.required = false
         this.conclusionAlimentTarget.disabled = false
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
+            this.conclusionRepasTarget.required = true
             this.treeselect.disabled = false
             this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse"
             this.selectedHazardTreeselectInputTarget.required = true
             this.treeselect.options = this.selectedHazardConfirmedChoicesValue
             this.treeselect.mount()
         } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
+            this.conclusionRepasTarget.required = true
             this.treeselect.disabled = false
             this.treeselect.placeholder = "Choisir dans la liste parmi les dangers syndromiques"
             this.selectedHazardTreeselectInputTarget.required = true

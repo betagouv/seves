@@ -134,6 +134,8 @@ fileignoreconfig:
   checksum: aaa529f0e3a3259250c195c4c90de3f77f4afd29b43d3097fcb6c6c2aac7e4b1
 - filename: core/static/core/base_form_in_modal.mjs
   checksum: d4543d7e8aa6872236a78583c5f9b719d56fd2e2cb24a8025bd3d41e874ce0f5
+- filename: tiac/tests/test_investigation_details_actions.py
+  checksum: de0caaa5587cb8a90054dd9715e047abbedc50683f8eedb5acf21a823c7c89ef
 
 
 version: "1.0"
