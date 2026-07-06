@@ -7,24 +7,12 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static 'ssa/_rappel_conso_form.js' %}"></script>
     <script type="module" src="{% static 'ssa/evenement_produit_form.mjs' %}"></script>
-    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 
 {% block content %}
     <form method="post" id="main-form">
         {% csrf_token %}
         {{ form.latest_version }}
-        <div id="categorie-produit-data" class="fr-hidden">{{ categorie_produit_data|safe }}</div>
-        <div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>
-        <div class="fr-hidden" id="categorie-danger-header">
-            <div class="fr-ml-1v">Dangers les plus courants</div>
-            {% for danger in form.danger_plus_courants %}
-                <div class="treeselect-list__item" level="0" group="false">
-                    <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
-                </div>
-            {% endfor %}
-            <div class="fr-ml-1v">Liste complète des dangers</div>
-        </div>
 
         <main class="main-container">
             <div class="evenement-produit-form-header">
@@ -93,57 +81,34 @@
                     <div class="fr-col-12 fr-col-lg-6">
                         <div class="white-container--lite tall-column">
                             <h3>Produit</h3>
-                            <div>
-                                <label>Catégorie de produit</label>
-                                <div id="categorie-produit"></div>
-                                <div>
-                                    {% if flag_new_treeselect %}
-                                        <div class="fr-mb-2w">
-                                            {{ form.categorie_produit }}
-                                        </div>
-                                    {% else %}
-                                        <div class="fr-mt-2w">
-                                            {{ form.categorie_produit }}
-                                        </div>
-                                    {% endif %}
+                            <div class="fr-mb-2w" data-controller="treeselect-categorie-messages">
+                                {% dsfr_form_field form.categorie_produit|set_data:"action:change->treeselect-categorie-messages#onCategorieDangerSelected"|set_data:"treeselect-categorie-messages-target:categorieDangerInput" %}
+                                {% include "ssa/_treeselect_categorie_messages_notice.html" with id="notice-container-produit" %}
+                            </div>
 
-                                    <div class="fr-mt-2v fr-hidden" id="notice-container-produit">
-                                        {% dsfr_notice title="__content__" %}
-                                    </div>
-                                    <div class="fr-mt-4v">
-                                        {% seves_render_field form.denomination %}
-                                    </div>
-                                    {% seves_render_field form.marque %}
-                                    {% seves_render_field form.lots %}
-                                    {% seves_render_field form.description_complementaire %}
-                                    {{ form.temperature_conservation.label_tag }}
-                                    <div class="radio-inline-container radio-inline-container--wrap">
-                                        {{ form.temperature_conservation }}
-                                    </div>
-                                </div>
+                            <div class="fr-mt-4v">
+                                {% seves_render_field form.denomination %}
+                            </div>
+                            {% seves_render_field form.marque %}
+                            {% seves_render_field form.lots %}
+                            {% seves_render_field form.description_complementaire %}
+                            {{ form.temperature_conservation.label_tag }}
+                            <div class="radio-inline-container radio-inline-container--wrap">
+                                {{ form.temperature_conservation }}
                             </div>
                         </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
                         <div
                             class="white-container--lite tall-column risk-column"
-                            data-controller="risque-fieldset"
+                            data-controller="treeselect-categorie-messages"
                         >
                             <h3>Risque</h3>
                             <div>
-                                <label>Catégorie de danger</label>
-                                {% if flag_new_treeselect %}
-                                    {{ form.categorie_danger|set_data:"action:change->risque-fieldset#onCategorieDangerSelected"|set_data:"risque-fieldset-target:categorieDangerInput" }}
-                                {% else %}
-                                    <div id="categorie-danger"></div>
-                                    {{ form.categorie_danger|set_data:"action:risque-fieldset#onCategorieDangerSelected" }}
-                                {% endif %}
-
+                                {% dsfr_form_field form.categorie_danger|set_data:"action:change->treeselect-categorie-messages#onCategorieDangerSelected"|set_data:"treeselect-categorie-messages-target:categorieDangerInput" %}
                                 {{ form.CategorieDanger.dangers_bacteriens|json_script:"dangers-bacteriens" }}
+                                {% include "ssa/_treeselect_categorie_messages_notice.html" with id="notice-container-risque" %}
 
-                                <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
-                                    {% dsfr_notice title="__content__" %}
-                                </div>
                                 <div class="fr-mt-4v">
                                     {% seves_render_field form.precision_danger %}
                                 </div>
@@ -160,7 +125,7 @@
                                     </div>
                                 </div>
                                 {% seves_render_field form.evaluation %}
-                                <div class="radio-inline-container fr-hidden" data-risque-fieldset-target="pamContainer">
+                                <div class="radio-inline-container fr-hidden" data-treeselect-categorie-messages-target="pamContainer">
                                     {{ form.produit_pret_a_manger.label_tag }}
                                     <div class="radio-inline-container fr-ml-4w">
                                         {{ form.produit_pret_a_manger }}

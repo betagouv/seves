@@ -78,8 +78,3 @@
 .fr-search-bar .choices {
     flex: 1.25;
 }
-
-.treeselect-list__item-checkbox-container {
-    margin-right: 10px;
-    border-radius: 40px !important;
-}

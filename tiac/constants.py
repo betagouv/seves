@@ -221,7 +221,20 @@ class EtatPrelevement(TextChoices):
     RESTE_INGREDIENT = auto(), "Reste d'ingrédient"
 
 
-DANGERS_COURANTS = CategorieDanger.danger_courants
+DANGERS_COURANTS = (
+    CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+    CategorieDanger.BACILLUS_CEREUS,
+    CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
+    CategorieDanger.CAMPYLOBACTER_COLI,
+    CategorieDanger.CAMPYLOBACTER_JEJUNI,
+    CategorieDanger.SALMONELLA_ENTERITIDIS,
+    CategorieDanger.SALMONELLA_TYPHIMURIUM,
+    CategorieDanger.SHIGELLA,
+    CategorieDanger.YERSINIA_ENTEROCOLITICA,
+    CategorieDanger.HISTAMINE,
+    CategorieDanger.TOXINE_DSP,
+    CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+)
 
 
 class SuspicionConclusion(TextChoices):

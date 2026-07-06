@@ -51,6 +51,7 @@
             {% elif widget.group_option %}
                 {% with widget=widget.group_option parent_index=widget.group_index %}
                     {% merge_data_action widget.attrs "change->treeselect-group#onSelect" %}
+                    {% set_context_var widget.attrs "data-group" "true" %}
                     {% partial input %}
                 {% endwith %}
             {% else %}
@@ -73,6 +74,7 @@
             {% else %}
                 aria-labelledby="{{ widget.aria_controls_prefix }}-label-{{ widget.group_index }}"
             {% endif %}
+            data-testid="group-container"
         >
             {% for optgroup in widget.optgroups %}
                 {% include optgroup.template_name with widget=optgroup %}
