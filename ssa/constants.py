@@ -604,33 +604,36 @@ class CategorieDanger(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
     SA_PESTE_PORCINE_CLASSIQUE = "SA - Peste porcine classique", "x Santé animale > SA - Peste porcine classique"
     SV_ORGANISME_DE_QUARANTAINE = "SV - Organisme de quarantaine", "x Santé végétale > SV - Organisme de quarantaine"
 
+    @classproperty
+    def danger_courants_ssa_pc(cls):
+        return (
+            cls.LISTERIA_MONOCYTOGENES,
+            cls.SALMONELLA_ENTERITIDIS,
+            cls.SALMONELLA_TYPHIMURIUM,
+            cls.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            cls.RESIDU_DE_PESTICIDE_BIOCIDE,
+        )
+
+    @classproperty
+    def danger_courants_ssa_ich(cls):
+        return (
+            cls.LISTERIA_MONOCYTOGENES,
+            cls.SALMONELLA_ENTERITIDIS,
+            cls.SALMONELLA_TYPHIMURIUM,
+            cls.ESCHERICHIA_COLI_SHIGATOXINOGENE,
+            cls.RESIDU_DE_PESTICIDE_BIOCIDE,
+        )
+
     @classmethod
     def dangers_bacteriens(cls):
         return [choice.value for choice in cls if choice.label.startswith("Bactérie >")]
 
-    @classproperty
-    def danger_courants(cls):
-        return (
-            cls.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
-            cls.BACILLUS_CEREUS,
-            cls.CLOSTRIDIUM_PERFRINGENS,
-            cls.CAMPYLOBACTER_COLI,
-            cls.CAMPYLOBACTER_JEJUNI,
-            cls.SALMONELLA_ENTERITIDIS,
-            cls.SALMONELLA_TYPHIMURIUM,
-            cls.SHIGELLA,
-            cls.YERSINIA_ENTEROCOLITICA,
-            cls.HISTAMINE,
-            cls.TOXINE_DSP,
-            cls.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
-        )
-
-    @classproperty
-    def treeselect_choices(cls):
+    @classmethod
+    def treeselect_choices_with_dangers_courants(cls, danger_courants):
         return (
             TreeselectGroup(
                 label="Dangers les plus courants",
-                choices=tuple(it.get_treeselect_item(html_name_prefix="shortcut") for it in cls.danger_courants),
+                choices=tuple(it.get_treeselect_item(html_name_prefix="shortcut") for it in danger_courants),
                 can_expand=False,
                 categorised_label=None,
             ),

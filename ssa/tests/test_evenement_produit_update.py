@@ -50,13 +50,6 @@ def test_can_update_evenement_produit_descripteur_and_save_as_draft(
     assert choice_js_get_values(page, "#id_free_link") == [f"{for_free_link.numero}Remove item"]
     expect(update_page.page.get_by_text("2000-01-1111", exact=True)).to_be_visible()
 
-    assert update_page.get_treeselect_options("categorie-danger") == [
-        evenement.get_categorie_danger_display().split(">")[-1].strip()
-    ]
-    assert update_page.get_treeselect_options("categorie-produit") == [
-        evenement.get_categorie_produit_display().split(">")[-1].strip()
-    ]
-
     # Making changes on all fields
     for field in inputs_fields:
         getattr(update_page, field).fill(getattr(wanted_values, field))
@@ -164,7 +157,6 @@ def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_serv
     evenement: EvenementProduit = EvenementProduitFactory(bacterie=True)
     update_page = EvenementProduitFormPage(page, live_server.url)
     update_page.navigate_update_page(evenement)
-    update_page.clear_treeselect("categorie-danger")
     update_page.set_categorie_danger_from_shortcut("Résidu de Pesticide Biocide")
 
     update_page.publish()
@@ -288,12 +280,12 @@ def test_display_of_notices(live_server, mocked_authentification_user, page):
 
     expect(
         update_page.page.locator("#notice-container-produit").get_by_text(
-            "Il existe des sous catégories pour « Ovoproduit » : pensez à préciser dès que possible."
+            "Il existe des sous-catégories pour « Ovoproduit » : pensez à préciser dès que possible."
         )
     ).to_be_visible()
     expect(
         update_page.page.locator("#notice-container-risque").get_by_text(
-            "Il existe des sous catégories pour « Bacillus » : pensez à préciser dès que possible."
+            "Il existe des sous-catégories pour « Bacillus » : pensez à préciser dès que possible."
         )
     ).to_be_visible()
 
@@ -390,7 +382,7 @@ def test_update_reference_clusters_will_trigger_email(live_server, page, mailout
 def test_update_evenement_produit_performances(client, django_assert_num_queries):
     evenement: EvenementProduit = EvenementProduitFactory(numeros_rappel_conso=["2000-01-1111"], not_bacterie=True)
 
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(8):
         client.get(evenement.get_update_url())
 
 

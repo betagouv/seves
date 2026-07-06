@@ -1,10 +1,7 @@
-import json
-
 from queryset_sequence import QuerySetSequence
 import waffle
 
 from core.mixins import WithOrderingMixin
-from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.filters import EvenementFilter, EvenementFilterTreeselect
 from ssa.models import EvenementInvestigationCasHumain, EvenementProduit
 from ssa.models.evenement_produit import EvenementProduitReadOnly
@@ -50,13 +47,3 @@ class WithFilteredListMixin(WithOrderingMixin):
         queryset = self.apply_ordering(self.get_raw_queryset())
         self.filter = filter_klass(self.request.GET, queryset=queryset)
         return self.filter.qs
-
-
-class EvenementProduitValuesMixin:
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
-        context["danger_plus_courant"] = EvenementProduit.danger_plus_courants()
-        context["flag_new_treeselect"] = waffle.flag_is_active(self.request, "new_treeselect")
-        return context

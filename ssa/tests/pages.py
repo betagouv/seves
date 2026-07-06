@@ -176,7 +176,7 @@ class WithEtablissementMixin:
         return self.page.locator(".etablissement-card").nth(index).locator(".etablissement-delete-btn").click()
 
 
-class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
+class EvenementProduitFormPage(WithEtablissementMixin):
     info_fields = ["date_reception", "numero_rasff", "type_evenement", "source", "description"]
     produit_fields = [
         "denomination",
@@ -205,6 +205,13 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
 
+        self._categorie_danger_treeselect = TreeselectPage(
+            self.page, self.page.locator("#fr-treeselect-id_categorie_danger")
+        )
+        self._categorie_produit_treeselect = TreeselectPage(
+            self.page, self.page.locator("#fr-treeselect-id_categorie_produit")
+        )
+
         self.temperature_conservation = page.get_by_label("Temperature conservation")
         self.produit_pret_a_manger = page.get_by_label("Produit pret a manger")
         self.numero_rappel_part_1 = page.locator("#rappel-1")
@@ -224,12 +231,10 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
         self.description.fill(evenement_produit.description)
 
     def set_categorie_produit(self, evenement_produit, clear_input=False):
-        label = evenement_produit.get_categorie_produit_display()
-        self.set_categorie_produit_from_label(label, clear_input)
+        self.set_categorie_produit_from_label(evenement_produit.get_categorie_produit_display(), clear_input)
 
     def set_categorie_produit_from_label(self, label, clear_input=False):
-        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", label, clear_input)
+        self._categorie_produit_treeselect.check_option(*re.split(r"\s*>\s*", label))
 
     def set_aliments_animaux(self, value):
         block = self.page.locator("#id_aliments_animaux_0").locator("..").locator("..").locator("..")
@@ -241,24 +246,16 @@ class EvenementProduitFormPage(WithTreeSelect, WithEtablissementMixin):
     def set_pret_a_manger(self, value):
         self.page.locator(f"input[type='radio'][name='produit_pret_a_manger'][value='{value}']").check(force=True)
 
-    def display_and_get_categorie_danger(self):
-        result = self.page.locator("#categorie-danger")
-        result.evaluate("el => el.scrollIntoView()")
-        return result
-
     def set_categorie_danger(self, evenement_produit, clear_input=False):
-        self.display_and_get_categorie_danger()
-        label = evenement_produit.get_categorie_danger_display()
-        self._set_treeselect_option("categorie-danger", label, clear_input)
+        self.set_categorie_danger_from_label(evenement_produit.get_categorie_danger_display())
 
     def set_categorie_danger_from_label(self, label, clear_input=False):
-        self.display_and_get_categorie_danger()
-        self._set_treeselect_option("categorie-danger", label, clear_input)
+        self._categorie_danger_treeselect.check_option(*re.split(r"\s*>\s*", label))
 
     def set_categorie_danger_from_shortcut(self, label):
-        self.page.locator("#categorie-danger .treeselect-input__edit").click()
-        self.page.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
-        self.page.locator("#categorie-danger .shortcut", has_text=label).locator("..").click()
+        self._categorie_danger_treeselect.check_option_by_shortcut(
+            "Dangers les plus courants", re.split(r"\s*>\s*", label)[-1]
+        )
 
     def set_quantification_unite(self, value):
         self.page.query_selector(".risk-column .choices").click()
@@ -555,6 +552,10 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
 
+        self._categorie_danger_treeselect = TreeselectPage(
+            self.page, self.page.locator("#fr-treeselect-id_categorie_danger")
+        )
+
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:investigation-cas-humain-creation')}")
 
@@ -576,15 +577,9 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
     def publish(self, *, wait_for=None):
         self._submit(self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish"), wait_for=wait_for)
 
-    def display_and_get_categorie_danger(self):
-        result = self.page.locator("#categorie-danger")
-        result.evaluate("el => el.scrollIntoView()")
-        return result
-
     def set_categorie_danger(self, evenement_produit, clear_input=False):
-        self.display_and_get_categorie_danger()
-        label = evenement_produit.get_categorie_danger_display()
-        self._set_treeselect_option("categorie-danger", label, clear_input)
+        names = re.split(r"\s*>\s*", evenement_produit.get_categorie_danger_display())
+        self._categorie_danger_treeselect.check_option(*names)
 
     def add_free_link(self, numero, choice_js_fill, link_label="Investigation de cas humain : "):
         choice_js_fill(self.page, "#liens-libre .choices", str(numero), link_label + str(numero))

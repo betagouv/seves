@@ -12,7 +12,6 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, UpdateView
 from docxtpl import DocxTemplate
 from reversion.models import Version
-import waffle
 
 from core.audit import audit_log
 from core.mixins import (
@@ -31,24 +30,23 @@ from core.mixins import (
     WithFreeLinksListInContextMixin,
     WithMessageMixin,
 )
-from ssa.forms import EvenementProduitForm, EvenementProduitTreeselectForm
+from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
 from ssa.models import Etablissement, EvenementProduit
 
 from ..constants import TypeEvenement
 from ..notifications import notify_alimentation_animale, notify_souches_clusters, notify_type_evenement_fna
 from ..tasks import notify_maestro
-from .mixins import EvenementProduitValuesMixin
 
 
 class EvenementProduitCreateView(
     WithFormErrorsAsMessagesMixin,
     WithAddUserContactsMixin,
-    EvenementProduitValuesMixin,
     MediaDefiningMixin,
     WithFormsetInvalidMixin,
     CreateView,
 ):
+    form_class = EvenementProduitForm
     template_name = "ssa/evenement_produit_form.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -57,13 +55,6 @@ class EvenementProduitCreateView(
         else:
             self.etablissement_formset = EtablissementFormSet()
         return super().dispatch(request, *args, **kwargs)
-
-    def get_form_class(self):
-        return (
-            EvenementProduitTreeselectForm
-            if waffle.flag_is_active(self.request, "new_treeselect")
-            else EvenementProduitForm
-        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -161,7 +152,6 @@ class EvenementUpdateView(
     UserPassesTestMixin,
     WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
-    EvenementProduitValuesMixin,
     MediaDefiningMixin,
     UpdateView,
 ):
@@ -180,13 +170,6 @@ class EvenementUpdateView(
 
         self.object = super().get_object(queryset)
         return self.object
-
-    def get_form_class(self):
-        return (
-            EvenementProduitTreeselectForm
-            if waffle.flag_is_active(self.request, "new_treeselect")
-            else super().get_form_class()
-        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

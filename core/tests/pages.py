@@ -94,7 +94,7 @@ class ChoiceJSPage:
 class TreeselectPage:
     @property
     def treeselect(self):
-        return self.container.locator(".fr-treeselect").first
+        return self.container.locator(":scope.fr-treeselect, :scope .fr-treeselect").first
 
     @property
     def main_button(self):
@@ -144,10 +144,10 @@ class TreeselectPage:
     def _locate_group(self, name: str, container: Locator | None = None):
         container = container or self.options_container
         group_header = container.locator(
-            f'.fr-treeselect__group .fr-treeselect__group-header:has(.fr-treeselect__group-button:text-is("{name}"))'
+            f'.fr-treeselect__group .fr-treeselect__group-header:has(*:text-is("{name}"))'
         ).first
         group = group_header.locator("..")
-        collapse = group.locator("> .fr-collapse")
+        collapse = group.locator('> [data-testid="group-container"]')
         button = group_header.locator(".fr-treeselect__group-button")
         return group, button, collapse
 
@@ -188,19 +188,24 @@ class TreeselectPage:
 
         return group or self.container
 
+    @playwright_repeatable
+    def _tick_checkbox(self, group, checkbox_label):
+        html_input = group.get_by_label(checkbox_label, exact=True).first
+        if not html_input.is_checked():
+            html_input.evaluate("it => it.click()")
+        expect(html_input).to_be_checked()
+
     def check_option(self, *names: str, close_after=True):
         with self.opened_treeselect(close_after=close_after):
             *groups, checkbox_label = names
             group = self.open_groups(*groups)
 
-            @playwright_repeatable
-            def tick_checkbox():
-                input = group.get_by_label(checkbox_label, exact=True).first
-                if not input.is_checked():
-                    input.evaluate("it => it.click()")
-                expect(input).to_be_checked()
+            self._tick_checkbox(group, checkbox_label)
 
-            tick_checkbox()
+    def check_option_by_shortcut(self, group_label: str, checkbox_label: str, *, close_after=True):
+        with self.opened_treeselect(close_after=close_after):
+            _, _, collapse = self._locate_group(group_label, self.treeselect)
+            self._tick_checkbox(collapse, checkbox_label)
 
     def uncheck_option(self, *names: str, close_after=True):
         with self.opened_treeselect(close_after=close_after):
