@@ -320,6 +320,9 @@ SECURE_CSP = {
         "https://cdn.jsdelivr.net/npm/fast-diff@1.3.0/+esm",
         "https://cdn.jsdelivr.net/npm/lodash.clonedeep@4.5.0/+esm",
         "https://cdn.jsdelivr.net/npm/lodash.isequal@4.5.0/+esm",
+        "https://cdn.jsdelivr.net/npm/fast-diff@%5E1.3.0/+esm",
+        "https://cdn.jsdelivr.net/npm/lodash.clonedeep@%5E4.5.0/+esm",
+        "https://cdn.jsdelivr.net/npm/lodash.isequal@%5E4.5.0/+esm",
     ),
     "style-src": (
         CSP.SELF,
