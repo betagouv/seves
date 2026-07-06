@@ -199,7 +199,7 @@ pytest-env==1.6.0
     # via -r requirements.in
 pytest-playwright==0.8.0
     # via -r requirements.in
-pytest-rerunfailures==16.3
+pytest-rerunfailures==16.4
     # via -r requirements.in
 pytest-split==0.11.0
     # via -r requirements.in
