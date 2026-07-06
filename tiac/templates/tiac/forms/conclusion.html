@@ -67,6 +67,13 @@
                                 {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
 
                                 {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas" %}
+
+                                {% if nb_repas > 1 %}
+                                    <div class="fr-mb-4v">
+                                        {% dsfr_notice title="Si le repas à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion" type="warning" %}
+                                    </div>
+                                {% endif %}
+
                                 {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment" %}
                             </fieldset>
 

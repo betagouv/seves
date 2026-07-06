@@ -11,8 +11,8 @@ from core.tests.generic_tests.actions import (
     generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
 from ssa.constants import CategorieDanger
-from tiac.factories import InvestigationTiacFactory
-from tiac.models import InvestigationTiac
+from tiac.factories import AnalyseAlimentaireFactory, InvestigationTiacFactory, RepasSuspectFactory
+from tiac.models import InvestigationTiac, RepasSuspect
 
 from ..constants import DANGERS_COURANTS, DangersSyndromiques, SuspicionConclusion
 from .pages import InvestigationTiacDetailsPage
@@ -192,7 +192,7 @@ def test_can_add_conclusion_button_is_hidden_for_other_states(live_server, page:
 
 
 def test_can_edit_existing_conclusion(live_server, page: Page):
-    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, with_repas=1)
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
@@ -207,7 +207,9 @@ def test_can_edit_existing_conclusion(live_server, page: Page):
 
 
 def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
-    investigation = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, suspicion_conclusion=None)
+    investigation = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS, suspicion_conclusion=None, with_repas=1
+    )
     contact_1, contact_2, contact_3 = ContactAgentFactory.create_batch(3)
     investigation.contacts.add(contact_1, contact_2, contact_3)
     creation_page = InvestigationTiacDetailsPage(page, live_server.url)
@@ -288,7 +290,7 @@ def test_conclusion_investigation_tiac_conditional_ui(
     expect(detail_page.aliment_field).to_be_disabled()
 
 
-def test_can_conclusion_form_is_initialized_when_agent_pathogene_is_set(live_server, page: Page):
+def test_conclusion_form_is_initialized_when_agent_pathogene_is_set(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
         suspicion_conclusion="",
@@ -297,6 +299,7 @@ def test_can_conclusion_form_is_initialized_when_agent_pathogene_is_set(live_ser
         conclusion_repas=None,
         conclusion_aliment=None,
         agents_confirmes_ars=[CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI],
+        with_repas=1,
     )
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
@@ -309,6 +312,7 @@ def test_can_conclusion_form_is_initialized_when_agent_pathogene_is_set(live_ser
     assert sorted(investigation.selected_hazard) == sorted(
         [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
     )
+    assert investigation.conclusion_repas == RepasSuspect.objects.get()
 
 
 def test_can_conclusion_form_shows_notice_when_user_try_to_force_choice(live_server, page: Page):
@@ -330,7 +334,7 @@ def test_can_conclusion_form_shows_notice_when_user_try_to_force_choice(live_ser
     ).to_be_visible()
 
 
-def test_can_conclusion_form_is_initialized_when_dangers_detectes_is_set(live_server, page: Page):
+def test_conclusion_form_is_initialized_when_dangers_detectes_is_set(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
         suspicion_conclusion="",
@@ -340,6 +344,7 @@ def test_can_conclusion_form_is_initialized_when_dangers_detectes_is_set(live_se
         conclusion_aliment=None,
         with_analyse_alimentaires=2,
         agents_confirmes_ars=[],
+        with_repas=1,
     )
     analyse = evenement.analyses_alimentaires.first()
     analyse.categorie_danger = [CategorieDanger.ALLERGENE_ARACHIDE]
@@ -358,9 +363,10 @@ def test_can_conclusion_form_is_initialized_when_dangers_detectes_is_set(live_se
     assert sorted(investigation.selected_hazard) == sorted(
         [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
     )
+    assert investigation.conclusion_repas == RepasSuspect.objects.get()
 
 
-def test_can_conclusion_form_is_initialized_when_both_dangers_detectes_and_agents_confirmes_are_set(
+def test_conclusion_form_is_initialized_when_both_dangers_detectes_and_agents_confirmes_are_set(
     live_server, page: Page
 ):
     evenement = InvestigationTiacFactory(
@@ -372,6 +378,7 @@ def test_can_conclusion_form_is_initialized_when_both_dangers_detectes_and_agent
         conclusion_aliment=None,
         with_analyse_alimentaires=1,
         agents_confirmes_ars=[CategorieDanger.ALLERGENE_CELERI],
+        with_repas=1,
     )
     analyse = evenement.analyses_alimentaires.first()
     analyse.categorie_danger = [CategorieDanger.ALLERGENE_ARACHIDE]
@@ -387,9 +394,10 @@ def test_can_conclusion_form_is_initialized_when_both_dangers_detectes_and_agent
     assert sorted(investigation.selected_hazard) == sorted(
         [CategorieDanger.ALLERGENE_ARACHIDE, CategorieDanger.ALLERGENE_CELERI]
     )
+    assert investigation.conclusion_repas == RepasSuspect.objects.get()
 
 
-def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_set(live_server, page: Page):
+def test_conclusion_form_is_initialized_when_dangers_syndromiques_are_set(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
         suspicion_conclusion="",
@@ -402,6 +410,7 @@ def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_set(li
             DangersSyndromiques.INTOXINATION_BACILLUS,
             DangersSyndromiques.TOXI_INFECTION_BACILLUS,
         ],
+        with_repas=1,
     )
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
@@ -414,9 +423,10 @@ def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_set(li
     assert sorted(investigation.selected_hazard) == sorted(
         [DangersSyndromiques.INTOXINATION_BACILLUS, DangersSyndromiques.TOXI_INFECTION_BACILLUS]
     )
+    assert investigation.conclusion_repas == RepasSuspect.objects.get()
 
 
-def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_set(live_server, page: Page):
+def test_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_set(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
         suspicion_conclusion="",
@@ -432,3 +442,63 @@ def test_can_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_se
     detail_page.add_conclusion_button.click()
     expect(detail_page.suspicion_conclusion_field).to_have_value("")
     expect(detail_page.page.locator("#selected_hazard-treeselect .treeselect--disabled")).to_have_count(1)
+
+
+def test_investigation_tiac_details_performance(live_server, client, django_assert_num_queries):
+    evenement = InvestigationTiacFactory()
+
+    client.get(evenement.get_absolute_url())
+
+    with django_assert_num_queries(26):
+        client.get(evenement.get_absolute_url())
+
+    RepasSuspectFactory.create_batch(3, investigation=evenement)
+    AnalyseAlimentaireFactory.create_batch(3, investigation=evenement)
+
+    with django_assert_num_queries(27):
+        client.get(evenement.get_absolute_url())
+
+
+def test_conclusion_form_shows_notice_when_multiple_repas(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_repas=2,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    expect(
+        detail_page.page.get_by_text(
+            "Si le repas à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+            exact=True,
+        )
+    ).to_be_visible()
+
+
+def test_conclusion_form_repas_is_required(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_repas=2,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
+    expect(detail_page.repas_field).to_have_attribute("required", "")
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
+    expect(detail_page.repas_field).to_have_attribute("required", "")
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
+    expect(detail_page.repas_field).not_to_have_attribute("required", "")
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
+    expect(detail_page.repas_field).not_to_have_attribute("required", "")
