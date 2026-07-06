@@ -44,6 +44,11 @@ def test_can_notify_ac(live_server, page: Page, mailoutbox, mus_contact):
     page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
     expect(page.locator(".evenements__list-row td:nth-child(1) .ac-notified")).to_be_visible()
 
+    message = Message.objects.get()
+    assert message.status == Message.Status.FINALISE
+    assert message.message_type == Message.NOTIFICATION_AC
+    assert message.date_publication is not None
+
 
 def test_cant_notify_ac_if_draft_in_ui(live_server, page, mocked_authentification_user):
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)

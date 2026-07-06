@@ -253,6 +253,7 @@ class AllowACNotificationMixin(models.Model):
             sender=user.agent.contact_set.get(),
             sender_structure=user.agent.structure,
             content_object=self,
+            date_publication=timezone.now(),
         )
 
         try:
