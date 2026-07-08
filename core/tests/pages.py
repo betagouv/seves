@@ -158,11 +158,11 @@ class TreeselectPage:
 
         @playwright_repeatable
         def do_open():
-            button.click()
-            expect(collapse).to_be_visible()
+            if not collapse.is_visible():
+                button.click()
+                expect(collapse).to_be_visible()
 
-        if not collapse.is_visible():
-            do_open()
+        do_open()
 
         return group
 
@@ -180,11 +180,11 @@ class TreeselectPage:
 
         @playwright_repeatable
         def do_close():
-            button.click()
-            expect(collapse).not_to_be_visible()
+            if collapse.is_visible():
+                button.click()
+                expect(collapse).not_to_be_visible()
 
-        if collapse.is_visible():
-            do_close()
+        do_close()
 
         return group or self.container
 
