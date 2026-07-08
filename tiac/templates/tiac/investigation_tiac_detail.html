@@ -33,7 +33,7 @@
           {% include "core/modal_warning_update.html" with url=object.get_update_url %}
         {% endif %}
         {% if can_be_modified and object.is_published %}
-          {% include "tiac/forms/conclusion.html" with form=conclusion_form nb_repas=object.repas.all|length %}
+          {% include "tiac/forms/conclusion.html" with form=conclusion_form nb_repas=object.repas.all|length nb_aliments=object.aliments.all|length %}
         {% endif %}
 
         <div class="details-top-row--actions">

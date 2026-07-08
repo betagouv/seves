@@ -580,6 +580,7 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
         )
         labels = {
             "conclusion_repas": "Repas retenu",
+            "conclusion_aliment": "Aliment retenu",
         }
 
     @property
@@ -663,6 +664,9 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
         repas = self.instance.repas.all()
         if len(repas) == 1:
             self.initial["conclusion_repas"] = repas[0]
+        aliments = self.instance.aliments.all()
+        if len(aliments) == 1:
+            self.initial["conclusion_aliment"] = aliments[0]
 
     @cached_property
     def selected_hazard_confirmed_choices(self):
