@@ -109,6 +109,13 @@ class TreeselectPage:
         return self.treeselect.get_by_test_id("treeselect-options")
 
     @property
+    def options_labels(self):
+        labels = self.options_container.locator("input").evaluate_all("""
+        inputs => inputs.map(input => input.labels?.[0]?.textContent.trim())
+        """)
+        return [label.replace("\n", "").strip() for label in labels]
+
+    @property
     def search_bar(self):
         return self.treeselect.locator(".fr-treeselect__head .fr-search-bar input").first
 
