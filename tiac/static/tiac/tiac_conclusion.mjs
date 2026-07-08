@@ -35,7 +35,7 @@ class ConclusionFormController extends Controller {
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
         let disabled = false
-        if (this.selectedHazardTreeselectInputTarget.disabled) {
+        if (this.selectedHazardTreeselectInputTarget.dataset.treeselectDisabled) {
             disabled = true
         }
 

@@ -403,3 +403,35 @@ def test_conclusion_form_aliment_is_pre_filled_when_unique(live_server, page: Pa
     investigation = InvestigationTiac.objects.get()
     assert investigation.suspicion_conclusion == SuspicionConclusion.UNKNOWN
     assert investigation.conclusion_aliment == AlimentSuspect.objects.get()
+
+
+def test_can_add_conclusion_to_investigation_tiac_when_no_prefill_at_all(
+    live_server,
+    page: Page,
+):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_repas=1,
+        agents_confirmes_ars=[],
+        danger_syndromiques_suspectes=[],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+
+    input_data = {
+        "conclusion_comment": "Mon commentaire",
+        "suspicion_conclusion": SuspicionConclusion.CONFIRMED,
+        "selected_hazard": [CategorieDanger.ALLERGENE_ARACHIDE],
+        "conclusion_repas": evenement.repas.get().pk,
+    }
+
+    detail_page.fill_conclusion(input_data)
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    expect(detail_page.page.get_by_text("Conclu", exact=True)).to_be_visible()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.get_etat_display() == "Conclu"
+    assert investigation.conclusion_comment == "Mon commentaire"
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
+    assert investigation.selected_hazard == [CategorieDanger.ALLERGENE_ARACHIDE]
