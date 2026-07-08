@@ -152,6 +152,14 @@
     background-position: left center;
 }
 
+.fr-treeselect__selected .fr-tag--text {
+    /* Limit tag to one line only */
+    flex-shrink: 10;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .fr-treeselect__selected .fr-tag .fr-btn {
     max-width: none;
     padding: 0.25rem;
@@ -186,4 +194,17 @@
     --icon-size: 1rem;
     -webkit-mask-image: url("/static/dsfr/dist/icons/system/close-line.svg") !important;
     mask-image: url("/static/dsfr/dist/icons/system/close-line.svg") !important;
+}
+
+.fr-treeselect .fr-treeselect-unselect-all {
+    /* Overrides .fr-nav's --underline-img which is defined to none */
+    --underline-img: linear-gradient(0deg, currentColor, currentColor);
+    background-image: var(--underline-img), var(--underline-img);
+    background-repeat: no-repeat, no-repeat;
+    background-position:
+        var(--underline-x) 100%,
+        var(--underline-x) calc(100% - var(--underline-thickness));
+    background-size:
+        var(--underline-hover-width) calc(var(--underline-thickness) * 2),
+        var(--underline-idle-width) var(--underline-thickness);
 }

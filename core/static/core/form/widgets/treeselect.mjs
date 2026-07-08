@@ -281,18 +281,23 @@ class TreeselectSelectedBadge extends TreeselectChoicesListener {
  * @property {HTMLElement} bodyTarget
  * @property {HTMLButtonElement} buttonTarget
  * @property {HTMLInputElement} searchbarTarget
+ * @property {HTMLButtonElement[]} unselectAllBtnTargets
  * @property {HTMLElement} selectedGroupTarget
  * @property {HTMLButtonElement} selectedTagTarget
  * @property {HTMLButtonElement[]} selectedTagTargets
  * @property {HTMLTemplateElement} selectedTagTplTarget
  */
 class Treeselect extends Controller {
-    static targets = ["body", "button", "searchbar", "selectedGroup", "selectedTag", "selectedTagTpl"]
+    static targets = ["body", "button", "searchbar", "unselectAllBtn", "selectedGroup", "selectedTag", "selectedTagTpl"]
     static values = {minSearchLength: {type: Number, default: 3}}
 
     initialize() {
         this.choices = new Map()
         this.children = new Map()
+        this.element.dataset.action = [
+            `${this.identifier}:${CHOICES_CHANGED_EVENT}->${this.identifier}#onChoicesChange`,
+            ...(this.element.dataset.action ?? "").split(/\s+/g),
+        ].join(" ")
     }
 
     connect() {
@@ -346,6 +351,18 @@ class Treeselect extends Controller {
         } else {
             this.choices.delete(value)
         }
+        this.dispatch(CHOICES_CHANGED_EVENT, {target, detail: {choices: this.choices}})
+    }
+
+    onUnselectAll() {
+        for (const it of this.element.querySelectorAll("input:checked")) {
+            it.checked = false
+        }
+        this.choices.clear()
+        this.dispatch(CHOICES_CHANGED_EVENT, {detail: {choices: this.choices}})
+    }
+
+    onChoicesChange() {
         const size = this.choices.size
         if (size === 0) {
             this.buttonTarget.textContent = this.originalButtonLabel
@@ -354,7 +371,7 @@ class Treeselect extends Controller {
         } else {
             this.buttonTarget.textContent = `${this.choices.size} éléments`
         }
-        this.dispatch(CHOICES_CHANGED_EVENT, {target, detail: {choices: this.choices}})
+        this.unselectAllBtnTargets.forEach(it => it.classList.toggle("fr-hidden", size === 0))
     }
 
     onEraseSearch() {
