@@ -106,7 +106,7 @@ class TreeselectPage:
 
     @property
     def options_container(self):
-        return self.treeselect.locator(".fr-treeselect__body").first
+        return self.treeselect.get_by_test_id("treeselect-options")
 
     @property
     def search_bar(self):
@@ -142,7 +142,7 @@ class TreeselectPage:
             self.close_treeselect()
 
     def _locate_group(self, name: str, container: Locator | None = None):
-        container = container or self.container
+        container = container or self.options_container
         group_header = container.locator(
             f'.fr-treeselect__group .fr-treeselect__group-header:has(.fr-treeselect__group-button:text-is("{name}"))'
         ).first
@@ -171,7 +171,7 @@ class TreeselectPage:
         for name in names:
             group = self.open_group(name, group)
         # If `names` is an empty liste because check box is top-level, just return the main dropdown
-        return group or self.main_dropdown
+        return group or self.options_container
 
     def close_group(self, name: str, container: Locator | None = None):
         self.open_treeselect()
@@ -218,7 +218,7 @@ class TreeselectPage:
 
     def uncheck_by_tag(self, text):
         with self.opened_treeselect():
-            locator = self.container.get_by_test_id("selected-tag").get_by_text(text, exact=True)
+            locator = self.selected_tags.locator(f':scope:has(:text-is("{text}"))')
             expect(locator).to_be_visible()
             locator.get_by_role("button").click()
             expect(locator).not_to_be_visible()
@@ -232,7 +232,11 @@ class TreeselectPage:
                 assert selected_tags_locator.count() == before - 1
 
     def get_option(self, option: GroupedChoicesMixin, exact=True):
-        return self.container.get_by_label(option.uncategorized_label, exact=exact)
+        return self.options_container.get_by_label(option.uncategorized_label, exact=exact)
+
+    def uncheck_all_by_unselect_button(self):
+        self.treeselect.get_by_test_id("treeselect-unselect-all").click()
+        expect(self.selected_tags).to_have_count(0)
 
     def search(self, term):
         self.search_bar.fill(term)

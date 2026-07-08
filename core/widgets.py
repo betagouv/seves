@@ -193,6 +193,7 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context["widget"]["has_search_bar"] = self.has_search_bar
+        context["widget"]["allow_multiple_selected"] = self.allow_multiple_selected
         return context
 
     def optgroups(self, name, values, attrs=None):

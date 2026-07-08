@@ -100,14 +100,14 @@ def test_treeselect_all_radio_with_same_value_are_selected(navigate_to_form, pag
 
     # First case: select result inside accordion
     treeselect_animal_radio.check_option(*TestChoices.MUNICH.splitted_label)
-    options = treeselect_animal_radio.container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
+    options = treeselect_animal_radio.options_container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
     assert options.count() == 2
     for option in options.all():
         expect(option).to_be_checked()
 
     # Unselect result
     treeselect_animal_radio.uncheck_by_tag(TestChoices.MUNICH.uncategorized_label)
-    options = treeselect_animal_radio.container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
+    options = treeselect_animal_radio.options_container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
     assert options.count() == 2
     for option in options.all():
         expect(option).not_to_be_checked()
@@ -117,7 +117,7 @@ def test_treeselect_all_radio_with_same_value_are_selected(navigate_to_form, pag
         treeselect_animal_radio.container.locator(
             f"[name^='shortcut'][value='{TestChoices.MUNICH.value}']"
         ).set_checked(True, force=True)
-    options = treeselect_animal_radio.container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
+    options = treeselect_animal_radio.options_container.get_by_label(TestChoices.MUNICH.uncategorized_label, exact=True)
     assert options.count() == 2
     for option in options.all():
         expect(option).to_be_checked()
@@ -255,3 +255,15 @@ def test_checking_group_input_opens_group_dropdown(navigate_to_form, page: Page)
     treeselect_animal_radio.check_option(*TestChoices.FRANCE.splitted_label, close_after=False)
     expect(treeselect_animal_radio.get_option(TestChoices.TOULOUSE)).to_be_visible()
     expect(treeselect_animal_radio.get_option(TestChoices.PARIS)).to_be_visible()
+
+
+def test_unselect_all_button(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+    treeselect_animal_radio = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    expect(treeselect_animal_radio.selected_tags).to_have_count(0)
+    treeselect_animal_radio.open_treeselect()
+    treeselect_animal_radio.check_option(*TestChoices.FRANCE.splitted_label, close_after=False)
+    expect(treeselect_animal_radio.selected_tags).to_have_count(3)
+    treeselect_animal_radio.uncheck_all_by_unselect_button()
+    expect(treeselect_animal_radio.selected_tags).to_have_count(0)
