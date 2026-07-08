@@ -12,7 +12,7 @@ from core.tests.generic_tests.actions import (
 )
 from ssa.constants import CategorieDanger
 from tiac.factories import AnalyseAlimentaireFactory, InvestigationTiacFactory, RepasSuspectFactory
-from tiac.models import InvestigationTiac, RepasSuspect
+from tiac.models import AlimentSuspect, InvestigationTiac, RepasSuspect
 
 from ..constants import DANGERS_COURANTS, DangersSyndromiques, SuspicionConclusion
 from .pages import InvestigationTiacDetailsPage
@@ -449,13 +449,13 @@ def test_investigation_tiac_details_performance(live_server, client, django_asse
 
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(26):
+    with django_assert_num_queries(27):
         client.get(evenement.get_absolute_url())
 
     RepasSuspectFactory.create_batch(3, investigation=evenement)
     AnalyseAlimentaireFactory.create_batch(3, investigation=evenement)
 
-    with django_assert_num_queries(27):
+    with django_assert_num_queries(28):
         client.get(evenement.get_absolute_url())
 
 
@@ -475,6 +475,27 @@ def test_conclusion_form_shows_notice_when_multiple_repas(live_server, page: Pag
     expect(
         detail_page.page.get_by_text(
             "Si le repas à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+            exact=True,
+        )
+    ).to_be_visible()
+
+
+def test_conclusion_form_shows_notice_when_multiple_aliments(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_aliment_suspect=2,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    expect(
+        detail_page.page.get_by_text(
+            "Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
             exact=True,
         )
     ).to_be_visible()
@@ -502,3 +523,26 @@ def test_conclusion_form_repas_is_required(live_server, page: Page):
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
+
+
+def test_conclusion_form_aliment_is_pre_filled_when_unique(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        suspicion_conclusion="",
+        selected_hazard=[],
+        conclusion_comment="",
+        conclusion_repas=None,
+        conclusion_aliment=None,
+        with_aliment_suspect=1,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion == SuspicionConclusion.UNKNOWN
+    assert investigation.conclusion_aliment == AlimentSuspect.objects.get()

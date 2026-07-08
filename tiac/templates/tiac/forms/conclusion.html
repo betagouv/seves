@@ -75,6 +75,13 @@
                                 {% endif %}
 
                                 {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment" %}
+
+                                {% if nb_aliments > 1 %}
+                                    <div class="fr-mb-4v">
+                                        {% dsfr_notice title="Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion" %}
+                                    </div>
+                                {% endif %}
+
                             </fieldset>
 
                         </div>
