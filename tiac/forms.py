@@ -647,7 +647,7 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
                 self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
                 self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
             else:
-                self.fields["selected_hazard"].widget.attrs["disabled"] = True
+                self.fields["selected_hazard"].widget.attrs["data-treeselect-disabled"] = "true"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
