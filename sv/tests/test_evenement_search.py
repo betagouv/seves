@@ -35,13 +35,8 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
     expect(page.get_by_label("Année")).to_be_visible()
     expect(page.get_by_label("Année")).to_be_empty()
     expect(page.locator("#search-form").get_by_text("Région")).to_be_visible()
-    expect(page.get_by_label("Région")).to_be_visible()
-    expect(page.get_by_label("Région")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
+    expect(page.get_by_text("Région", exact=True)).to_be_visible()
     expect(page.get_by_text("Organisme", exact=True)).to_be_visible()
-    expect(page.locator("#id_organisme_nuisible ~ .choices__list--single .choices__placeholder")).to_be_visible()
-    expect(page.locator("#id_organisme_nuisible ~ .choices__list--single .choices__placeholder")).to_contain_text(
-        settings.SELECT_EMPTY_CHOICE
-    )
     expect(page.get_by_label("Publication entre le")).to_be_visible()
     expect(page.get_by_label("Publication entre le")).to_be_empty()
     expect(page.get_by_label("Et le")).to_be_visible()
@@ -56,9 +51,9 @@ def test_search_form_have_all_fields(live_server, page: Page) -> None:
 
 
 @pytest.mark.django_db
-def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> None:
+def test_reset_button_clears_form(live_server, page: Page) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
-    RegionFactory.create_batch(5)
+    regions = RegionFactory.create_batch(5)
     OrganismeNuisibleFactory.create_batch(5)
     contact_structure = Contact.objects.filter(structure__isnull=False).first()
     contact_agent = Contact.objects.filter(agent__isnull=False).first()
@@ -66,9 +61,10 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
     page.get_by_label("Année").fill("2024")
     page.get_by_label("N° événement").fill("1")
-    page.get_by_label("Région").select_option(index=1)
+
+    TreeselectPage(page, page.locator("label", has_text="Région").locator("..")).check_option(regions[0].nom)
     organisme = OrganismeNuisible.objects.first().libelle_court
-    choice_js_fill(page, "#id_organisme_nuisible ~ .choices__list--single", organisme, organisme)
+    TreeselectPage(page, page.locator("label", has_text="Organisme").locator("..")).check_option(organisme)
     page.get_by_label("Publication entre le").fill("2024-06-19")
     page.get_by_label("Et le").fill("2024-06-19")
     page.get_by_label("État").select_option(index=1)
@@ -80,29 +76,25 @@ def test_reset_button_clears_form(live_server, page: Page, choice_js_fill) -> No
 
     expect(page.get_by_label("Année")).to_be_empty()
     expect(page.get_by_label("N° événement")).to_be_empty()
-    expect(page.get_by_label("Région")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
-    expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     expect(page.get_by_label("Publication entre le")).to_be_empty()
     expect(page.get_by_label("Et le")).to_be_empty()
     expect(page.get_by_label("État")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
-    expect(page.locator(".fr-nav").get_by_text(settings.SELECT_EMPTY_CHOICE)).to_have_count(2)
 
 
 @pytest.mark.django_db
-def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page, choice_js_fill) -> None:
+def test_reset_button_clears_form_when_filters_in_url(live_server, page: Page) -> None:
     """Test que le bouton Effacer efface les champs du formulaire de recherche."""
     RegionFactory.create_batch(2)
     OrganismeNuisibleFactory.create_batch(2)
     on = OrganismeNuisible.objects.first()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}?organisme_nuisible={on.pk}")
-    expect(page.get_by_label("Organisme")).to_contain_text(on.libelle_court)
+    expect(page.locator("label", has_text="Organisme").locator("..")).to_contain_text(on.libelle_court)
     page.get_by_role("button", name="Effacer").click()
 
-    expect(page.get_by_label("Organisme")).to_contain_text(settings.SELECT_EMPTY_CHOICE)
     assert (
         page.url
-        == f"{live_server.url}{get_fiche_detection_search_form_url()}?annee=&numero=&region=&organisme_nuisible=&start_date=&end_date=&etat="
+        == f"{live_server.url}{get_fiche_detection_search_form_url()}?annee=&numero=&start_date=&end_date=&etat="
     )
 
 
@@ -145,7 +137,7 @@ def test_search_with_region(live_server, page: Page, mocked_authentification_use
     other_lieu = LieuFactory(departement=ain)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option("Corse")
+    TreeselectPage(page, page.locator("label", has_text="Région").locator("..")).check_option("Corse")
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero), exact=True)).to_be_visible()
@@ -184,7 +176,7 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     Evenement.objects.update(visibilite=Visibilite.NATIONALE)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option(str(nouvelle_aquitaine.id))
+    TreeselectPage(page, page.locator("label", has_text="Région").locator("..")).check_option(nouvelle_aquitaine.nom)
     page.get_by_role("button", name="Rechercher").click()
 
     expect(
@@ -204,7 +196,7 @@ def test_search_with_region_structure_mapping(live_server, page: Page, ensure_de
     expect(page.locator("body")).to_contain_text("4 sur un total de 7")
 
 
-def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user, choice_js_fill) -> None:
+def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authentification_user) -> None:
     """Test la recherche d'une fiche détection en utilisant un organisme nuisible.
     Effectue une recherche en sélectionnant un organisme nuisible spécifique et
     vérifier que les fiches détectées retournées sont associées à cet organisme."""
@@ -212,31 +204,33 @@ def test_search_with_organisme_nuisible(live_server, page: Page, mocked_authenti
     organisme_2 = FicheDetectionFactory().evenement.organisme_nuisible
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    choice_js_fill(page, ".choices__list--single", organisme_1.libelle_court, organisme_1.libelle_court)
+    TreeselectPage(page, page.locator("label", has_text="Organisme").locator("..")).check_option(
+        organisme_1.libelle_court
+    )
     page.get_by_role("button", name="Rechercher").click()
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&region=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&organisme_nuisible={organisme_1.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=organisme_1.libelle_court)).to_be_visible()
     expect(page.get_by_role("cell", name=organisme_2.libelle_court)).not_to_be_visible()
 
 
-def test_search_filter_for_organisme_nuisible_is_ordered(live_server, page: Page, choice_js_get_all_values):
+def test_search_filter_for_organisme_nuisible_is_ordered(live_server, page: Page):
     OrganismeNuisible.objects.all().delete()
     OrganismeNuisibleFactory(libelle_court="Zegodacus")
     OrganismeNuisibleFactory(libelle_court="Aleurocanthus")
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    assert choice_js_get_all_values(page, '.fr-fieldset__element:has(label[for="id_organisme_nuisible"])') == [
+    assert TreeselectPage(page, page.locator("label", has_text="Organisme").locator("..")).options_labels == [
         "Aleurocanthus",
         "Zegodacus",
     ]
 
 
-def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: Page, choice_js_fill):
+def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: Page):
     organisme = OrganismeNuisibleFactory(libelle_court="Xylella fastidiosa")
     evenement_1 = EvenementFactory(organisme_nuisible=organisme)
     organisme_sub_specie = OrganismeNuisibleFactory(libelle_court="Xylella fastidiosa subsp. fastidiosa")
@@ -244,14 +238,14 @@ def test_search_with_organisme_nuisible_includes_sub_species(live_server, page: 
     evenement_3 = EvenementFactory()
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    choice_js_fill(
-        page, "#id_organisme_nuisible ~.choices__list--single", organisme.libelle_court, organisme.libelle_court
+    TreeselectPage(page, page.locator("label", has_text="Organisme").locator("..")).check_option(
+        organisme.libelle_court
     )
     page.get_by_role("button", name="Rechercher").click()
 
     assert (
         page.url
-        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&region=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
+        == f"{live_server.url}{reverse('sv:evenement-liste')}?annee=&numero=&organisme_nuisible={organisme.id}&start_date=&end_date=&etat="
     )
 
     expect(page.get_by_role("cell", name=evenement_1.numero, exact=True)).to_be_visible()
@@ -306,7 +300,7 @@ def test_search_with_state(live_server, page: Page) -> None:
     expect(page.get_by_role("cell", name=str(evenement_2.numero), exact=True)).to_be_visible()
 
 
-def test_search_with_multiple_filters(live_server, page: Page, choice_js_fill) -> None:
+def test_search_with_multiple_filters(live_server, page: Page) -> None:
     """Test la recherche d'un évènement en utilisant plusieurs filtres.
     Effectue une recherche en sélectionnant plusieurs filtres et
     vérifier que les évènements retournés satisfont toutes les conditions spécifiées."""
@@ -314,9 +308,11 @@ def test_search_with_multiple_filters(live_server, page: Page, choice_js_fill) -
     lieu = LieuFactory(fiche_detection=fiche1)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option(str(lieu.departement.region.id))
+    TreeselectPage(page, page.locator("label", has_text="Région").locator("..")).check_option(
+        str(lieu.departement.region)
+    )
     organisme = fiche1.evenement.organisme_nuisible.libelle_court
-    choice_js_fill(page, ".choices__list--single", organisme, organisme)
+    TreeselectPage(page, page.locator("label", has_text="Organisme").locator("..")).check_option(organisme)
     page.get_by_label("Publication entre le").fill(fiche1.evenement.date_publication.strftime("%Y-%m-%d"))
     page.get_by_label("Et le").fill(fiche1.evenement.date_publication.strftime("%Y-%m-%d"))
     page.get_by_label("État").select_option(str(fiche1.evenement.etat))
@@ -371,14 +367,17 @@ def test_nb_fiches_detection_column(live_server, page: Page):
 
 
 @pytest.mark.django_db
-def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(live_server, page: Page):
+def test_cant_see_duplicate_fiche_detection_when_multiple_lieu_with_same_region(
+    live_server, page: Page, ensure_departements
+):
     """Test que lorsqu'une fiche de détection a plusieurs lieux dans la même région, elle n'apparaît qu'une seule fois dans la liste
     lors d'une recherche par région"""
-    lieu = LieuFactory(departement__nom="Charente-Maritime")
-    _other_lieu = LieuFactory(departement__nom="Charente-Maritime", fiche_detection=lieu.fiche_detection)
+    departement, *_ = ensure_departements("Charente-Maritime")
+    lieu = LieuFactory(departement=departement)
+    _other_lieu = LieuFactory(departement=departement, fiche_detection=lieu.fiche_detection)
 
     page.goto(f"{live_server.url}{get_fiche_detection_search_form_url()}")
-    page.get_by_label("Région").select_option(str(lieu.departement.region.id))
+    TreeselectPage(page, page.locator("label", has_text="Région").locator("..")).check_option("Nouvelle-Aquitaine")
     page.get_by_role("button", name="Rechercher").click()
 
     expect(page.get_by_role("cell", name=str(lieu.fiche_detection.evenement.numero), exact=True)).to_have_count(1)
