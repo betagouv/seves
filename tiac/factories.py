@@ -160,6 +160,15 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     class Meta:
         model = InvestigationTiac
 
+    class Params:
+        no_conclusion = factory.Trait(
+            suspicion_conclusion="",
+            selected_hazard=[],
+            conclusion_comment="",
+            conclusion_repas=None,
+            conclusion_aliment=None,
+        )
+
     # Contexte
     numero_sivss = factory.Faker("numerify", text="######")
     follow_up = FuzzyChoice(InvestigationFollowUp.values)
