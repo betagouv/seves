@@ -85,11 +85,11 @@ def test_investigation_tiac_details_performance(live_server, client, django_asse
 
     client.get(evenement.get_absolute_url())
 
-    with django_assert_num_queries(27):
+    with django_assert_num_queries(26):
         client.get(evenement.get_absolute_url())
 
     RepasSuspectFactory.create_batch(3, investigation=evenement)
     AnalyseAlimentaireFactory.create_batch(3, investigation=evenement)
 
-    with django_assert_num_queries(28):
+    with django_assert_num_queries(27):
         client.get(evenement.get_absolute_url())

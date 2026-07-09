@@ -23,6 +23,7 @@ class ConclusionFormController extends Controller {
         "selectedHazardTreeselectInput",
         "selectedHazardTreeselectHeader",
         "notice",
+        "noticeAliment",
     ]
     static values = {
         suspicionConclusionChoices: Object,
@@ -177,6 +178,22 @@ class ConclusionFormController extends Controller {
 
     onSuspicionConclusionChanged({target: {value}}) {
         this.suspicionConclusionValue = value
+    }
+
+    conclusionAlimentTargetConnected() {
+        if (this.conclusionAlimentTarget.value) {
+            this.noticeAlimentTarget.classList.add("fr-hidden")
+        } else {
+            this.noticeAlimentTarget.classList.remove("fr-hidden")
+        }
+    }
+
+    onAlimentChanged(event) {
+        if (event.target.value) {
+            this.noticeAlimentTarget.classList.add("fr-hidden")
+        } else {
+            this.noticeAlimentTarget.classList.remove("fr-hidden")
+        }
     }
 }
 

@@ -74,13 +74,11 @@
                                     </div>
                                 {% endif %}
 
-                                {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment" %}
+                                {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment"|set_data:"action:conclusion-form#onAlimentChanged" %}
 
-                                {% if nb_aliments > 1 %}
-                                    <div class="fr-mb-4v">
-                                        {% dsfr_notice title="Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion" %}
-                                    </div>
-                                {% endif %}
+                                <div class="fr-mb-4v" data-conclusion-form-target="noticeAliment">
+                                    {% dsfr_notice title="Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion" %}
+                                </div>
 
                                 <div class="fr-flex fr-flex--space-between fr-flex--row">
                                     <div class="fr-btns-group">
