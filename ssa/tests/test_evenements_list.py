@@ -123,7 +123,7 @@ def test_list_can_filter_by_type_evenement(live_server, mocked_authentification_
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.type_evenement_select.select_option(TypeEvenement.NON_ALERTE)
+    search_page.type_evenement_treeselect.check_option(TypeEvenement.NON_ALERTE.label)
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.1"
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
@@ -139,7 +139,7 @@ def test_list_can_filter_by_type_evenement_for_investigation_cas_humain(
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.type_evenement_select.select_option("Investigation de cas humain")
+    search_page.type_evenement_treeselect.check_option("Investigation de cas humain")
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.1"
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
@@ -158,7 +158,7 @@ def test_list_can_filter_by_source(live_server, mocked_authentification_user, pa
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.source_select.select_option(Source.TOUT_DROIT)
+    search_page.source_treeselect.check_option(Source.TOUT_DROIT.label)
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
@@ -176,7 +176,7 @@ def test_list_can_filter_by_source_for_investigation_cas_humain(live_server, moc
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.source_select.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    search_page.source_treeselect.check_option(SourceInvestigationCasHumain.DO_LISTERIOSE.label)
     search_page.submit_search()
     assert search_page.numero_cell().text_content() == "A-2025.2"
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
@@ -196,7 +196,7 @@ def test_list_can_filter_by_common_source(live_server, mocked_authentification_u
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
-    search_page.source_select.select_option(SourceInvestigationCasHumain.SIGNALEMENT_AUTRE)
+    search_page.source_treeselect.check_option(SourceInvestigationCasHumain.SIGNALEMENT_AUTRE.label)
     search_page.submit_search()
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.2")).to_be_visible()

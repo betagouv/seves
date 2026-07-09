@@ -86,10 +86,17 @@ class EvenementFilter(
             }
         ),
     )
-    type_evenement = django_filters.ChoiceFilter(
-        label="Type d'événement ", choices=[], empty_label=settings.SELECT_EMPTY_CHOICE, method="filter_type_evenement"
+    type_evenement = django_filters.MultipleChoiceFilter(
+        label="Type d'événement ",
+        choices=[(k, v) for k, v in TypeEvenement.choices] + [("ich", "Investigation de cas humain")],
+        method="filter_type_evenement",
+        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
     )
-    source = django_filters.ChoiceFilter(label="Source ", choices=[], empty_label=settings.SELECT_EMPTY_CHOICE)
+    source = django_filters.MultipleChoiceFilter(
+        label="Source",
+        choices=(Source.choices + SourceInvestigationCasHumain.choices),
+        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
+    )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
         label="Recherche libre",
@@ -157,15 +164,13 @@ class EvenementFilter(
         form = EvenementProduitFilterForm
 
     def filter_type_evenement(self, queryset, name, value):
-        if value == "ich":
-            if issubclass(queryset.model, EvenementProduit):
-                queryset = queryset.none()
-        else:
-            if issubclass(queryset.model, EvenementProduit):
-                queryset = queryset.filter(type_evenement=value)
-            else:
-                queryset = queryset.none()
-        return queryset
+        is_produit = issubclass(queryset.model, EvenementProduit)
+
+        if is_produit:
+            types_evenements = [v for v in value if v != "ich"]
+            return queryset.filter(type_evenement__in=types_evenements) if types_evenements else queryset.none()
+
+        return queryset if "ich" in value else queryset.none()
 
     def filter_full_text_search(self, queryset, name, value):
         if not value:

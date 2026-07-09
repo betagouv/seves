@@ -364,6 +364,10 @@ class EvenementProduitListPage(WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self.type_evenement_treeselect = TreeselectPage(
+            self.page, self.page.locator("label", has_text="Type d'événement").locator("..")
+        )
+        self.source_treeselect = TreeselectPage(self.page, self.page.locator("label", has_text="Source").locator(".."))
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenements-liste')}")
@@ -422,14 +426,6 @@ class EvenementProduitListPage(WithTreeSelect):
     @property
     def numero_rasff_field(self):
         return self.page.locator("#id_numero_rasff")
-
-    @property
-    def type_evenement_select(self):
-        return self.page.locator("#id_type_evenement")
-
-    @property
-    def source_select(self):
-        return self.page.locator("#id_source")
 
     @property
     def start_date_field(self):
