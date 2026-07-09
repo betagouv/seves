@@ -784,6 +784,14 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
         return self.page.get_by_role("button", name="Modifier la conclusion")
 
     @property
+    def selected_hazard_label(self):
+        return self.page.locator("[for=id_selected_hazard]")
+
+    @property
+    def selected_hazard_hidden_field(self):
+        return self.page.locator("#id_selected_hazard")
+
+    @property
     def repas_field(self):
         return self.page.locator("#id_conclusion_repas")
 
@@ -801,6 +809,11 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     def fill_conclusion(self, input_data):
         self.add_conclusion_button.click()
         self.suspicion_conclusion_field.select_option(input_data["suspicion_conclusion"])
+        self.selected_hazard_label.evaluate(
+            """(el) => {
+                el.closest('.fr-modal__body').scrollTop = 200;
+            }"""
+        )
         if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
             self.clear_treeselect("selected_hazard-treeselect")
             for item in input_data["selected_hazard"]:
