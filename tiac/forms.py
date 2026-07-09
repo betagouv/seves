@@ -647,6 +647,13 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
             else:
                 self.fields["selected_hazard"].widget.attrs["data-treeselect-disabled"] = "true"
 
+        repas = self.instance.repas.all()
+        if len(repas) == 1:
+            self.initial["conclusion_repas"] = repas[0]
+        aliments = self.instance.aliments.all()
+        if len(aliments) == 1:
+            self.initial["conclusion_aliment"] = aliments[0]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in ("conclusion_repas", "conclusion_aliment"):
@@ -658,13 +665,6 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
 
         if not self.instance.suspicion_conclusion:
             self._init_conclusion()
-
-        repas = self.instance.repas.all()
-        if len(repas) == 1:
-            self.initial["conclusion_repas"] = repas[0]
-        aliments = self.instance.aliments.all()
-        if len(aliments) == 1:
-            self.initial["conclusion_aliment"] = aliments[0]
 
     @cached_property
     def selected_hazard_confirmed_choices(self):

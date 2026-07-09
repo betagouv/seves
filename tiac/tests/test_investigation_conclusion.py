@@ -110,7 +110,9 @@ def test_can_add_conclusion_button_is_hidden_for_other_states(live_server, page:
 
 
 def test_can_edit_existing_conclusion(live_server, page: Page):
-    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, with_repas=1)
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.CONCLU, suspicion_conclusion=SuspicionConclusion.UNKNOWN
+    )
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
@@ -357,6 +359,7 @@ def test_conclusion_form_shows_notice_when_multiple_aliments(live_server, page: 
         no_conclusion=True,
         with_aliment_suspect=2,
     )
+    aliment = evenement.aliments.first()
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.add_conclusion_button.click()
@@ -366,6 +369,30 @@ def test_conclusion_form_shows_notice_when_multiple_aliments(live_server, page: 
             exact=True,
         )
     ).to_be_visible()
+    detail_page.aliment_field.select_option(str(aliment.pk))
+    expect(
+        detail_page.page.get_by_text(
+            "Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+            exact=True,
+        )
+    ).not_to_be_visible()
+
+
+def test_conclusion_form_dont_show_notice_when_one_aliment(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_aliment_suspect=1,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    expect(
+        detail_page.page.get_by_text(
+            "Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+            exact=True,
+        )
+    ).not_to_be_visible()
 
 
 def test_conclusion_form_required_fields(live_server, page: Page):
@@ -496,3 +523,33 @@ def test_cant_forge_conclusion_update_on_cloture_investigation_i_cant_modify(cli
     )
     evenement.refresh_from_db()
     assert evenement.conclusion_comment == "Initial value"
+
+
+def test_aliment_is_prefill_only_on_add_not_on_edition(
+    live_server,
+    page: Page,
+):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_aliment_suspect=1,
+        agents_confirmes_ars=[],
+        danger_syndromiques_suspectes=[],
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+
+    detail_page.add_conclusion_button.click()
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
+    expect(detail_page.aliment_field).to_have_value(str(evenement.aliments.get().pk))
+    detail_page.aliment_field.select_option("")
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.conclusion_aliment is None
+    assert investigation.suspicion_conclusion == SuspicionConclusion.UNKNOWN
+
+    detail_page.edit_conclusion_button.click()
+    expect(detail_page.aliment_field).to_have_value("")
