@@ -366,7 +366,7 @@ def test_conclusion_form_shows_notice_when_multiple_aliments(live_server, page: 
     ).to_be_visible()
 
 
-def test_conclusion_form_repas_is_required(live_server, page: Page):
+def test_conclusion_form_required_fields(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
         no_conclusion=True,
@@ -377,13 +377,24 @@ def test_conclusion_form_repas_is_required(live_server, page: Page):
     detail_page.add_conclusion_button.click()
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
+    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
     expect(detail_page.repas_field).to_have_attribute("required", "")
+    assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == '"*"'
+
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
+    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
+    assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == '"*"'
     expect(detail_page.repas_field).to_have_attribute("required", "")
+
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
+    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
+    assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
+
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
+    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
+    assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
 
 
 def test_conclusion_form_aliment_is_pre_filled_when_unique(live_server, page: Page):

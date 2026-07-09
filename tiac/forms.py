@@ -565,9 +565,7 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=True
     )
-    selected_hazard = SimpleArrayField(
-        forms.CharField(), delimiter="||", label="Dangers retenus", required=False, widget=forms.HiddenInput
-    )
+    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
 
     class Meta:
         model = InvestigationTiac
