@@ -675,7 +675,9 @@ class TiacExportView(WithFilteredListMixin, WithExportHeterogeneousQuerysetMixin
 
 
 @method_decorator(require_POST, name="dispatch")
-class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, UpdateView):
+class ConclusionUpdateView(
+    MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, UserPassesTestMixin, UpdateView
+):
     form_class = ConclusionForm
 
     def get_queryset(self):
