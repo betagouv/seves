@@ -204,9 +204,9 @@ def test_only_displays_ssa_contacts(live_server, page: Page, mocked_authentifica
     generic_test_only_displays_app_contacts(live_server, page, evenement, "ssa")
 
 
-def test_structure_show_only_one_entry_in_select(live_server, page: Page):
+def test_structure_show_only_one_entry_in_select(live_server, page: Page, mocked_authentification_user):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
-    generic_test_structure_show_only_one_entry_in_select(live_server, page, evenement)
+    generic_test_structure_show_only_one_entry_in_select(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import ArrayField
 from django.urls import resolve
 from django.urls.base import reverse
@@ -66,6 +67,9 @@ def mocked_authentification_user(db, request):
         agent = Agent.objects.create(
             user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC"
         )
+        sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
+        ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
+        user.groups.add(ssa_group, sv_group)
         Contact.objects.create(agent=agent, email="text@example.com")
         user = (
             User.objects.filter(pk=user.pk)

@@ -3,6 +3,7 @@ from typing import Literal
 import zipfile
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from playwright.sync_api import Page, expect
@@ -11,6 +12,8 @@ from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, MessageFactory
 from core.models import Contact, Document, FinSuiviContact, Message, Structure
 from core.pages import CreateMessagePage, ListOfMessagesPage, UpdateMessagePage
+
+User = get_user_model()
 
 
 def generic_test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill, object):
@@ -410,14 +413,15 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
     assert dropdown_items - {contact.display_with_agent_unit for contact in absent} == dropdown_items
 
 
-def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page, record):
+def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page, mocked_authentification_user, record):
+    user = mocked_authentification_user
     Contact.objects.filter(email="service_account@seves.com").delete()
     contact_structure = ContactStructureFactory()
-    ContactAgentFactory(
+    agent_1 = ContactAgentFactory(
         agent__structure=contact_structure.structure,
         with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
     )
-    ContactAgentFactory(
+    agent_2 = ContactAgentFactory(
         agent__structure=contact_structure.structure,
         with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
     )
@@ -427,7 +431,16 @@ def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page
     message_page.new_message()
 
     dropdown_items = [item.inner_text() for item in message_page.recipents_dropdown_items.all()]
-    assert len(dropdown_items) == 3, f"Got {len(dropdown_items)} items"
+    expected = sorted(
+        [
+            str(contact_structure),
+            agent_1.display_with_agent_unit,
+            agent_2.display_with_agent_unit,
+            user.agent.contact_set.get().display_with_agent_unit,
+            str(user.agent.structure.contact_set.get()),
+        ]
+    )
+    assert sorted(dropdown_items) == expected, f"Got {dropdown_items}, expected {expected}"
 
 
 def generic_test_can_add_and_see_message_in_new_tab_without_document(
