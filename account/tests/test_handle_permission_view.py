@@ -127,7 +127,7 @@ def test_sv_user_cant_manage_ssa_permissions(live_server, page, mocked_authentif
     Group.objects.get_or_create(name=settings.SSA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group, sv_group)
+    mocked_authentification_user.groups.set([access_admin_group, sv_group])
     agent = AgentFactory(structure=structure, prenom="Test", nom="User")
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
@@ -144,7 +144,7 @@ def test_ssa_user_cant_manage_sv_permissions(live_server, page, mocked_authentif
     ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group, ssa_group)
+    mocked_authentification_user.groups.set([access_admin_group, ssa_group])
     agent = AgentFactory(structure=structure, prenom="Test", nom="User")
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
@@ -170,7 +170,7 @@ def test_users_cant_forge_other_group_permissions(
     Group.objects.get_or_create(name=settings.SSA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     user_group = Group.objects.get(name=user_group_name)
-    mocked_authentification_user.groups.add(access_admin_group, user_group)
+    mocked_authentification_user.groups.set([access_admin_group, user_group])
     agent = AgentFactory(prenom="Test", nom="User")
     assert agent.user.groups.count() == 0
     assert agent.user.is_active is False

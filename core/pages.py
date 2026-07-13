@@ -374,6 +374,12 @@ class WithDocumentsPage(BaseDocumentPage):
     def document_edit_save(self, doc_id):
         self.page.get_by_test_id(f"documents-edit-{doc_id}").click()
 
+    def delete_document(self, doc_id):
+        self.open_document_tab()
+        self.page.locator(f'.fr-icon-delete-line[aria-controls="fr-modal-{doc_id}"]').click()
+        expect(self.page.locator(f"#fr-modal-{doc_id}")).to_be_visible()
+        self.page.get_by_test_id(f"documents-delete-{doc_id}").click()
+
 
 class WithContactsPage:
     def __init__(self, page: Page):
