@@ -22,14 +22,6 @@
     margin-bottom: 0.5rem;
     margin-left: auto;
 }
-.fr-btn--delete {
-    color: var(--text-default-error);
-    background-color: transparent;
-}
-.fr-btn--delete:hover {
-    color: white;
-    background-color: var(--text-default-error) !important;
-}
 .zone-button {
     background-image: none;
 }

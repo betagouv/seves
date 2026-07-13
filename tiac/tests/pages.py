@@ -792,6 +792,10 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
         return self.page.locator("#id_selected_hazard")
 
     @property
+    def delete_conclusion_button(self):
+        return self.current_modal.get_by_role("button", name="Supprimer la conclusion")
+
+    @property
     def repas_field(self):
         return self.page.locator("#id_conclusion_repas")
 
