@@ -82,13 +82,26 @@
                                     </div>
                                 {% endif %}
 
-                                <div
-                                    class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
-                                    <button class="fr-btn fr-btn--secondary" aria-controls="modal-conclusion" type="button">
-                                        Annuler
-                                    </button>
-
-                                    <button type="submit" class="fr-btn">Enregistrer</button>
+                                <div class="fr-flex fr-flex--space-between fr-flex--row">
+                                    <div class="fr-btns-group">
+                                        {% if form.instance.suspicion_conclusion %}
+                                            <button
+                                                type="submit"
+                                                name="delete"
+                                                class="fr-btn fr-btn--delete" formnovalidate
+                                            >
+                                                <span class="fr-icon-delete-bin-line fr-mr-2v fr-icon--sm" aria-hidden="true"></span>
+                                                Supprimer la conclusion
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <div
+                                        class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                                        <button class="fr-btn fr-btn--secondary" aria-controls="modal-conclusion" type="button">
+                                            Annuler
+                                        </button>
+                                        <button type="submit" class="fr-btn">Enregistrer</button>
+                                    </div>
                                 </div>
                             </fieldset>
 

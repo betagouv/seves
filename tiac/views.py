@@ -684,6 +684,27 @@ class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, Wi
     def test_func(self):
         return self.get_object().can_be_modified(self.request.user)
 
+    def _empty_conclusion(self):
+        self.object.suspicion_conclusion = None
+        self.object.selected_hazard = []
+        self.object.conclusion_comment = ""
+        self.object.conclusion_repas = None
+        self.object.conclusion_aliment = None
+        self.object.save()
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if "delete" in self.request.POST:
+            self._empty_conclusion()
+            self.add_user_contacts(self.object)
+            notify_conclusion(self.object, self.request.user)
+            messages.success(self.request, "La conclusion a été supprimée.")
+            return HttpResponseRedirect(self.object.get_absolute_url())
+        if form.is_valid():
+            return self.form_valid(form)
+        return self.form_invalid(form)
+
     def form_valid(self, form):
         dirty_fields = self.object.get_dirty_fields()
         self.object = form.save()

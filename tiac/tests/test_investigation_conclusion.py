@@ -446,3 +446,29 @@ def test_can_add_conclusion_to_investigation_tiac_when_no_prefill_at_all(
     assert investigation.conclusion_comment == "Mon commentaire"
     assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
     assert investigation.selected_hazard == [CategorieDanger.ALLERGENE_ARACHIDE]
+
+
+def test_can_delete_existing_conclusion(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.CONCLU,
+        suspicion_conclusion=SuspicionConclusion.CONFIRMED,
+        selected_hazard=[CategorieDanger.ALLERGENE_LAIT],
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+    evenement.conclusion_repas = evenement.repas.get()
+    evenement.conclusion_aliment = evenement.aliments.get()
+    evenement.save()
+
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.edit_conclusion_button.click()
+    detail_page.delete_conclusion_button.click()
+
+    expect(detail_page.page.get_by_text("La conclusion a été supprimée.", exact=True)).to_be_visible()
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.suspicion_conclusion is None
+    assert investigation.selected_hazard == []
+    assert investigation.conclusion_comment == ""
+    assert investigation.conclusion_repas is None
+    assert investigation.conclusion_aliment is None
