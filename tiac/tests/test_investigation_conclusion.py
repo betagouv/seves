@@ -1,9 +1,11 @@
 import random
 
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
 
 from core.factories import ContactAgentFactory
+from core.models import Structure
 from ssa.constants import CategorieDanger
 from tiac.factories import InvestigationTiacFactory
 from tiac.models import AlimentSuspect, InvestigationTiac, RepasSuspect
@@ -379,7 +381,7 @@ def test_conclusion_form_required_fields(live_server, page: Page):
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
     expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
     expect(detail_page.repas_field).to_have_attribute("required", "")
-    assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == '"*"'
+    assert detail_page.selected_hazard_label.evaluate("(el) =>   getComputedStyle(el, '::after').content") == '"*"'
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
     expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
@@ -472,3 +474,25 @@ def test_can_delete_existing_conclusion(live_server, page: Page):
     assert investigation.conclusion_comment == ""
     assert investigation.conclusion_repas is None
     assert investigation.conclusion_aliment is None
+
+
+def test_cant_forge_conclusion_update_on_cloture_investigation_i_cant_modify(client, mocked_authentification_user):
+    evenement = InvestigationTiacFactory(
+        createur=Structure.objects.create(libelle="A new structure"),
+        etat=InvestigationTiac.Etat.CLOTURE,
+        conclusion_comment="Initial value",
+    )
+    assert evenement.can_be_modified(mocked_authentification_user) is False
+
+    client.post(
+        reverse("tiac:investigation-tiac-edition-conclusion", kwargs={"pk": evenement.pk}),
+        data={
+            "conclusion_comment": "New comment for test",
+            "suspicion_conclusion": SuspicionConclusion.UNKNOWN,
+            "conclusion_repas": "",
+            "conclusion_aliment": "",
+            "selected_hazard": "",
+        },
+    )
+    evenement.refresh_from_db()
+    assert evenement.conclusion_comment == "Initial value"
