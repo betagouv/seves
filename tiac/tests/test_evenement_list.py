@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.models import Departement, LienLibre
 from ssa.constants import CategorieDanger, CategorieProduit
-from tiac.constants import DangersSyndromiques, SuspicionConclusion
+from tiac.constants import DangersSyndromiques, EvenementFollowUp, SuspicionConclusion
 from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
@@ -176,15 +176,18 @@ def test_search_with_conclusion(live_server, page: Page):
     evenement_1 = EvenementSimpleFactory(numero_annee=2025)
     evenement_2 = InvestigationTiacFactory(numero_annee=2024, suspicion_conclusion=SuspicionConclusion.CONFIRMED)
     evenement_3 = InvestigationTiacFactory(numero_annee=2023, suspicion_conclusion=None)
+    evenement_4 = InvestigationTiacFactory(numero_annee=2022, suspicion_conclusion=SuspicionConclusion.UNKNOWN)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.conclusion_field.select_option("TIAC à agent confirmé")
+    search_page.conclusion_field_treeselect.check_option("TIAC à agent confirmé")
+    search_page.conclusion_field_treeselect.check_option("TIAC à agent inconnu")
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(evenement_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(evenement_3.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
 
 
 def test_search_with_selected_hazard(live_server, page: Page, choice_js_fill_from_element_with_value):
@@ -492,20 +495,24 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
 
 
 def test_can_filter_by_follow_up(live_server, mocked_authentification_user, page: Page):
-    to_be_found = InvestigationTiacFactory(
+    to_be_found_1 = InvestigationTiacFactory(
         numero_annee=2025, numero_evenement=2, follow_up=InvestigationFollowUp.INVESTIGATION_COORDONNEE
     )
+    to_be_found_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=1, follow_up=EvenementFollowUp.NONE)
     not_to_be_found_1 = InvestigationTiacFactory(
-        numero_annee=2025, numero_evenement=1, follow_up=InvestigationFollowUp.INVESTIGATION_DD
+        numero_annee=2025, numero_evenement=4, follow_up=InvestigationFollowUp.INVESTIGATION_DD
     )
-    not_to_be_found_2 = EvenementSimpleFactory(numero_annee=2025, numero_evenement=3)
+    not_to_be_found_2 = EvenementSimpleFactory(
+        numero_annee=2025, numero_evenement=3, follow_up=EvenementFollowUp.INVESGTIGATION_TIAC
+    )
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.follow_up.select_option("Investigation TIAC / Investigation coordonnée / MUS informée")
+    search_page.follow_up_treeselect.check_option("Investigation TIAC / Investigation coordonnée / MUS informée")
+    search_page.follow_up_treeselect.check_option("Enr. simple / Aucune suite")
     search_page.submit_search()
-
-    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 

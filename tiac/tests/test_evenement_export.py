@@ -107,7 +107,7 @@ def test_export_tiac_from_ui_with_only_one_type_of_object_in_filter(
     search_page.navigate()
 
     search_page.annee_field.fill("2025")
-    search_page.conclusion_field.select_option("TIAC à agent confirmé")
+    search_page.conclusion_field_treeselect.check_option("TIAC à agent confirmé")
     search_page.submit_search()
     search_page.submit_export()
 

@@ -17,6 +17,7 @@ from core.filters_mixins import (
 )
 from core.form_mixins import js_module
 from core.models import LienLibre
+from core.widgets import TreeselectCheckbox
 from ssa.filters import CharInFilter, WithEtablissementFilterMixin
 from tiac.constants import (
     DANGERS_COURANTS,
@@ -74,15 +75,19 @@ class TiacFilter(
     with_free_links = django_filters.BooleanFilter(
         label="Inclure les liaisons", method="filter_with_free_links", widget=CheckboxInput
     )
-    follow_up = django_filters.ChoiceFilter(
+    follow_up = django_filters.MultipleChoiceFilter(
         label="Type d'événement/suites",
-        empty_label=settings.SELECT_EMPTY_CHOICE,
+        choices=(
+            [(f"simple-{value}", f"Enr. simple / {label}") for value, label in EvenementFollowUp.choices]
+            + [(f"tiac-{value}", f"Investigation TIAC / {label}") for value, label in InvestigationFollowUp.choices]
+        ),
         method="filter_follow_up",
+        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
     )
-    suspicion_conclusion = django_filters.ChoiceFilter(
+    suspicion_conclusion = django_filters.MultipleChoiceFilter(
         label="Conclusion",
         choices=SuspicionConclusion.choices,
-        empty_label=settings.SELECT_EMPTY_CHOICE,
+        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
     )
     selected_hazard = CharInFilter(
         label="Dangers retenus",
@@ -259,23 +264,25 @@ class TiacFilter(
         """
         queryset_type = "combined"
         for filter_name in self.INVESTIGATION_TIAC_FILTERS:
-            if self.form.cleaned_data[filter_name] not in ("", None, []):
+            if self.form.cleaned_data.get(filter_name) not in ("", None, []):
                 queryset = self.queryset._querysets[1]
                 queryset_type = "tiac"
 
-        if self.form.cleaned_data["follow_up"].startswith("simple"):
-            if queryset_type == "combined":
-                queryset_type = "simple"
-                queryset = self.queryset._querysets[0]
-            elif queryset_type == "tiac":
-                return self.queryset._querysets[0].none()
+        fiche_types = set([v.split("-")[0] for v in self.form.cleaned_data["follow_up"]])
+        if len(fiche_types) == 1:
+            if "simple" in fiche_types:
+                if queryset_type == "combined":
+                    queryset_type = "simple"
+                    queryset = self.queryset._querysets[0]
+                elif queryset_type == "tiac":
+                    return self.queryset._querysets[0].none()
 
-        if self.form.cleaned_data["follow_up"].startswith("tiac"):
-            if queryset_type == "combined":
-                queryset_type = "tiac"
-                queryset = self.queryset._querysets[1]
-            elif queryset_type == "simple":
-                return self.queryset._querysets[0].none()
+            if "tiac" in fiche_types:
+                if queryset_type == "combined":
+                    queryset_type = "simple"
+                    queryset = self.queryset._querysets[1]
+                elif queryset_type == "simple":
+                    return self.queryset._querysets[0].none()
 
         for name, value in self.form.cleaned_data.items():
             queryset = self.filters[name].filter(queryset, value)
@@ -321,8 +328,8 @@ class TiacFilter(
         return queryset
 
     def filter_follow_up(self, queryset, name, value):
-        type_fiche, cleaned_value = value.split("-")
-        return queryset.filter(follow_up=cleaned_value)
+        ids = [v.split("-")[1] for v in value]
+        return queryset.filter(follow_up__in=ids)
 
     def filter_full_text_search(self, queryset, name, value):
         return queryset
