@@ -692,6 +692,7 @@ class ConclusionUpdateView(
         self.object.conclusion_comment = ""
         self.object.conclusion_repas = None
         self.object.conclusion_aliment = None
+        self.object.etat = InvestigationTiac.Etat.EN_COURS
         self.object.save()
 
     def post(self, request, *args, **kwargs):

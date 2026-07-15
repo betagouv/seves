@@ -496,11 +496,13 @@ def test_can_delete_existing_conclusion(live_server, page: Page):
 
     expect(detail_page.page.get_by_text("La conclusion a été supprimée.", exact=True)).to_be_visible()
     investigation = InvestigationTiac.objects.get()
+    evenement.refresh_from_db()
     assert investigation.suspicion_conclusion is None
     assert investigation.selected_hazard == []
     assert investigation.conclusion_comment == ""
     assert investigation.conclusion_repas is None
     assert investigation.conclusion_aliment is None
+    assert evenement.etat == InvestigationTiac.Etat.EN_COURS
 
 
 def test_cant_forge_conclusion_update_on_cloture_investigation_i_cant_modify(client, mocked_authentification_user):
