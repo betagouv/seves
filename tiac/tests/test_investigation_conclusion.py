@@ -351,6 +351,13 @@ def test_conclusion_form_shows_notice_when_multiple_repas(live_server, page: Pag
             exact=True,
         )
     ).to_be_visible()
+    detail_page.repas_field.select_option(str(evenement.repas.first().pk))
+    expect(
+        detail_page.page.get_by_text(
+            "Si le repas à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+            exact=True,
+        )
+    ).not_to_be_visible()
 
 
 def test_conclusion_form_shows_notice_when_multiple_aliments(live_server, page: Page):
@@ -555,3 +562,32 @@ def test_aliment_is_prefill_only_on_add_not_on_edition(
 
     detail_page.edit_conclusion_button.click()
     expect(detail_page.aliment_field).to_have_value("")
+
+
+def test_conclusion_form_clears_repas_and_aliment_when_switching_to_discarded(live_server, page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+    repas = evenement.repas.get()
+    aliment = evenement.aliments.get()
+    evenement.suspicion_conclusion = SuspicionConclusion.CONFIRMED
+    evenement.selected_hazard = ["Salmonella"]
+    evenement.conclusion_repas = repas
+    evenement.conclusion_aliment = aliment
+    evenement.save()
+
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.edit_conclusion_button.click()
+    detail_page.page.locator("#id_conclusion_comment").fill("New comment")
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+
+    evenement.refresh_from_db()
+    assert evenement.suspicion_conclusion == SuspicionConclusion.DISCARDED
+    assert evenement.conclusion_repas is None
+    assert evenement.conclusion_aliment is None

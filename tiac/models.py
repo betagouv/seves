@@ -362,12 +362,8 @@ class InvestigationTiac(
     )
     conclusion_comment = models.TextField("Commentaire", default="", blank=True)
 
-    conclusion_repas = models.ForeignKey(
-        "tiac.RepasSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
-    conclusion_aliment = models.ForeignKey(
-        "tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
+    conclusion_repas = models.ForeignKey("tiac.RepasSuspect", on_delete=models.PROTECT, null=True, blank=True)
+    conclusion_aliment = models.ForeignKey("tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, blank=True)
 
     objects = InvestigationTiacManager()
 
