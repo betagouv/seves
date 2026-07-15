@@ -76,6 +76,7 @@ class ConclusionFormController extends Controller {
 
     onTreeselectInput({detail}) {
         if (detail.length === 0) {
+            this.selectedHazardTreeselectInputTarget.value = ""
             this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                 checkbox.checked = false
             })
@@ -164,6 +165,7 @@ class ConclusionFormController extends Controller {
 
         if (this.selectedHazardTreeselectInitializedValue) {
             this.treeselect.updateValue("")
+            this.selectedHazardTreeselectInputTarget.value = ""
         } else if (value) {
             this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
             this.selectedHazardTreeselectInitializedValue = true
