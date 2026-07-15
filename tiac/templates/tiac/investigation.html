@@ -5,8 +5,6 @@
     <link rel="stylesheet" href="{% static 'core/_etablissement_card.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation_base.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/investigation.css' %}">
-    <link rel="stylesheet" href="{% static 'ssa/form/widgets/_custom_tree_select.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
 {% endblock %}
 
 {% block content %}
@@ -170,8 +168,12 @@
                 {{ aliment_formset }}
                 {{ analyse_alimentaire_formset }}
             </fieldset>
-            <fieldset class="fr-fieldset form-fieldset fr-mt-4v form-fieldset" data-controller="agents-pathogene" id="agents-pathogene">
-                <div data-agents-pathogene-target="jsonConfig" class="fr-hidden">{{ categorie_danger_data|safe }}</div>
+            <fieldset
+                id="agents-pathogene"
+                class="fr-fieldset form-fieldset fr-mt-4v form-fieldset"
+                data-controller="agents-pathogene"
+                data-agents-pathogene-treeselect-outlet="#agents-pathogene .fr-treeselect"
+            >
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Informations apportées par l’ARS</legend>
                 </div>
@@ -179,28 +181,7 @@
                 {% dsfr_form_field form.analyses_sur_les_malades|dsfr_inline %}
                 <div class="fr-grid-row fr-grid-row--gutters">
                     <div class="fr-col-4">{% dsfr_form_field form.precisions|set_data:"agents-pathogene-target:precisions" %}</div>
-                    <div class="fr-col-8">
-
-                        {% dsfr_form_field form.agents_confirmes_ars|set_data:"agents-pathogene-target:categorieDangerInput" %}
-
-                        <label for="id_agents_confirmes_ars" class="fr-label">Agent pathogène détecté sur les malades</label>
-                        <span class="fr-hint-text fr-mb-3v">Confirmation obtenue par examen clinique ou analytique des malades</span>
-                        <div data-agents-pathogene-target="categorieDangerContainer"></div>
-
-                        <template data-agents-pathogene-target="categorieDangerHeader">
-                            <div class="categorie-danger-header">
-                                <div class="fr-ml-1v">Dangers les plus courants</div>
-                                {% for danger in danger_plus_courant %}
-                                    <div class="treeselect-list__item" level="0" group="false" data-action="click->agents-pathogene#onShortcut:prevent:stop">
-                                        <input type="checkbox" id="shortcut_{{ forloop.counter0 }}" class="treeselect-list__item-checkbox-container">
-                                        <label class="treeselect-list__item-label shortcut" for="shortcut_{{ forloop.counter0 }}">{{ danger }}</label>
-                                    </div>
-                                {% endfor %}
-                                <div class="fr-ml-1v">Liste complète des dangers</div>
-                            </div>
-                        </template>
-
-                    </div>
+                    <div class="fr-col-8">{% dsfr_form_field form.agents_confirmes_ars %}</div>
                 </div>
 
             </fieldset>

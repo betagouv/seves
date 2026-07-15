@@ -1,92 +1,39 @@
 import {applicationReady} from "Application"
-import "TreeSelect"
-import {hideHeader, patchItems, shortcutClicked, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 import {Controller} from "Stimulus"
 
+/**
+ * ******** Targets ********
+ * @property {HTMLInputElement} precisionsTarget
+ * @property {HTMLInputElement[]} analysesTargets
+ * ******** Values ********
+ * @property {String} analysesValue
+ * ******** Outlets ********
+ * @property {Treeselect} treeselectOutlet
+ */
 class AgentsPathogeneController extends Controller {
-    static targets = [
-        "jsonConfig",
-        "categorieDangerInput",
-        "categorieDangerContainer",
-        "categorieDangerHeader",
-        "precisions",
-        "analyses",
-    ]
+    static targets = ["precisions", "analyses"]
+    static values = {analyses: String}
+    static outlets = ["treeselect"]
 
     connect() {
-        this.setupCategorieDanger()
-        const currentValue = this.analysesTargets.find(el => el.checked)
-
-        this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
-        this.precisionsTarget.disabled = true
-
-        if (currentValue && currentValue.value === "oui") {
-            this.categorieDangerContainerTarget.classList.remove("treeselect--disabled")
-            this.precisionsTarget.disabled = false
-        }
+        this.analysesTargets.forEach(it => it.dispatchEvent(new Event("change")))
     }
 
-    onShortcut(event) {
-        shortcutClicked(event, this.treeselect, this.categorieDangerInputTarget)
-    }
-
-    onAnalyseChange(event) {
-        if (event.target.value === "oui") {
+    analysesValueChanged(value) {
+        if (value === "oui") {
             this.precisionsTarget.disabled = false
-            this.categorieDangerContainerTarget.classList.remove("treeselect--disabled")
+            this.treeselectOutlet.setDisabledState(false)
         } else {
             this.precisionsTarget.disabled = true
-            this.categorieDangerContainerTarget.classList.add("treeselect--disabled")
-            this.precisionsTarget.value = ""
-            this.treeselect.updateValue()
+            this.treeselectOutlet.setDisabledState(true)
+            this.treeselectOutlet.unselectAll()
         }
     }
 
-    setupCategorieDanger() {
-        const options = JSON.parse(this.jsonConfigTarget.textContent)
-        const controller = this
-        const treeselect = new Treeselect({
-            parentHtmlContainer: this.categorieDangerContainerTarget,
-            value: this.categorieDangerInputTarget.value.split("||").map(v => v.trim()),
-            options: options,
-            isSingleSelect: false,
-            isIndependentNodes: true,
-            openCallback() {
-                patchItems(treeselect.srcElement)
-                if (this._customHeaderAdded) {
-                    showHeader(treeselect.srcElement, ".categorie-danger-header")
-                    return
-                }
-                const list = controller.element.querySelector(".treeselect-list")
-                if (list) {
-                    const fragment = controller.categorieDangerHeaderTarget.content.cloneNode(true)
-                    list.prepend(fragment)
-                    this._customHeaderAdded = true
-                }
-            },
-            searchCallback(item) {
-                if (item.length === 0) {
-                    showHeader(treeselect.srcElement, ".categorie-danger-header")
-                } else {
-                    hideHeader(treeselect.srcElement, ".categorie-danger-header")
-                }
-            },
-            ...tsDefaultOptions,
-        })
-        this.treeselect = treeselect
-        this.element.querySelector(".treeselect-input").classList.add("fr-input")
-        treeselect.srcElement.addEventListener("update-dom", () => {
-            patchItems(treeselect.srcElement)
-        })
-        treeselect.srcElement.addEventListener("input", e => {
-            if (e.detail.length === 0) {
-                this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
-                    checkbox.checked = false
-                })
-            } else {
-                this.categorieDangerInputTarget.value = e.detail.join("||")
-            }
-        })
+    onAnalyseChange({target}) {
+        if (target.checked) {
+            this.analysesValue = target.value
+        }
     }
 }
 

@@ -624,6 +624,23 @@ class CategorieDanger(WithChoicesToJS, GroupedChoicesMixin, models.TextChoices):
             cls.RESIDU_DE_PESTICIDE_BIOCIDE,
         )
 
+    @classproperty
+    def danger_courants_tiac(cls):
+        return (
+            CategorieDanger.STAPHYLOCOCCUS_AUREUS_ET_OU_SA_TOXINE,
+            CategorieDanger.BACILLUS_CEREUS,
+            CategorieDanger.CLOSTRIDIUM_PERFRINGENS,
+            CategorieDanger.CAMPYLOBACTER_COLI,
+            CategorieDanger.CAMPYLOBACTER_JEJUNI,
+            CategorieDanger.SALMONELLA_ENTERITIDIS,
+            CategorieDanger.SALMONELLA_TYPHIMURIUM,
+            CategorieDanger.SHIGELLA,
+            CategorieDanger.YERSINIA_ENTEROCOLITICA,
+            CategorieDanger.HISTAMINE,
+            CategorieDanger.TOXINE_DSP,
+            CategorieDanger.VIRUS_DE_LA_GASTROENTERITE_AIGUE,
+        )
+
     @classmethod
     def dangers_bacteriens(cls):
         return [choice.value for choice in cls if choice.label.startswith("Bactérie >")]
