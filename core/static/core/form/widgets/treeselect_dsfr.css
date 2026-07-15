@@ -13,6 +13,19 @@
     position: relative;
 }
 
+.fr-treeselect.fr-treeselect--disabled input {
+    color: var(--text-disabled-grey);
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.fr-nav__item .fr-btn,
+.fr-nav__item .fr-link {
+    /* Overrides style set by DSFR on small screens */
+    min-height: auto !important;
+}
+
 .fr-label + .fr-nav:has(> .fr-treeselect) {
     margin-top: 0.5rem;
 }

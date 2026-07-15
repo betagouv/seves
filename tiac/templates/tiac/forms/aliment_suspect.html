@@ -12,9 +12,9 @@
     {{ form.description_composition.label_tag }}
     {{ form.description_composition|set_data:"aliment-form-target:descriptionCompositionInput" }}
 </div>
-<div class="fr-input-group" id="categorie-produit" data-aliment-form-target="categorieProduitRootContainer">
-    <label>Catégorie de produit</label>
-    <div data-aliment-form-target="categorieProduitContainer"></div>
+<div id="categorie-produit" class="fr-input-group" data-aliment-form-target="categorieProduitRootContainer">
+    <label class="fr-label" for="{{ form.categorie_produit.id_for_label }}">{{ form.categorie_produit.label }}</label>
+    {{ form.categorie_produit }}
 </div>
 <div class="fr-input-group" data-aliment-form-target="descriptionProduitInputContainer">
     {{ form.description_produit.label_tag }}
@@ -27,5 +27,4 @@
 
 {% dsfr_notice title="Ajoutez vos documents dans l'onglet documents après publication de la fiche." %}
 {{ form.DELETE|set_data:"aliment-form-target:deleteInput" }}
-{{ form.categorie_produit|set_data:"aliment-form-target:categorieProduitInput" }}
 {{ form.id }}

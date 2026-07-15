@@ -10,7 +10,6 @@ import pytest
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import DepartementFactory
 from core.models import Contact, Departement, LienLibre
-from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from ssa.views import FindNumeroAgrementView
@@ -121,7 +120,7 @@ def test_can_create_investigation_tiac_with_all_fields(
     creation_page.precisions.fill(input_data.precisions)
 
     for danger in input_data.agents_confirmes_ars:
-        creation_page.add_agent_pathogene_confirme(CategorieDanger(danger).label)
+        creation_page.add_agent_pathogene_confirme(danger)
 
     creation_page.submit_as_draft()
 

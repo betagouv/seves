@@ -1,3 +1,4 @@
+from functools import cached_property
 import json
 from urllib.parse import quote
 
@@ -8,7 +9,7 @@ from playwright.sync_api import Locator, Page, expect
 
 from core.pages import WithActionsPage
 from core.tests.pages import TreeselectPage
-from ssa.constants import CategorieDanger
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from tiac.models import (
@@ -110,7 +111,11 @@ class WithEtablissementMixin:
         self.close_etablissement_modal()
 
 
-class WithAnalyseAlimentaireMixin(WithTreeSelect):
+class WithAnalyseAlimentaireMixin:
+    @cached_property
+    def analyses_alimentaires_categorie_danger_treeselect(self):
+        return TreeselectPage(self.page, self.current_modal.locator("#categorie-danger"))
+
     def get_analyse_alimentaire_card(self, index):
         return self.page.locator(".analyse-card").nth(index)
 
@@ -124,7 +129,9 @@ class WithAnalyseAlimentaireMixin(WithTreeSelect):
         modal.locator('[id$="etat_prelevement"]').select_option(analyse.etat_prelevement)
         modal.locator("#categorie-danger").evaluate("el => el.scrollIntoView()")
         for categorie_danger in analyse.categorie_danger:
-            self._set_treeselect_option("categorie-danger", CategorieDanger(categorie_danger).label)
+            self.analyses_alimentaires_categorie_danger_treeselect.check_option(
+                *CategorieDanger(categorie_danger).splitted_label
+            )
         modal.locator('[id$="comments"]').fill(analyse.comments)
         modal.locator('[id$="reference_souche"]').fill(analyse.reference_souche)
         modal.locator(f"[id$='sent_to_lnr_cnr'] input[type='radio'][value='{str(analyse.sent_to_lnr_cnr)}']").check(
@@ -476,7 +483,7 @@ class EvenementSimpleDetailsPage(WithEtablissementMixin, WithActionsPage, WithSy
         self.page.get_by_role("button", name="Publier").click()
 
 
-class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin, WithTreeSelect):
+class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMixin):
     fields = [
         "date_reception",
         "evenement_origin",
@@ -500,6 +507,11 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.base_url = base_url
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
+
+        self.aliments_suspectes_categorie_produit_treeselect = TreeselectPage(
+            self.page, self.current_modal.locator("#categorie-produit")
+        )
+        self.agents_confirmes_ars_treeselect = TreeselectPage(self.page, self.page.locator("#agents-pathogene"))
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:investigation-tiac-creation')}")
@@ -540,16 +552,13 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         self.datetime_first_symptoms.fill(obj.datetime_first_symptoms.strftime("%Y-%m-%dT%H:%M"))
         self.datetime_last_symptoms.fill(obj.datetime_last_symptoms.strftime("%Y-%m-%dT%H:%M"))
 
-    def add_agent_pathogene_confirme(self, label):
-        self.page.locator("#agents-pathogene").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("agents-pathogene", label)
+    def add_agent_pathogene_confirme(self, value):
+        self.agents_confirmes_ars_treeselect.check_option(*CategorieDanger(value).splitted_label)
 
-    def add_agent_pathogene_confirme_via_shortcut(self, label):
-        container = self.page.locator("#agents-pathogene")
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".treeselect-input__edit").click()
-        container.locator(".shortcut", has_text=label).locator("..").click()
-        self.page.keyboard.press("Escape")
+    def add_agent_pathogene_confirme_via_shortcut(self, value):
+        self.agents_confirmes_ars_treeselect.check_option_by_shortcut(
+            "Dangers les plus courants", CategorieDanger(value).uncategorized_label
+        )
 
     @property
     def current_modal(self):
@@ -587,9 +596,10 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def add_aliment_simple(self, aliment: AlimentSuspect):
         self.page.get_by_test_id("add-aliment").click()
 
-        self.page.locator("#categorie-produit").locator("visible=true").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", aliment.get_categorie_produit_display())
-        self.current_modal.get_by_label("Matière première").click(force=True)
+        self.current_modal.get_by_label("Matière première", exact=True).click(force=True)
+        self.aliments_suspectes_categorie_produit_treeselect.check_option(
+            *CategorieProduit(aliment.categorie_produit).splitted_label
+        )
 
         for field in ["denomination", "description_produit"]:
             self.current_modal.locator(f'[id$="{field}"]').fill(str(getattr(aliment, field)))

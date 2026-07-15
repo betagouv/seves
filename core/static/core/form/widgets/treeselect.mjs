@@ -325,6 +325,19 @@ class Treeselect extends Controller {
         this.children.delete(id)
     }
 
+    unselectAll() {
+        for (const it of this.element.querySelectorAll("input:checked")) {
+            it.checked = false
+        }
+        this.choices.clear()
+        this.dispatch(CHOICES_CHANGED_EVENT, {detail: {choices: this.choices}})
+    }
+
+    setDisabledState(disabled) {
+        this.element.classList.toggle("fr-treeselect--disabled", disabled)
+        this.buttonTarget.disabled = disabled
+    }
+
     async onSearch({detail: {search}}) {
         await Promise.all(this.children.values().map(it => it.search(search, this.minSearchLengthValue)))
     }
@@ -359,11 +372,7 @@ class Treeselect extends Controller {
     }
 
     onUnselectAll() {
-        for (const it of this.element.querySelectorAll("input:checked")) {
-            it.checked = false
-        }
-        this.choices.clear()
-        this.dispatch(CHOICES_CHANGED_EVENT, {detail: {choices: this.choices}})
+        this.unselectAll()
     }
 
     onChoicesChange() {
