@@ -360,7 +360,7 @@ class EvenementProduitDetailsPage(SsaBaseDetailPage):
         self.page.get_by_role("button", name="Publier").click()
 
 
-class EvenementProduitListPage(WithTreeSelect):
+class EvenementProduitListPage:
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -368,6 +368,12 @@ class EvenementProduitListPage(WithTreeSelect):
             self.page, self.page.locator("label", has_text="Type d'événement").locator("..")
         )
         self.source_treeselect = TreeselectPage(self.page, self.page.locator("label", has_text="Source").locator(".."))
+        self._categorie_danger_treeselect = TreeselectPage(
+            self.page, self.page.locator("#search-form #fr-treeselect-id_categorie_danger")
+        )
+        self._categorie_produit_treeselect = TreeselectPage(
+            self.page, self.page.locator("#search-form #fr-treeselect-id_categorie_produit")
+        )
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('ssa:evenements-liste')}")
@@ -496,10 +502,10 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator("#id_pays")
 
     def set_categorie_produit(self, term):
-        self._set_treeselect_option("id_categorie_produit-wrapper", term)
+        self._categorie_produit_treeselect.check_option(*re.split(r"\s*>\s*", term))
 
     def set_categorie_danger(self, term):
-        self._set_treeselect_option("id_categorie_danger-wrapper", term)
+        self._categorie_danger_treeselect.check_option(*re.split(r"\s*>\s*", term))
 
     @property
     def full_text_field(self):
@@ -530,7 +536,7 @@ class EvenementProduitListPage(WithTreeSelect):
         TreeselectPage(self.page, element).check_option(value)
 
 
-class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
+class InvestigationCasHumainFormPage(WithEtablissementMixin):
     fields = (
         "description",
         "date_reception",
