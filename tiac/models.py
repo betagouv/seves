@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import strip_tags
 import reversion
 from reversion.models import Version
@@ -528,6 +529,14 @@ class InvestigationTiac(
     @property
     def can_add_or_edit_conclusion(self):
         return self.etat in (self.Etat.EN_COURS, self.Etat.CONCLU)
+
+    def publish(self):
+        self.etat = self.Etat.EN_COURS
+        if self.suspicion_conclusion:
+            self.etat = self.Etat.CONCLU
+        if hasattr(self, "date_publication"):
+            self.date_publication = timezone.now()
+        self.save()
 
     class Meta:
         constraints = (
