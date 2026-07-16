@@ -208,16 +208,12 @@ def test_can_edit_investigation_elements(live_server, page: Page, ensure_departe
         investigation.analyses_alimentaires.order_by("pk").all()[1].reference_prelevement
         == analyse_alimentaires_to_modify.reference_prelevement
     )
-    actual = investigation.analyses_alimentaires.order_by("pk").last()
     assert_models_are_equal(
-        actual,
+        investigation.analyses_alimentaires.order_by("pk").last(),
         new_analyse_alimentaire,
-        to_exclude=[*COMMON_FIELDS_TO_EXCLUDE, "categorie_danger"],
+        to_exclude=[*COMMON_FIELDS_TO_EXCLUDE],
         ignore_array_order=True,
     )
-    # categorie_danger field may contain more values than manually selected because Treeselect
-    # autoselects children of a selected group.
-    assert set(new_analyse_alimentaire.categorie_danger) - set(actual.categorie_danger) == set()
 
 
 def test_cancel_edit_on_etablissement_reset_all_value(

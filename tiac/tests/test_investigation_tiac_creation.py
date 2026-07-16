@@ -144,13 +144,9 @@ def test_can_create_investigation_tiac_with_all_fields(
             "selected_hazard",
             "conclusion_repas",
             "conclusion_aliment",
-            "agents_confirmes_ars",
         ],
         ignore_array_order=True,
     )
-    # agents_confirmes_ars field may contain more values than manually selected because Treeselect
-    # autoselects children of a selected group.
-    assert set(input_data.agents_confirmes_ars) - set(investigation.agents_confirmes_ars) == set()
 
 
 def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
@@ -493,14 +489,8 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     analyses = InvestigationTiac.objects.get().analyses_alimentaires.all()
     assert len(analyses) == 1
     assert_models_are_equal(
-        analyse,
-        analyses[0],
-        to_exclude=[*FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, "categorie_danger"],
-        ignore_array_order=True,
+        analyse, analyses[0], to_exclude=FIELD_TO_EXCLUDE_ANALYSE_ALIMENTAIRE, ignore_array_order=True
     )
-    # categorie_danger field may contain more values than manually selected because Treeselect
-    # autoselects children of a selected group.
-    assert set(analyse.categorie_danger) - set(analyses[0].categorie_danger) == set()
 
 
 def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):

@@ -52,12 +52,6 @@ class AlimentFormController extends BaseFormInModal {
         dsfr(this.dialogTarget).modal.conceal()
     }
 
-    onCloseForm() {
-        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
-        // In this case, the form is not considered valid and it should be deleted on close
-        if (this.shouldImmediatelyShowValue) this.forceDelete()
-    }
-
     /** @param {AnalyseAlimentaireData} analyse */
     getDeleteConfirmationSentence(analyse) {
         return `Confimez-vous vouloir supprimer l'analyse alimentaire ${analyse.reference_prelevement}?`

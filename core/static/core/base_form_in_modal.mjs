@@ -18,6 +18,11 @@ export class BaseFormInModal extends Controller {
         keepChanges: {type: Boolean, default: false},
     }
 
+    dialogTargetConnected(el) {
+        const actions = (el.dataset.action ?? "").split(/\s+/g)
+        el.dataset.action = [`dsfr.conceal->${this.identifier}#onCloseForm:self`, ...actions].join(" ")
+    }
+
     openDialog() {
         this.initialValues = collectFormValues(this.fieldsetTarget, {
             nameTransform: name => name,
@@ -48,6 +53,12 @@ export class BaseFormInModal extends Controller {
         if (!this.clean(formValues)) return
         this.keepChangesValue = true
         this.initCard(formValues)
+    }
+
+    onCloseForm() {
+        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
+        // In this case, the form is not considered valid and it should be deleted on close
+        if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
     onModify() {

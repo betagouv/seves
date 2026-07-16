@@ -62,12 +62,6 @@ class AlimentFormController extends BaseFormInModal {
         }
     }
 
-    onCloseForm() {
-        // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
-        // In this case, the form is not considered valid and it should be deleted on close
-        if (this.shouldImmediatelyShowValue) this.forceDelete()
-    }
-
     onTypeAlimentChange(event) {
         this.handleConditionalFields(event.target.value)
     }
