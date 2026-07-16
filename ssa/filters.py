@@ -21,7 +21,6 @@ from core.models import Departement, LienLibre
 from core.widgets import TreeselectCheckbox
 from ssa.constants import CategorieDanger, CategorieProduit, Source, SourceInvestigationCasHumain, TypeEvenement
 from ssa.models import EvenementProduit
-from ssa.widgets import CategorieDangerLegacyTreeselect, CategorieProduitLegacyTreeselect
 
 
 class StrInFilter(BaseInFilter, CharFilter):
@@ -115,16 +114,16 @@ class EvenementFilter(
     numeros_rappel_conso = StrInFilter(
         field_name="numeros_rappel_conso", lookup_expr="overlap", distinct=True, label="Rappel Conso"
     )
-    categorie_produit = CharInFilter(
+    categorie_produit = MultipleChoiceFilter(
         field_name="categorie_produit",
-        lookup_expr="in",
-        widget=CategorieProduitLegacyTreeselect,
+        choices=CategorieProduit,
+        widget=TreeselectCheckbox(choices=CategorieProduit.treeselect_groups),
         label="Catégorie de produit",
     )
-    categorie_danger = CharInFilter(
+    categorie_danger = MultipleChoiceFilter(
         field_name="categorie_danger",
-        lookup_expr="in",
-        widget=CategorieDangerLegacyTreeselect,
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox(choices=CategorieDanger.treeselect_groups),
         label="Catégorie de danger",
     )
     reference_souches = django_filters.CharFilter(lookup_expr="icontains")
@@ -235,18 +234,3 @@ class EvenementFilter(
             ids.extend(subqueryset.values_list("id", flat=True))
 
         return self.with_free_links_filtered(ids)
-
-
-class EvenementFilterTreeselect(EvenementFilter):
-    categorie_produit = MultipleChoiceFilter(
-        field_name="categorie_produit",
-        choices=CategorieProduit,
-        widget=TreeselectCheckbox(choices=CategorieProduit.treeselect_groups),
-        label="Catégorie de produit",
-    )
-    categorie_danger = MultipleChoiceFilter(
-        field_name="categorie_danger",
-        choices=CategorieDanger,
-        widget=TreeselectCheckbox(choices=CategorieDanger.treeselect_groups),
-        label="Catégorie de danger",
-    )
