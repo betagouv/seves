@@ -428,7 +428,7 @@ def test_cant_publish_and_notifier_ac_evenement_i_cant_see(client, mailoutbox):
     }
     response = client.post(reverse("publish-and-ac-notification"), data=payload)
 
-    assert response.status_code == 302
+    assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.is_draft is True
     assert evenement.is_ac_notified is False

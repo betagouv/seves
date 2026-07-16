@@ -1,7 +1,10 @@
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory
+from core.factories import AgentFactory, ContactAgentFactory, ContactStructureFactory, DocumentFactory
 from core.pages import WithContactsPage, WithDocumentsPage
 from seves.settings import SSA_GROUP, SV_GROUP
 from ssa.factories import EvenementProduitFactory
@@ -112,3 +115,30 @@ def test_document_delete_missing_ssa_group(live_server, page: Page, mocked_authe
     expect(page.get_by_text("Le document a été marqué comme supprimé.")).not_to_be_visible()
     document.refresh_from_db()
     assert document.is_deleted is False
+
+
+@pytest.mark.django_db
+@pytest.mark.disable_mocked_authentification_user
+def test_publish_and_ac_notification_view_ignores_domain_group(client):
+    agent = AgentFactory()
+    user = agent.user
+    user.is_active = True
+    user.save()
+    assert user.groups.count() == 0
+    evenement = EvenementProduitFactory(
+        createur=agent.structure, etat=EvenementProduit.Etat.BROUILLON, date_publication=None
+    )
+    client.force_login(user)
+
+    payload = {
+        "content_type_id": ContentType.objects.get_for_model(EvenementProduit).id,
+        "content_id": evenement.pk,
+    }
+    response = client.post(reverse("publish-and-ac-notification"), data=payload)
+
+    assert response.status_code == 403
+
+    evenement.refresh_from_db()
+    assert evenement.is_published is False
+    assert evenement.etat == EvenementProduit.Etat.BROUILLON
+    assert evenement.date_publication is None
