@@ -67,9 +67,7 @@ class TreeselectGroupConnectable extends TreeselectChoicesListener {
             if (target === it) continue
             if (choices.has(it.value.trim()) && !it.checked) {
                 it.checked = true
-            } else if (!choices.has(it.value.trim()) && it.checked && it.type === "radio") {
-                // Here, we don't want to uncheck if input is of type checkbox since this would interfere with
-                // the feature to automatically select group input when all children are selected
+            } else if (!choices.has(it.value.trim()) && it.checked) {
                 it.checked = false
             }
         }
@@ -224,20 +222,22 @@ class TreeselectGroup extends TreeselectGroupConnectable {
 
     /** @param {Event} evt */
     onSelect(evt) {
-        if (this.#locked) return
-
-        if (!this.hasInputTarget || this.inputTarget.type !== "checkbox") return
+        if (this.#locked || !this.hasInputTarget) return
 
         const checked = evt.target.checked
-        try {
-            this.#locked = true
-            for (const it of this.childTargets) {
-                it.checked = checked
-                it.dispatchEvent(new Event("change"))
+        if (this.inputTarget.type === "checkbox") {
+            try {
+                this.#locked = true
+                for (const it of this.childTargets) {
+                    it.checked = checked
+                    it.dispatchEvent(new Event("change"))
+                }
+            } finally {
+                this.#locked = false
             }
-        } finally {
-            this.#locked = false
         }
+
+        // Open group accordion
         if (checked) {
             this.collapseTargets.forEach(async it => {
                 await dsfrDisclosePromise(dsfr(it).collapse)

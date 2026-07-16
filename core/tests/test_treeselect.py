@@ -30,7 +30,7 @@ class TestChoices(GroupedChoicesMixin, TextChoices):
 
     @classproperty
     def les_plus_courants(cls):
-        return cls.MUNICH, cls.BERLIN, cls.CHILI, cls.BRESIL, cls.SAO_POLO
+        return cls.MUNICH, cls.PORTE_DE_BRANDEBOURG, cls.CHILI, cls.BRESIL, cls.SAO_POLO
 
     @classproperty
     def treeselect_choices(cls):
@@ -243,6 +243,36 @@ def test_checkbox_options_and_parent_behavior(navigate_to_form, page: Page):
         expect(treeselect_animal_radio.get_option(it)).not_to_be_checked()
 
     assert treeselect_animal_radio.selected_tags.count() == 0
+
+
+def test_shortcut_behavior(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    # Test that checking option also checks its shortcut
+    treeselect.check_option(*TestChoices.PORTE_DE_BRANDEBOURG.splitted_label)
+    options = treeselect.container.locator(f'input[value="{TestChoices.PORTE_DE_BRANDEBOURG.value}"]').all()
+    assert len(options) == 2
+    for option in options:
+        expect(option).to_be_checked()
+
+    # Test that unchecking option also unchecks its shortcut
+    treeselect.uncheck_option(*TestChoices.PORTE_DE_BRANDEBOURG.splitted_label)
+    for option in options:
+        expect(option).not_to_be_checked()
+
+
+def test_check_group_input_opens_group_accordion(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+
+    for treeselect in (
+        TreeselectPage(page, page.get_by_test_id("animal_radio")),
+        TreeselectPage(page, page.get_by_test_id("animal_checkbox")),
+    ):
+        with treeselect.opened_treeselect():
+            treeselect.check_option(*TestChoices.BERLIN.splitted_label, close_after=False)
+            for option in treeselect.container.get_by_label(TestChoices.PORTE_DE_BRANDEBOURG.uncategorized_label).all():
+                expect(option).to_be_visible()
 
 
 def test_checking_group_input_opens_group_dropdown(navigate_to_form, page: Page):
