@@ -342,11 +342,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "analyses_sur_les_malades",
             "precisions",
             "agents_confirmes_ars",
-            "suspicion_conclusion",
-            "selected_hazard",
-            "conclusion_comment",
-            "conclusion_repas",
-            "conclusion_aliment",
             "latest_version",
         )
         widgets = {
@@ -373,12 +368,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
-        for field in ("conclusion_repas", "conclusion_aliment"):
-            self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
-            queryset = self[field].field.queryset
-            self[field].field.queryset = (
-                queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
-            )
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
 
