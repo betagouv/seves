@@ -3,7 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import CheckboxInput, HiddenInput, Media, TextInput
+from django.forms import CheckboxInput, Media, TextInput
 import django_filters
 from dsfr.forms import DsfrBaseForm
 
@@ -17,10 +17,12 @@ from core.filters_mixins import (
 )
 from core.form_mixins import js_module
 from core.models import LienLibre
-from core.widgets import TreeselectCheckbox
-from ssa.filters import CharInFilter, WithEtablissementFilterMixin
+from core.widgets import TreeselectCheckbox, TreeselectGroup
+from ssa.constants import CategorieDanger, CategorieProduit
+from ssa.filters import WithEtablissementFilterMixin
 from tiac.constants import (
     DANGERS_COURANTS,
+    SELECTED_HAZARD_CHOICES,
     DangersSyndromiques,
     EvenementFollowUp,
     SuspicionConclusion,
@@ -89,11 +91,27 @@ class TiacFilter(
         choices=SuspicionConclusion.choices,
         widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
     )
-    selected_hazard = CharInFilter(
+    selected_hazard = django_filters.MultipleChoiceFilter(
         label="Dangers retenus",
         field_name="selected_hazard",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=SELECTED_HAZARD_CHOICES,
+        method="filter_selected_hazard",
+        widget=TreeselectCheckbox(
+            choices=(
+                TreeselectGroup(
+                    label="Dangers syndromiques",
+                    choices=DangersSyndromiques.choices_short_names,
+                    can_expand=False,
+                    categorised_label=None,
+                ),
+                TreeselectGroup(
+                    label="Liste complète des dangers alimentaires",
+                    choices=CategorieDanger.treeselect_groups,
+                    can_expand=False,
+                    categorised_label=None,
+                ),
+            )
+        ),
     )
     full_text_search = django_filters.CharFilter(
         method="filter_full_text_search",
@@ -151,17 +169,23 @@ class TiacFilter(
         label="Danger syndromique suspecté",
         method="filter_danger_syndromiques_suspectes",
     )
-    agents_pathogenes = CharInFilter(
+    agents_pathogenes = django_filters.MultipleChoiceFilter(
         label="Agent pathogène confirmé par l'ARS",
         field_name="agents_confirmes_ars",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=CategorieDanger,
+        method="filter_agents_pathogenes",
+        widget=TreeselectCheckbox(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac)
+        ),
     )
-    analyse_categorie_danger = CharInFilter(
+    analyse_categorie_danger = django_filters.MultipleChoiceFilter(
         label="Analyse - Danger détecté",
         field_name="analyses_alimentaires__categorie_danger",
-        lookup_expr="overlap",
-        widget=HiddenInput,
+        choices=CategorieDanger,
+        method="filter_analyse_categorie_danger",
+        widget=TreeselectCheckbox(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac)
+        ),
     )
     type_aliment = django_filters.ChoiceFilter(
         choices=TypeAliment,
@@ -169,11 +193,12 @@ class TiacFilter(
         empty_label=settings.SELECT_EMPTY_CHOICE,
         field_name="aliments__type_aliment",
     )
-    aliment_categorie_produit = CharInFilter(
+    aliment_categorie_produit = django_filters.MultipleChoiceFilter(
         label="Aliment - Catégorie de produit",
         field_name="aliments__categorie_produit",
-        lookup_expr="in",
-        widget=HiddenInput,
+        choices=CategorieProduit,
+        method="filter_aliment_categorie_produit",
+        widget=TreeselectCheckbox(choices=CategorieProduit.treeselect_groups),
     )
     nb_personnes_repas = django_filters.CharFilter(
         field_name="repas__nombre_participant",
@@ -323,6 +348,26 @@ class TiacFilter(
 
     def filter_danger_syndromiques_suspectes(self, queryset, name, value):
         return queryset.filter(danger_syndromiques_suspectes__contains=value)
+
+    def filter_selected_hazard(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(selected_hazard__overlap=value)
+
+    def filter_agents_pathogenes(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(agents_confirmes_ars__overlap=value)
+
+    def filter_aliment_categorie_produit(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(aliments__categorie_produit__in=value)
+
+    def filter_analyse_categorie_danger(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(analyses_alimentaires__categorie_danger__overlap=value)
 
     def filter_with_free_links(self, queryset, name, value):
         return queryset

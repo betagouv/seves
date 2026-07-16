@@ -131,7 +131,10 @@ export function getSelectedLabel(element) {
 export function resetForm(element) {
     element.querySelectorAll("input, select, textarea").forEach(field => {
         if (field.type === "checkbox" || field.type === "radio") {
-            field.checked = false
+            if (field.checked) {
+                field.checked = false
+                field.dispatchEvent(new Event("change"))
+            }
         } else {
             field.value = ""
         }

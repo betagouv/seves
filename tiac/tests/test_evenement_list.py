@@ -657,3 +657,12 @@ def test_list_can_filter_by_aliment_categorie_produit(live_server, page: Page):
     assert search_page.numero_cell().text_content() == "T-2025.3"
     expect(search_page.page.get_by_text("2025.2")).not_to_be_visible()
     expect(search_page.page.get_by_text("2025.1")).not_to_be_visible()
+
+
+def test_list_counter_of_sidebar_filter_is_still_accurate_with_treeselect(live_server, page: Page):
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.set_agents_pathogenes_from_shortcut(CategorieDanger.BACILLUS_CEREUS)
+    search_page.add_filters()
+    expect(search_page.filter_counter).to_have_text("1")
