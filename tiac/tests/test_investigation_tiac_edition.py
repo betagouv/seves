@@ -4,6 +4,7 @@ import pytest
 
 from core.constants import MUS_STRUCTURE
 from core.models import Contact, LienLibre
+from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import (
@@ -17,7 +18,7 @@ from tiac.factories import (
 
 from ..constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from ..models import Analyses, Etablissement, EvenementSimple, InvestigationFollowUp, InvestigationTiac
-from .pages import InvestigationTiacEditPage
+from .pages import InvestigationTiacDetailsPage, InvestigationTiacEditPage
 
 pytestmark = pytest.mark.usefixtures("mus_contact")
 
@@ -420,3 +421,52 @@ def test_cancel_edit_on_repas_show_correct_conditional_field(
 
     edit_page.get_repas_card(0).locator(".modify-button").click()
     expect(edit_page.current_modal.locator('[id$="type_collectivite"]')).not_to_be_visible()
+
+
+def test_editing_investigation_does_not_wipe_existing_conclusion(
+    live_server, page: Page, ensure_departements, assert_models_are_equal
+):
+    departement, *_ = ensure_departements("Paris")
+
+    investigation = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(investigation)
+    detail_page.fill_conclusion(
+        {
+            "conclusion_comment": "Mon commentaire",
+            "suspicion_conclusion": SuspicionConclusion.CONFIRMED.value,
+            "selected_hazard": [CategorieDanger.values[0]],
+            "conclusion_repas": investigation.repas.get().pk,
+            "conclusion_aliment": investigation.aliments.get().pk,
+        }
+    )
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+
+    investigation.refresh_from_db()
+    original_conclusion_repas = investigation.conclusion_repas
+    original_conclusion_aliment = investigation.conclusion_aliment
+    assert original_conclusion_repas is not None
+    assert original_conclusion_aliment is not None
+
+    new_repas = RepasSuspectFactory.build(departement=departement)
+    new_aliment = AlimentSuspectFactory.build(cuisine=True)
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+    edit_page.add_repas(new_repas)
+    edit_page.add_aliment_cuisine(new_aliment)
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+    assert investigation.repas.count() == 2
+    assert investigation.aliments.count() == 2
+    assert investigation.conclusion_repas == original_conclusion_repas
+    assert investigation.conclusion_aliment == original_conclusion_aliment
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED.value
+    assert investigation.conclusion_comment == "Mon commentaire"
