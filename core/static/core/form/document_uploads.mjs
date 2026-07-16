@@ -367,6 +367,12 @@ class DocumentForm extends Controller {
         el.dispatchEvent(new Event("input"))
     }
 
+    getCookie(name) {
+        const value = `; ${document.cookie}`
+        const parts = value.split(`; ${name}=`)
+        if (parts.length === 2) return parts.pop().split(";").shift()
+    }
+
     /**
      * @return {Promise<{pk: string, documentName: string}>}
      *          Returns the name and id of the document that was successfully uploaded.
@@ -383,6 +389,9 @@ class DocumentForm extends Controller {
                 body: new FormData(this.formTarget),
                 redirect: "error",
                 signal: this.abortController.signal,
+                headers: {
+                    "X-CSRFToken": this.getCookie("csrftoken"),
+                },
             })
 
             if (result.ok || result.status === 400) {
@@ -466,7 +475,12 @@ class DocumentForm extends Controller {
             this.stateValue = DOCUMENT_STATE.DELETING
             if (this.deleteUrlValue.length > 0) {
                 this.abortController = new AbortController()
-                await fetchPool(this.deleteUrlValue, {method: "POST"})
+                await fetchPool(this.deleteUrlValue, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": this.getCookie("csrftoken"),
+                    },
+                })
             }
             this.element.remove()
             this.dispatch(COMMON_EVENTS.DOCUMENT_DELETE, {

@@ -8,24 +8,36 @@ const CHOICES_CHANGED_EVENT = "choices"
 
 let counter = 0
 
-/**
- * *** Targets ***
- * @property {HTMLInputElement[]} inputTargets
- * @property {HTMLInputElement} inputTarget
- * @property {boolean} hasInputTarget
- */
-class TreeselectGroupConnectable extends Controller {
-    static targets = ["input"]
-
+class TreeselectChoicesListener extends Controller {
     connect() {
         /** @type {Treeselect} */
         this.treeselect = this.application.getControllerForElementAndIdentifier(
             this.element.closest(`[data-controller~="${WIDGET_IDENTIFIER}"]`),
             WIDGET_IDENTIFIER,
         )
-
         this.onChoicesChanged = this.onChoicesChanged.bind(this)
         this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`, this.onChoicesChanged)
+    }
+
+    disconnect() {
+        this.treeselect.element.removeEventListener(
+            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
+            this.onChoicesChanged,
+        )
+    }
+}
+
+/**
+ * *** Targets ***
+ * @property {HTMLInputElement[]} inputTargets
+ * @property {HTMLInputElement} inputTarget
+ * @property {boolean} hasInputTarget
+ */
+class TreeselectGroupConnectable extends TreeselectChoicesListener {
+    static targets = ["input"]
+
+    connect() {
+        super.connect()
 
         const enclosingGroup = this.element.parentElement.closest(
             `[data-controller~="${WIDGET_IDENTIFIER}"], [data-controller~="${GROUP_IDENTIFIER}"]`,
@@ -42,10 +54,7 @@ class TreeselectGroupConnectable extends Controller {
 
     disconnect() {
         this._parentGroup?.unregisterChild(this._childId, this)
-        this.treeselect.element.removeEventListener(
-            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
-            this.onChoicesChanged,
-        )
+        super.disconnect()
     }
 
     /**
@@ -58,9 +67,7 @@ class TreeselectGroupConnectable extends Controller {
             if (target === it) continue
             if (choices.has(it.value.trim()) && !it.checked) {
                 it.checked = true
-            } else if (!choices.has(it.value.trim()) && it.checked && it.type === "radio") {
-                // Here, we don't want to uncheck if input is of type checkbox since this would interfere with
-                // the feature to automatically select group input when all children are selected
+            } else if (!choices.has(it.value.trim()) && it.checked) {
                 it.checked = false
             }
         }
@@ -79,10 +86,6 @@ class TreeselectElement extends TreeselectGroupConnectable {
             ...Array.from(this.inputTarget.labels).map(it => it.textContent.trim()),
             this.inputTarget.ariaLabel?.trim() ?? "",
         ]
-    }
-
-    get isHidden() {
-        return this.hiddenValue
     }
 
     initialize() {
@@ -121,8 +124,6 @@ class TreeselectElement extends TreeselectGroupConnectable {
  * @property {HTMLInputElement[]} accordionBtnTargets
  * *** Values ***
  * @property {Boolean} hiddenValue
- * @property {Boolean} hasChildrenMatchingValue
- * @property {Boolean} selfMatchesSearchValue
  */
 class TreeselectGroup extends TreeselectGroupConnectable {
     static values = {
@@ -221,20 +222,22 @@ class TreeselectGroup extends TreeselectGroupConnectable {
 
     /** @param {Event} evt */
     onSelect(evt) {
-        if (this.#locked) return
-
-        if (!this.hasInputTarget || this.inputTarget.type !== "checkbox") return
+        if (this.#locked || !this.hasInputTarget) return
 
         const checked = evt.target.checked
-        try {
-            this.#locked = true
-            for (const it of this.childTargets) {
-                it.checked = checked
-                it.dispatchEvent(new Event("change"))
+        if (this.inputTarget.type === "checkbox") {
+            try {
+                this.#locked = true
+                for (const it of this.childTargets) {
+                    it.checked = checked
+                    it.dispatchEvent(new Event("change"))
+                }
+            } finally {
+                this.#locked = false
             }
-        } finally {
-            this.#locked = false
         }
+
+        // Open group accordion
         if (checked) {
             this.collapseTargets.forEach(async it => {
                 await dsfrDisclosePromise(dsfr(it).collapse)
@@ -248,24 +251,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
  * *** Values ***
  * @property {String} formvalValue
  */
-class TreeselectSelectedBadge extends Controller {
+class TreeselectSelectedBadge extends TreeselectChoicesListener {
     static values = {formval: String}
-
-    connect() {
-        this.treeselect = this.application.getControllerForElementAndIdentifier(
-            this.element.closest(`[data-controller~="${WIDGET_IDENTIFIER}"]`),
-            WIDGET_IDENTIFIER,
-        )
-        this.onChoicesChanged = this.onChoicesChanged.bind(this)
-        this.treeselect.element.addEventListener(`${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`, this.onChoicesChanged)
-    }
-
-    disconnect() {
-        this.treeselect.element.removeEventListener(
-            `${WIDGET_IDENTIFIER}:${CHOICES_CHANGED_EVENT}`,
-            this.onChoicesChanged,
-        )
-    }
 
     /**
      * @param {CustomEvent} param0
@@ -294,18 +281,23 @@ class TreeselectSelectedBadge extends Controller {
  * @property {HTMLElement} bodyTarget
  * @property {HTMLButtonElement} buttonTarget
  * @property {HTMLInputElement} searchbarTarget
+ * @property {HTMLButtonElement[]} unselectAllBtnTargets
  * @property {HTMLElement} selectedGroupTarget
  * @property {HTMLButtonElement} selectedTagTarget
  * @property {HTMLButtonElement[]} selectedTagTargets
  * @property {HTMLTemplateElement} selectedTagTplTarget
  */
 class Treeselect extends Controller {
-    static targets = ["body", "button", "searchbar", "selectedGroup", "selectedTag", "selectedTagTpl"]
+    static targets = ["body", "button", "searchbar", "unselectAllBtn", "selectedGroup", "selectedTag", "selectedTagTpl"]
     static values = {minSearchLength: {type: Number, default: 3}}
 
     initialize() {
         this.choices = new Map()
         this.children = new Map()
+        this.element.dataset.action = [
+            `${this.identifier}:${CHOICES_CHANGED_EVENT}->${this.identifier}#onChoicesChange`,
+            ...(this.element.dataset.action ?? "").split(/\s+/g),
+        ].join(" ")
     }
 
     connect() {
@@ -359,6 +351,18 @@ class Treeselect extends Controller {
         } else {
             this.choices.delete(value)
         }
+        this.dispatch(CHOICES_CHANGED_EVENT, {target, detail: {choices: this.choices}})
+    }
+
+    onUnselectAll() {
+        for (const it of this.element.querySelectorAll("input:checked")) {
+            it.checked = false
+        }
+        this.choices.clear()
+        this.dispatch(CHOICES_CHANGED_EVENT, {detail: {choices: this.choices}})
+    }
+
+    onChoicesChange() {
         const size = this.choices.size
         if (size === 0) {
             this.buttonTarget.textContent = this.originalButtonLabel
@@ -367,7 +371,7 @@ class Treeselect extends Controller {
         } else {
             this.buttonTarget.textContent = `${this.choices.size} éléments`
         }
-        this.dispatch(CHOICES_CHANGED_EVENT, {target, detail: {choices: this.choices}})
+        this.unselectAllBtnTargets.forEach(it => it.classList.toggle("fr-hidden", size === 0))
     }
 
     onEraseSearch() {

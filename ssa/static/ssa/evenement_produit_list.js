@@ -1,5 +1,4 @@
 import {addLevel2CategoryIfAllChildrenAreSelected, patchItems, tsDefaultOptions} from "CustomTreeSelect"
-import choicesDefaults from "choicesDefaults"
 
 document.addEventListener("DOMContentLoaded", () => {
     function clearSidebarFilters(event) {
@@ -45,15 +44,10 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     sidebarClosingObserver.observe(document.getElementById("sidebar"), {attributes: true})
 
-    const choicesAgentContact = new Choices(document.getElementById("id_agent_contact"), choicesDefaults)
-    const choicesStructureContact = new Choices(document.getElementById("id_structure_contact"), choicesDefaults)
-
     const searchForm = document.getElementById("search-form")
     searchForm.addEventListener("reset", event => {
         event.preventDefault()
         resetForm(searchForm)
-        choicesAgentContact.setChoiceByValue("")
-        choicesStructureContact.setChoiceByValue("")
         searchForm.submit()
     })
 })

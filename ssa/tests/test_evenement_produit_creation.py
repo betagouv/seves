@@ -102,7 +102,7 @@ def test_display_of_notice_produit_field(live_server, mocked_authentification_us
     creation_page.set_categorie_produit_from_label("Produit non alimentaire > Autre produit non alimentaire")
     expect(notice_element).not_to_be_visible()
     creation_page.set_categorie_produit_from_label("Produit carné > PABV cuit - produit à base de viande cuit")
-    expected = "Il existe des sous catégories pour « PABV cuit - produit à base de viande cuit » : pensez à préciser dès que possible."
+    expected = "Il existe des sous-catégories pour « PABV cuit - produit à base de viande cuit » : pensez à préciser dès que possible."
     expect(notice_element.get_by_text(expected)).to_be_visible()
 
 
@@ -125,7 +125,7 @@ def test_display_of_notice_danger_field_shown(live_server, mocked_authentificati
     creation_page.set_categorie_danger_from_label("Bactérie > Clostridium")
     expect(
         notice_element.get_by_text(
-            "Il existe des sous catégories pour « Clostridium » : pensez à préciser dès que possible."
+            "Il existe des sous-catégories pour « Clostridium » : pensez à préciser dès que possible."
         )
     ).to_be_visible()
 
@@ -740,19 +740,6 @@ def test_cant_add_etablissement_with_incorrect_numero_agrement(live_server, page
     creation_page.current_modal.locator(".save-btn").click()
 
     assert not creation_page.current_modal_numero_agrement_field.evaluate("el => el.validity.valid")
-
-
-def test_categorie_danger_dont_show(live_server, mocked_authentification_user, page: Page):
-    creation_page = EvenementProduitFormPage(page, live_server.url)
-    creation_page.navigate()
-    dropdown = creation_page.display_and_get_categorie_danger()
-    # Force open the dropdown by clicking it
-    dropdown.get_by_placeholder("Choisir").click()
-    expect(dropdown.locator(".categorie-danger-header")).to_be_visible()
-    assert "Dangers les plus courants" in dropdown.inner_text()
-    page.keyboard.type("Sal")
-    expect(dropdown.locator(".categorie-danger-header")).to_be_hidden()
-    assert "Dangers les plus courants" not in dropdown.inner_text()
 
 
 def test_can_create_evenement_produit_with_maestro_reference(

@@ -1,4 +1,4 @@
-{% load dsfr_tags get_item set_context_var %}
+{% load dsfr_tags set_context_var %}
 
 {% partialdef input %}
     <div class="fr-{{ widget.type }}-group{% if parent_index %} fr-treeselect__group-selectable{% endif %}">
@@ -51,6 +51,7 @@
             {% elif widget.group_option %}
                 {% with widget=widget.group_option parent_index=widget.group_index %}
                     {% merge_data_action widget.attrs "change->treeselect-group#onSelect" %}
+                    {% set_context_var widget.attrs "data-group" "true" %}
                     {% partial input %}
                 {% endwith %}
             {% else %}
@@ -73,6 +74,7 @@
             {% else %}
                 aria-labelledby="{{ widget.aria_controls_prefix }}-label-{{ widget.group_index }}"
             {% endif %}
+            data-testid="group-container"
         >
             {% for optgroup in widget.optgroups %}
                 {% include optgroup.template_name with widget=optgroup %}
@@ -87,6 +89,7 @@
         class="fr-treeselect fr-nav__item"
         data-controller="treeselect"
         data-action="dsfr.search->treeselect#onSearch"
+        {% if widget.attrs.min_search_length %}data-treeselect-min-search-length-value="{{ widget.attrs.min_search_length }}"{% endif %}
     >
         <div class="fr-treeselect__wrapper">
             <button
@@ -108,7 +111,7 @@
                                 id="search-input"
                                 class="fr-input"
                                 aria-describedby="search-input-messages"
-                                placeholder="Rechercher… (tapez au moins 3 caractères)"
+                                placeholder="{{ widget.attrs.placeholder|default:'Rechercher… (tapez au moins 3 caractères)' }}"
                                 type="search"
                                 data-treeselect-target="searchbar"
                             >
@@ -124,6 +127,20 @@
                     </div>
                 {% endif %}
                 <div class="fr-treeselect__body" data-treeselect-target="body">
+                    {% if widget.allow_multiple_selected %}
+                        <section class="fr-btns-group fr-btns-group--right">
+                            <button
+                                type="button"
+                                class="fr-treeselect-unselect-all fr-link fr-hidden"
+                                data-action="treeselect#onUnselectAll"
+                                data-treeselect-target="unselectAllBtn"
+                                data-fr-prevent-conceal
+                                data-testid="treeselect-unselect-all"
+                            >
+                                Tout désélectionner
+                            </button>
+                        </section>
+                    {% endif %}
                     <section
                         class="fr-tags-group fr-treeselect__selected"
                         data-treeselect-target="selectedGroup"
@@ -132,10 +149,13 @@
                             <div
                                 class="fr-tag fr-background-action-high--blue-france fr-text-inverted--blue-france"
                                 type="button"
+                                title="__label__"
                                 data-controller="treeselect-selected-badge"
                                 data-treeselect-selected-badge-formval-value="__value__"
+                                data-testid="selected-tag"
+                                aria-label="__label__"
                             >
-                                __label__
+                                <span class="fr-tag--text">__label__</span>
                                 <button
                                     type="button"
                                     class="fr-btn fr-icon-close-circle-line"
@@ -146,9 +166,11 @@
                             </div>
                         </template>
                     </section>
-                    {% for optgroup in widget.optgroups %}
-                        {% include optgroup.template_name with widget=optgroup %}
-                    {% endfor %}
+                    <section data-testid="treeselect-options">
+                        {% for optgroup in widget.optgroups %}
+                            {% include optgroup.template_name with widget=optgroup %}
+                        {% endfor %}
+                    </section>
                 </div>
             </div>
         </div>

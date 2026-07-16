@@ -30,7 +30,7 @@ from tiac.constants import (
     TypeCollectivite,
     TypeRepas,
 )
-from tiac.fields import SelectWithAttributeField
+from tiac.fields import SelectConclusionWithAttributeField, SelectWithAttributeField
 from tiac.models import (
     AlimentSuspect,
     AnalyseAlimentaire,
@@ -239,10 +239,6 @@ class EvenementSimpleTransferForm(DsfrBaseForm, forms.ModelForm):
 
 
 class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
-    SuspicionConclusion = SuspicionConclusion
-    CategorieDanger = CategorieDanger
-    DangersSyndromiques = DangersSyndromiques
-
     date_reception = forms.DateField(
         required=True,
         label="Date de réception",
@@ -324,10 +320,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     precisions = forms.CharField(
         widget=forms.TextInput(attrs={"disabled": True}), required=False, label="Précisions", help_text="Type d'analyse"
     )
-    suspicion_conclusion = SEVESChoiceField(
-        label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=False
-    )
-    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
 
     class Meta:
         model = InvestigationTiac
@@ -350,11 +342,6 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
             "analyses_sur_les_malades",
             "precisions",
             "agents_confirmes_ars",
-            "suspicion_conclusion",
-            "selected_hazard",
-            "conclusion_comment",
-            "conclusion_repas",
-            "conclusion_aliment",
             "latest_version",
         )
         widgets = {
@@ -377,53 +364,16 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     def common_danger(self):
         return DANGERS_COURANTS
 
-    @cached_property
-    def selected_hazard_confirmed_choices(self):
-        return json.dumps(self.CategorieDanger.build_options())
-
-    @cached_property
-    def selected_hazard_suspected_choices(self):
-        return json.dumps([{"name": label, "value": value} for value, label in DangersSyndromiques.choices_short_names])
-
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self._add_free_links()
-        for field in ("conclusion_repas", "conclusion_aliment"):
-            self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
-            queryset = self[field].field.queryset
-            self[field].field.queryset = (
-                queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
-            )
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
 
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_reception"].initial = today
         self.fields["date_reception"].widget.attrs["max"] = today
-
-    def clean_suspicion_conclusion_and_selected_hazard(self):
-        suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
-        selected_hazard = self.cleaned_data.get("selected_hazard")
-
-        if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
-            self.cleaned_data["selected_hazard"] = []
-        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and any(
-            item not in CategorieDanger.values for item in selected_hazard
-        ):
-            self.add_error(
-                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
-            )
-        elif suspicion_conclusion == SuspicionConclusion.SUSPECTED and any(
-            item not in DangersSyndromiques.values for item in selected_hazard
-        ):
-            self.add_error(
-                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
-            )
-
-    def clean(self):
-        self.clean_suspicion_conclusion_and_selected_hazard()
-        return super().clean()
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -596,3 +546,123 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         widgets = {
             "sent_to_lnr_cnr": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
+
+
+class ConclusionForm(DsfrBaseForm, forms.ModelForm):
+    SuspicionConclusion = SuspicionConclusion
+
+    suspicion_conclusion = SEVESChoiceField(
+        label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=True
+    )
+    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
+
+    class Meta:
+        model = InvestigationTiac
+        fields = (
+            "suspicion_conclusion",
+            "selected_hazard",
+            "conclusion_comment",
+            "conclusion_repas",
+            "conclusion_aliment",
+        )
+        labels = {
+            "conclusion_repas": "Repas retenu",
+            "conclusion_aliment": "Aliment retenu",
+        }
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(
+                js_module("tiac/tiac_conclusion.mjs"),
+                js_module("ssa/treeselectjs.umd.js"),
+                js_module("ssa/form/widgets/legacy_treeselect.mjs"),
+            ),
+            css={
+                "all": (
+                    "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
+                    "ssa/form/widgets/_custom_tree_select.css",
+                )
+            },
+        )
+
+    def clean_suspicion_conclusion_and_selected_hazard(self):
+        suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
+        selected_hazard = self.cleaned_data.get("selected_hazard")
+
+        if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
+            self.cleaned_data["selected_hazard"] = []
+        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and any(
+            item not in CategorieDanger.values for item in selected_hazard
+        ):
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
+            )
+        elif suspicion_conclusion == SuspicionConclusion.SUSPECTED and any(
+            item not in DangersSyndromiques.values for item in selected_hazard
+        ):
+            self.add_error(
+                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        self.clean_suspicion_conclusion_and_selected_hazard()
+
+        needs_repas = (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED)
+        if cleaned_data.get("suspicion_conclusion") in needs_repas and not cleaned_data.get("conclusion_repas"):
+            self.add_error(
+                "conclusion_repas",
+                f"Le champ repas est obligatoire lorsque la conclusion est {SuspicionConclusion.CONFIRMED.label} ou {SuspicionConclusion.SUSPECTED.label}.",
+            )
+        return cleaned_data
+
+    def _init_conclusion(self):
+        categories_danger = list(
+            danger for analyse in self.instance.analyses_alimentaires.all() for danger in analyse.categorie_danger
+        )
+        hazards = categories_danger + self.instance.agents_confirmes_ars
+        if hazards:
+            self.fields["suspicion_conclusion"].widget = SelectConclusionWithAttributeField(
+                attrs={},
+                choices=self.fields["suspicion_conclusion"].choices,
+            )
+            self.initial["suspicion_conclusion"] = SuspicionConclusion.CONFIRMED
+            self.initial["selected_hazard"] = categories_danger + self.instance.agents_confirmes_ars
+        else:
+            if self.instance.danger_syndromiques_suspectes:
+                self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
+                self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
+            else:
+                self.fields["selected_hazard"].widget.attrs["data-treeselect-disabled"] = "true"
+
+        repas = self.instance.repas.all()
+        if len(repas) == 1:
+            self.initial["conclusion_repas"] = repas[0]
+        aliments = self.instance.aliments.all()
+        if len(aliments) == 1:
+            self.initial["conclusion_aliment"] = aliments[0]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ("conclusion_repas", "conclusion_aliment"):
+            self[field].field.empty_label = settings.SELECT_EMPTY_CHOICE
+            queryset = self[field].field.queryset
+            self[field].field.queryset = (
+                queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
+            )
+
+        if not self.instance.suspicion_conclusion:
+            self._init_conclusion()
+
+    @cached_property
+    def selected_hazard_confirmed_choices(self):
+        return json.dumps(CategorieDanger.build_options())
+
+    @cached_property
+    def selected_hazard_suspected_choices(self):
+        return json.dumps([{"name": label, "value": value} for value, label in DangersSyndromiques.choices_short_names])
+
+    @cached_property
+    def common_danger(self):
+        return DANGERS_COURANTS

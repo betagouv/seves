@@ -5,7 +5,8 @@ import itertools
 import typing
 
 from django.forms import Media, widgets
-from django.utils.choices import BaseChoiceIterator, normalize_choices
+from django.utils.choices import BaseChoiceIterator
+from django.utils.functional import Promise
 
 from core.form_mixins import js_module
 
@@ -18,11 +19,11 @@ if typing.TYPE_CHECKING:
     _ChoiceNamedGroup: TypeAlias = tuple[str, Iterable[_Choice]]
     _Choices: TypeAlias = Iterable["_Choice | _ChoiceNamedGroup | TreeselectGroup | TreeselectItem"] | type[Choices]
 
-_UNSET = type("UNSET", (), {"__bool__": lambda *args: False})()
+_UNSET = type("UNSET", (), {"__bool__": lambda *args: False, "__repr__": lambda *args: "UNSET"})()
 
 
 @dataclasses.dataclass(kw_only=True)
-class TreeselectItem:
+class TreeselectItem(Promise):
     value: Any
     label: str
     categorised_label: str | None
@@ -30,7 +31,7 @@ class TreeselectItem:
 
 
 @dataclasses.dataclass(kw_only=True)
-class TreeselectGroup(BaseChoiceIterator):
+class TreeselectGroup(BaseChoiceIterator, Promise):
     value: Any = _UNSET
     label: str
     choices: _Choices
@@ -38,7 +39,6 @@ class TreeselectGroup(BaseChoiceIterator):
     can_expand: bool = True
 
     def __post_init__(self):
-        self.choices = normalize_choices(self.choices)
         self._choices_list = list(self.choices)
 
     def __getitem__(self, index):
@@ -156,8 +156,9 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
 
     @choices.setter
     def choices(self, value):
-        if not self._choices:
-            self._choices = normalize_choices(value)
+        # We don't want to forcibly evaluate BaseChoiceIterator here
+        if not isinstance(self._choices, (BaseChoiceIterator, Promise, bytes, str)) and not self._choices:
+            self._choices = value
 
     @property
     def media(self):
@@ -193,6 +194,7 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context["widget"]["has_search_bar"] = self.has_search_bar
+        context["widget"]["allow_multiple_selected"] = self.allow_multiple_selected
         return context
 
     def optgroups(self, name, values, attrs=None):
@@ -220,9 +222,6 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         return TreeselectGroupWidget(
             self, TreeselectItem(label=str(label), value=value, categorised_label="")
         ).create_option(name, value, label, selected, index, subindex, attrs)
-
-    def render(self, name, value, attrs=None, renderer=None):
-        return super().render(name, value, attrs, renderer)
 
 
 class TreeselectRadio(TreeselectCheckbox):

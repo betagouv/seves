@@ -6,7 +6,7 @@ from core.tests.generic_tests.actions import (
     generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object,
     generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
-from tiac.factories import InvestigationTiacFactory
+from tiac.factories import AnalyseAlimentaireFactory, InvestigationTiacFactory, RepasSuspectFactory
 from tiac.models import InvestigationTiac
 
 from .pages import InvestigationTiacDetailsPage
@@ -78,3 +78,18 @@ def test_can_download_document_investigation_cas_humain_when_no_publication_date
     details_page.navigate(evenement)
     download = details_page.download().value
     assert download.suggested_filename == f"investigation_tiac_{evenement.numero}.docx"
+
+
+def test_investigation_tiac_details_performance(live_server, client, django_assert_num_queries):
+    evenement = InvestigationTiacFactory()
+
+    client.get(evenement.get_absolute_url())
+
+    with django_assert_num_queries(26):
+        client.get(evenement.get_absolute_url())
+
+    RepasSuspectFactory.create_batch(3, investigation=evenement)
+    AnalyseAlimentaireFactory.create_batch(3, investigation=evenement)
+
+    with django_assert_num_queries(27):
+        client.get(evenement.get_absolute_url())

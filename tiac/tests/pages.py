@@ -7,6 +7,7 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from core.pages import WithActionsPage
+from core.tests.pages import TreeselectPage
 from ssa.constants import CategorieDanger
 from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
@@ -291,16 +292,16 @@ class EvenementListPage(WithTreeSelect):
     def full_text_field(self):
         return self.page.locator("#id_full_text_search")
 
-    def set_agent_filter(self, value, choice_js_fill_from_element):
-        element = self.page.locator("#id_agent_contact").locator("..")
-        choice_js_fill_from_element(self.page, element, value, value)
+    def set_agent_filter(self, value):
+        element = self.page.locator("label", has_text="Agent en contact").locator("..")
+        TreeselectPage(self.page, element).check_option(value)
 
-    def set_structure_filter(self, value, choice_js_fill_from_element):
-        element = self.page.locator("#id_structure_contact").locator("..")
-        choice_js_fill_from_element(self.page, element, value, value)
+    def set_structure_filter(self, value):
+        element = self.page.locator("label", has_text="Structure en contact").locator("..")
+        TreeselectPage(self.page, element).check_option(value)
 
     def submit_search(self):
-        return self.page.locator("#search-form").get_by_text("Rechercher", exact=True).click()
+        return self.page.get_by_test_id("submit-search").click()
 
     def submit_export(self):
         return self.page.get_by_role("button", name="Extraire", exact=True).click()
@@ -494,9 +495,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         "datetime_last_symptoms",
         "analyses_sur_les_malades",
         "precisions",
-        "suspicion_conclusion",
-        "selected_hazard",
-        "conclusion_comment",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -553,6 +551,7 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
         container.evaluate("el => el.scrollIntoView()")
         container.locator(".treeselect-input__edit").click()
         container.locator(".shortcut", has_text=label).locator("..").click()
+        self.page.keyboard.press("Escape")
 
     @property
     def current_modal(self):
@@ -669,8 +668,18 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def nb_aliments(self):
         return self.page.locator(".aliment-card").locator("visible=true").count()
 
+    def submit_from_top(self):
+        self.page.get_by_test_id("top-action-btns").get_by_test_id("submit-publish").click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
     def submit(self, btn_label="Enregistrer"):
         self.page.get_by_test_id("bottom-action-btns").get_by_test_id("submit-publish").click()
+        self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
+
+    def submit_from_top_as_draft(self):
+        self.page.get_by_test_id("top-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         self.page.wait_for_url(f"**{reverse('tiac:investigation-tiac-details', kwargs={'numero': '*'})}")
 
     def submit_as_draft(self):
@@ -685,17 +694,6 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def remove_free_link(self, index):
         self.page.locator("#liens-libre").get_by_role("button", name="Remove item").nth(index).click()
 
-    def fill_conlusion(self, input_data):
-        self.suspicion_conclusion.select_option(input_data.suspicion_conclusion)
-        if input_data.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
-            for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", CategorieDanger(item).label)
-        elif input_data.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
-            for item in input_data.selected_hazard:
-                self._set_treeselect_option("selected_hazard-treeselect", DangersSyndromiques(item).short_name)
-
-        self.conclusion_comment.fill(input_data.conclusion_comment)
-
 
 class InvestigationTiacEditPage(InvestigationTiacFormPage):
     def __init__(self, page: Page, base_url, investigation: InvestigationTiac):
@@ -708,7 +706,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin, WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -776,3 +774,66 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     @property
     def current_modal(self):
         return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    @property
+    def add_conclusion_button(self):
+        return self.page.get_by_role("button", name="Enregistrer la conclusion")
+
+    @property
+    def edit_conclusion_button(self):
+        return self.page.get_by_role("button", name="Modifier la conclusion")
+
+    @property
+    def selected_hazard_label(self):
+        return self.page.locator("[for=id_selected_hazard]")
+
+    @property
+    def selected_hazard_hidden_field(self):
+        return self.page.locator("#id_selected_hazard")
+
+    @property
+    def delete_conclusion_button(self):
+        return self.current_modal.get_by_role("button", name="Supprimer la conclusion")
+
+    @property
+    def repas_field(self):
+        return self.page.locator("#id_conclusion_repas")
+
+    @property
+    def aliment_field(self):
+        return self.page.locator("#id_conclusion_aliment")
+
+    def save_conclusion(self):
+        self.page.locator(".fr-modal__body").locator("visible=true").get_by_role("button", name="Enregistrer").click()
+
+    @property
+    def suspicion_conclusion_field(self):
+        return self.page.locator("#id_suspicion_conclusion")
+
+    def fill_conclusion(self, input_data):
+        self.add_conclusion_button.click()
+        self.suspicion_conclusion_field.select_option(input_data["suspicion_conclusion"])
+        self.selected_hazard_label.evaluate(
+            """(el) => {
+                el.closest('.fr-modal__body').scrollTop = 200;
+            }"""
+        )
+        if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
+            self.clear_treeselect("selected_hazard-treeselect")
+            for item in input_data["selected_hazard"]:
+                final_label = CategorieDanger(item).label.split(">")[-1].strip()
+                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
+        elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
+            self.clear_treeselect("selected_hazard-treeselect")
+            for item in input_data["selected_hazard"]:
+                label = DangersSyndromiques(item).short_name
+                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", label, label)
+        self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
+
+        if input_data["suspicion_conclusion"] != SuspicionConclusion.DISCARDED:
+            if input_data.get("conclusion_repas"):
+                self.repas_field.select_option(str(input_data["conclusion_repas"]))
+            if input_data.get("conclusion_aliment"):
+                self.aliment_field.select_option(str(input_data["conclusion_aliment"]))
+
+        self.save_conclusion()

@@ -78,13 +78,9 @@
 
     <div class="fr-grid-row fr-col">
         <div class="fr-col-12 fr-col-xl-6">
-            <div class="fr-fieldset__element">
-                {{ form.categorie_danger.label_tag }}
-                <div id="categorie-danger"></div>
-                {{ form.categorie_danger }}
-                <div class="fr-mt-2v fr-hidden" id="notice-container-risque">
-                    {% dsfr_notice title="__content__" %}
-                </div>
+            <div class="fr-fieldset__element" data-controller="treeselect-categorie-messages">
+                {% dsfr_form_field form.categorie_danger|set_data:"action:change->treeselect-categorie-messages#onCategorieDangerSelected"|set_data:"treeselect-categorie-messages-target:categorieDangerInput" %}
+                {% include "ssa/_treeselect_categorie_messages_notice.html" with id="notice-container-risque" %}
             </div>
             <div class="fr-fieldset__element">
                 {% dsfr_form_field form.precision_danger %}
@@ -103,15 +99,3 @@
         </div>
     </div>
 </fieldset>
-
-<div class="fr-hidden" id="categorie-danger-header">
-    <div class="fr-ml-1v">Dangers les plus courants</div>
-    {% for danger in form.danger_plus_courants %}
-        <div class="treeselect-list__item" level="0" group="false">
-            <label class="treeselect-list__item-label shortcut">{{ danger }}</label>
-        </div>
-    {% endfor %}
-    <div class="fr-ml-1v">Liste complète des dangers</div>
-</div>
-
-<div id="categorie-danger-data" class="fr-hidden">{{ form.categorie_danger_data }}</div>

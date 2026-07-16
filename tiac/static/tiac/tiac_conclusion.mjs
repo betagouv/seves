@@ -22,6 +22,9 @@ class ConclusionFormController extends Controller {
         "selectedHazardTreeselect",
         "selectedHazardTreeselectInput",
         "selectedHazardTreeselectHeader",
+        "notice",
+        "noticeAliment",
+        "noticeRepas",
     ]
     static values = {
         suspicionConclusionChoices: Object,
@@ -33,6 +36,11 @@ class ConclusionFormController extends Controller {
 
     /** @param {HTMLSelectElement} el */
     selectedHazardTreeselectTargetConnected(el) {
+        let disabled = false
+        if (this.selectedHazardTreeselectInputTarget.dataset.treeselectDisabled) {
+            disabled = true
+        }
+
         this.treeselect = new Treeselect({
             ...tsDefaultOptions,
             parentHtmlContainer: el,
@@ -40,6 +48,7 @@ class ConclusionFormController extends Controller {
             options: [],
             isSingleSelect: false,
             isIndependentNodes: true,
+            disabled: disabled,
             openCallback: this.treeselectOpenCallback.bind(this),
             searchCallback: item => {
                 if (item.length === 0) {
@@ -50,9 +59,6 @@ class ConclusionFormController extends Controller {
             },
         })
         patchItems(this.treeselect.srcElement)
-        if (this.suspicionConclusionValue !== "") {
-            this.suspicionConclusionValueChanged(this.suspicionConclusionChoicesValue)
-        }
     }
 
     selectedHazardTreeselectTargetDiconnected() {
@@ -71,6 +77,7 @@ class ConclusionFormController extends Controller {
 
     onTreeselectInput({detail}) {
         if (detail.length === 0) {
+            this.selectedHazardTreeselectInputTarget.value = ""
             this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
                 checkbox.checked = false
             })
@@ -123,14 +130,17 @@ class ConclusionFormController extends Controller {
         if (this.treeselect === undefined) return
 
         this.conclusionRepasTarget.disabled = false
+        this.conclusionRepasTarget.required = false
         this.conclusionAlimentTarget.disabled = false
         if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
+            this.conclusionRepasTarget.required = true
             this.treeselect.disabled = false
             this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse"
             this.selectedHazardTreeselectInputTarget.required = true
             this.treeselect.options = this.selectedHazardConfirmedChoicesValue
             this.treeselect.mount()
         } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
+            this.conclusionRepasTarget.required = true
             this.treeselect.disabled = false
             this.treeselect.placeholder = "Choisir dans la liste parmi les dangers syndromiques"
             this.selectedHazardTreeselectInputTarget.required = true
@@ -156,14 +166,49 @@ class ConclusionFormController extends Controller {
 
         if (this.selectedHazardTreeselectInitializedValue) {
             this.treeselect.updateValue("")
-        } else {
+            this.selectedHazardTreeselectInputTarget.value = ""
+        } else if (value) {
             this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
             this.selectedHazardTreeselectInitializedValue = true
+        }
+
+        if (this.suspicionConclusionTarget.selectedOptions?.[0]?.dataset?.needsNotice === "true") {
+            this.noticeTarget.classList.remove("fr-hidden")
+        } else {
+            this.noticeTarget.classList.add("fr-hidden")
         }
     }
 
     onSuspicionConclusionChanged({target: {value}}) {
         this.suspicionConclusionValue = value
+    }
+
+    conclusionAlimentTargetConnected() {
+        if (this.conclusionAlimentTarget.value) {
+            this.noticeAlimentTarget.classList.add("fr-hidden")
+        } else {
+            this.noticeAlimentTarget.classList.remove("fr-hidden")
+        }
+    }
+
+    conclusionRepasTargetConnected() {
+        if (this.conclusionRepasTarget.value) {
+            this.noticeRepasTarget.classList.add("fr-hidden")
+        } else {
+            this.noticeRepasTarget.classList.remove("fr-hidden")
+        }
+    }
+
+    onAlimentChanged(event) {
+        if (event.target.value) {
+            this.noticeAlimentTarget.classList.add("fr-hidden")
+        } else {
+            this.noticeAlimentTarget.classList.remove("fr-hidden")
+        }
+    }
+
+    onRepasChanged(event) {
+        this.noticeRepasTarget.classList.toggle("fr-hidden", event.target.value)
     }
 }
 

@@ -13,23 +13,23 @@ class EspeceSearch extends Controller {
     static values = {position: {type: String, default: "auto"}}
 
     /** @type {?Choices} */
-    #choiceWidget = null
+    choiceWidget = null
 
     selectTargetConnected(el) {
         this.cleanup(el)
-        this.#choiceWidget = new Choices(el, {
+        this.choiceWidget = new Choices(el, {
             ...choicesDefaults,
             removeItemButton: true,
             placeholderValue: "Tapez minimum 2 caractères",
             searchResultLimit: 50,
             position: this.positionValue,
         })
-        this.#choiceWidget.input.element.dataset.action = `${this.identifier}#onInput`
+        this.choiceWidget.input.element.dataset.action = `${this.identifier}#onInput`
     }
 
     selectTargetDisconnected() {
-        this.#choiceWidget?.destroy()
-        this.#choiceWidget = null
+        this.choiceWidget?.destroy()
+        this.choiceWidget = null
     }
 
     /** @param {HTMLSelectElement} el */
@@ -66,8 +66,8 @@ class EspeceSearch extends Controller {
      */
     async onInput({target: {value}}) {
         if (value.trim().length >= 2) {
-            this.#choiceWidget?.clearChoices()
-            this.#choiceWidget?.setChoices(await this.search(value), "value", "label", true)
+            this.choiceWidget?.clearChoices()
+            this.choiceWidget?.setChoices(await this.search(value), "value", "label", true)
         }
     }
 }

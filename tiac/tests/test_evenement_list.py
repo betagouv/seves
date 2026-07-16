@@ -128,18 +128,20 @@ def test_list_can_filter_by_date_reception(live_server, mocked_authentification_
     expect(search_page.page.get_by_text("2025.4")).not_to_be_visible()
 
 
-def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
+def test_search_with_structure_contact(live_server, page: Page):
     evenement_1 = EvenementSimpleFactory(numero_annee=2024)
     evenement_2 = InvestigationTiacFactory(numero_annee=2025)
     evenement_3 = EvenementSimpleFactory(numero_annee=2026)
     evenement_4 = InvestigationTiacFactory(numero_annee=2027)
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_structure_2 = ContactStructureFactory(with_one_active_agent=True)
     evenement_1.contacts.add(contact_structure)
-    evenement_2.contacts.add(contact_structure)
+    evenement_2.contacts.add(contact_structure_2)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_structure_filter(str(contact_structure), choice_js_fill_from_element)
+    search_page.set_structure_filter(str(contact_structure))
+    search_page.set_structure_filter(str(contact_structure_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
@@ -148,18 +150,20 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
     expect(page.get_by_text(evenement_4.numero, exact=True)).not_to_be_visible()
 
 
-def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
+def test_search_with_agent_contact(live_server, page: Page):
     evenement_1 = EvenementSimpleFactory(numero_annee=2000)
     evenement_2 = InvestigationTiacFactory(numero_annee=2001)
     evenement_3 = EvenementSimpleFactory(numero_annee=2002)
     evenement_4 = InvestigationTiacFactory(numero_annee=2003)
     contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_agent_2 = ContactAgentFactory(with_active_agent=True)
     evenement_1.contacts.add(contact_agent)
-    evenement_2.contacts.add(contact_agent)
+    evenement_2.contacts.add(contact_agent_2)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_agent_filter(str(contact_agent), choice_js_fill_from_element)
+    search_page.set_agent_filter(str(contact_agent))
+    search_page.set_agent_filter(str(contact_agent_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).to_be_visible()
@@ -293,7 +297,9 @@ def test_can_filter_by_pays(live_server, mocked_authentification_user, page: Pag
 
 
 def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Page):
-    to_be_found_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS, numero_annee=2020)
+    to_be_found_1 = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS, numero_annee=2020, suspicion_conclusion=None
+    )
     to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS, numero_annee=2021)
     not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
     not_to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.CLOTURE, numero_annee=2023)
@@ -307,6 +313,24 @@ def test_can_filter_by_etat(live_server, mocked_authentification_user, page: Pag
 
     expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
+    expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
+
+
+def test_can_filter_by_etat_conclu(live_server, page: Page):
+    to_be_found_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.CONCLU, numero_annee=2020)
+    not_to_be_found_1 = InvestigationTiacFactory(numero_annee=2022)
+    not_to_be_found_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.CLOTURE, numero_annee=2023)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_sidebar()
+    search_page.etat.select_option("Conclu")
+    search_page.add_filters()
+    search_page.submit_search()
+
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.locator("td").get_by_text("Conclu", exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 

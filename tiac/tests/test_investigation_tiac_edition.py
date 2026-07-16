@@ -3,8 +3,8 @@ from playwright.sync_api import Page, expect
 import pytest
 
 from core.constants import MUS_STRUCTURE
-from core.factories import ContactAgentFactory
 from core.models import Contact, LienLibre
+from ssa.constants import CategorieDanger
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import (
@@ -16,9 +16,9 @@ from tiac.factories import (
     RepasSuspectFactory,
 )
 
-from ..constants import DangersSyndromiques, SuspicionConclusion
+from ..constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from ..models import Analyses, Etablissement, EvenementSimple, InvestigationFollowUp, InvestigationTiac
-from .pages import InvestigationTiacEditPage
+from .pages import InvestigationTiacDetailsPage, InvestigationTiacEditPage
 
 pytestmark = pytest.mark.usefixtures("mus_contact")
 
@@ -111,7 +111,7 @@ def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, ch
     edit_page.set_analyses(new_analyses_sur_les_malades.value)
     edit_page.precisions.fill(new_precision)
     edit_page.add_agent_pathogene_confirme_via_shortcut("Shigella")
-    edit_page.submit()
+    edit_page.submit_from_top()
 
     investigation.refresh_from_db()
     assert_models_are_equal(
@@ -268,20 +268,13 @@ def test_cancel_edit_on_etablissement_reset_all_value(
     assert initial_etablissement == investigation.etablissements.get()
 
 
-def test_can_edit_etiologie_conclusion_and_freelinks(
+def test_can_edit_freelinks(
     live_server, page: Page, ensure_departements, assert_models_are_equal, choose_different_values, choice_js_fill
 ):
     investigation: InvestigationTiac = InvestigationTiacFactory(with_liens_libres=2)
     other_event_1 = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     other_event_2 = EvenementSimpleFactory(etat=EvenementSimple.Etat.EN_COURS)
     other_event_3 = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
-
-    new_investigation: InvestigationTiac = InvestigationTiacFactory(
-        agents_confirmes_ars=choose_different_values(SuspicionConclusion.values, investigation.agents_confirmes_ars),
-        suspicion_conclusion=choose_different_values(
-            SuspicionConclusion.values, [investigation.suspicion_conclusion], singleton=True
-        ),
-    )
 
     edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
     edit_page.navigate()
@@ -290,8 +283,6 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
     edit_page.add_free_link(other_event_1.numero, choice_js_fill)
     edit_page.add_free_link(other_event_2.numero, choice_js_fill, link_label="Enregistrement simple : ")
     edit_page.add_free_link(other_event_3.numero, choice_js_fill, link_label="Événement produit : ")
-    edit_page.fill_conlusion(new_investigation)
-
     edit_page.submit()
 
     investigation.refresh_from_db()
@@ -300,18 +291,6 @@ def test_can_edit_etiologie_conclusion_and_freelinks(
         other_event_2,
         other_event_3,
     }
-    assert_models_are_equal(
-        investigation,
-        new_investigation,
-        fields=[
-            "suspicion_conclusion",
-            "selected_hazard",
-            "conclusion_comment",
-            "conclusion_repas",
-            "conclusion_aliment",
-        ],
-        ignore_array_order=True,
-    )
 
 
 def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live_server, page: Page, mailoutbox):
@@ -330,28 +309,6 @@ def test_edit_investigation_tiac_with_investigation_coordonnee_notification(live
     assert set(mail.to) == {"text@example.com", contact_structure_mus.email}
     assert "Investigation coordonnée" in mail.subject
     assert contact_structure_mus in investigation.contacts.all()
-
-
-def test_edit_investigation_tiac_with_conclusion_notification(live_server, page: Page, mailoutbox):
-    investigation = InvestigationTiacFactory(suspicion_conclusion=None)
-    contact_1, contact_2, contact_3 = ContactAgentFactory.create_batch(3)
-    investigation.contacts.add(contact_1, contact_2, contact_3)
-    creation_page = InvestigationTiacEditPage(page, live_server.url, investigation=investigation)
-    creation_page.navigate()
-    creation_page.suspicion_conclusion.select_option(SuspicionConclusion.CONFIRMED)
-    creation_page._set_treeselect_option(
-        "selected_hazard-treeselect", "Allergène - composition ou étiquetage > Allergène - Arachide"
-    )
-    creation_page.submit_as_draft()
-
-    investigation = InvestigationTiac.objects.get()
-    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED
-
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    assert set(mail.to) == {contact_1.email, contact_2.email, contact_3.email}
-    assert "Conclusion suspicion TIAC" in mail.subject
-    assert "TIAC à agent confirmé" in mail.body
 
 
 def test_can_update_ars_block_only_when_analysis_is_true(live_server, mocked_authentification_user, page: Page):
@@ -414,3 +371,102 @@ def test_update_investigation_tiac_updates_last_updated_field(live_server, page)
     update_page.page.wait_for_url(f"**{evenement.numero_evenement}**")
     evenement.refresh_from_db()
     assert evenement.last_updated > initial_last_update
+
+
+def test_cancel_edit_on_repas_reset_values(live_server, page: Page, ensure_departements, assert_models_are_equal):
+    departement, *_ = ensure_departements("Paris")
+
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_repas=1,
+        with_repas__departement=departement,
+    )
+    initial_repas = investigation.repas.get()
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_repas_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator("visible=true").locator('[id$="denomination"]').fill("New value")
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.get_repas_card(0).locator(".modify-button").click()
+
+    modal = edit_page.current_modal
+    expect(modal.locator('[id$="denomination"]')).to_have_value(initial_repas.denomination)
+
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.repas.count() == 1
+    assert initial_repas == investigation.repas.get()
+
+
+def test_cancel_edit_on_repas_show_correct_conditional_field(
+    live_server, page: Page, ensure_departements, assert_models_are_equal
+):
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_repas=1,
+        with_repas__type_repas=TypeRepas.DOMICILE,
+    )
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_repas_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator('[id$="type_repas"]').select_option(TypeRepas.RESTAURATION_COLLECTIVE)
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+
+    edit_page.get_repas_card(0).locator(".modify-button").click()
+    expect(edit_page.current_modal.locator('[id$="type_collectivite"]')).not_to_be_visible()
+
+
+def test_editing_investigation_does_not_wipe_existing_conclusion(
+    live_server, page: Page, ensure_departements, assert_models_are_equal
+):
+    departement, *_ = ensure_departements("Paris")
+
+    investigation = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(investigation)
+    detail_page.fill_conclusion(
+        {
+            "conclusion_comment": "Mon commentaire",
+            "suspicion_conclusion": SuspicionConclusion.CONFIRMED.value,
+            "selected_hazard": [CategorieDanger.values[0]],
+            "conclusion_repas": investigation.repas.get().pk,
+            "conclusion_aliment": investigation.aliments.get().pk,
+        }
+    )
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+
+    investigation.refresh_from_db()
+    original_conclusion_repas = investigation.conclusion_repas
+    original_conclusion_aliment = investigation.conclusion_aliment
+    assert original_conclusion_repas is not None
+    assert original_conclusion_aliment is not None
+
+    new_repas = RepasSuspectFactory.build(departement=departement)
+    new_aliment = AlimentSuspectFactory.build(cuisine=True)
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+    edit_page.add_repas(new_repas)
+    edit_page.add_aliment_cuisine(new_aliment)
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+    assert investigation.repas.count() == 2
+    assert investigation.aliments.count() == 2
+    assert investigation.conclusion_repas == original_conclusion_repas
+    assert investigation.conclusion_aliment == original_conclusion_aliment
+    assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED.value
+    assert investigation.conclusion_comment == "Mon commentaire"

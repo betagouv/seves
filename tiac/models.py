@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import strip_tags
 import reversion
 from reversion.models import Version
@@ -290,6 +291,7 @@ class Analyses(models.TextChoices):
 class InvestigationTiac(
     AllowsSoftDeleteMixin,
     AllowModificationMixin,
+    WithEtatMixin,
     WithContactPermissionMixin,
     WithSharedNumeroMixin,
     WithFreeLinkIdsMixin,
@@ -302,6 +304,14 @@ class InvestigationTiac(
     WithLastUpdatedDatetime,
     models.Model,
 ):
+    class Etat(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        EN_COURS = "en_cours", "En cours"
+        CLOTURE = "cloture", "Clôturé"
+        CONCLU = "conclu", "Conclu"
+
+    etat = models.CharField(max_length=100, choices=Etat, verbose_name="État de l'événement", default=Etat.BROUILLON)
+
     will_trigger_inquiry = models.BooleanField(default=False, verbose_name="Enquête auprès des cas")
     numero_sivss = models.CharField(
         max_length=6,
@@ -353,12 +363,8 @@ class InvestigationTiac(
     )
     conclusion_comment = models.TextField("Commentaire", default="", blank=True)
 
-    conclusion_repas = models.ForeignKey(
-        "tiac.RepasSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
-    conclusion_aliment = models.ForeignKey(
-        "tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, default=None, blank=True
-    )
+    conclusion_repas = models.ForeignKey("tiac.RepasSuspect", on_delete=models.PROTECT, null=True, blank=True)
+    conclusion_aliment = models.ForeignKey("tiac.AlimentSuspect", on_delete=models.PROTECT, null=True, blank=True)
 
     objects = InvestigationTiacManager()
 
@@ -369,6 +375,13 @@ class InvestigationTiac(
                     annee, numero = InvestigationTiac._get_annee_and_numero()
                     self.numero_annee = annee
                     self.numero_evenement = numero
+
+                if (
+                    "suspicion_conclusion" in self.get_dirty_fields()
+                    and self.suspicion_conclusion
+                    and self.etat == self.Etat.EN_COURS
+                ):
+                    self.etat = self.Etat.CONCLU
                 super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -513,6 +526,18 @@ class InvestigationTiac(
             ("_prefetched_analyses_alimentaires", AnalyseAlimentaire.objects.filter(investigation=self)),
         ]
 
+    @property
+    def can_add_or_edit_conclusion(self):
+        return self.etat in (self.Etat.EN_COURS, self.Etat.CONCLU)
+
+    def publish(self):
+        self.etat = self.Etat.EN_COURS
+        if self.suspicion_conclusion:
+            self.etat = self.Etat.CONCLU
+        if hasattr(self, "date_publication"):
+            self.date_publication = timezone.now()
+        self.save()
+
     class Meta:
         constraints = (
             models.CheckConstraint(
@@ -540,7 +565,7 @@ class InvestigationTiac(
                 name="selected_hazard_constraints",
             ),
             models.CheckConstraint(
-                condition=~Q(suspicion_conclusion=SuspicionConclusion.UNKNOWN.value)
+                condition=~Q(suspicion_conclusion=SuspicionConclusion.DISCARDED.value)
                 | (Q(conclusion_repas__isnull=True) & Q(conclusion_aliment__isnull=True)),
                 name="repas_aliment_only_if_conclusion_known",
             ),

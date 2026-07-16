@@ -140,6 +140,9 @@ class ContactQueryset(QuerySet):
     def order_by_structure_and_name(self):
         return self.order_by("agent__structure__libelle", "agent__nom", "agent__prenom")
 
+    def order_by_contact_name(self):
+        return self.order_by("agent__nom", "agent__prenom")
+
 
 class LienLibreManager(Manager):
     def delete_related_links(self, object):

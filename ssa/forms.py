@@ -1,10 +1,7 @@
-import json
-
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import ChoiceField, Media
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, DSFRRadioButton, SEVESChoiceField
@@ -58,9 +55,6 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
         label="Description de l'événement",
     )
 
-    categorie_danger = SEVESChoiceField(
-        required=False, choices=CategorieDanger.choices, widget=forms.HiddenInput, label_suffix=""
-    )
     precision_danger = forms.CharField(
         required=False,
         label="Précision danger",
@@ -74,26 +68,8 @@ class WithEvenementCommonMixin(WithEvenementProduitFreeLinksMixin, forms.Form):
     @property
     def media(self):
         return super().media + Media(
-            css={
-                "all": (
-                    "ssa/form/widgets/_custom_tree_select.css",
-                    "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
-                )
-            },
-            js=(js_module("ssa/categorie_djanger.mjs"), js_module("ssa/free_links.mjs")),
+            js=(js_module("ssa/categorie_danger_produit_messages.mjs"), js_module("ssa/free_links.mjs")),
         )
-
-    def categorie_danger_data(self):
-        return mark_safe(json.dumps(CategorieDanger.build_options(sorted_results=True)))
-
-    def danger_plus_courants(self):
-        return [
-            CategorieDanger.LISTERIA_MONOCYTOGENES,
-            CategorieDanger.SALMONELLA_ENTERITIDIS,
-            CategorieDanger.SALMONELLA_TYPHIMURIUM,
-            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
-            CategorieDanger.RESIDU_DE_PESTICIDE_BIOCIDE,
-        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,7 +91,17 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
         label="Inclut des aliments pour animaux",
     )
 
-    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
+    categorie_produit = ChoiceField(
+        required=False, choices=CategorieProduit, widget=TreeselectRadio(choices=CategorieProduit.treeselect_groups)
+    )
+    categorie_danger = ChoiceField(
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectRadio(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_ssa_pc)
+        ),
+    )
+
     lots = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 30, "rows": 4}), label="Lots, DLC/DDM")
     description_complementaire = forms.CharField(
         required=False,
@@ -231,15 +217,6 @@ class EvenementProduitForm(DSFRForm, WithEvenementCommonMixin, WithLatestVersion
         }
 
 
-class EvenementProduitTreeselectForm(EvenementProduitForm):
-    categorie_produit = ChoiceField(
-        required=False, choices=CategorieProduit, widget=TreeselectRadio(choices=CategorieProduit.treeselect_groups)
-    )
-    categorie_danger = ChoiceField(
-        required=False, choices=CategorieDanger, widget=TreeselectRadio(choices=CategorieDanger.treeselect_choices)
-    )
-
-
 class EtablissementForm(DsfrBaseForm, WithCommonContextVars, BaseEtablissementForm, forms.ModelForm):
     template_name = "ssa/forms/etablissement.html"
 
@@ -286,6 +263,14 @@ class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm)
 class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLatestVersionLocking, forms.ModelForm):
     template_name = "ssa/forms/investigation_cas_humain.html"
 
+    categorie_danger = ChoiceField(
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectRadio(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_ssa_ich)
+        ),
+    )
+
     source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=True)
 
     def __init__(self, *args, **kwargs):
@@ -295,17 +280,6 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
 
         if not self.user.agent.structure.is_ac:
             self.fields.pop("numero_rasff")
-
-    def danger_plus_courants(self):
-        return [
-            CategorieDanger.LISTERIA_MONOCYTOGENES,
-            CategorieDanger.ESCHERICHIA_COLI_SHIGATOXINOGENE,
-            CategorieDanger.SALMONELLA_ENTERITIDIS,
-            CategorieDanger.SALMONELLA_TYPHIMURIUM,
-            CategorieDanger.YERSINIA_ENTEROCOLITICA,
-            CategorieDanger.CLOSTRIDIUM_BOTULINUM,
-            CategorieDanger.VIRUS_DE_L_ENCEPHALITE_A_TIQUE,
-        ]
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -341,9 +315,3 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
                 },
             )
         }
-
-
-class InvestigationCasHumainTreeselectForm(InvestigationCasHumainForm):
-    categorie_danger = ChoiceField(
-        required=False, choices=CategorieDanger, widget=TreeselectRadio(choices=CategorieDanger.treeselect_choices)
-    )

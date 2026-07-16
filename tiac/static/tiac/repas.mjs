@@ -4,7 +4,7 @@ import {BaseFormSetController} from "BaseFormset"
 import {collectFormValues} from "Forms"
 
 class RepasFormController extends BaseFormInModal {
-    static targets = ["denominationInput", "typeCollectiviteInputContainer", "typeCollectiviteInput"]
+    static targets = ["denominationInput", "typeCollectiviteInputContainer", "typeCollectiviteInput", "typeRepasInput"]
 
     connect() {
         if (this.shouldImmediatelyShowValue) {
@@ -20,13 +20,19 @@ class RepasFormController extends BaseFormInModal {
     }
 
     onCloseForm() {
+        if (!this.keepChangesValue) {
+            this.restoreForm()
+            this.typeRepasInputTarget.dispatchEvent(new Event("change", {bubbles: true}))
+        }
+        this.keepChangesValue = false
+
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()
     }
 
-    onTypeRepasChoice(event) {
-        const selectedOption = event.target.options[event.target.selectedIndex]
+    onTypeRepasChoice() {
+        const selectedOption = this.typeRepasInputTarget.options[this.typeRepasInputTarget.selectedIndex]
         if (selectedOption.getAttribute("data-needs-type-collectivite") === "true") {
             this.typeCollectiviteInputContainerTarget.classList.remove("fr-hidden")
         } else {

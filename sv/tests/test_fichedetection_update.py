@@ -155,6 +155,74 @@ def test_fiche_detection_update_lieu_modal_content(
     )
 
 
+def test_edit_lieu_modal_reset_values_when_close_without_saving(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+    choice_js_get_values,
+):
+    fiche_detection = FicheDetectionFactory()
+    lieu = LieuFactory(fiche_detection=fiche_detection, is_etablissement=True)
+    page.goto(f"{live_server.url}{fiche_detection.get_update_url()}")
+
+    lieu_form_elements.edit_form(0)
+    lieu_form_elements.nom_input.fill("Test")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.force_lieu_address("Test address")
+    lieu_form_elements.force_commune()
+    lieu_form_elements.coord_gps_wgs84_latitude_input.fill(str(10))
+    lieu_form_elements.coord_gps_wgs84_longitude_input.fill(str(20))
+
+    lieu_form_elements.activite_etablissement_input.fill(lieu.activite_etablissement)
+    lieu_form_elements.pays_etablissement_input.select_option(lieu.pays_etablissement.code)
+    lieu_form_elements.raison_sociale_etablissement_input.fill(lieu.raison_sociale_etablissement)
+    lieu_form_elements.force_etablissement_address(lieu.adresse_etablissement)
+    lieu_form_elements.fill_siret_etablissement(
+        f"{lieu.siret_etablissement} (Forcer la valeur)", search=lieu.siret_etablissement
+    )
+    lieu_form_elements.code_inupp_etablissement_input.fill(lieu.code_inupp_etablissement)
+    lieu_form_elements.lieu_site_inspection_input.select_option(lieu.get_site_inspection_display())
+    lieu_form_elements.position_etablissement_input.select_option(
+        str(lieu.position_chaine_distribution_etablissement.id)
+    )
+    lieu_form_elements.close_with(action="cancel")
+    lieu_form_elements.edit_form(0)
+
+    expect(lieu_form_elements.nom_input).to_have_value(lieu.nom)
+    expect(lieu_form_elements.adresse_input).to_have_value(lieu.adresse_lieu_dit)
+    expected_value = f"{lieu.adresse_lieu_dit}\nRemove item"
+    assert choice_js_get_values(page, '[id^="id_lieux-"][id$="adresse_lieu_dit"]')[0].replace(
+        "\n", " "
+    ) == expected_value.replace("\n", " ")
+    expect(page.get_by_text(f"{lieu.commune} ({lieu.departement.numero})Remove item")).to_be_visible()
+    expect(lieu_form_elements.coord_gps_wgs84_latitude_input).to_have_value(str(lieu.wgs84_latitude))
+    expect(lieu_form_elements.coord_gps_wgs84_longitude_input).to_have_value(str(lieu.wgs84_longitude))
+
+    expect(lieu_form_elements.is_etablissement_checkbox).to_be_checked()
+    expect(lieu_form_elements.activite_etablissement_input).to_have_value(lieu.activite_etablissement)
+    expect(lieu_form_elements.siret_etablissement_input).to_have_value(lieu.siret_etablissement)
+    expect(lieu_form_elements.raison_sociale_etablissement_input).to_have_value(lieu.raison_sociale_etablissement)
+    expected_value = f"{lieu.siret_etablissement} (Forcer la valeur) Remove item"
+    assert (
+        choice_js_get_values(page, '[id^="id_lieux-"][id$="siret_etablissement"]')[0].replace("\n", " ")
+        == expected_value
+    )
+
+    expect(lieu_form_elements.adresse_etablissement_input).to_have_value(lieu.adresse_etablissement)
+    expected_value = f"{lieu.adresse_etablissement}\nRemove item"
+    assert choice_js_get_values(page, '[id^="id_lieux-"][id$="adresse_etablissement"]')[0].replace(
+        "\n", " "
+    ) == expected_value.replace("\n", " ")
+
+    expect(lieu_form_elements.pays_etablissement_input).to_have_value(lieu.pays_etablissement.code)
+    expect(lieu_form_elements.code_inupp_etablissement_input).to_have_value(str(lieu.code_inupp_etablissement))
+    expect(lieu_form_elements.position_etablissement_input).to_have_value(
+        str(lieu.position_chaine_distribution_etablissement.id)
+    )
+
+
 def test_fiche_detection_update_page_content_with_no_data(
     live_server, page: Page, form_elements: FicheDetectionFormDomElements
 ):
@@ -1421,13 +1489,11 @@ def test_elements_infestes_add_to_existing(live_server, page: Page, assert_model
             expect(generated_card.locator(".fr-card__desc")).to_contain_text(
                 f"Quantité d’éléments infestés : {element.quantite_with_unite}"
             )
-
         if element == to_add_and_delete:
             evenement_page.remove_last_card()
 
     assert fiche.elements_infestes.count() == len(existing)
     expect(evenement_page.empty_message).not_to_be_visible()
-
     evenement_page.save()
 
     fiche.refresh_from_db()
@@ -1481,3 +1547,23 @@ def test_elements_infestes_edit(live_server, page: Page, assert_models_are_equal
     assert_models_are_equal(
         elements_infeste, new_data, fields=("type", "espece", "quantite", "quantite_unite", "comments")
     )
+
+
+def test_elements_infestes_edit_close_modal_reset_values(live_server, page: Page, choice_js_get_values):
+    fiche: FicheDetection = FicheDetectionFactory()
+    element_infeste = ElementInfesteFactory(fiche_detection=fiche, espece__libelle="Espece test")
+    evenement_page = EvenementUpdatePage(page, live_server)
+    new_data = ElementInfesteFactory.create()
+
+    evenement_page.navigate(fiche)
+    evenement_page.edit_card(0, new_data, close_with_action="cancel")
+
+    evenement_page.elements_cards.nth(0).get_by_role("button", name="Modifier").click()
+
+    expect(evenement_page.fieldset.get_by_label("Type")).to_have_value(element_infeste.type)
+    expect(evenement_page.fieldset.locator('[name$="quantite"]')).to_have_value(element_infeste.quantite)
+    expect(
+        evenement_page.fieldset.get_by_label(element_infeste.get_quantite_unite_display(), exact=True)
+    ).to_be_checked()
+    expect(evenement_page.fieldset.locator('[name$="comments"]')).to_have_value(element_infeste.comments)
+    assert choice_js_get_values(page, "#id_elements_infestes-0-espece", delete_remove_link=True) == ["Espece test\n"]

@@ -135,7 +135,7 @@ def notify_message(message_obj: Message):
             recipients = message_obj.recipients.all()
         case Message.DEMANDE_INTERVENTION:
             recipients = message_obj.recipients.structures_only()
-            copy = message_obj.recipients_copy.structures_only()
+            copy = message_obj.recipients_copy.all()
         case Message.NOTIFICATION_AC:
             content = f"Bonjour,\nLa fiche {message_obj.content_object.numero} vient d'être déclarée à l'administration centrale."
             recipients = [Contact.objects.get_mus(), Contact.objects.get_bsv()]

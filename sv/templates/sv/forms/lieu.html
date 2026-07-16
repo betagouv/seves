@@ -8,6 +8,7 @@
     class="fr-modal"
     data-lieu-form-target="dialog"
     data-testid="form-dialog"
+    data-action="dsfr.conceal->lieu-form#onCloseForm"
 >
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
@@ -47,6 +48,7 @@
                                     data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
                                     data-map-region-value="{{ form.structure.region.nom }}"
                                     data-map-departement-value="{{ form.structure.departement.nom }}"
+                                    data-lieu-form-target="mainFields"
                                 >
                                     <div class="fr-grid-row fr-grid-row--gutters">
                                         <div class="fr-col-6">

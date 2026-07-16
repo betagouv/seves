@@ -58,13 +58,13 @@ class AddressSearchAutocompleteController extends Controller {
     ]
 
     /** @type {?Choices} */
-    #addressWidget = null
+    addressWidget = null
 
     /** @type {?Choices} */
-    #communeWidget = null
+    communeWidget = null
 
     addressTargetConnected(el) {
-        this.#addressWidget = setUpAddressChoices(el)
+        this.addressWidget = setUpAddressChoices(el)
         el.dataset.action = [
             ...(el.dataset.action || "").split(/s+/g),
             `choice->${this.identifier}#onAddressChoice`,
@@ -72,12 +72,12 @@ class AddressSearchAutocompleteController extends Controller {
     }
 
     addressTargetDisconnected() {
-        this.#addressWidget?.destroy()
-        this.#addressWidget = null
+        this.addressWidget?.destroy()
+        this.addressWidget = null
     }
 
     communeTargetConnected(el) {
-        this.#communeWidget = setUpCommuneChoices(el)
+        this.communeWidget = setUpCommuneChoices(el)
         el.dataset.action = [
             ...(el.dataset.action || "").split(/s+/g),
             `choice->${this.identifier}#onCommuneChoice`,
@@ -87,16 +87,16 @@ class AddressSearchAutocompleteController extends Controller {
     }
 
     communeTargetDisconnected() {
-        this.#communeWidget?.destroy()
-        this.#communeWidget = null
+        this.communeWidget?.destroy()
+        this.communeWidget = null
     }
 
     setAddress(data) {
         const departementCode = (data.context || "").split(",")[0].trim()
         if (data.value) {
-            this.#addressWidget?.setValue([data.value])
+            this.addressWidget?.setValue([data.value])
         }
-        this.#communeWidget?.setValue([data.city])
+        this.communeWidget?.setValue([data.city])
         const fieldsToUpdate = [
             [this.departementTargets, departementCode],
             [this.communeTargets, data.city],
@@ -121,7 +121,7 @@ class AddressSearchAutocompleteController extends Controller {
     }
 
     onCommuneForcedChoice({detail: {value}}) {
-        this.#communeWidget?.setValue([value])
+        this.communeWidget?.setValue([value])
     }
 
     onAddressChoice({detail: {customProperties}}) {
@@ -158,6 +158,7 @@ class AddressSearchAutocompleteController extends Controller {
  * @property {HTMLElement[]} errorMessageTargets
  * @property {HTMLInputElement} nomInputTarget
  * @property {HTMLSelectElement} sireneSelectTarget
+ * @property {HTMLElement} mainFieldsTarget
  * @property {HTMLElement} etablissementFieldsTarget
  * @property {HTMLInputElement} raisonSocialeInputTarget
  * @property {HTMLInputElement} activiteEtablissementInputTarget
@@ -180,6 +181,7 @@ class LieuFormController extends BaseFormInModal {
         "errorMessage",
         "nomInput",
         "sireneSelect",
+        "mainFields",
         "etablissementFields",
         "raisonSocialeInput",
         "activiteEtablissementInput",
@@ -195,6 +197,14 @@ class LieuFormController extends BaseFormInModal {
     get etablissementAddressOutlet() {
         return this.application.getControllerForElementAndIdentifier(
             this.etablissementFieldsTarget,
+            "address-search-autocomplete",
+        )
+    }
+
+    /** @return {AddressSearchAutocompleteController} */
+    get addressOutlet() {
+        return this.application.getControllerForElementAndIdentifier(
+            this.mainFieldsTarget,
             "address-search-autocomplete",
         )
     }
@@ -271,6 +281,18 @@ class LieuFormController extends BaseFormInModal {
     }
 
     onCloseForm() {
+        if (!this.keepChangesValue) {
+            this.resetChoiceJs(this.#sireneWidget, "siret_etablissement")
+            this.resetChoiceJs(this.etablissementAddressOutlet.addressWidget, "adresse_etablissement")
+            this.resetChoiceJs(this.etablissementAddressOutlet.communeWidget, "commune_etablissement")
+            this.resetChoiceJs(this.addressOutlet.addressWidget, "adresse_lieu_dit")
+            this.resetChoiceJs(this.addressOutlet.communeWidget, "commune")
+            this.restoreForm()
+            // Forces the reset of the map
+            const mapController = this.application.getControllerForElementAndIdentifier(this.mainFieldsTarget, "map")
+            mapController.onCoordinateChange()
+        }
+        this.keepChangesValue = false
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()

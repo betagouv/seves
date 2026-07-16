@@ -14,7 +14,7 @@
         {% csrf_token %}
         {{ form.latest_version }}
         <main class="main-container">
-            <div class="evenement-produit-form-header fr-grid-row">
+            <div class="evenement-produit-form-header fr-grid-row" data-testid="top-action-btns">
                 <h1 class="fr-col-6">
                     {% if form.instance.pk %}
                         Modification de l'événement {{ object.numero }}
@@ -204,77 +204,7 @@
                 </div>
 
             </fieldset>
-            <fieldset
-                class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
-                data-controller="conclusion-form"
-                data-conclusion-form-suspicion-conclusion-choices-value="{{ form.SuspicionConclusion.as_json }}"
-                data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
-                data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
-            >
-                <legend class="fr-h3 fr-fieldset__legend">Conclusion</legend>
 
-                <div class="fr-notice fr-notice--info">
-                    <div class="fr-container">
-                        <div class="fr-notice__body">
-                            <p>
-                                <span class="fr-notice__title">
-                                    Afin de préciser le scénario (repas/aliment), il est
-                                    nécessaire d’avoir préalablement publié ou enregistré vos ajouts/modifications pour
-                                    pouvoir les sélectionner dans les menus déroulants ci-dessous
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
-                    <div class="fr-col-6 needs-required">
-                        {% dsfr_form_field form.suspicion_conclusion|set_data:"action:conclusion-form#onSuspicionConclusionChanged:prevent:default"|set_data:"conclusion-form-target:suspicionConclusion" %}
-                        <div id="selected_hazard-treeselect" class="fr-input-group">
-                            {{ form.selected_hazard.label_tag }}
-                            <div
-                                data-conclusion-form-target="selectedHazardTreeselect"
-                                data-action="input->conclusion-form#onTreeselectInput update-dom->conclusion-form#onUpdateDom"
-                            ></div>
-                            {{ form.selected_hazard|set_data:"conclusion-form-target:selectedHazardTreeselectInput" }}
-                            <template data-conclusion-form-target="selectedHazardTreeselectHeader">
-                                <div class="categorie-danger-header">
-                                    <div class="fr-ml-1v">Dangers les plus courants</div>
-                                    {% for danger in form.common_danger %}
-                                        <div
-                                            class="treeselect-list__item"
-                                            level="0"
-                                            group="false"
-                                            data-action="mousedown->conclusion-form#onShortcut:prevent:stop"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                id="shortcut_{{ forloop.counter0 }}"
-                                                class="treeselect-list__item-checkbox-container"
-                                            >
-                                            <label
-                                                class="treeselect-list__item-label shortcut"
-                                                for="shortcut_{{ forloop.counter0 }}"
-                                            >{{ danger }}</label>
-                                        </div>
-                                    {% endfor %}
-                                    <div class="fr-ml-1v">Liste complète des dangers</div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                    <div class="fr-col-6 conclusion-comment">
-                        {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
-                    </div>
-                </div>
-                <div class="fr-grid-row fr-grid-row--gutters fr-my-0">
-                    <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas" %}
-                    </div>
-                    <div class="fr-col-3">
-                        {% dsfr_form_field form.conclusion_aliment|set_data:"conclusion-form-target:conclusionAliment"  %}
-                    </div>
-                </div>
-            </fieldset>
             <fieldset id="liens-libre" class="fr-fieldset form-fieldset fr-mt-2w">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Événements liés</legend>

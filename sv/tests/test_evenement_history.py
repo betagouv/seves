@@ -1,7 +1,10 @@
+import datetime
 from unittest import mock
 
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.formats import date_format
 from playwright.sync_api import expect
 
 from sv.factories import (
@@ -404,3 +407,55 @@ def test_evenement_history_content_prelevement_shows_even_when_added_with_lieu(
 
     creation_text = f"Objet ajouté : Prélèvement {str(prelevement)}"
     expect(page.get_by_text(creation_text)).to_be_visible()
+
+
+def test_history_nested_diff_date_corresponds_to_modification_not_previous_revision(
+    live_server,
+    page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    choice_js_fill,
+):
+    statut, _ = StatutReglementaire.objects.get_or_create(libelle="organisme quarantaine prioritaire")
+    organisme_nuisible = OrganismeNuisibleFactory()
+    page.goto(f"{live_server.url}{reverse('sv:fiche-detection-creation')}")
+    choice_js_fill(
+        page,
+        "#organisme-nuisible .choices__list--single",
+        organisme_nuisible.libelle_court,
+        organisme_nuisible.libelle_court,
+    )
+    page.get_by_label("Statut réglementaire").select_option(value=str(statut.id))
+    page.get_by_test_id("bottom-action-btns").get_by_role("button", name="Enregistrer").click()
+
+    evenement = Evenement.objects.get()
+    detection = evenement.detections.get()
+    t1 = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+    t2 = datetime.datetime(2024, 1, 15, 11, 0, tzinfo=datetime.timezone.utc)
+
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    lieu_form_elements.open_new_form()
+    lieu_form_elements.nom_input.fill("Mon lieu")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.close_with(action="save")
+    with mock.patch("django.utils.timezone.now", return_value=t1):
+        form_elements.save_update_btn.click()
+
+    # Edit same lieu
+    page.goto(f"{live_server.url}{detection.get_update_url()}")
+    page.get_by_test_id("lieu-edit-btn").click()
+    lieu_form_elements.nom_input.fill("Mon lieu 2")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.close_with(action="save")
+    with mock.patch("django.utils.timezone.now", return_value=t2):
+        form_elements.save_update_btn.click()
+
+    content_type = ContentType.objects.get_for_model(Evenement)
+    url = reverse("revision-list", kwargs={"content_type": content_type.pk, "pk": evenement.pk})
+    page.goto(f"{live_server.url}{url}")
+
+    rows = page.locator("table tbody tr").all()
+    row_data = [[cell.inner_text().strip() for cell in row.locator("td").all()] for row in rows]
+    modification_row = next(row for row in row_data if len(row) > 5 and row[4] == "Mon lieu" and row[5] == "Mon lieu 2")
+    expected_date = date_format(timezone.localtime(t2), "DATETIME_FORMAT")
+    assert modification_row[2] == expected_date

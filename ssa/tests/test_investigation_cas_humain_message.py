@@ -85,11 +85,11 @@ def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_ser
 
 
 def test_can_add_and_see_demande_intervention_in_new_tab_without_document(
-    live_server, page: Page, choice_js_fill, mocked_authentification_user
+    live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
     evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
     generic_test_can_add_and_see_demande_intervention_in_new_tab_without_document(
-        live_server, page, choice_js_fill, evenement, mocked_authentification_user
+        live_server, page, choice_js_fill, evenement, mocked_authentification_user, mailoutbox
     )
 
 

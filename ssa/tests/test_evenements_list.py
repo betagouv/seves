@@ -57,13 +57,6 @@ def test_list_filtered_by_visibilite(live_server, mocked_authentification_user, 
 
 def test_row_content(live_server, mocked_authentification_user, page: Page):
     evenement = EvenementProduitFactory()
-    other_structure = StructureFactory()
-    LienLibre.objects.create(
-        related_object_1=evenement, related_object_2=EvenementProduitFactory(createur=other_structure)
-    )
-    LienLibre.objects.create(
-        related_object_1=evenement, related_object_2=EvenementProduitFactory(createur=other_structure)
-    )
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
 
@@ -71,6 +64,24 @@ def test_row_content(live_server, mocked_authentification_user, page: Page):
     assert search_page.date_publication_cell().text_content() == evenement.date_publication.strftime("%d/%m/%Y")
     assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
     assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.produit_cell().inner_text() == evenement.get_categorie_produit_display()
+    assert search_page.danger_cell().inner_text() == evenement.get_categorie_danger_display()
+    assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
+    assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
+    assert search_page.etat_cell().text_content() == "Brouillon"
+
+
+def test_row_content_for_investigation_cas_humain(live_server, mocked_authentification_user, page: Page):
+    evenement = InvestigationCasHumainFactory()
+    search_page = EvenementProduitListPage(page, live_server.url)
+    search_page.navigate()
+
+    assert search_page.numero_cell().text_content() == evenement.numero
+    assert search_page.date_publication_cell().text_content() == evenement.date_publication.strftime("%d/%m/%Y")
+    assert search_page.date_maj_cell().text_content() == datetime.date.today().strftime("%d/%m/%Y")
+    assert search_page.description_cell().inner_text() == evenement.description
+    assert search_page.produit_cell().inner_text() == "-"
+    assert search_page.danger_cell().inner_text() == evenement.get_categorie_danger_display()
     assert search_page.type_evenement_cell().text_content() == evenement.get_type_evenement_display()
     assert search_page.createur_cell().text_content() == mocked_authentification_user.agent.structure.libelle
     assert search_page.etat_cell().text_content() == "Brouillon"
@@ -441,10 +452,11 @@ def test_can_filter_by_produit_pret_a_manger(live_server, mocked_authentificatio
 
 
 def test_can_filter_by_reference_souches(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(reference_souches="FOO")
+    to_be_found_1 = EvenementProduitFactory(reference_souches="FOO")
+    to_be_found_2 = EvenementProduitFactory(reference_souches="fool")
     not_to_be_found_1 = EvenementProduitFactory(reference_souches="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_souches="BUZZ")
-    not_to_be_found_3 = InvestigationCasHumainFactory()
+    not_to_be_found_3 = InvestigationCasHumainFactory(reference_souches="Yet another value")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -453,17 +465,19 @@ def test_can_filter_by_reference_souches(live_server, mocked_authentification_us
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
 
 
 def test_can_filter_by_reference_clusters(live_server, mocked_authentification_user, page: Page):
-    to_be_found = EvenementProduitFactory(reference_clusters="FOO")
+    to_be_found_1 = EvenementProduitFactory(reference_clusters="FOO")
+    to_be_found_2 = EvenementProduitFactory(reference_clusters="fool")
     not_to_be_found_1 = EvenementProduitFactory(reference_clusters="BAR")
     not_to_be_found_2 = EvenementProduitFactory(reference_clusters="BUZZ")
-    not_to_be_found_3 = InvestigationCasHumainFactory()
+    not_to_be_found_3 = InvestigationCasHumainFactory(reference_clusters="Not related")
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
@@ -472,7 +486,8 @@ def test_can_filter_by_reference_clusters(live_server, mocked_authentification_u
     search_page.add_filters()
     search_page.submit_search()
 
-    expect(page.get_by_text(to_be_found.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_1.numero, exact=True)).to_be_visible()
+    expect(page.get_by_text(to_be_found_2.numero, exact=True)).to_be_visible()
     expect(page.get_by_text(not_to_be_found_1.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
     expect(page.get_by_text(not_to_be_found_3.numero, exact=True)).not_to_be_visible()
@@ -705,18 +720,20 @@ def test_can_filter_by_with_free_links(live_server, mocked_authentification_user
     expect(page.get_by_text(not_to_be_found_2.numero, exact=True)).not_to_be_visible()
 
 
-def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_from_element):
+def test_search_with_structure_contact(live_server, page: Page):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = EvenementProduitFactory()
     evenement_4 = InvestigationCasHumainFactory()
     contact_structure = ContactStructureFactory(with_one_active_agent=True)
+    contact_structure_2 = ContactStructureFactory(with_one_active_agent=True)
     evenement_2.contacts.add(contact_structure)
-    evenement_4.contacts.add(contact_structure)
+    evenement_4.contacts.add(contact_structure_2)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_structure_filter(str(contact_structure), choice_js_fill_from_element)
+    search_page.set_structure_filter(str(contact_structure))
+    search_page.set_structure_filter(str(contact_structure_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()
@@ -725,18 +742,20 @@ def test_search_with_structure_contact(live_server, page: Page, choice_js_fill_f
     expect(page.get_by_text(evenement_4.numero, exact=True)).to_be_visible()
 
 
-def test_search_with_agent_contact(live_server, page: Page, choice_js_fill, choice_js_fill_from_element):
+def test_search_with_agent_contact(live_server, page: Page):
     evenement_1 = EvenementProduitFactory()
     evenement_2 = EvenementProduitFactory()
     evenement_3 = InvestigationCasHumainFactory()
     evenement_4 = InvestigationCasHumainFactory()
     contact_agent = ContactAgentFactory(with_active_agent=True)
+    contact_agent_2 = ContactAgentFactory(with_active_agent=True)
     evenement_2.contacts.add(contact_agent)
-    evenement_4.contacts.add(contact_agent)
+    evenement_4.contacts.add(contact_agent_2)
 
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    search_page.set_agent_filter(str(contact_agent), choice_js_fill_from_element)
+    search_page.set_agent_filter(str(contact_agent))
+    search_page.set_agent_filter(str(contact_agent_2))
     search_page.submit_search()
 
     expect(page.get_by_text(evenement_1.numero, exact=True)).not_to_be_visible()

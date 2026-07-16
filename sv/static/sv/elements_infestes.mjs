@@ -85,6 +85,15 @@ class ElementInfesteFormController extends BaseFormInModal {
     }
 
     onCloseForm() {
+        if (!this.keepChangesValue) {
+            this.restoreForm()
+            const especeController = this.application.getControllerForElementAndIdentifier(
+                this.element.querySelector("[data-controller*='espece-search']"),
+                "espece-search",
+            )
+            this.resetChoiceJs(especeController.choiceWidget, "espece")
+        }
+        this.keepChangesValue = false
         // this.shouldImmediatelyShowValue indicates that the card has not be rendered yet.
         // In this case, the form is not considered valid and it should be deleted on close
         if (this.shouldImmediatelyShowValue) this.forceDelete()

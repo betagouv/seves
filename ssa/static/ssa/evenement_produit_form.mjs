@@ -1,65 +1,8 @@
-import {findPath, isLevel2WithChildren, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import choicesDefaults from "choicesDefaults"
 
-const NOTICE_TEXT = "Il existe des sous catégories pour « __value__ » : pensez à préciser dès que possible."
-
 document.addEventListener("DOMContentLoaded", () => {
-    function handleNoticeProduitDisplay(options, value) {
-        if (isLevel2WithChildren(options, value)) {
-            document.querySelector("#notice-container-produit .fr-notice__title").innerText = NOTICE_TEXT.replace(
-                "__value__",
-                value,
-            )
-            document.querySelector("#notice-container-produit").classList.remove("fr-hidden")
-        } else {
-            document.querySelector("#notice-container-produit").classList.add("fr-hidden")
-        }
-    }
-
-    function setupCategorieProduit() {
-        const selectedValueEl = document.getElementById("id_categorie_produit")
-
-        if (selectedValueEl === null) {
-            // Prevent old Treeselect init on FF
-            return
-        }
-
-        const options = JSON.parse(document.getElementById("categorie-produit-data").textContent)
-        const selectedValue = selectedValueEl.value
-        const treeselect = new Treeselect({
-            parentHtmlContainer: document.getElementById("categorie-produit"),
-            value: selectedValue,
-            options: options,
-            isSingleSelect: true,
-            openCallback() {
-                patchItems(treeselect.srcElement)
-            },
-            ...tsDefaultOptions,
-        })
-        patchItems(treeselect.srcElement)
-        treeselect.srcElement.addEventListener("update-dom", () => {
-            patchItems(treeselect.srcElement)
-        })
-        document.querySelector("#categorie-produit .treeselect-input").classList.add("fr-input")
-
-        treeselect.srcElement.addEventListener("input", e => {
-            if (!e.detail) return
-            const result = findPath(e.detail, options)
-            document.getElementById("id_categorie_produit").value = e.detail
-            document.querySelector("#categorie-produit .treeselect-input__tags-count").innerText = result
-                .map(n => n.name)
-                .join(" > ")
-        })
-
-        treeselect.srcElement.addEventListener("input", e => {
-            handleNoticeProduitDisplay(options, e.detail)
-        })
-        handleNoticeProduitDisplay(options, selectedValue)
-    }
-
     new Choices(document.getElementById("id_quantification_unite"), {
         ...choicesDefaults,
         position: "bottom",
     })
-    setupCategorieProduit()
 })

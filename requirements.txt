@@ -160,7 +160,7 @@ packaging==24.0
     #   pytest-rerunfailures
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.60.0
+playwright==1.61.0
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -199,7 +199,7 @@ pytest-env==1.6.0
     # via -r requirements.in
 pytest-playwright==0.8.0
     # via -r requirements.in
-pytest-rerunfailures==16.3
+pytest-rerunfailures==16.4
     # via -r requirements.in
 pytest-split==0.11.0
     # via -r requirements.in
@@ -221,7 +221,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==8.0.0
+redis==8.0.1
     # via -r requirements.in
 requests==2.33.0
     # via
@@ -232,17 +232,17 @@ requests-mock==1.12.1
     # via -r requirements.in
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.15.18
+ruff==0.15.20
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.63.0
+sentry-sdk[django]==2.64.0
     # via -r requirements.in
 six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
-soupsieve==2.8.3
+soupsieve==2.8.4
     # via beautifulsoup4
 sqlparse==0.5.4
     # via

@@ -120,6 +120,8 @@ class EvenementFilter(
         widget=CategorieDangerLegacyTreeselect,
         label="Catégorie de danger",
     )
+    reference_souches = django_filters.CharFilter(lookup_expr="icontains")
+    reference_clusters = django_filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = EvenementProduit
