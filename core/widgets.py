@@ -119,14 +119,15 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     choice = TreeselectItem(value=choice[0], label=choice[1], categorised_label=None)
                 if choice.categorised_label:
                     attrs["data-categorised-label"] = choice.categorised_label
+                option_name = name
                 if choice.html_name_prefix:
-                    name = f"{choice.html_name_prefix}-{name}"
+                    option_name = f"{choice.html_name_prefix}-{name}"
                     selected = str(choice.value) in value
                 else:
                     selected = self.get_selected(choice.value, value)
 
                 yield self.create_option(
-                    name,
+                    option_name,
                     choice.value,
                     choice.label,
                     selected,

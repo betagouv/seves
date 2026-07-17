@@ -318,3 +318,13 @@ def test_unselect_all_button(navigate_to_form, page: Page):
     expect(treeselect_animal_radio.selected_tags).to_have_count(3)
     treeselect_animal_radio.uncheck_all_by_unselect_button()
     expect(treeselect_animal_radio.selected_tags).to_have_count(0)
+
+
+def test_shortcut_do_not_accumulate_name_prefix(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    with treeselect.opened_treeselect():
+        for it in TestChoices.les_plus_courants:
+            shortcut_checkbox = treeselect.container.locator(f'input[name^="shortcut"][value="{it.value}"]')
+            expect(shortcut_checkbox).to_have_attribute("name", "shortcut-animal_checkbox")
