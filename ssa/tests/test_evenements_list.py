@@ -791,7 +791,7 @@ def test_list_performance_scaling(live_server, client, django_assert_num_queries
     url = reverse("ssa:evenements-liste")
     client.get(url)
 
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(12):
         client.get(url)
 
     EvenementProduitFactory()
@@ -799,5 +799,5 @@ def test_list_performance_scaling(live_server, client, django_assert_num_queries
     InvestigationCasHumainFactory()
     InvestigationCasHumainFactory()
 
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(12):
         client.get(url)

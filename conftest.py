@@ -67,6 +67,13 @@ def mocked_authentification_user(db, request):
             user=user, prenom="John", nom="Doe", structure=structure, structure_complete="AC/DC"
         )
         Contact.objects.create(agent=agent, email="text@example.com")
+        user = (
+            User.objects.filter(pk=user.pk)
+            .select_related("agent", "agent__structure")
+            .prefetch_related("agent__structure__contact_set")
+            .prefetch_related("groups")
+            .first()
+        )
 
         def mocked(self, request):
             request.user = user
