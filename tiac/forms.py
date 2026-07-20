@@ -557,6 +557,7 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
     )
 
     categorie_danger = forms.MultipleChoiceField(
+        label="Dangers détectés",
         required=False,
         choices=CategorieDanger,
         widget=TreeselectCheckbox(

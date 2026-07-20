@@ -15,8 +15,8 @@ class AgentsPathogeneController extends Controller {
     static values = {analyses: String}
     static outlets = ["treeselect"]
 
-    connect() {
-        this.analysesTargets.forEach(it => it.dispatchEvent(new Event("change")))
+    initialize() {
+        this.analysesValue = this.analysesTargets.find(it => it.checked)?.value ?? ""
     }
 
     analysesValueChanged(value) {
