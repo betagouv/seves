@@ -970,17 +970,25 @@ def generic_test_can_preview_image_from_message_details(live_server, page: Page,
         content=path.read_bytes(),
         content_type="image/png",
     )
+    infected_file = SimpleUploadedFile(
+        name="virus.png",
+        content=path.read_bytes(),
+        content_type="image/png",
+    )
     message = MessageFactory(content_object=target_object)
     DocumentFactory(content_object=message, is_infected=False, file=file)
+    document = DocumentFactory(content_object=message, file=infected_file)
+    Document.objects.filter(id=document.id).update(is_infected=True)
 
     page.goto(f"{live_server.url}{target_object.get_absolute_url()}")
     message_page = ListOfMessagesPage(page)
     page.locator("#tabpanel-messages").click()
     new_page = message_page.open_message()
 
-    new_page.locator(".fr-icon-eye-line").click()
+    new_page.locator(".fr-icon-eye-line").first.click()
     img = new_page.locator('img[src*="_test.png"]')
     expect(img).to_be_visible()
+    expect(page.locator("html")).not_to_contain_text("virus.png")
 
 
 def generic_test_can_download_zip_attachments_of_message(live_server, page: Page, object):
