@@ -162,7 +162,9 @@ def test_edit_investigation_show_previous_danger_value(live_server, page: Page):
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
-    expect(detail_page.current_modal.get_by_text("Allergène - Lait")).to_be_visible()
+    expect(
+        detail_page.current_modal.get_by_role("button", name="Allergène - composition ou étiquetage > Allergène - Lait")
+    ).to_be_visible()
 
 
 def test_edit_investigation_show_previous_danger_values(live_server, page: Page):
@@ -178,7 +180,7 @@ def test_edit_investigation_show_previous_danger_values(live_server, page: Page)
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
-    expect(detail_page.current_modal.get_by_text("3 éléments sélectionnés")).to_be_visible()
+    expect(detail_page.current_modal.get_by_text("3 éléments")).to_be_visible()
 
 
 def test_conclusion_investigation_tiac_conditional_ui(
@@ -333,7 +335,7 @@ def test_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_set(li
     detail_page.navigate(evenement)
     detail_page.add_conclusion_button.click()
     expect(detail_page.suspicion_conclusion_field).to_have_value("")
-    expect(detail_page.page.locator("#selected_hazard-treeselect .treeselect--disabled")).to_have_count(1)
+    expect(detail_page.page.locator("#treeselect-confirmed .fr-treeselect--disabled")).to_have_count(1)
 
 
 def test_conclusion_form_shows_notice_when_multiple_repas(live_server, page: Page):
