@@ -563,7 +563,8 @@ class InvestigationCasHumainFormPage(WithTreeSelect, WithEtablissementMixin):
         self.source.select_option(evenement.source)
 
     def _submit(self, locator: Locator, *, wait_for=None):
-        wait_for = wait_for or "/details/"
+        if wait_for is None:
+            wait_for = "/details/"
         locator.click()
         self.page.wait_for_url(f"**{wait_for}**")
 
