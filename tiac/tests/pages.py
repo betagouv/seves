@@ -718,6 +718,8 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self.treeselect_confirmed = TreeselectPage(self.page, self.page.locator("#treeselect-confirmed"))
+        self.treeselect_suspected = TreeselectPage(self.page, self.page.locator("#treeselect-suspected"))
 
     @property
     def title(self):
@@ -793,11 +795,11 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
 
     @property
     def selected_hazard_label(self):
-        return self.page.locator("[for=id_selected_hazard]")
+        return self.page.locator("label", has_text="Dangers retenus").filter(visible=True)
 
     @property
     def selected_hazard_hidden_field(self):
-        return self.page.locator("#id_selected_hazard")
+        return self.page.locator("#required-proxy")
 
     @property
     def delete_conclusion_button(self):
@@ -827,15 +829,14 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
             }"""
         )
         if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
-            self.clear_treeselect("selected_hazard-treeselect")
+            self.treeselect_confirmed.uncheck_all()
             for item in input_data["selected_hazard"]:
                 final_label = CategorieDanger(item).label.split(">")[-1].strip()
-                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
+                self.treeselect_confirmed.check_option(final_label)
         elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
-            self.clear_treeselect("selected_hazard-treeselect")
+            self.treeselect_suspected.uncheck_all()
             for item in input_data["selected_hazard"]:
-                label = DangersSyndromiques(item).short_name
-                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", label, label)
+                self.treeselect_suspected.check_option(DangersSyndromiques(item).short_name)
         self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
 
         if input_data["suspicion_conclusion"] != SuspicionConclusion.DISCARDED:

@@ -1,182 +1,111 @@
 import {applicationReady} from "Application"
-import {hideHeader, patchItems, showHeader, tsDefaultOptions} from "CustomTreeSelect"
 import {Controller} from "Stimulus"
 
 /**
  * @property {Object.<string, {value: string, label: string}>} suspicionConclusionChoicesValue
  * @property {string} suspicionConclusionValue
- * @property {Object[]} selectedHazardConfirmedChoicesValue
- * @property {Object[]} selectedHazardSuspectedChoicesValue
- * @property {string} selectedHazardIdValue
- * @property {boolean} selectedHazardTreeselectInitializedValue
  * @property {HTMLSelectElement} suspicionConclusionTarget
- * @property {HTMLDivElement} selectedHazardTreeselectTarget
- * @property {HTMLInputElement} selectedHazardTreeselectInputTarget
- * @property {HTMLTemplateElement} selectedHazardTreeselectHeaderTarget
  */
 class ConclusionFormController extends Controller {
     static targets = [
         "suspicionConclusion",
         "conclusionRepas",
         "conclusionAliment",
-        "selectedHazardTreeselect",
-        "selectedHazardTreeselectInput",
-        "selectedHazardTreeselectHeader",
         "notice",
         "noticeAliment",
         "noticeRepas",
+        "selectedHazardConfirmedContainer",
+        "selectedHazardSuspectedContainer",
+        "requiredProxy",
     ]
     static values = {
         suspicionConclusionChoices: Object,
         suspicionConclusion: String,
         selectedHazardConfirmedChoices: Array,
         selectedHazardSuspectedChoices: Array,
-        selectedHazardTreeselectInitialized: {type: Boolean, default: false},
     }
+    static outlets = ["treeselect"]
 
-    /** @param {HTMLSelectElement} el */
-    selectedHazardTreeselectTargetConnected(el) {
-        let disabled = false
-        if (this.selectedHazardTreeselectInputTarget.dataset.treeselectDisabled) {
-            disabled = true
+    treeselectOutletConnected(outlet) {
+        if (outlet.element.id === "fr-treeselect-id_selected_hazard_confirmed") {
+            this.treeselectConfirmedOutlet = outlet
+        } else if (outlet.element.id === "fr-treeselect-id_selected_hazard_suspected") {
+            this.treeselectSuspectedOutlet = outlet
         }
-
-        this.treeselect = new Treeselect({
-            ...tsDefaultOptions,
-            parentHtmlContainer: el,
-            value: [],
-            options: [],
-            isSingleSelect: false,
-            isIndependentNodes: true,
-            disabled: disabled,
-            openCallback: this.treeselectOpenCallback.bind(this),
-            searchCallback: item => {
-                if (item.length === 0) {
-                    showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                } else {
-                    hideHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                }
-            },
-        })
-        patchItems(this.treeselect.srcElement)
+        outlet.element.addEventListener("treeselect:choices", this.onTreeselectChoicesChanged)
+        this.#syncTreeselects()
+        this.#syncRequiredProxyValue()
     }
 
-    selectedHazardTreeselectTargetDiconnected() {
-        this.treeselect.destroy()
-        this.treeselect = undefined
+    treeselectOutletDisconnected(outlet) {
+        outlet.element.removeEventListener("treeselect:choices", this.onTreeselectChoicesChanged)
     }
 
+    onTreeselectChoicesChanged = () => {
+        this.#syncRequiredProxyValue()
+    }
+
+    // The hidden field is needed to "fake" a required checkbox, sync the value so that we can submit the modal
+    // when we have a value
+    #syncRequiredProxyValue() {
+        const value = this.suspicionConclusionValue
+        if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
+            this.requiredProxyTarget.value = this.treeselectConfirmedOutlet?.choices.size > 0 ? "x" : ""
+        } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
+            this.requiredProxyTarget.value = this.treeselectSuspectedOutlet?.choices.size > 0 ? "x" : ""
+        }
+    }
     suspicionConclusionTargetConnected(el) {
         el.dispatchEvent(new Event("change"))
     }
 
-    onUpdateDom() {
-        if (this.treeselect === undefined) return
-        patchItems(this.treeselect.srcElement)
-    }
+    #syncTreeselects() {
+        if (!this.treeselectConfirmedOutlet || !this.treeselectSuspectedOutlet) return
 
-    onTreeselectInput({detail}) {
-        if (detail.length === 0) {
-            this.selectedHazardTreeselectInputTarget.value = ""
-            this.element.querySelectorAll("[id^='shortcut_']").forEach(checkbox => {
-                checkbox.checked = false
-            })
-        } else {
-            this.selectedHazardTreeselectInputTarget.value = detail.join("||")
-        }
-    }
+        const value = this.suspicionConclusionValue
+        const isConfirmed = value === this.suspicionConclusionChoicesValue.CONFIRMED.value
+        const isSuspected = value === this.suspicionConclusionChoicesValue.SUSPECTED.value
 
-    treeselectOpenCallback() {
-        if (this.suspicionConclusionValue === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
-            patchItems(this.treeselect.srcElement)
-            if (this.treeselect.srcElement.querySelectorAll(".categorie-danger-header").length !== 0) {
-                showHeader(this.treeselect.srcElement, ".categorie-danger-header")
-                return
-            }
-            const list = this.selectedHazardTreeselectTarget.querySelector(".treeselect-list")
-            if (list) {
-                const fragment = this.selectedHazardTreeselectHeaderTarget.content.cloneNode(true)
-                list.prepend(fragment)
-                this.customHeaderAddedValue = true
-            }
-        }
-    }
+        this.treeselectConfirmedOutlet.setDisabledState(!isConfirmed)
+        if (!isConfirmed) this.treeselectConfirmedOutlet.unselectAll()
 
-    onShortcut({target}) {
-        const label = target.getElementsByTagName("label")[0]
-        const value = label.textContent.trim()
-        const checkbox = this.selectedHazardTreeselectTarget.querySelector(`[id$="${label.getAttribute("for")}"]`)
-        checkbox.checked = !checkbox.checked
-
-        const valuesToSet = this.treeselect.value
-        if (checkbox.checked) {
-            valuesToSet.push(value)
-        } else {
-            valuesToSet.pop(value)
-        }
-
-        this.treeselect.updateValue(valuesToSet)
-        this.selectedHazardTreeselectInputTarget.value = valuesToSet.join("||")
-        let text = ""
-        if (valuesToSet.length === 1) {
-            text = valuesToSet[0]
-        } else {
-            text = `${valuesToSet.length} ${this.treeselect.tagsCountText}`
-        }
-        this.selectedHazardTreeselectTarget.querySelector(".treeselect-input__tags-count").innerText = text
+        this.treeselectSuspectedOutlet.setDisabledState(!isSuspected)
+        if (!isSuspected) this.treeselectSuspectedOutlet.unselectAll()
     }
 
     suspicionConclusionValueChanged(value) {
-        if (this.treeselect === undefined) return
+        const isConfirmed = value === this.suspicionConclusionChoicesValue.CONFIRMED.value
+        const isSuspected = value === this.suspicionConclusionChoicesValue.SUSPECTED.value
+        const isDiscarded = value === this.suspicionConclusionChoicesValue.DISCARDED.value
 
-        this.conclusionRepasTarget.disabled = false
-        this.conclusionRepasTarget.required = false
-        this.conclusionAlimentTarget.disabled = false
-        if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
-            this.conclusionRepasTarget.required = true
-            this.treeselect.disabled = false
-            this.treeselect.placeholder = "Choisir dans la liste d’après les résultats d’analyse"
-            this.selectedHazardTreeselectInputTarget.required = true
-            this.treeselect.options = this.selectedHazardConfirmedChoicesValue
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
-            this.conclusionRepasTarget.required = true
-            this.treeselect.disabled = false
-            this.treeselect.placeholder = "Choisir dans la liste parmi les dangers syndromiques"
-            this.selectedHazardTreeselectInputTarget.required = true
-            this.treeselect.options = this.selectedHazardSuspectedChoicesValue
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.DISCARDED.value) {
-            this.treeselect.options = []
-            this.treeselect.placeholder = "Choisir dans la liste"
-            this.treeselect.disabled = true
+        this.conclusionRepasTarget.disabled = isDiscarded
+        this.conclusionRepasTarget.required = isConfirmed || isSuspected
+        this.requiredProxyTarget.required = isConfirmed || isSuspected
+        this.conclusionAlimentTarget.disabled = isDiscarded
+
+        if (isDiscarded) {
             this.conclusionRepasTarget.value = ""
-            this.conclusionRepasTarget.disabled = true
             this.conclusionAlimentTarget.value = ""
-            this.conclusionAlimentTarget.disabled = true
-            this.selectedHazardTreeselectInputTarget.required = false
-            this.treeselect.mount()
-        } else if (value === this.suspicionConclusionChoicesValue.UNKNOWN.value) {
-            this.treeselect.options = []
-            this.treeselect.placeholder = "Choisir dans la liste"
-            this.treeselect.disabled = true
-            this.selectedHazardTreeselectInputTarget.required = false
-            this.treeselect.mount()
         }
 
-        if (this.selectedHazardTreeselectInitializedValue) {
-            this.treeselect.updateValue("")
-            this.selectedHazardTreeselectInputTarget.value = ""
-        } else if (value) {
-            this.treeselect.updateValue(this.selectedHazardTreeselectInputTarget.value.split("||"))
-            this.selectedHazardTreeselectInitializedValue = true
-        }
+        // Still show this fields as a "fake" one for Discarded, Unknwon and no value
+        this.selectedHazardConfirmedContainerTarget.classList.toggle("fr-hidden", isSuspected)
+        this.selectedHazardConfirmedContainerTarget
+            .querySelector("label")
+            .classList.toggle("required-field", isConfirmed)
+
+        this.selectedHazardSuspectedContainerTarget.classList.toggle("fr-hidden", !isSuspected)
+        this.selectedHazardSuspectedContainerTarget
+            .querySelector("label")
+            .classList.toggle("required-field", isSuspected)
 
         if (this.suspicionConclusionTarget.selectedOptions?.[0]?.dataset?.needsNotice === "true") {
             this.noticeTarget.classList.remove("fr-hidden")
         } else {
             this.noticeTarget.classList.add("fr-hidden")
         }
+        this.#syncTreeselects()
+        this.#syncRequiredProxyValue()
     }
 
     onSuspicionConclusionChanged({target: {value}}) {

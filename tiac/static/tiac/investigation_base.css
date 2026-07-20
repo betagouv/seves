@@ -14,7 +14,7 @@
 .conclusion-comment textarea {
     flex-grow: 1;
 }
-#id_selected_hazard {
+#required-proxy {
     display: block;
     height: 0;
     padding: 1px;
