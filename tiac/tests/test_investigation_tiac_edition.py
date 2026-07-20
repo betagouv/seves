@@ -98,7 +98,11 @@ COMMON_FIELDS_TO_EXCLUDE = [
 
 
 def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, choose_different_values):
-    investigation = InvestigationTiacFactory(analyses_sur_les_malades=Analyses.INCONNU, agents_confirmes_ars=[])
+    agents_confirmes_ars = [CategorieDanger.CRONOBACTER_SAKAZAKII, CategorieDanger.AMANDE]
+    investigation = InvestigationTiacFactory(
+        analyses_sur_les_malades=Analyses.OUI,
+        agents_confirmes_ars=agents_confirmes_ars,
+    )
 
     new_analyses_sur_les_malades = Analyses.OUI
     new_precision = Faker().sentence()
@@ -107,6 +111,10 @@ def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, ch
 
     edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
     edit_page.navigate()
+
+    # Assert that treeselect was correctly initialized with good values
+    checked_inputs = edit_page.agents_confirmes_ars_treeselect.options_container.locator("input:checked").all()
+    assert {it.input_value() for it in checked_inputs} == {it.value for it in agents_confirmes_ars}
 
     edit_page.set_analyses(new_analyses_sur_les_malades.value)
     edit_page.precisions.fill(new_precision)
@@ -117,7 +125,7 @@ def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, ch
     assert_models_are_equal(
         investigation,
         {
-            "agents_confirmes_ars": ["Shigella"],
+            "agents_confirmes_ars": {*(it.value for it in agents_confirmes_ars), "Shigella"},
             "analyses_sur_les_malades": new_analyses_sur_les_malades.label,
             "precisions": new_precision,
         },
@@ -126,6 +134,7 @@ def test_can_edit_ars_block(live_server, page: Page, assert_models_are_equal, ch
             "analyses_sur_les_malades",
             "precisions",
         ],
+        ignore_array_order=True,
     )
     assert previous_count == InvestigationTiac.objects.count()
 
