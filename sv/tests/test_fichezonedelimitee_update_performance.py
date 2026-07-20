@@ -1,6 +1,6 @@
 from sv.factories import EvenementFactory, FicheDetectionFactory, FicheZoneFactory
 
-BASE_NUM_QUERIES = 14
+BASE_NUM_QUERIES = 12
 
 
 def test_update_fiche_zone_delimitee_form_with_multiple_existing_fiche_detection(

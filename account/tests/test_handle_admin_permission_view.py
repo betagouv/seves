@@ -87,7 +87,7 @@ def test_performances_admin_page_scales(client, mocked_authentification_user, dj
     mocked_authentification_user.agent.structure = structure
     AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
 
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(8):
         response = client.get(reverse("handle-admins"))
         assert response.status_code == 200
 
@@ -95,7 +95,7 @@ def test_performances_admin_page_scales(client, mocked_authentification_user, dj
     AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
     AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, settings.SSA_GROUP])
 
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(8):
         response = client.get(reverse("handle-admins"))
         assert response.status_code == 200
 
