@@ -95,8 +95,6 @@ jobs:
         run: |
           pip install --upgrade "pip!=25.3" pip-tools
           pip-sync
-      - name: Install dependencies
-        run: pip install pip-tools && pip-sync
       - name: Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(playwright --version | awk '{print $2}')" >> $GITHUB_ENV
       - name: Cache playwright binaries
