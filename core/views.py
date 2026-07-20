@@ -298,8 +298,8 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
         context["can_reply_to"] = self.message.can_reply_to(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.message)
-        context["documents"] = self.message.documents.all()
-        downloadable_documents = [d for d in context["documents"] if (d.is_deleted is False and d.is_infected is False)]
+        context["documents"] = self.message.documents.exclude(is_infected=True)
+        downloadable_documents = [d for d in context["documents"] if (d.is_deleted is False)]
         context["document_count_for_download"] = len(downloadable_documents)
         return context
 

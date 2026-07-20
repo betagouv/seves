@@ -369,11 +369,15 @@ class Document(models.Model):
 
     @property
     def can_be_viewed(self):
-        return self.mimetype in [AllowedMimeTypes.IMAGE_PNG, AllowedMimeTypes.IMAGE_JPEG, AllowedMimeTypes.IMAGE_GIF]
+        return self.is_infected is False and self.mimetype in [
+            AllowedMimeTypes.IMAGE_PNG,
+            AllowedMimeTypes.IMAGE_JPEG,
+            AllowedMimeTypes.IMAGE_GIF,
+        ]
 
     @property
     def can_pdf_be_viewed(self):
-        return self.mimetype == AllowedMimeTypes.APPLICATION_PDF
+        return self.is_infected is False and self.mimetype == AllowedMimeTypes.APPLICATION_PDF
 
     @classmethod
     def validate_file_extention_for_document_type(cls, file, document_type):
