@@ -124,16 +124,20 @@ class TreeselectElement extends TreeselectGroupConnectable {
  * @property {HTMLInputElement[]} accordionBtnTargets
  * *** Values ***
  * @property {Boolean} hiddenValue
+ * @property {Boolean} autoSelectChildrenValue
  */
 class TreeselectGroup extends TreeselectGroupConnectable {
     static values = {
         hidden: {type: Boolean, default: false},
-        selfMatchesSearch: {type: Boolean, default: true},
-        hasChildrenMatching: {type: Boolean, default: true},
+        autoSelectChildren: {type: Boolean, default: false},
     }
     static targets = ["accordionBtn", "collapse"]
 
     #locked = false
+
+    get canAutoSelectChildren() {
+        return this.inputTarget.type === "checkbox" && this.autoSelectChildrenValue
+    }
 
     get labels() {
         const result = []
@@ -203,7 +207,7 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         if (this.#locked) return
 
         await super.onChoicesChanged(evt)
-        if (!this.hasInputTarget || this.inputTarget.type !== "checkbox") return
+        if (!this.hasInputTarget || !this.canAutoSelectChildren) return
 
         try {
             this.#locked = true
@@ -225,7 +229,7 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         if (this.#locked || !this.hasInputTarget) return
 
         const checked = evt.target.checked
-        if (this.inputTarget.type === "checkbox") {
+        if (this.canAutoSelectChildren) {
             try {
                 this.#locked = true
                 for (const it of this.childTargets) {
