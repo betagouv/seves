@@ -901,8 +901,10 @@ def test_only_displays_sv_contacts(live_server, page: Page, mocked_authentificat
     generic_test_only_displays_app_contacts(live_server, page, EvenementFactory(), "sv")
 
 
-def test_structure_show_only_one_entry_in_select(live_server, page: Page):
-    generic_test_structure_show_only_one_entry_in_select(live_server, page, EvenementFactory())
+def test_structure_show_only_one_entry_in_select(live_server, page: Page, mocked_authentification_user):
+    generic_test_structure_show_only_one_entry_in_select(
+        live_server, page, mocked_authentification_user, EvenementFactory()
+    )
 
 
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):

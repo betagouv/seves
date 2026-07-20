@@ -47,7 +47,7 @@ from core.models import (
     user_is_referent_national,
 )
 
-from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
+from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Domains, Visibilite
 from .filters import DocumentFilter, MessageFilter
 from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
 from .html import html_to_simple_text
@@ -389,6 +389,9 @@ class WithEtatMixin(models.Model):
         return self.etat == self.Etat.EN_COURS
 
     def can_publish(self, user):
+        needed_group = Domains.group_for_value(self._meta.app_label)
+        if needed_group and needed_group not in [g.name for g in user.groups.all()]:
+            return False
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
     def can_be_cloture_by(self, user):
@@ -443,6 +446,9 @@ class WithEtatMixin(models.Model):
 
 class AllowModificationMixin(WithEtatMixin):
     def can_user_access(self, user):
+        needed_group = Domains.group_for_value(self._meta.app_label)
+        if needed_group and needed_group not in [g.name for g in user.groups.all()]:
+            return False
         if user.agent.is_in_structure(self.createur):
             return True
         return not self.is_draft

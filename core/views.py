@@ -37,6 +37,7 @@ from .forms import (
 )
 from .mixins import (
     AbstractMessageHandlingView,
+    AllowACNotificationMixin,
     GetFicheObjectMixin,
     PreventActionIfVisibiliteBrouillonMixin,
     WithACNotificationMixin,
@@ -350,15 +351,25 @@ class ACNotificationView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         return safe_redirect(request.POST.get("next"))
 
 
-class PublishAndACNotificationView(WithPublishMixin, WithACNotificationMixin, View):
-    def post(self, request):
-        content_type_id = request.POST.get("content_type_id")
-        content_id = request.POST.get("content_id")
+class PublishAndACNotificationView(
+    WithPublishMixin, GetFicheObjectMixin, UserPassesTestMixin, WithACNotificationMixin, View
+):
+    def get_fiche_object(self):
+        content_type_id = self.request.POST.get("content_type_id")
+        content_id = self.request.POST.get("content_id")
         content_type = ContentType.objects.get(pk=content_type_id).model_class()
         obj = content_type.objects.get(pk=content_id)
-        if not self.publish(obj, request):
+        if not isinstance(obj, AllowACNotificationMixin):
+            raise PermissionDenied
+        return obj
+
+    def test_func(self):
+        return self.fiche_objet.can_user_access(self.request.user)
+
+    def post(self, request):
+        if not self.publish(self.fiche_objet, request):
             return safe_redirect(request.POST.get("next"))
-        self.notify_ac(obj, request)
+        self.notify_ac(self.fiche_objet, request)
         return safe_redirect(request.POST.get("next"))
 
 

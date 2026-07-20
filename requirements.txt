@@ -56,7 +56,7 @@ distlib==0.3.8
     # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
-django==6.0.6
+django==6.0.7
     # via
     #   -r requirements.in
     #   dj-importmap
@@ -83,7 +83,7 @@ django-dsfr==3.5.2
     # via -r requirements.in
 django-environ==0.14.0
     # via -r requirements.in
-django-filter==25.2
+django-filter==26.1
     # via -r requirements.in
 django-post-office==3.11.2
     # via -r requirements.in
@@ -93,7 +93,7 @@ django-reversion==6.3.0
     # via
     #   -r requirements.in
     #   django-reversion-compare
-django-reversion-compare==0.19.2
+django-reversion-compare==0.19.3
     # via -r requirements.in
 django-storages[s3]==1.14.6
     # via -r requirements.in
@@ -236,7 +236,7 @@ ruff==0.15.20
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.64.0
+sentry-sdk[django]==2.65.0
     # via -r requirements.in
 six==1.16.0
     # via

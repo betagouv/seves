@@ -248,6 +248,12 @@ class EvenementListPage(WithTreeSelect):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self.follow_up_treeselect = TreeselectPage(
+            self.page, self.page.locator("label", has_text="Type d'événement/suites").locator("..")
+        )
+        self.conclusion_field_treeselect = TreeselectPage(
+            self.page, self.page.locator("label", has_text="Conclusion").locator("..")
+        )
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
@@ -259,10 +265,6 @@ class EvenementListPage(WithTreeSelect):
     @property
     def numero_field(self):
         return self.page.locator("#id_numero")
-
-    @property
-    def follow_up(self):
-        return self.page.locator("#id_follow_up")
 
     @property
     def with_links(self):
@@ -283,10 +285,6 @@ class EvenementListPage(WithTreeSelect):
     @property
     def end_date_reception_field(self):
         return self.page.locator("#id_end_date_reception")
-
-    @property
-    def conclusion_field(self):
-        return self.page.locator("#id_suspicion_conclusion")
 
     @property
     def full_text_field(self):

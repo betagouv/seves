@@ -11,7 +11,7 @@ def test_update_evenement_simple_performances(client, django_assert_num_queries)
     evenement = EvenementSimpleFactory()
     client.get(reverse("tiac:evenement-simple-edition", kwargs={"pk": evenement.pk}))
 
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(9):
         client.get(reverse("tiac:evenement-simple-edition", kwargs={"pk": evenement.pk}))
 
 
