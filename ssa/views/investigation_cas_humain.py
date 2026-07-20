@@ -89,8 +89,11 @@ class InvestigationCasHumainCreateView(
         return self.form_valid(form)
 
 
-class InvestigationCasHumainUpdateView(InvestigationCasHumainCreateView, UpdateView):
+class InvestigationCasHumainUpdateView(UserPassesTestMixin, InvestigationCasHumainCreateView, UpdateView):
     success_message = "L'évènement Investigation cas humain a bien été modifié."
+
+    def test_func(self) -> bool | None:
+        return self.get_object().can_be_modified(self.request.user)
 
     @property
     def object(self):
