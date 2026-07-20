@@ -161,7 +161,7 @@ def test_treeselect_button_label(navigate_to_form, page: Page):
     assert treeselect_animal_radio.main_button.inner_text() == "Choisir dans la liste"
 
 
-def test_checkbox_options_and_parent_behavior(navigate_to_form, page: Page):
+def test_checkbox_options_and_parent_behavior_auto_select_enabled(navigate_to_form, page: Page):
     navigate_to_form(TestForm())
     treeselect_animal_radio = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
 
@@ -243,6 +243,27 @@ def test_checkbox_options_and_parent_behavior(navigate_to_form, page: Page):
         expect(treeselect_animal_radio.get_option(it)).not_to_be_checked()
 
     assert treeselect_animal_radio.selected_tags.count() == 0
+
+
+def test_checkbox_options_and_parent_behavior_auto_select_disabled(navigate_to_form, page: Page):
+    form = TestForm()
+    form["animal_checkbox"].field.widget.auto_select_children = False
+    navigate_to_form(form)
+    treeselect_animal_radio = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    # Tests that checking parent does not check children
+    treeselect_animal_radio.check_option(*TestChoices.FRANCE.splitted_label)
+
+    for it in (TestChoices.TOULOUSE, TestChoices.PARIS):
+        expect(treeselect_animal_radio.get_option(it)).not_to_be_checked()
+
+    # Tests that checking children does not check parent
+    treeselect_animal_radio.uncheck_option(*TestChoices.FRANCE.splitted_label)
+
+    for it in (TestChoices.TOULOUSE, TestChoices.PARIS):
+        treeselect_animal_radio.check_option(*it.splitted_label)
+
+    expect(treeselect_animal_radio.get_option(TestChoices.FRANCE)).not_to_be_checked()
 
 
 def test_shortcut_behavior(navigate_to_form, page: Page):
