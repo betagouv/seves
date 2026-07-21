@@ -329,7 +329,7 @@ def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification
     evenement = EvenementFactory(etat=Evenement.Etat.BROUILLON)
     message = Message.objects.create_unsaved(active_contact, related_to=evenement)
 
-    response = client.post(
+    client.post(
         evenement.add_message_url,
         data={
             "id": message.pk,
@@ -341,10 +341,8 @@ def test_cant_add_message_if_evenement_brouillon(client, mocked_authentification
         follow=True,
     )
 
-    messages = list(response.context["messages"])
-    assert len(messages) == 1
-    assert messages[0].level_tag == "error"
-    assert str(messages[0]) == "Action impossible car la fiche est en brouillon"
+    message = Message._base_objects.get()
+    assert message.status == Message.Status.AVANT_SAUVEGARDE
 
 
 def test_can_see_more_than_4_search_result_in_recipients_and_recipients_copy_field(
@@ -589,9 +587,36 @@ def test_cant_forge_post_of_message_in_evenement_we_cant_see(client, mocked_auth
         reverse("message-add", kwargs={"obj_type_pk": content_type, "obj_pk": evenement.pk}), data=payload
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
     evenement.refresh_from_db()
     assert evenement.messages.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_forge_post_of_message_to_update_existing_message(client, mocked_authentification_user):
+    evenement = EvenementFactory(visibilite=Visibilite.NATIONALE, etat=Evenement.Etat.EN_COURS)
+    contact = ContactAgentFactory(with_active_agent__with_groups=[settings.SV_GROUP])
+    message = MessageFactory(status=Message.Status.FINALISE, content_object=evenement, message_type=Message.MESSAGE)
+
+    content_type = ContentType.objects.get_for_model(evenement).id
+
+    payload = {
+        "id": message.pk,
+        "content_type": content_type,
+        "object_id": evenement.pk,
+        "recipients": contact.pk,
+        "title": "Test",
+        "content": "Test",
+        "action": "finalise",
+    }
+    url = reverse("message-add", kwargs={"obj_type_pk": content_type, "obj_pk": evenement.pk})
+    response = client.post(f"{url}?type=message", data=payload)
+
+    assert response.status_code == 404
+    evenement.refresh_from_db()
+    message = evenement.messages.get()
+    assert message.content != "Test"
+    assert message.title != "Test"
 
 
 def test_can_delete_document_attached_to_message(live_server, page: Page, mocked_authentification_user: User):
