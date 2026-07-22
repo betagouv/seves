@@ -119,3 +119,33 @@ def generic_test_cant_soft_delete_without_domain_group(client, mocked_authentifi
 
     object.refresh_from_db()
     assert object.is_deleted is False
+
+
+def generic_test_cant_cloturer_without_domain_group(client, mocked_authentification_user, object, ac_structure):
+    _revoke_domain_group(mocked_authentification_user, object)
+    mocked_authentification_user.agent.structure = ac_structure
+    mocked_authentification_user.agent.save()
+    assert object.is_cloture is False
+
+    client.post(
+        reverse("cloturer", kwargs={"pk": object.pk}),
+        data={"content_type_id": ContentType.objects.get_for_model(object).id},
+    )
+
+    object.refresh_from_db()
+    assert object.is_cloture is False
+
+
+def generic_test_cant_open_without_domain_group(client, mocked_authentification_user, object, ac_structure):
+    _revoke_domain_group(mocked_authentification_user, object)
+    mocked_authentification_user.agent.structure = ac_structure
+    mocked_authentification_user.agent.save()
+    assert object.is_cloture is True
+
+    client.post(
+        reverse("evenement-ouvrir", kwargs={"pk": object.pk}),
+        data={"content_type_id": ContentType.objects.get_for_model(object).id},
+    )
+
+    object.refresh_from_db()
+    assert object.is_cloture is True
