@@ -30,6 +30,7 @@ from django.views.generic.edit import UpdateView
 from docxtpl import DocxTemplate, RichText
 from queryset_sequence import QuerySetSequence
 
+from core.authorization import has_needed_group
 from core.forms import (
     AgentAddForm,
     DocumentEditForm,
@@ -397,7 +398,7 @@ class WithEtatMixin(models.Model):
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
     def can_be_cloture_by(self, user):
-        return user.agent.structure.is_ac
+        return has_needed_group(self, user) and user.agent.structure.is_ac
 
     def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
@@ -414,6 +415,8 @@ class WithEtatMixin(models.Model):
 
     def can_ouvrir(self, user: User):
         """Vérifie si l'évènement peut être ouvert (repasser dans l'état EN COURS)"""
+        if not has_needed_group(self, user):
+            return False
         if self.is_cloture:
             return user.agent.structure.is_ac
         return False

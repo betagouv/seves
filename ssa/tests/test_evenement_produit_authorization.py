@@ -10,6 +10,8 @@ from core.tests.generic_tests.authorization import (
     generic_test_cant_publish_without_domain_group,
     generic_test_cant_soft_delete_without_domain_group,
     generic_test_cant_upload_document_without_domain_group,
+    generic_test_cant_cloturer_without_domain_group,
+    generic_test_cant_open_without_domain_group,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -70,3 +72,15 @@ def test_cant_publish_without_domain_group(client, mocked_authentification_user)
 def test_cant_soft_delete_without_domain_group(client, mocked_authentification_user):
     evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_cant_soft_delete_without_domain_group(client, mocked_authentification_user, evenement)
+
+C
+def test_cant_cloturer_without_ssa_group(client, mocked_authentification_user, mus_contact):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_cant_cloturer_without_domain_group(
+        client, mocked_authentification_user, evenement, mus_contact.structure
+    )
+
+
+def test_cant_ouvrir_without_ssa_group(client, mocked_authentification_user, mus_contact):
+    evenement = EvenementProduitFactory(etat=EvenementProduit.Etat.CLOTURE)
+    generic_test_cant_open_without_domain_group(client, mocked_authentification_user, evenement, mus_contact.structure)
