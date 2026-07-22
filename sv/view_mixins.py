@@ -58,17 +58,15 @@ class WithPrelevementHandlingMixin:
             form_is_empty = not any(form_data.values())
 
             if form_is_empty and prelevement_id:
-                try:
-                    # Cas 1 : Suppression d'un prélèvement uniquement (le lieu n'est pas supprimé)
-                    prelevement = Prelevement.objects.get(id=prelevement_id)
-                    prelevement.delete()
-                except Prelevement.DoesNotExist:
-                    # Cas 2 : Le prélèvement a déjà été supprimé car son lieu a été supprimé (cascade)
-                    pass
+                # Cas 1 : Suppression d'un prélèvement uniquement (le lieu n'est pas supprimé)
+                # Cas 2 : Le prélèvement a déjà été supprimé car son lieu a été supprimé (cascade)
+                # Protection pour vérifier qu'on intervient que sur les prelevements de cette fiche (via les lieux)
+                Prelevement.objects.filter(id=prelevement_id, lieu__in=allowed_lieux).delete()
                 continue
 
-            if prelevement_id:
-                prelevement = Prelevement.objects.get(id=prelevement_id)
+            if prelevement_id and (
+                prelevement := Prelevement.objects.filter(id=prelevement_id, lieu__in=allowed_lieux).first()
+            ):
                 if check_for_inactive_values:
                     labos = self._handle_inactive_values(Laboratoire, "laboratoire", detection.pk)
                     structure = self._handle_inactive_values(StructurePreleveuse, "structure_preleveuse", detection.pk)

@@ -1567,3 +1567,39 @@ def test_elements_infestes_edit_close_modal_reset_values(live_server, page: Page
     ).to_be_checked()
     expect(evenement_page.fieldset.locator('[name$="comments"]')).to_have_value(element_infeste.comments)
     assert choice_js_get_values(page, "#id_elements_infestes-0-espece", delete_remove_link=True) == ["Espece test\n"]
+
+
+def test_cant_delete_prelevement_of_unrelated_fiche_by_forging_form(live_server, page: Page):
+    attacker_lieu = LieuFactory()
+    attacker_fiche = attacker_lieu.fiche_detection
+
+    victim_structure = Structure.objects.create(libelle="Structure victime")
+    victim_fiche = FicheDetectionFactory(evenement__createur=victim_structure, createur=victim_structure)
+    victim_lieu = LieuFactory(fiche_detection=victim_fiche)
+    victim_prelevement = PrelevementFactory(lieu=victim_lieu)
+    assert Prelevement.objects.count() == 1
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+    response = evenement_page.navigate(victim_fiche)
+    assert response.status == 403
+
+    evenement_page = EvenementUpdatePage(page, live_server)
+    evenement_page.navigate(attacker_fiche)
+
+    page.evaluate(
+        """
+     ([name, value]) => {
+         const input = document.createElement("input");
+         input.type = "hidden";
+         input.name = name;
+         input.value = value;
+         document.querySelector("main form").appendChild(input);
+     }
+     """,
+        [f"prelevements-{victim_prelevement.id}-id", str(victim_prelevement.id)],
+    )
+    evenement_page.save()
+
+    assert Prelevement.objects.count() == 1
+    victim_prelevement.refresh_from_db()
+    assert victim_prelevement.lieu_id == victim_lieu.id
