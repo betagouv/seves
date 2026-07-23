@@ -9,7 +9,7 @@
                     <div class="fr-modal__content">
                         <h1 id="fr-modal-title-modal-extraire-evenements" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Extraction volumineuse</h1>
                         <p>Cette extraction contient {{ total_object_count }} lignes. Le fichier généré sera volumineux et son ouverture dans un tableur peut être lente. Fermez cette fenêtre pour affiner votre recherche à l'aide des filtres (pensez à cliquer sur "rechercher") avant de lancer l'extraction.</p>
-                       <form action="{% url 'ssa:export-csv' %}?{{ request.GET.urlencode }}" method="post">
+                        <form action="{% url 'ssa:export-csv' %}?{{ request.GET.urlencode }}" method="post">
                             <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
                                 <button type="button" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-extraire-evenements">Annuler</button>
                                 {% csrf_token %}
