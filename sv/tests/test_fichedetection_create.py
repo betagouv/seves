@@ -984,6 +984,7 @@ def test_lieu_map(
     x = box["x"] + box["width"] / 2
     y = box["y"] + box["height"] / 2
     page.mouse.dblclick(x, y)
+    page.wait_for_timeout(1000)
     assert call_count["count"] == 1
 
     lieu_form_elements.close_with(action="save")
