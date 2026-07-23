@@ -169,6 +169,12 @@ USE_I18N = True
 
 USE_TZ = True
 
+USE_THOUSAND_SEPARATOR = True
+
+THOUSAND_SEPARATOR = " "
+
+NUMBER_GROUPING = 3
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_ROOT = "staticfiles"
