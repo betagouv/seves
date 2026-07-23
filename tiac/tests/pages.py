@@ -317,7 +317,7 @@ class EvenementListPage:
             return self.page.get_by_test_id("submit-search").click()
 
     def submit_export(self):
-        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+        return self.page.get_by_role("button", name="Extraire").click()
 
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
