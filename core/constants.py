@@ -142,6 +142,8 @@ DEPARTEMENTS = [
     ("976", "Mayotte", "Mayotte"),
 ]
 
+VOLUMINOUS_EXTRACT_THRESHOLD = 1000
+
 
 class Domains(StrEnum, ExtendedChoices):
     SV = {

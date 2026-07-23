@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView
 
+from core.constants import VOLUMINOUS_EXTRACT_THRESHOLD
 from core.mixins import MediaDefiningMixin, WithExportHeterogeneousQuerysetMixin
 from ssa.display import EvenementDisplay
 from ssa.models import EvenementProduit
@@ -32,6 +33,10 @@ class EvenementsListView(MediaDefiningMixin, WithFilteredListMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
         context["total_object_count"] = self.get_raw_queryset().count()
-        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
+        context["voluminous_extract_threshold"] = VOLUMINOUS_EXTRACT_THRESHOLD
+        context["object_list"] = [
+            EvenementDisplay.from_evenement(evenement)
+            for evenement in context["object_list"]
+        ]
 
         return context
