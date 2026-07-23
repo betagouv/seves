@@ -1,5 +1,6 @@
 import csv
 from io import StringIO
+from unittest import mock
 
 from playwright.sync_api import Page, expect
 import pytest
@@ -221,7 +222,24 @@ def test_export_evenements_from_ui(live_server, mocked_authentification_user, pa
 def test_cant_export_evenement_when_no_results_in_list(live_server, mocked_authentification_user, page):
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    expect(search_page.page.get_by_role("button", name="Extraire", exact=True)).not_to_be_visible()
+    expect(search_page.page.get_by_role("button", name="Extraire")).not_to_be_visible()
+
+
+def test_export_shows_modal_when_above_threshold(live_server, mocked_authentification_user, page: Page, settings):
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    EvenementProduitFactory()
+    EvenementProduitFactory()
+    search_page = EvenementProduitListPage(page, live_server.url)
+
+    with mock.patch("ssa.views.common.VOLUMINOUS_EXTRACT_THRESHOLD", 1):
+        search_page.navigate()
+        search_page.page.get_by_role("button", name="Extraire").click()
+        expect(search_page.page.locator("#fr-modal-extraire-evenements")).to_be_visible()
+        search_page.page.get_by_test_id("submit-extract").click()
+
+    expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
+    task = Export.objects.get()
+    assert task.task_done is True
 
 
 @pytest.mark.django_db
