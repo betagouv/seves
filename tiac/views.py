@@ -19,6 +19,7 @@ from docxtpl import DocxTemplate
 from reversion.models import Version
 
 from core.audit import audit_log
+from core.constants import VOLUMINOUS_EXTRACT_THRESHOLD
 from core.diffs import create_manual_version
 from core.mixins import (
     MediaDefiningMixin,
@@ -252,6 +253,7 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
             object_list.append(DisplayItem.from_object(evenement))
 
         context["total_object_count"] = self.get_raw_queryset.count()
+        context["voluminous_extract_threshold"] = VOLUMINOUS_EXTRACT_THRESHOLD
         context["object_list"] = object_list
         context["filter"] = self.filter
         return context
