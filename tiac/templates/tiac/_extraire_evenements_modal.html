@@ -1,0 +1,24 @@
+<dialog aria-labelledby="fr-modal-title-modal-extraire-evenements" role="dialog" id="fr-modal-extraire-evenements" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale" aria-controls="fr-modal-extraire-evenements">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-extraire-evenements" class="fr-modal__title"><span class="fr-icon-arrow-right-line fr-icon--lg"></span>Extraction volumineuse</h1>
+                        <p>Cette extraction contient {{ total_object_count }} lignes. Le fichier généré sera volumineux et son ouverture dans un tableur peut être lente. Fermez cette fenêtre pour affiner votre recherche à l'aide des filtres (pensez à cliquer sur "rechercher") avant de lancer l'extraction.</p>
+                        <form action="{% url 'tiac:export-tiac' %}?{{ request.GET.urlencode }}" method="post">
+                            <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-lg">
+                                <button type="button" class="fr-btn fr-btn--secondary" aria-controls="fr-modal-extraire-evenements">Annuler</button>
+                                {% csrf_token %}
+                                <button type="submit" class="fr-btn" data-testid="submit-extract">Confirmer l'extraction</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

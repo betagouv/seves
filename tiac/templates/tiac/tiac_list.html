@@ -60,12 +60,7 @@
     <main class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
-            <form action="{% url 'tiac:export-tiac' %}?{{ request.GET.urlencode }}" method="post">
-                {% csrf_token %}
-                {% if paginator.count > 0 %}
-                    <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">Extraire</button>
-                {% endif %}
-            </form>
+            {% include "core/_extraire_evenements_bouton.html" with export_url_name="tiac:export-tiac" %}
         </div>
         {% if paginator.count > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
