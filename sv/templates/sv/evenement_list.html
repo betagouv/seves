@@ -38,13 +38,7 @@
     <div class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count  }} sur un total de {{ total_object_count }}</div>
-
-            <form method="post" action="{% url 'sv:fiche-detection-export' %}{% querystring %}">
-                {% csrf_token %}
-                <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-add-line" data-testid="extract">
-                    Extraire
-                </button>
-            </form>
+            {% include "core/_extraire_evenements_bouton.html" with export_url_name="sv:fiche-detection-export" %}    
         </div>
 
         {% if paginator.count > 0 %}
