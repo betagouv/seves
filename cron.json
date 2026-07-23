@@ -23,6 +23,10 @@
 	  {
 		"command": "0 4 * * * ./bin/fetch_and_import_contacts.sh",
 	    "size": "M"
+	  },
+	  {
+		"command": "10 * * * * python manage.py refresh_evenement_produit_view",
+	    "size": "M"
 	  }
 	]
   }
