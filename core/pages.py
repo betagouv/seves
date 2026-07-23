@@ -268,7 +268,7 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     def erase_message_content(self):
         self.message_content.click()
         expect(self.message_content).to_be_focused()
-        self.page.keyboard.press("Control+A")
+        self.page.keyboard.press("ControlOrMeta+A")
         self.page.keyboard.press("Backspace")
         expect(self.message_content).to_have_text("")
 
