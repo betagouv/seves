@@ -47,7 +47,8 @@ from core.models import (
     user_is_referent_national,
 )
 
-from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Domains, Visibilite
+from .authorization import has_needed_group
+from .constants import BSV_STRUCTURE, MUS_STRUCTURE, Visibilite
 from .filters import DocumentFilter, MessageFilter
 from .formsets import FicheDocumentUploadFormSet, MessageDocumentUploadFormSet
 from .html import html_to_simple_text
@@ -311,6 +312,8 @@ class WithVisibiliteMixin(models.Model):
 
     def can_user_access(self, user):
         """Vérifie si l'utilisateur peut accéder à la fiche de détection."""
+        if not has_needed_group(self, user):
+            return False
         if self.is_visibilite_nationale:
             return True
         if user.agent.is_in_structure(self.createur):
@@ -389,13 +392,12 @@ class WithEtatMixin(models.Model):
         return self.etat == self.Etat.EN_COURS
 
     def can_publish(self, user):
-        needed_group = Domains.group_for_value(self._meta.app_label)
-        if needed_group and needed_group not in [g.name for g in user.groups.all()]:
+        if not has_needed_group(self, user):
             return False
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
     def can_be_cloture_by(self, user):
-        return user.agent.structure.is_ac
+        return has_needed_group(self, user) and user.agent.structure.is_ac
 
     def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""
@@ -412,6 +414,8 @@ class WithEtatMixin(models.Model):
 
     def can_ouvrir(self, user: User):
         """Vérifie si l'évènement peut être ouvert (repasser dans l'état EN COURS)"""
+        if not has_needed_group(self, user):
+            return False
         if self.is_cloture:
             return user.agent.structure.is_ac
         return False
@@ -446,8 +450,7 @@ class WithEtatMixin(models.Model):
 
 class AllowModificationMixin(WithEtatMixin):
     def can_user_access(self, user):
-        needed_group = Domains.group_for_value(self._meta.app_label)
-        if needed_group and needed_group not in [g.name for g in user.groups.all()]:
+        if not has_needed_group(self, user):
             return False
         if user.agent.is_in_structure(self.createur):
             return True

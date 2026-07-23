@@ -41,6 +41,7 @@
     <div
         class="fr-treeselect__group{% if widget.can_expand %} fr-accordion{% endif %}"
         data-controller="treeselect-group"
+        data-treeselect-group-auto-select-children-value="{{ widget.auto_select_children }}"
     >
         <div class="fr-treeselect__group-header">
             {% if not widget.can_expand %}

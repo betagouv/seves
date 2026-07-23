@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.http.response import HttpResponse, HttpResponseServerError, JsonResponse
+from django.http.response import Http404, HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.translation import ngettext
@@ -182,10 +182,17 @@ class MessageCreateView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTestM
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.reply_message = None
+        agent = self.request.user.agent
         if self.request.method == "GET":
-            self.message = Message.objects.create_unsaved(self.request.user.agent, related_to=self.fiche_objet)
+            self.message = Message.objects.create_unsaved(agent, related_to=self.fiche_objet)
         else:
-            self.message = Message.objects.get_base_queryset().get(pk=self.request.POST.get("id"))
+            authorized_messages = Message.objects.get_base_queryset().filter(
+                sender=agent.contact_set.get(), status=Message.Status.AVANT_SAUVEGARDE
+            )
+            try:
+                self.message = authorized_messages.get(pk=self.request.POST.get("id"))
+            except Message.DoesNotExist:
+                raise Http404("Message non trouvé")
 
     def get_fiche_object(self):
         self.fiche_object_class = ContentType.objects.get(pk=self.kwargs.get("obj_type_pk")).model_class()
@@ -298,8 +305,8 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
         context["can_reply_to"] = self.message.can_reply_to(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.message)
-        context["documents"] = self.message.documents.all()
-        downloadable_documents = [d for d in context["documents"] if (d.is_deleted is False and d.is_infected is False)]
+        context["documents"] = self.message.documents.exclude(is_infected=True)
+        downloadable_documents = [d for d in context["documents"] if (d.is_deleted is False)]
         context["document_count_for_download"] = len(downloadable_documents)
         return context
 

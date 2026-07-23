@@ -69,7 +69,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def option_template_name(self):
         return self.parent.option_template_name
 
-    def __init__(self, parent: "TreeselectCheckbox", item: TreeselectGroup | TreeselectItem):
+    def __init__(self, parent: "TreeselectMixin", item: TreeselectGroup | TreeselectItem):
         self.parent = parent
         self.item = item
         self.group_label = item.label
@@ -90,6 +90,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         context["group"] = self.group_label
         context["group_index"] = self.parent.get_next_id()
         context["can_expand"] = False
+        context["auto_select_children"] = self.parent.auto_select_children
         context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
         if isinstance(self.item, TreeselectGroup):
             context["can_expand"] = self.item.can_expand
@@ -118,14 +119,15 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     choice = TreeselectItem(value=choice[0], label=choice[1], categorised_label=None)
                 if choice.categorised_label:
                     attrs["data-categorised-label"] = choice.categorised_label
+                option_name = name
                 if choice.html_name_prefix:
-                    name = f"{choice.html_name_prefix}-{name}"
+                    option_name = f"{choice.html_name_prefix}-{name}"
                     selected = str(choice.value) in value
                 else:
                     selected = self.get_selected(choice.value, value)
 
                 yield self.create_option(
-                    name,
+                    option_name,
                     choice.value,
                     choice.label,
                     selected,
@@ -143,12 +145,11 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         return context
 
 
-class TreeselectCheckbox(widgets.ChoiceWidget):
-    allow_multiple_selected = True
-    input_type = "checkbox"
+class TreeselectMixin(widgets.ChoiceWidget):
     template_name = "core/form/widgets/treeselect.html"
     option_template_name = "core/form/widgets/treeselect.html#option"
     has_search_bar = True
+    auto_select_children = False
 
     @property
     def choices(self) -> _Choices:
@@ -224,6 +225,24 @@ class TreeselectCheckbox(widgets.ChoiceWidget):
         ).create_option(name, value, label, selected, index, subindex, attrs)
 
 
-class TreeselectRadio(TreeselectCheckbox):
+class TreeselectCheckbox(TreeselectMixin):
+    allow_multiple_selected = True
+    input_type = "checkbox"
+    auto_select_children = True
+
+    def __init__(
+        self,
+        attrs=None,
+        choices: _Choices = (),
+        *,
+        input_type: Literal["checkbox", "radio"] = _UNSET,
+        has_search_bar: bool = _UNSET,
+        auto_select_children: bool = True,
+    ):
+        super().__init__(attrs, choices, input_type=input_type, has_search_bar=has_search_bar)
+        self.auto_select_children = auto_select_children
+
+
+class TreeselectRadio(TreeselectMixin):
     allow_multiple_selected = False
     input_type = "radio"

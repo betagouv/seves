@@ -33,12 +33,6 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
     display: block !important;
 }
 
-.repas-modal .fr-checkbox-group,
-.aliment-modal .fr-checkbox-group,
-.aliment-modal .fr-radio-group {
-    margin-top: 0.5rem;
-}
-
 @media (min-width: 78em) {
     .fr-container {
         max-width: unset;

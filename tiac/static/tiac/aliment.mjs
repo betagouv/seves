@@ -1,7 +1,6 @@
 import {applicationReady} from "Application"
 import {BaseFormInModal} from "BaseFormInModal"
 import {BaseFormSetController} from "BaseFormset"
-import {findPath, patchItems, tsDefaultOptions} from "CustomTreeSelect"
 import {collectFormValues} from "Forms"
 
 /**
@@ -18,8 +17,6 @@ class AlimentFormController extends BaseFormInModal {
     static targets = [
         "denominationInput",
         "typeAlimentInputContainer",
-        "categorieProduitInput",
-        "categorieProduitContainer",
         "descriptionCompositionInput",
         "descriptionCompositionInputContainer",
         "descriptionProduitInput",
@@ -30,7 +27,6 @@ class AlimentFormController extends BaseFormInModal {
     static values = {categorieProduit: Array}
 
     connect() {
-        this.setupCategorieProduit()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
             this.handleConditionalFields(this.typeAlimentInputContainerTarget.querySelector(":checked").value)
@@ -44,33 +40,6 @@ class AlimentFormController extends BaseFormInModal {
         }
     }
 
-    setupCategorieProduit() {
-        const treeselect = new Treeselect({
-            parentHtmlContainer: this.categorieProduitContainerTarget,
-            value: this.categorieProduitInputTarget.value,
-            options: this.categorieProduitValue,
-            isSingleSelect: true,
-            openCallback() {
-                patchItems(treeselect.srcElement)
-            },
-            ...tsDefaultOptions,
-        })
-        patchItems(treeselect.srcElement)
-        treeselect.srcElement.addEventListener("update-dom", () => {
-            patchItems(treeselect.srcElement)
-        })
-        this.categorieProduitContainerTarget.querySelector(".treeselect-input").classList.add("fr-input")
-
-        treeselect.srcElement.addEventListener("input", e => {
-            if (!e.detail) return
-            const result = findPath(e.detail, this.categorieProduitValue)
-            this.categorieProduitInputTarget.value = e.detail
-            this.categorieProduitContainerTarget.querySelector(
-                "#categorie-produit .treeselect-input__tags-count",
-            ).innerText = result.map(n => n.name).join(" > ")
-        })
-    }
-
     initCard(aliment) {
         this.shouldImmediatelyShowValue = false
         this.cardContainerTargets.forEach(it => it.remove())
@@ -82,10 +51,6 @@ class AlimentFormController extends BaseFormInModal {
     handleConditionalFields(value) {
         if (value === "aliment cuisine") {
             this.descriptionCompositionInputContainerTarget.classList.remove("fr-hidden")
-            this.categorieProduitInputTarget.value = ""
-            this.categorieProduitContainerTarget.querySelector(
-                "#categorie-produit .treeselect-input__tags-count",
-            ).innerText = ""
             this.descriptionProduitInputContainerTarget.classList.add("fr-hidden")
             this.categorieProduitRootContainerTarget.classList.add("fr-hidden")
             this.descriptionCompositionInputTarget.value = ""

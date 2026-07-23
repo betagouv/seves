@@ -14,6 +14,7 @@ from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_mo
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
+from core.widgets import TreeselectCheckbox, TreeselectRadio
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
@@ -84,6 +85,7 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             "follow_up",
             "latest_version",
         )
+
         widgets = {
             "notify_ars": forms.RadioSelect(choices=((True, "Oui"), (False, "Non"))),
         }
@@ -305,7 +307,16 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     danger_syndromiques_suspectes = SimpleArrayField(
         forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput
     )
-    agents_confirmes_ars = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
+    agents_confirmes_ars = forms.MultipleChoiceField(
+        label="Agent pathogène détecté sur les malades",
+        help_text="Confirmation obtenue par examen clinique ou analytique des malades",
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac),
+            auto_select_children=False,
+        ),
+    )
     analyses_sur_les_malades = forms.ChoiceField(
         choices=Analyses.choices,
         widget=forms.RadioSelect(
@@ -352,17 +363,16 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
     def media(self):
         return super().media + Media(
             js=(
+                js_module("core/form/widgets/treeselect_dsfr.mjs"),
+                js_module("core/form/widgets/treeselect.mjs"),
                 js_module("ssa/free_links.mjs"),
                 js_module("tiac/etiologie.mjs"),
                 js_module("tiac/agents_pathogene.mjs"),
                 js_module("tiac/tiac_conclusion.mjs"),
                 js_module("tiac/ars_informee.mjs"),
             ),
+            css={"all": ("core/form/widgets/treeselect_dsfr.css",)},
         )
-
-    @cached_property
-    def common_danger(self):
-        return DANGERS_COURANTS
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -482,7 +492,11 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
     type_aliment = forms.ChoiceField(
         label="Type d'aliment suspecté", widget=forms.RadioSelect, choices=TypeAliment.choices, required=False
     )
-    categorie_produit = SEVESChoiceField(required=False, choices=CategorieProduit.choices, widget=forms.HiddenInput)
+    categorie_produit = forms.ChoiceField(
+        required=False,
+        choices=CategorieProduit,
+        widget=TreeselectRadio(choices=CategorieProduit.treeselect_groups),
+    )
     description_composition = forms.CharField(
         widget=forms.Textarea(attrs={"cols": 30, "rows": 3}),
         label="Description de la composition de l'aliment",
@@ -501,9 +515,21 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         label="Motif de suspicion de l'aliment",
     )
 
-    @cached_property
-    def categorie_produit_json(self):
-        return json.dumps(CategorieProduit.build_options())
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(
+                js_module("core/form/widgets/treeselect_dsfr.mjs"),
+                js_module("core/form/widgets/treeselect.mjs"),
+            ),
+            css={"all": ("core/form/widgets/treeselect_dsfr.css",)},
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data["type_aliment"] == TypeAliment.CUISINE:
+            cleaned_data["categorie_produit"] = ""
+        return cleaned_data
 
     class Meta:
         model = AlimentSuspect
@@ -530,15 +556,25 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.Select,
     )
 
-    categorie_danger = SimpleArrayField(forms.CharField(), delimiter="||", required=False, widget=forms.HiddenInput)
+    categorie_danger = forms.MultipleChoiceField(
+        label="Dangers détectés",
+        required=False,
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac),
+            auto_select_children=False,
+        ),
+    )
 
-    @cached_property
-    def categorie_danger_json(self):
-        return json.dumps(CategorieDanger.build_options())
-
-    @cached_property
-    def common_danger(self):
-        return DANGERS_COURANTS
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(
+                js_module("core/form/widgets/treeselect_dsfr.mjs"),
+                js_module("core/form/widgets/treeselect.mjs"),
+            ),
+            css={"all": ("core/form/widgets/treeselect_dsfr.css",)},
+        )
 
     class Meta:
         model = AnalyseAlimentaire

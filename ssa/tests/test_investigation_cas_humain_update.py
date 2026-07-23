@@ -301,3 +301,22 @@ def test_investigation_cas_humain_updates_last_updated_field(live_server, page):
     update_page.publish()
     evenement.refresh_from_db()
     assert evenement.last_updated > initial_last_update
+
+
+def test_cant_update_investigation_cas_humain_in_draft_from_other_structure(
+    live_server, page, choice_js_get_values, choice_js_fill
+):
+    evenement: EvenementInvestigationCasHumain = InvestigationCasHumainFactory()
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+
+    # Change the owner now the page is loaded
+    evenement.createur = StructureFactory()
+    evenement.save()
+
+    update_page.evaluation.fill("Test")
+    # Bypass WithLatestVersionLocking
+    update_page.page.locator("#id_latest_version").evaluate(f"(el) => el.value = '{evenement.latest_version.id}'")
+    update_page.submit_as_draft(wait_for="")
+    evenement.refresh_from_db()
+    assert evenement.evaluation != "Test"
