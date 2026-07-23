@@ -515,7 +515,7 @@ class EvenementProduitListPage(WithTreeSelect):
         return self.page.locator(".add-btn").click()
 
     def submit_export(self):
-        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+        return self.page.get_by_role("button", name="Extraire").click()
 
     @property
     def filter_counter(self):
