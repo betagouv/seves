@@ -34,9 +34,6 @@ class EvenementsListView(MediaDefiningMixin, WithFilteredListMixin, ListView):
         context["filter"] = self.filter
         context["total_object_count"] = self.get_raw_queryset().count()
         context["voluminous_extract_threshold"] = VOLUMINOUS_EXTRACT_THRESHOLD
-        context["object_list"] = [
-            EvenementDisplay.from_evenement(evenement)
-            for evenement in context["object_list"]
-        ]
+        context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
 
         return context
