@@ -1,3 +1,3 @@
-from .evenement import Evenement
+from .evenement import Espece, EvenementAnimal, Maladie
 
-__all__ = ("Evenement",)
+__all__ = ("EvenementAnimal", "Maladie", "Espece")

@@ -1,8 +1,43 @@
 {% extends "core/base.html" %}
-
+{% load dsfr_tags render_field_with_inline_label %}
 
 {% block product_nav %}
+    <li>
+        <button type="button" data-fr-opened="false" aria-controls="modal-pre-creation" class="fr-btn fr-btn--header-blue fr-btn--icon-left fr-icon-add-line fr-my-auto">Créer un évènement</button>
+    </li>
     <li>
         <a class="fr-btn {% block highlight_menu_evenements %}{% endblock %}" href="{% url 'sa:evenement-liste' %}">Liste des événements</a>
     </li>
 {% endblock product_nav %}
+
+{% block pre_content %}
+    <dialog id="modal-pre-creation" class="fr-modal" aria-labelledby="modal-title-pre-creation">
+        <div class="fr-container fr-container--fluid fr-container-md">
+            <div class="fr-grid-row fr-grid-row--center">
+                <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                    <div class="fr-modal__body">
+                        <div class="fr-modal__header">
+                            <button aria-controls="modal-pre-creation" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                        </div>
+                        <div class="fr-modal__content">
+                            <h2 id="modal-title-pre-creation" class="fr-modal__title">
+                                <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                                Créer un événement cas ou suspicion
+                            </h2>
+
+                            <form method="get" action="{% url 'sa:evenement-animal-creation' %}">
+                                {% dsfr_form_field pre_creation_form.maladie  %}
+                                {% dsfr_form_field pre_creation_form.espece  %}
+                                {% dsfr_inline_radio_field pre_creation_form.statut_animal %}
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
+                                    <button class="fr-btn fr-btn--secondary" aria-controls="modal-pre-creation" type="button">Annuler</button>
+                                    <button type="submit" class="fr-btn">Suivant > </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+{% endblock %}
