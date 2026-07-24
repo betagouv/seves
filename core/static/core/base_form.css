@@ -12,6 +12,11 @@ fieldset:has(input[type="radio"][required]) > legend,
 .label-marked {
     font-weight: bold;
 }
+
+label:has(.label-marked) .fr-hint-text {
+    font-weight: normal;
+}
+
 label:has(+ input:required):not(:has(.label-marked))::after,
 label:has(+ input[data-required="true"]):not(:has(.label-marked))::after,
 label:has(+ select:required):not(:has(.label-marked))::after,

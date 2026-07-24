@@ -1,0 +1,72 @@
+{% extends "sa/base.html" %}
+{% load dsfr_tags widget_tweaks static render_field_with_inline_label %}
+
+{% block content %}
+    <form class="fr-container--fluid fr-background-alt--grey" method="post">
+        {% csrf_token %}
+        <main class="main-container">
+            <div class="fr-grid-row" data-testid="top-action-btns">
+                <h1 class="fr-col-6">
+                    Créer un événement cas ou suspicion
+                </h1>
+                <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
+                    <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm">
+                        {% block buttons %}
+                            {% partialdef buttons inline %}
+                                <button type="submit" class="fr-btn fr-btn--secondary">
+                                    Enregistrer
+                                </button>
+                            {% endpartialdef %}
+                        {% endblock %}
+                    </ul>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <section class="fr-my-4v fr-input-group fr-input-group--error">
+                    {{ form.non_field_errors }}
+                </section>
+            {% endif %}
+
+            <fieldset class="fr-fieldset form-fieldset">
+                <div class="fr-grid-row fr-grid-row--gutters fr-col" data-controller="ars-informee">
+                    {{ form.maladie }}
+                    {{ form.espece }}
+                    {{ form.statut_animal }}
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Maladie suspectée</div>
+                        <div>{{ maladie.name }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Espèce concernée</div>
+                        <div>{{ espece.name }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Statut de l'animal</div>
+                        <div>{{ statut_animal.label }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v ">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Informations</legend>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="fr-input-group">
+                            <label class="fr-label" for="date-creation-input">Date de création</label>
+                            <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
+                        </div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-6">
+                        {% dsfr_form_field form.statut_evenement %}
+                        {% dsfr_form_field form.date_statut_changed %}
+                    </div>
+                </div>
+            </fieldset>
+
+        </main>
+    </form>
+{% endblock content %}
