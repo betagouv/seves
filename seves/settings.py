@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "sv",
     "ssa",
     "core",
+    "sa",
     "account",
     "importmap",
     "django_filters",

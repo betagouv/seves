@@ -148,7 +148,7 @@ class Domains(StrEnum, ExtendedChoices):
         "value": "sv",
         "group": "sv_user",
         "label": "Santé des végétaux",
-        "icon": "fr-icon-leaf-line",
+        "icon": "fr-icon-leaf-line fr-icon--sm",
         "url": reverse_lazy("sv:evenement-liste"),
         "help_url": "https://doc-sv.seves.beta.gouv.fr",
     }
@@ -156,7 +156,7 @@ class Domains(StrEnum, ExtendedChoices):
         "value": "ssa",
         "group": "ssa_user",
         "label": "Produit & cas",
-        "icon": "fr-icon-restaurant-line ",
+        "icon": "fr-icon-restaurant-line fr-icon--sm",
         "url": reverse_lazy("ssa:evenement-produit-liste"),
         "help_url": "https://doc-ssa.seves.beta.gouv.fr",
     }
@@ -164,9 +164,17 @@ class Domains(StrEnum, ExtendedChoices):
         "value": "tiac",
         "group": "ssa_user",
         "label": "TIAC & plaintes",
-        "icon": "fr-icon-restaurant-line ",
+        "icon": "fr-icon-restaurant-line fr-icon--sm",
         "url": reverse_lazy("tiac:evenement-liste"),
         "help_url": "https://doc-tiac.seves.beta.gouv.fr/",
+    }
+    SA = {
+        "value": "sa",
+        "group": "sa_user",
+        "label": "Santé Animale",
+        "icon": "ri-syringe-line",
+        "url": reverse_lazy("sa:evenement-liste"),
+        "help_url": "",
     }
 
     @enum_property
