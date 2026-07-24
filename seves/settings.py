@@ -118,6 +118,7 @@ TEMPLATES = [
                 "seves.context_processors.select_empty_choice",
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
+                "sa.context_processors.pre_creation_form",
             ],
         },
     },
