@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "sv",
     "ssa",
     "core",
+    "sa",
     "account",
     "importmap",
     "django_filters",
@@ -299,6 +300,7 @@ LOGGING = {
 CAN_GIVE_ACCESS_GROUP = "access_admin"
 SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
+SA_GROUP = "sa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
 SECURE_CSP = {

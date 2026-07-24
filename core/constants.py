@@ -1,5 +1,6 @@
 import contextlib
 
+from django.conf import settings
 from django.db import models
 from django.db.models.enums import StrEnum
 from django.urls import reverse_lazy
@@ -146,27 +147,35 @@ DEPARTEMENTS = [
 class Domains(StrEnum, ExtendedChoices):
     SV = {
         "value": "sv",
-        "group": "sv_user",
+        "group": settings.SV_GROUP,
         "label": "Santé des végétaux",
-        "icon": "fr-icon-leaf-line",
+        "icon": "fr-icon-leaf-line fr-icon--sm",
         "url": reverse_lazy("sv:evenement-liste"),
         "help_url": "https://doc-sv.seves.beta.gouv.fr",
     }
     SSA = {
         "value": "ssa",
-        "group": "ssa_user",
+        "group": settings.SSA_GROUP,
         "label": "Produit & cas",
-        "icon": "fr-icon-restaurant-line ",
+        "icon": "fr-icon-restaurant-line fr-icon--sm",
         "url": reverse_lazy("ssa:evenement-produit-liste"),
         "help_url": "https://doc-ssa.seves.beta.gouv.fr",
     }
     TIAC = {
         "value": "tiac",
-        "group": "ssa_user",
+        "group": settings.SSA_GROUP,
         "label": "TIAC & plaintes",
-        "icon": "fr-icon-restaurant-line ",
+        "icon": "fr-icon-restaurant-line fr-icon--sm",
         "url": reverse_lazy("tiac:evenement-liste"),
         "help_url": "https://doc-tiac.seves.beta.gouv.fr/",
+    }
+    SA = {
+        "value": "sa",
+        "group": settings.SA_GROUP,
+        "label": "Santé Animale",
+        "icon": "ri-syringe-line",
+        "url": reverse_lazy("sa:evenement-liste"),
+        "help_url": "",
     }
 
     @enum_property
