@@ -45,6 +45,9 @@ fieldset {
 .product-switch .fr-translate .fr-translate__btn::before {
     width: 0px;
 }
+#domain-picker {
+    right: 0px;
+}
 
 .alert-container {
     margin: 2rem 1.5rem;
