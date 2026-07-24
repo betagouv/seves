@@ -21,8 +21,7 @@
                                 class="fr-fieldset fr-flex fr-flex--align-normal form-fieldset fr-mt-2w"
                                 data-controller="conclusion-form"
                                 data-conclusion-form-suspicion-conclusion-choices-value="{{ form.SuspicionConclusion.as_json }}"
-                                data-conclusion-form-selected-hazard-confirmed-choices-value="{{ form.selected_hazard_confirmed_choices }}"
-                                data-conclusion-form-selected-hazard-suspected-choices-value="{{ form.selected_hazard_suspected_choices }}"
+                                data-conclusion-form-treeselect-outlet="#treeselect-confirmed .fr-treeselect, #treeselect-suspected .fr-treeselect"
                             >
                                 <p>Certains champs ont été préremplis à partir des éléments de la fiche. Vous pouvez les modifier.</p>
 
@@ -32,38 +31,14 @@
                                     {% dsfr_notice title="Êtes vous sûr qu'il ne s'agit pas d'une tiac à agent confirmé ? Un danger détecté sur les malades ou les aliments est enregistré dans la fiche. Pour rappel, un agent peut être confirmé soit par des analyses effectuées sur les malades, soit par des analyses effectuées sur les aliments ou leur environnement de production." %}
                                 </div>
 
-                                <div id="selected_hazard-treeselect" class="fr-input-group">
-                                    {{ form.selected_hazard.label_tag }}
-                                    {{ form.selected_hazard|set_data:"conclusion-form-target:selectedHazardTreeselectInput" }}
-                                    <div
-                                        data-conclusion-form-target="selectedHazardTreeselect"
-                                        data-action="input->conclusion-form#onTreeselectInput update-dom->conclusion-form#onUpdateDom"
-                                    ></div>
-                                    <template data-conclusion-form-target="selectedHazardTreeselectHeader">
-                                        <div class="categorie-danger-header">
-                                            <div class="fr-ml-1v">Dangers les plus courants</div>
-                                            {% for danger in form.common_danger %}
-                                                <div
-                                                    class="treeselect-list__item"
-                                                    level="0"
-                                                    group="false"
-                                                    data-action="mousedown->conclusion-form#onShortcut:prevent:stop"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        id="shortcut_{{ forloop.counter0 }}"
-                                                        class="treeselect-list__item-checkbox-container"
-                                                    >
-                                                    <label
-                                                        class="treeselect-list__item-label shortcut"
-                                                        for="shortcut_{{ forloop.counter0 }}"
-                                                    >{{ danger }}</label>
-                                                </div>
-                                            {% endfor %}
-                                            <div class="fr-ml-1v">Liste complète des dangers</div>
-                                        </div>
-                                    </template>
+                                <div class="fr-input-group" id="treeselect-confirmed" data-conclusion-form-target="selectedHazardConfirmedContainer">
+                                    {% dsfr_form_field form.selected_hazard_confirmed %}
                                 </div>
+                                <div class="fr-input-group" id="treeselect-suspected" data-conclusion-form-target="selectedHazardSuspectedContainer">
+                                    {% dsfr_form_field form.selected_hazard_suspected %}
+                                </div>
+                                <input data-conclusion-form-target="requiredProxy" id="required-proxy" required>
+
                                 {% dsfr_form_field form.conclusion_comment|remove_attr:"cols"|remove_attr:"rows" %}
 
                                 {% dsfr_form_field form.conclusion_repas|set_data:"conclusion-form-target:conclusionRepas"|set_data:"action:conclusion-form#onRepasChanged" %}

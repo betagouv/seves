@@ -5,7 +5,7 @@ import re
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
-from django.forms import Media
+from django.forms import Media, MultipleChoiceField
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
@@ -590,13 +590,35 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
     suspicion_conclusion = SEVESChoiceField(
         label="Conclusion de la suspicion de TIAC", choices=SuspicionConclusion, required=True
     )
-    selected_hazard = SimpleArrayField(forms.CharField(), delimiter="||", label="Dangers retenus", required=False)
+
+    selected_hazard_confirmed = MultipleChoiceField(
+        required=False,
+        label="Dangers retenus",
+        choices=CategorieDanger,
+        widget=TreeselectCheckbox(
+            choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac),
+            attrs={"placeholder": "Choisir dans la liste d’après les résultats d’analyse"},
+            auto_select_children=False,
+        ),
+    )
+    selected_hazard_suspected = MultipleChoiceField(
+        required=False,
+        label="Dangers retenus",
+        choices=DangersSyndromiques,
+        widget=TreeselectCheckbox(
+            choices=[(c[0], DangersSyndromiques(c[0]).short_name) for c in DangersSyndromiques.choices],
+            attrs={"placeholder": "Choisir dans la liste parmi les dangers syndromiques"},
+            auto_select_children=False,
+        ),
+    )
 
     class Meta:
         model = InvestigationTiac
         fields = (
             "suspicion_conclusion",
             "selected_hazard",
+            "selected_hazard_confirmed",
+            "selected_hazard_suspected",
             "conclusion_comment",
             "conclusion_repas",
             "conclusion_aliment",
@@ -609,37 +631,33 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(
-                js_module("tiac/tiac_conclusion.mjs"),
-                js_module("ssa/treeselectjs.umd.js"),
-                js_module("ssa/form/widgets/legacy_treeselect.mjs"),
-            ),
-            css={
-                "all": (
-                    "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
-                    "ssa/form/widgets/_custom_tree_select.css",
-                )
-            },
+            js=(js_module("tiac/tiac_conclusion.mjs"),),
         )
 
     def clean_suspicion_conclusion_and_selected_hazard(self):
         suspicion_conclusion = self.cleaned_data.get("suspicion_conclusion")
-        selected_hazard = self.cleaned_data.get("selected_hazard")
+        selected_hazard_confirmed = self.cleaned_data.get("selected_hazard_confirmed")
+        selected_hazard_suspected = self.cleaned_data.get("selected_hazard_suspected")
 
         if suspicion_conclusion not in (SuspicionConclusion.CONFIRMED, SuspicionConclusion.SUSPECTED):
             self.cleaned_data["selected_hazard"] = []
-        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED and any(
-            item not in CategorieDanger.values for item in selected_hazard
-        ):
-            self.add_error(
-                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
-            )
-        elif suspicion_conclusion == SuspicionConclusion.SUSPECTED and any(
-            item not in DangersSyndromiques.values for item in selected_hazard
-        ):
-            self.add_error(
-                "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
-            )
+        elif suspicion_conclusion == SuspicionConclusion.CONFIRMED:
+            if any(item not in CategorieDanger.values for item in selected_hazard_confirmed):
+                self.add_error(
+                    "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(CategorieDanger.labels)}]"
+                )
+            else:
+                self.cleaned_data["selected_hazard"] = selected_hazard_confirmed
+        elif suspicion_conclusion == SuspicionConclusion.SUSPECTED:
+            if any(item not in DangersSyndromiques.values for item in selected_hazard_suspected):
+                self.add_error(
+                    "selected_hazard", f"La valeur doit être comprise parmis [{', '.join(DangersSyndromiques.labels)}]"
+                )
+            else:
+                self.cleaned_data["selected_hazard"] = selected_hazard_suspected
+
+        if "selected_hazard" in self.cleaned_data:
+            self.instance.selected_hazard = self.cleaned_data["selected_hazard"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -664,13 +682,11 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
                 choices=self.fields["suspicion_conclusion"].choices,
             )
             self.initial["suspicion_conclusion"] = SuspicionConclusion.CONFIRMED
-            self.initial["selected_hazard"] = categories_danger + self.instance.agents_confirmes_ars
+            self.initial["selected_hazard_confirmed"] = categories_danger + self.instance.agents_confirmes_ars
         else:
             if self.instance.danger_syndromiques_suspectes:
                 self.initial["suspicion_conclusion"] = SuspicionConclusion.SUSPECTED
-                self.initial["selected_hazard"] = self.instance.danger_syndromiques_suspectes
-            else:
-                self.fields["selected_hazard"].widget.attrs["data-treeselect-disabled"] = "true"
+                self.initial["selected_hazard_suspected"] = self.instance.danger_syndromiques_suspectes
 
         repas = self.instance.repas.all()
         if len(repas) == 1:
@@ -688,7 +704,12 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
                 queryset.filter(investigation=self.instance) if self.instance.pk else queryset.none()
             )
 
-        if not self.instance.suspicion_conclusion:
+        if self.instance.suspicion_conclusion:
+            if self.instance.suspicion_conclusion == SuspicionConclusion.SUSPECTED:
+                self.fields["selected_hazard_suspected"].initial = self.instance.selected_hazard
+            if self.instance.suspicion_conclusion == SuspicionConclusion.CONFIRMED:
+                self.fields["selected_hazard_confirmed"].initial = self.instance.selected_hazard
+        else:
             self._init_conclusion()
 
     @cached_property
