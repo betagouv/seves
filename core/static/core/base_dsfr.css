@@ -65,6 +65,12 @@
     padding-bottom: 0;
 }
 
+.fieldset-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .fr-grid-row--border > .fr-col:not(:first-child),
 .fr-grid-row--border > [class*=" fr-col-"]:not(:first-child) {
     border-left: 1px solid var(--border-default-grey);
