@@ -53,10 +53,14 @@ class HomeRedirectMiddleware:
                 return redirect("ssa:evenement-produit-liste")
             if preferred_domain == "sv" and settings.SV_GROUP in groups:
                 return redirect("sv:evenement-liste")
+            if preferred_domain == "sa" and settings.SA_GROUP in groups:
+                return redirect("sa:evenement-liste")
             if settings.SSA_GROUP in groups:
                 return redirect("ssa:evenement-produit-liste")
             if settings.SV_GROUP in groups:
                 return redirect("sv:evenement-liste")
+            if settings.SSA_GROUP in groups:
+                return redirect("sa:evenement-liste")
         return self.get_response(request)
 
 

@@ -1,0 +1,8 @@
+{% extends "core/base.html" %}
+
+
+{% block product_nav %}
+    <li>
+        <a class="fr-btn {% block highlight_menu_evenements %}{% endblock %}" href="{% url 'sa:evenement-liste' %}">Liste des événements</a>
+    </li>
+{% endblock product_nav %}
