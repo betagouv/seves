@@ -1,5 +1,3 @@
-from unittest import mock
-
 from playwright.sync_api import Page, expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory
@@ -100,15 +98,14 @@ def test_export_tiac_from_ui(live_server, mocked_authentification_user, page: Pa
 
 def test_export_tiac_shows_modal_when_above_threshold(live_server, mocked_authentification_user, page: Page, settings):
     settings.CELERY_TASK_ALWAYS_EAGER = True
-    EvenementSimpleFactory()
-    EvenementSimpleFactory()
+    settings.VOLUMINOUS_EXTRACT_THRESHOLD = 1
+    EvenementSimpleFactory().create_batch(2)
     search_page = EvenementListPage(page, live_server.url)
 
-    with mock.patch("tiac.views.VOLUMINOUS_EXTRACT_THRESHOLD", 1):
-        search_page.navigate()
-        search_page.page.get_by_role("button", name="Extraire").click()
-        expect(search_page.page.locator("#fr-modal-extraire-evenements")).to_be_visible()
-        search_page.page.get_by_test_id("submit-extract").click()
+    search_page.navigate()
+    search_page.page.get_by_role("button", name="Extraire").click()
+    expect(search_page.page.locator("#fr-modal-extraire-evenements")).to_be_visible()
+    search_page.page.get_by_test_id("submit-extract").click()
 
     expect(search_page.page.get_by_text("Votre demande d'export a bien été enregistrée")).to_be_visible()
     task = Export.objects.get()

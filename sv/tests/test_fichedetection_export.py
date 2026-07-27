@@ -1,5 +1,4 @@
 import csv
-from unittest import mock
 
 from django.urls import reverse
 from playwright.sync_api import expect
@@ -40,16 +39,16 @@ def test_export_is_filtered(live_server, page):
     assert len(lines) == 2
 
 
-def test_export_shows_modal_when_above_threshold(live_server, page):
+def test_export_shows_modal_when_above_threshold(live_server, page, settings):
+    settings.VOLUMINOUS_EXTRACT_THRESHOLD = 1
     FicheDetectionFactory.create_batch(2)
 
-    with mock.patch("sv.views.VOLUMINOUS_EXTRACT_THRESHOLD", 1):
-        page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
-        page.get_by_role("button", name="Extraire (2)", exact=True).click()
-        expect(page.locator("#fr-modal-extraire-evenements")).to_be_visible()
+    page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
+    page.get_by_role("button", name="Extraire (2)", exact=True).click()
+    expect(page.locator("#fr-modal-extraire-evenements")).to_be_visible()
 
-        with page.expect_download() as download_info:
-            page.get_by_test_id("submit-extract").click()
+    with page.expect_download() as download_info:
+        page.get_by_test_id("submit-extract").click()
 
     download = download_info.value
     assert download.suggested_filename == "export_fiche_detection.csv"
