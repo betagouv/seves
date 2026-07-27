@@ -41,8 +41,7 @@ def test_export_is_filtered(live_server, page):
 
 
 def test_export_shows_modal_when_above_threshold(live_server, page):
-    FicheDetectionFactory()
-    FicheDetectionFactory()
+    FicheDetectionFactory.create_batch(2)
 
     with mock.patch("sv.views.VOLUMINOUS_EXTRACT_THRESHOLD", 1):
         page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
