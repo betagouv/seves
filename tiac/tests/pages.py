@@ -10,7 +10,6 @@ from playwright.sync_api import Locator, Page, expect
 from core.pages import WithActionsPage
 from core.tests.pages import TreeselectPage
 from ssa.constants import CategorieDanger, CategorieProduit
-from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from tiac.models import (
     AlimentSuspect,
@@ -721,7 +720,7 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin, WithTreeSelect):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
