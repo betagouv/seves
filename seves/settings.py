@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "django_countries",
     "django.contrib.postgres",
     "reversion_compare",
+    "django.contrib.gis",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -133,7 +134,10 @@ WSGI_APPLICATION = "seves.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db(),
+    "default": {
+        **env.db(),
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+    },
 }
 
 CACHES = {

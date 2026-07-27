@@ -1,6 +1,14 @@
 {% extends "sa/base.html" %}
 {% load dsfr_tags widget_tweaks static render_field_with_inline_label %}
 
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sa/evenement_animal_form.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css">
+
+{% endblock extrahead %}
+
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
@@ -63,6 +71,42 @@
                     <div class="fr-col-12 fr-col-lg-6">
                         {% dsfr_form_field form.statut_evenement %}
                         {% dsfr_form_field form.date_statut_changed %}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v ">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Localisation
+                        <div class="helptext fr-hint-text">Placez votre repère en double cliquant sur la zone correspondante ou renseignez manuellement les coordonnées GPS.</div>
+                    </legend>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-col"
+                     data-controller="map address-search-autocomplete"
+                     data-map-json-file-value="{% static 'core/style_ign.json' %}"
+                     data-map-reverse-api-value="{{ REVERSE_GEO_API }}"
+                     data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
+                     data-map-region-value="{{ form.structure.region.nom }}"
+                     data-map-departement-value="{{ form.structure.departement.nom }}"
+                >
+                    <div class="fr-col-12 fr-col-lg-7">
+                        <div data-map-target="mapDisplay" class="map"></div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-5">
+
+                        <div class="fr-select-group" data-controller="ban-search" data-testid="ban-search">
+                            {{ form.adresse_lieu_dit.label_tag }}
+                            {{ form.adresse_lieu_dit|set_data:"address-search-autocomplete-target:address" }}
+                        </div>
+                        <div class="fr-select-group" data-controller="communes-search" data-testid="communes-search">
+                            {{ form.commune.label_tag }}
+                            {{ form.commune|set_data:"map-target:communeSelect"|set_data:"address-search-autocomplete-target:commune" }}
+                        </div>
+
+                        {% dsfr_form_field form.code_insee|set_data:"map-target:codeInseeInput"|set_data:"address-search-autocomplete-target:codeInsee"%}
+                        {% dsfr_form_field form.numero_identifiant %}
+                        {% dsfr_form_field form.type_lieu %}
+                        {% dsfr_form_field form.coordinates %}
                     </div>
                 </div>
             </fieldset>

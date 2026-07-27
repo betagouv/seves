@@ -45,6 +45,8 @@ jobs:
           version: 2.4.4
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
           pip install --upgrade "pip!=25.3" pip-tools
           pip-sync
       - name: Check no missing migrations
@@ -66,7 +68,7 @@ jobs:
         group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     services:
       postgres:
-        image: postgres:latest
+        image: postgis/postgis:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -93,6 +95,8 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
           pip install --upgrade "pip!=25.3" pip-tools
           pip-sync
       - name: Install dependencies
