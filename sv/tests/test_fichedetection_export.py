@@ -46,7 +46,7 @@ def test_export_shows_modal_when_above_threshold(live_server, page):
 
     with mock.patch("sv.views.VOLUMINOUS_EXTRACT_THRESHOLD", 1):
         page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
-        page.get_by_role("button", name="Extraire").click()
+        page.get_by_role("button", name="Extraire (2)", exact=True).click()
         expect(page.locator("#fr-modal-extraire-evenements")).to_be_visible()
 
         with page.expect_download() as download_info:
