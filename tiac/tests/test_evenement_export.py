@@ -99,11 +99,12 @@ def test_export_tiac_from_ui(live_server, mocked_authentification_user, page: Pa
 def test_export_tiac_shows_modal_when_above_threshold(live_server, mocked_authentification_user, page: Page, settings):
     settings.CELERY_TASK_ALWAYS_EAGER = True
     settings.VOLUMINOUS_EXTRACT_THRESHOLD = 1
-    EvenementSimpleFactory().create_batch(2)
+    nb_evenements = 2
+    EvenementSimpleFactory.create_batch(nb_evenements)
     search_page = EvenementListPage(page, live_server.url)
 
     search_page.navigate()
-    search_page.page.get_by_role("button", name="Extraire").click()
+    search_page.submit_export(nb_evenements=nb_evenements)
     expect(search_page.page.locator("#fr-modal-extraire-evenements")).to_be_visible()
     search_page.page.get_by_test_id("submit-extract").click()
 
