@@ -332,7 +332,6 @@ SECURE_CSP = {
         "https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css",
         "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css",
         "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css",
-        "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css",
     ),
     "font-src": (CSP.SELF, "cdn.jsdelivr.net"),
