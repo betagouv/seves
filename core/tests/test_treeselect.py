@@ -1,4 +1,5 @@
 from enum import auto
+from unittest.mock import MagicMock
 
 from django import forms
 from django.db.models import TextChoices
@@ -71,12 +72,13 @@ def navigate_to_form(live_server, page: Page):
             {% block content %}
                 <div class='fr-container fr-py-4v'>
                     <div class='fr-grid-row fr-grid-row--center'>
-                        <div class='fr-col-12 fr-col-sm-6'>
+                        <form method='post' class='fr-col-12 fr-col-sm-6'>
                             {% for field in form %}
                                 <div data-testid="{{ field.name }}">
                                     {% dsfr_form_field field %}
                                 </div>
                             {% endfor %}
+                            <button class='fr-btn' type='submit'>Post</button>
                         </div>
                     </div>
                 </div>
@@ -87,11 +89,12 @@ def navigate_to_form(live_server, page: Page):
             body = Template(template).render(Context({"form": form, "media": form.media}))
             route.fulfill(status=200, body=body, content_type="text/html")
 
-        page.route("**/test-treeselect/", resolve)
+        url = "**/test-treeselect/"
+        page.route(url, resolve)
         page.goto(f"{live_server.url}/test-treeselect/")
+        page.unroute(url, resolve)
 
     yield _navigate_to_form
-    page.unroute("**/test-treeselect/")
 
 
 def test_treeselect_all_radio_with_same_value_are_selected(navigate_to_form, page: Page):
@@ -328,3 +331,29 @@ def test_shortcut_do_not_accumulate_name_prefix(navigate_to_form, page: Page):
         for it in TestChoices.les_plus_courants:
             shortcut_checkbox = treeselect.container.locator(f'input[name^="shortcut"][value="{it.value}"]')
             expect(shortcut_checkbox).to_have_attribute("name", "shortcut-animal_checkbox")
+
+
+def test_treeselect_requirement(navigate_to_form, page: Page):
+    form = TestForm()
+    form["animal_checkbox"].field.required = True
+    navigate_to_form(form)
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    mock = MagicMock()
+
+    def mock_post(route):
+        mock()
+        route.fulfill(status=200, body="", content_type="text/html")
+
+    page.route("**/test-treeselect/", mock_post)
+    page.get_by_role("button", name="Post").click()
+    page.wait_for_function(
+        "it => it.validationMessage === 'Vous devez sélectionner au moins un élément'",
+        arg=treeselect.main_button.element_handle(),
+    )
+    assert mock.call_count == 0
+    treeselect.check_option(*TestChoices.FRANCE.splitted_label)
+    page.wait_for_function("it => it.validationMessage === ''", arg=treeselect.main_button.element_handle())
+    page.get_by_role("button", name="Post").click()
+    page.wait_for_load_state("load")
+    assert mock.call_count == 1

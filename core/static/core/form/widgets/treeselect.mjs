@@ -311,6 +311,12 @@ class Treeselect extends Controller {
             }
             resolve()
         })
+        this.onValidate = this.onValidate.bind(this)
+        this.buttonTarget.form?.addEventListener("submit", this.onValidate)
+    }
+
+    disconnect() {
+        this.buttonTarget.form?.removeEventListener("submit", this.onValidate)
     }
 
     buttonTargetConnected(el) {
@@ -336,6 +342,12 @@ class Treeselect extends Controller {
     setDisabledState(disabled) {
         this.element.classList.toggle("fr-treeselect--disabled", disabled)
         this.buttonTarget.disabled = disabled
+    }
+
+    resetValidity() {
+        this.buttonTarget.type = "button"
+        this.buttonTarget.setCustomValidity("")
+        this.buttonTarget.reportValidity()
     }
 
     async onSearch({detail: {search}}) {
@@ -384,12 +396,32 @@ class Treeselect extends Controller {
         } else {
             this.buttonTarget.textContent = `${this.choices.size} éléments`
         }
+        this.resetValidity()
         this.unselectAllBtnTargets.forEach(it => it.classList.toggle("fr-hidden", size === 0))
     }
 
     onEraseSearch() {
         this.searchbarTarget.value = ""
         this.searchbarTarget.dispatchEvent(new Event("input"))
+    }
+
+    onValidate(evt) {
+        if (this.buttonTarget.ariaRequired === "true" && this.choices.size === 0) {
+            /*
+             * For whatever weird reason, <button type="button"> are not subjet to form constraint validation
+             * They need to be <button type="submit"> for constraint API to actually work and the spec has not planned
+             * any exception for a custom component to display a validation message;
+             * see https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/willValidate
+             * This should not create problems here since DSFR already intercepts the click event to open the dropdown
+             */
+            this.buttonTarget.type = "submit"
+            this.buttonTarget.setCustomValidity("Vous devez sélectionner au moins un élément")
+            this.buttonTarget.reportValidity()
+            evt.preventDefault()
+            evt.stopPropagation()
+        } else {
+            this.resetValidity()
+        }
     }
 }
 

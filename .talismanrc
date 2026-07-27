@@ -134,6 +134,7 @@ fileignoreconfig:
   checksum: d4543d7e8aa6872236a78583c5f9b719d56fd2e2cb24a8025bd3d41e874ce0f5
 - filename: tiac/tests/test_investigation_details_actions.py
   checksum: de0caaa5587cb8a90054dd9715e047abbedc50683f8eedb5acf21a823c7c89ef
-
+- filename: core/static/core/form/widgets/treeselect.mjs
+  checksum: ba4564b7f9f62ca759e7e9a4951331717d458569c9f3dbd5c19ad32c9fa24e03
 
 version: "1.0"
