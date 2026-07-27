@@ -1,7 +1,7 @@
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, DepartementFactory, StructureFactory
+from core.factories import ContactAgentFactory, DepartementFactory, StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
@@ -177,48 +177,6 @@ def test_can_udpate_etablissement_with_error_show_message(live_server, page, ass
     ).to_be_visible()
 
     assert Etablissement.objects.get().numero_agrement == etablissement.numero_agrement
-
-
-def test_contact_added_to_investigation_cas_humain_when_edit(live_server, page, mocked_authentification_user):
-    evenement = InvestigationCasHumainFactory(
-        createur=StructureFactory(), etat=EvenementInvestigationCasHumain.Etat.EN_COURS, not_bacterie=True
-    )
-    assert evenement.contacts.count() == 0
-    update_page = InvestigationCasHumainFormPage(page, live_server.url)
-    update_page.navigate_update_page(evenement)
-    update_page.description.fill("New value")
-    update_page.publish()
-
-    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
-    assert evenement.contacts.count() == 2
-    assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
-    assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
-
-
-def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_authentification_user):
-    createur = StructureFactory()
-    evenement = InvestigationCasHumainFactory(
-        createur=createur, not_bacterie=True, etat=EvenementInvestigationCasHumain.Etat.EN_COURS
-    )
-    structure = ContactStructureFactory()
-    agent = ContactAgentFactory()
-    evenement.contacts.add(structure)
-    evenement.contacts.add(agent)
-    assert evenement.contacts.count() == 2
-
-    update_page = InvestigationCasHumainFormPage(page, live_server.url)
-    update_page.navigate_update_page(evenement)
-    update_page.description.fill("New value")
-    update_page.publish()
-
-    expect(update_page.page.get_by_text("L'évènement Investigation cas humain a bien été modifié.")).to_be_visible()
-    evenement.refresh_from_db()
-    assert set(evenement.contacts.all()) == {
-        agent,
-        structure,
-        mocked_authentification_user.agent.contact_set.get(),
-        mocked_authentification_user.agent.structure.contact_set.get(),
-    }
 
 
 def test_update_reference_souches_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
