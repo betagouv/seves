@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import WithFormErrorsAsMessagesMixin
+from core.mixins import MediaDefiningMixin, WithFormErrorsAsMessagesMixin
 from sa.forms.evenement import EvenementAnimalForm
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
@@ -13,9 +13,12 @@ class EvenementListView(ListView):
     model = EvenementAnimal
 
 
-class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, CreateView):
+class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
     form_class = EvenementAnimalForm
     template_name = "sa/evenement_animal_form.html"
+
+    def get_media(self, **context_data):
+        return context_data["form"].media
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -23,6 +26,7 @@ class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, CreateView):
         kwargs["maladie"] = self.request.GET.get("maladie")
         kwargs["espece"] = self.request.GET.get("espece")
         kwargs["statut_animal"] = self.request.GET.get("statut_animal")
+        kwargs["structure"] = self.request.user.agent.structure
         return kwargs
 
     def get_context_data(self, **kwargs):

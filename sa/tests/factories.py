@@ -1,3 +1,4 @@
+from django.contrib.gis.geos import Point
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
@@ -34,6 +35,12 @@ class EvenementAnimalFactory(DjangoModelFactory):
     statut_evenement = FuzzyChoice([choice[0] for choice in StatutEvenement.choices])
     numero_annee = factory.Faker("year")
 
+    adresse_lieu_dit = factory.Faker("street_address")
+    commune = factory.Faker("city")
+    code_insee = factory.Faker("numerify", text="#####")
+    numero_identifiant = factory.Faker("numerify", text="##### #####")
+    type_lieu = FuzzyChoice([c[0] for c in StatutAnimal.choices])
+
     class Meta:
         model = EvenementAnimal
 
@@ -48,3 +55,8 @@ class EvenementAnimalFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def date_statut_changed(self):
         return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
+    def coordinates(self):
+        lat, lon = fake.local_latlng(country_code="FR", coords_only=True)
+        return Point(float(lon), float(lat))

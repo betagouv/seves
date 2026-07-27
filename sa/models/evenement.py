@@ -1,5 +1,7 @@
 from enum import auto
 
+from django.contrib.gis.db.models import PointField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 
@@ -34,6 +36,11 @@ class StatutEvenement(models.TextChoices):
     NON_RETENU = auto(), "Non retenu"
 
 
+class TypeLieu(models.TextChoices):
+    ABATTOIR = auto(), "Abattoir"
+    AUTRE = auto(), "Autre"
+
+
 class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, models.Model):
     # Common fields for event handling
     statut_evenement = models.CharField(
@@ -57,6 +64,34 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, mod
         verbose_name="Statut de l'animal",
         null=False,
     )
+
+    # Localisation block
+    adresse_lieu_dit = models.CharField(max_length=255, verbose_name="Adresse ou lieu-dit", blank=True)
+    commune = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    code_insee = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE de la commune",
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{5}$",
+                message="Le code INSEE doit contenir exactement 5 chiffres",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    numero_identifiant = models.CharField(
+        max_length=255,
+        verbose_name="Identifiant parcelle, culture",
+        blank=True,
+    )
+    type_lieu = models.CharField(
+        max_length=100,
+        choices=StatutAnimal.choices,
+        verbose_name="Type de lieu",
+        null=False,
+    )
+    coordinates = PointField(verbose_name="Coordonnées", null=False)
 
     def save(self, *args, **kwargs):
         if not self.numero_annee and not self.numero_evenement:

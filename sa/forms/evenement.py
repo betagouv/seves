@@ -1,8 +1,12 @@
 from django import forms
+from django.forms import Media
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
+from core.fields import SEVESChoiceField
+from core.form_mixins import js_module
+from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
 from sa.models.evenement import EvenementAnimal, StatutAnimal
 
@@ -29,6 +33,26 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         ),
     )
 
+    # Localisation
+    adresse_lieu_dit = forms.CharField(
+        label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
+    )
+    type_lieu = SEVESChoiceField(
+        choices=StatutAnimal.choices,
+        label="Type de lieu",
+        widget=forms.Select(attrs={"required": True}),
+    )
+    coordinates = LatLonField(
+        required=True,
+        label="",
+    )
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("core/map.mjs"), js_module("core/address_search_autocomplete.mjs")),
+        )
+
     class Meta:
         model = EvenementAnimal
         fields = [
@@ -37,18 +61,27 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "statut_animal",
             "statut_evenement",
             "date_statut_changed",
+            "adresse_lieu_dit",
+            "commune",
+            "code_insee",
+            "numero_identifiant",
+            "type_lieu",
+            "coordinates",
         ]
         widgets = {
             "maladie": forms.HiddenInput,
             "espece": forms.HiddenInput,
             "statut_animal": forms.HiddenInput,
+            "code_insee": forms.HiddenInput,
+            "commune": forms.Select(attrs={"hidden": "hidden"}),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-        self.maladie = kwargs.pop("maladie", "")
-        self.espece = kwargs.pop("espece", "")
-        self.statut_animal = kwargs.pop("statut_animal", "")
+        self.maladie = kwargs.pop("maladie")
+        self.espece = kwargs.pop("espece")
+        self.statut_animal = kwargs.pop("statut_animal")
+        self.structure = kwargs.pop("structure")
         super().__init__(*args, **kwargs)
         self.fields["maladie"].initial = self.maladie
         self.fields["espece"].initial = self.espece
