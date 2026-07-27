@@ -155,6 +155,8 @@ def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):
     if added is False:
         if contact.structure == users_structure or (contact.agent and contact.agent.structure == users_structure):
             return  # Never send the notification if the removal is performed by a user inside the same structure
+    if added is True and obj._meta.app_label in ("ssa", "tiac"):
+        return  # Never send the notification if the addition is performed in SSA context or TIAC context
 
     action = "ajouté au" if added else "retiré du"
     subject = "Ajout aux contacts" if added else "Retrait des contacts"

@@ -21,10 +21,13 @@ def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_
     assert page.get_by_test_id("contacts-agents").count() == 1
     assert object.__class__.objects.filter(pk=object.pk, contacts=contact).exists()
 
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    assert "Ajout aux contacts" in mail.subject
-    assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
+    if object._meta.app_label in ("ssa", "tiac"):
+        assert len(mailoutbox) == 0
+    else:
+        assert len(mailoutbox) == 1
+        mail = mailoutbox[0]
+        assert "Ajout aux contacts" in mail.subject
+        assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
 
 
 def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, object, mailoutbox):
@@ -40,10 +43,13 @@ def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice
     assert page.get_by_test_id("contacts-structures").count() == 1
     assert object.__class__.objects.filter(pk=object.pk, contacts=contact_structure).exists()
 
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    assert "Ajout aux contacts" in mail.subject
-    assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
+    if object._meta.app_label in ("ssa", "tiac"):
+        assert len(mailoutbox) == 0
+    else:
+        assert len(mailoutbox) == 1
+        mail = mailoutbox[0]
+        assert "Ajout aux contacts" in mail.subject
+        assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
 
 
 def generic_test_add_contact_structure_to_an_evenement_with_dedicated_email(
@@ -64,11 +70,14 @@ def generic_test_add_contact_structure_to_an_evenement_with_dedicated_email(
     expect(page.get_by_text("testemail@test.com", exact=True)).to_be_visible()
     assert object.__class__.objects.filter(pk=object.pk, contacts=contact_structure).exists()
 
-    assert len(mailoutbox) == 1
-    mail = mailoutbox[0]
-    assert "Ajout aux contacts" in mail.subject
-    assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
-    assert mail.to == ["testemail@test.com"], f"Got {mail.to}"
+    if object._meta.app_label in ("ssa", "tiac"):
+        assert len(mailoutbox) == 0
+    else:
+        assert len(mailoutbox) == 1
+        mail = mailoutbox[0]
+        assert "Ajout aux contacts" in mail.subject
+        assert "Vous avez été ajouté au suivi de l’évènement" in mail.body
+        assert mail.to == ["testemail@test.com"], f"Got {mail.to}"
 
 
 def generic_test_remove_contact_agent_from_an_evenement(live_server, page, object, mailoutbox):
@@ -131,9 +140,12 @@ def generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page,
         )
     ).to_be_visible()
 
-    assert len(mailoutbox) == 2
-    assert "Ajout aux contacts" in mailoutbox[0].subject
-    assert "Ajout aux contacts" in mailoutbox[1].subject
+    if object._meta.app_label in ("ssa", "tiac"):
+        assert len(mailoutbox) == 0
+    else:
+        assert len(mailoutbox) == 2
+        assert "Ajout aux contacts" in mailoutbox[0].subject
+        assert "Ajout aux contacts" in mailoutbox[1].subject
 
 
 def generic_test_cant_add_contact_agent_if_he_cant_access_domain(live_server, page, choice_js_cant_pick, object):
