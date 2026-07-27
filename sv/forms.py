@@ -190,7 +190,7 @@ class LieuBaseFormSet(BaseInlineFormSet):
 
     @property
     def media(self):
-        return super().media + Media(js=(js_module("sv/lieux.mjs"),))
+        return super().media + Media(js=(js_module("sv/lieux.mjs"), js_module("core/address_search_autocomplete.mjs")))
 
     def __init__(self, structure: Structure, *args, **kwargs):
         self.structure = structure
