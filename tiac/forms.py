@@ -597,7 +597,7 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
         choices=CategorieDanger,
         widget=TreeselectCheckbox(
             choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac),
-            attrs={"placeholder": "Choisir dans la liste d’après les résultats d’analyse"},
+            attrs={"placeholder": "Choisir dans la liste d’après les résultats d’analyse", "required": True},
             auto_select_children=False,
         ),
     )
@@ -607,7 +607,7 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
         choices=DangersSyndromiques,
         widget=TreeselectCheckbox(
             choices=[(c[0], DangersSyndromiques(c[0]).short_name) for c in DangersSyndromiques.choices],
-            attrs={"placeholder": "Choisir dans la liste parmi les dangers syndromiques"},
+            attrs={"placeholder": "Choisir dans la liste parmi les dangers syndromiques", "required": True},
             auto_select_children=False,
         ),
     )

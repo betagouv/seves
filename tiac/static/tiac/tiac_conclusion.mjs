@@ -32,29 +32,9 @@ class ConclusionFormController extends Controller {
         } else if (outlet.element.id === "fr-treeselect-id_selected_hazard_suspected") {
             this.treeselectSuspectedOutlet = outlet
         }
-        outlet.element.addEventListener("treeselect:choices", this.onTreeselectChoicesChanged)
         this.#syncTreeselects()
-        this.#syncRequiredProxyValue()
     }
 
-    treeselectOutletDisconnected(outlet) {
-        outlet.element.removeEventListener("treeselect:choices", this.onTreeselectChoicesChanged)
-    }
-
-    onTreeselectChoicesChanged = () => {
-        this.#syncRequiredProxyValue()
-    }
-
-    // The hidden field is needed to "fake" a required checkbox, sync the value so that we can submit the modal
-    // when we have a value
-    #syncRequiredProxyValue() {
-        const value = this.suspicionConclusionValue
-        if (value === this.suspicionConclusionChoicesValue.CONFIRMED.value) {
-            this.requiredProxyTarget.value = this.treeselectConfirmedOutlet?.choices.size > 0 ? "x" : ""
-        } else if (value === this.suspicionConclusionChoicesValue.SUSPECTED.value) {
-            this.requiredProxyTarget.value = this.treeselectSuspectedOutlet?.choices.size > 0 ? "x" : ""
-        }
-    }
     suspicionConclusionTargetConnected(el) {
         el.dispatchEvent(new Event("change"))
     }
@@ -80,7 +60,6 @@ class ConclusionFormController extends Controller {
 
         this.conclusionRepasTarget.disabled = isDiscarded
         this.conclusionRepasTarget.required = isConfirmed || isSuspected
-        this.requiredProxyTarget.required = isConfirmed || isSuspected
         this.conclusionAlimentTarget.disabled = isDiscarded
 
         if (isDiscarded) {
@@ -105,7 +84,6 @@ class ConclusionFormController extends Controller {
             this.noticeTarget.classList.add("fr-hidden")
         }
         this.#syncTreeselects()
-        this.#syncRequiredProxyValue()
     }
 
     onSuspicionConclusionChanged({target: {value}}) {
