@@ -56,11 +56,7 @@ dsfrInitialized.then(dsfr => {
                     it.dispatchEvent(new Event("input"))
                 }
             })
-            this.addDescent(this.constructor.FOCUS, () => {
-                for (const it of this.node.querySelectorAll('.fr-input[type="search"]')) {
-                    setTimeout(() => requestAnimationFrame(() => it.focus()), 50)
-                }
-            })
+            this.addDescent(this.constructor.FOCUS, () => this.node.querySelector('.fr-input[type="search"]')?.focus())
         }
 
         onChange({target: {value}}) {
