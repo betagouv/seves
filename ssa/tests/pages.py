@@ -463,8 +463,9 @@ class EvenementProduitListPage:
     def add_filters(self):
         return self.page.locator(".add-btn").click()
 
-    def submit_export(self):
-        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+    def submit_export(self, nb_evenements=None):
+        name = "Extraire" if nb_evenements is None else f"Extraire ({nb_evenements})"
+        return self.page.get_by_role("button", name=name, exact=nb_evenements is not None).click()
 
     @property
     def filter_counter(self):

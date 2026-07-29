@@ -3,6 +3,7 @@ import datetime
 import io
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -91,6 +92,7 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
         context["total_object_count"] = self.get_raw_queryset().count()
+        context["voluminous_extract_threshold"] = settings.VOLUMINOUS_EXTRACT_THRESHOLD
 
         for evenement in context["evenement_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)

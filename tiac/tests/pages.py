@@ -315,8 +315,9 @@ class EvenementListPage:
         with self.page.expect_navigation():
             return self.page.get_by_test_id("submit-search").click()
 
-    def submit_export(self):
-        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+    def submit_export(self, nb_evenements=None):
+        name = "Extraire" if nb_evenements is None else f"Extraire ({nb_evenements})"
+        return self.page.get_by_role("button", name=name, exact=nb_evenements is not None).click()
 
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")

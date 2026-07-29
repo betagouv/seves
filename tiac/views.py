@@ -4,6 +4,7 @@ import io
 import json
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -252,6 +253,7 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
             object_list.append(DisplayItem.from_object(evenement))
 
         context["total_object_count"] = self.get_raw_queryset.count()
+        context["voluminous_extract_threshold"] = settings.VOLUMINOUS_EXTRACT_THRESHOLD
         context["object_list"] = object_list
         context["filter"] = self.filter
         return context

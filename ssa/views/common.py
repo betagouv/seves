@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.forms import Media
 from django.urls import reverse
 from django.views import View
@@ -32,6 +33,7 @@ class EvenementsListView(MediaDefiningMixin, WithFilteredListMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
         context["total_object_count"] = self.get_raw_queryset().count()
+        context["voluminous_extract_threshold"] = settings.VOLUMINOUS_EXTRACT_THRESHOLD
         context["object_list"] = [EvenementDisplay.from_evenement(evenement) for evenement in context["object_list"]]
 
         return context
