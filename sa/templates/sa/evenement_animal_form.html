@@ -110,6 +110,25 @@
                     </div>
                 </div>
             </fieldset>
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="context">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Éléments de contexte de la suspicion
+                    </legend>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12 fr-col-lg-6">
+                        {% dsfr_form_field form.context_suspicion %}
+                        {% dsfr_form_field form.date_first_symptoms %}
+                        {{ form.human_involved.label_tag }}
+                        <div class="fr-flex-only radio-inline-container--wrap">
+                            {{ form.human_involved }}
+                        </div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-6">
+                        {% dsfr_form_field form.description %}
+                    </div>
+                </div>
+            </fieldset>
 
         </main>
     </form>

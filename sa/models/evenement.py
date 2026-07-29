@@ -41,6 +41,17 @@ class TypeLieu(models.TextChoices):
     AUTRE = auto(), "Autre"
 
 
+class ContexteSuspicion(models.TextChoices):
+    INVESTIGATION_CAS_HUMAIN = auto(), "Investigation cas humain"
+    PROPHYLAXIE = auto(), "Prophylaxie"
+
+
+class HumanInvolved(models.TextChoices):
+    OUI = auto(), "Oui"
+    NON = auto(), "Non"
+    NE_SAIS_PAS = auto(), "Je ne sais pas"
+
+
 class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, models.Model):
     # Common fields for event handling
     statut_evenement = models.CharField(
@@ -92,6 +103,24 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, mod
         null=False,
     )
     coordinates = PointField(verbose_name="Coordonnées", null=False)
+
+    # Contexte de la suspicion
+    context_suspicion = models.CharField(
+        max_length=100,
+        choices=ContexteSuspicion.choices,
+        verbose_name="Contexte de la suspicion",
+        null=True,
+        blank=True,
+    )
+    date_first_symptoms = models.DateField(verbose_name="Date d'apparition des éventuels 1ers symptômes", null=True)
+    human_involved = models.CharField(
+        max_length=100,
+        choices=HumanInvolved.choices,
+        verbose_name="Humains exposés pour lesquels des actions sont engagées ?",
+        null=True,
+        blank=True,
+    )
+    description = models.TextField(verbose_name="Description de la situation", blank=True)
 
     def save(self, *args, **kwargs):
         if not self.numero_annee and not self.numero_evenement:

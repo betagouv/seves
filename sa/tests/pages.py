@@ -111,6 +111,9 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         "numero_identifiant",
         "coordinates_0",  # Lat
         "coordinates_1",  # Long
+        "context_suspicion",
+        "date_first_symptoms",
+        "description",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -139,3 +142,9 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         self.page.get_by_role("button", name="Enregistrer", exact=True).click()
         redirect = reverse("sa:evenement-animal-details", kwargs={"numero": "*"})
         self.page.wait_for_url(f"**{redirect}")
+
+    def fill_context_block(self, evenement):
+        self.context_suspicion.select_option(evenement.context_suspicion)
+        self.date_first_symptoms.fill(evenement.date_first_symptoms.strftime("%Y-%m-%d"))
+        self.description.fill(evenement.description)
+        self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()

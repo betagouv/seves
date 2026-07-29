@@ -8,7 +8,7 @@ from core.fields import SEVESChoiceField
 from core.form_mixins import js_module
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
-from sa.models.evenement import EvenementAnimal, StatutAnimal
+from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolved, StatutAnimal
 
 
 class EvenementAnimalPreCreationForm(DsfrBaseForm):
@@ -47,6 +47,39 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         label="",
     )
 
+    context_suspicion = SEVESChoiceField(
+        choices=ContexteSuspicion.choices,
+        required=False,
+        label="Contexte de la suspicion",
+        help_text="Contexte d'identification de la suspicion",
+    )
+    date_first_symptoms = forms.DateField(
+        required=False,
+        label="Date d'apparition des éventuels 1ers symptômes",
+        help_text="À défaut date de la suspicion",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    human_involved = forms.ChoiceField(
+        choices=HumanInvolved.choices,
+        widget=forms.RadioSelect(attrs={"class": "fr-fieldset__element--inline"}),
+        label="Humains exposés pour lesquels des actions sont engagées ?",
+        required=False,
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "cols": 30,
+                "rows": 10,
+                "placeholder": "Circonstances de la suspicion, investigations engagées, précisions sur la date des symptômes ou sur les conditions du prélèvement",
+            }
+        ),
+        label="Description de la situation",
+    )
+
     @property
     def media(self):
         return super().media + Media(
@@ -67,6 +100,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "numero_identifiant",
             "type_lieu",
             "coordinates",
+            "context_suspicion",
+            "date_first_symptoms",
+            "human_involved",
+            "description",
         ]
         widgets = {
             "maladie": forms.HiddenInput,
@@ -89,6 +126,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
 
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_statut_changed"].widget.attrs["max"] = today
+        self.fields["date_first_symptoms"].widget.attrs["max"] = today
 
     def save(self, commit=True):
         if not self.instance.pk:

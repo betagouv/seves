@@ -6,7 +6,7 @@ from faker import Faker
 
 from core.models import Structure
 from sa.models import Espece, EvenementAnimal, Maladie
-from sa.models.evenement import StatutAnimal, StatutEvenement
+from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement
 
 fake = Faker()
 
@@ -41,6 +41,10 @@ class EvenementAnimalFactory(DjangoModelFactory):
     numero_identifiant = factory.Faker("numerify", text="##### #####")
     type_lieu = FuzzyChoice([c[0] for c in StatutAnimal.choices])
 
+    context_suspicion = FuzzyChoice(ContexteSuspicion.values)
+    human_involved = FuzzyChoice(HumanInvolved.values)
+    description = factory.Faker("paragraph")
+
     class Meta:
         model = EvenementAnimal
 
@@ -54,6 +58,10 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_statut_changed(self):
+        return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
+    def date_first_symptoms(self):
         return fake.date_this_decade(before_today=True)
 
     @factory.lazy_attribute
