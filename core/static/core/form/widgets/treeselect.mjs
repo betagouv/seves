@@ -406,7 +406,7 @@ class Treeselect extends Controller {
     }
 
     onValidate(evt) {
-        if (this.buttonTarget.ariaRequired === "true" && this.choices.size === 0) {
+        if (this.buttonTarget.ariaRequired === "true" && this.choices.size === 0 && !this.buttonTarget.disabled) {
             /*
              * For whatever weird reason, <button type="button"> are not subjet to form constraint validation
              * They need to be <button type="submit"> for constraint API to actually work and the spec has not planned
@@ -416,9 +416,11 @@ class Treeselect extends Controller {
              */
             this.buttonTarget.type = "submit"
             this.buttonTarget.setCustomValidity("Vous devez sélectionner au moins un élément")
-            this.buttonTarget.reportValidity()
-            evt.preventDefault()
-            evt.stopPropagation()
+            if (!this.buttonTarget.reportValidity()) {
+                evt.preventDefault()
+                evt.stopPropagation()
+                this.buttonTarget.focus()
+            }
         } else {
             this.resetValidity()
         }

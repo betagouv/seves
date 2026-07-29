@@ -414,23 +414,30 @@ def test_conclusion_form_required_fields(live_server, page: Page):
     detail_page.navigate(evenement)
     detail_page.add_conclusion_button.click()
 
+    expect(detail_page.treeselect_confirmed.main_button).to_have_attribute("aria-required", "true")
+    expect(detail_page.treeselect_suspected.main_button).to_have_attribute("aria-required", "true")
+
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
-    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_enabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) =>   getComputedStyle(el, '::after').content") == '"*"'
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
-    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_enabled()
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == '"*"'
     expect(detail_page.repas_field).to_have_attribute("required", "")
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
-    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
-    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
 

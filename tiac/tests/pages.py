@@ -805,10 +805,6 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
         return self.page.locator("label", has_text="Dangers retenus").filter(visible=True)
 
     @property
-    def selected_hazard_hidden_field(self):
-        return self.page.locator("#required-proxy")
-
-    @property
     def delete_conclusion_button(self):
         return self.current_modal.get_by_role("button", name="Supprimer la conclusion")
 
