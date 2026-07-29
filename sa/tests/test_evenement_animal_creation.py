@@ -124,3 +124,21 @@ def test_can_create_evenement_animal_with_ban_auto_complete(
     assert evenement_produit.adresse_lieu_dit == "251 Rue de Vaugirard"
     assert evenement_produit.commune == "Paris"
     assert evenement_produit.code_insee == "75115"
+
+
+def test_can_create_evenement_animal_with_context_block(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_context_block(input_data)
+    creation_page.submit()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.context_suspicion == input_data.context_suspicion
+    assert evenement_produit.date_first_symptoms == input_data.date_first_symptoms
+    assert evenement_produit.description == input_data.description
+    assert evenement_produit.human_involved == input_data.human_involved
