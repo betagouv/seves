@@ -357,3 +357,14 @@ def test_treeselect_requirement(navigate_to_form, page: Page):
     page.get_by_role("button", name="Post").click()
     page.wait_for_load_state("load")
     assert mock.call_count == 1
+
+
+def test_treeselect_empty_search(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
+
+    with treeselect.opened_treeselect():
+        no_result = treeselect.container.get_by_text("Aucun résultat")
+        expect(no_result).not_to_be_visible()
+        treeselect.search("wololo")
+        expect(no_result).to_be_visible()
