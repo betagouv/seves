@@ -6,6 +6,8 @@ from .models import Espece, EvenementAnimal, Maladie
 
 class EvenementAnimalAdminForm(forms.ModelForm):
     class Meta:
+        from .models import Espece, EvenementAnimal
+
         model = EvenementAnimal
         fields = "__all__"
         widgets = {

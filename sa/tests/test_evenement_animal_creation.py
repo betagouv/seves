@@ -142,3 +142,55 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
     assert evenement_produit.date_first_symptoms == input_data.date_first_symptoms
     assert evenement_produit.description == input_data.description
     assert evenement_produit.human_involved == input_data.human_involved
+
+
+def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_etablissement_block(input_data)
+    creation_page.submit()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    fields = [
+        "numero_identifiant_etablissement",
+        "raison_sociale_etablissement",
+        "departement_etablissement",
+        "adresse_lieu_dit_etablissement",
+        "code_insee_etablissement",
+        "siret_etablissement",
+        "commune_etablissement",
+        "pays_etablissement",
+    ]
+    for field in fields:
+        assert getattr(evenement_produit, field) == getattr(input_data, field)
+
+
+def test_can_create_evenement_animal_with_detenteur_particulier_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory(particulier=True)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_particulier_block(input_data)
+    creation_page.submit()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    fields = [
+        "nom_particulier",
+        "prenom_particulier",
+        "adresse_particulier",
+        "commune_particulier",
+        "departement_particulier",
+        "code_insee_particulier",
+        "email_particulier",
+        "telephone_particulier",
+    ]
+    for field in fields:
+        assert getattr(evenement_produit, field) == getattr(input_data, field)

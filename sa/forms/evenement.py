@@ -1,14 +1,17 @@
 from django import forms
+from django.conf import settings
 from django.forms import Media
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
 from core.form_mixins import js_module
+from core.models import Departement
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
-from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolved, StatutAnimal
+from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolved, StatutAnimal, TypeDetenteur
 
 
 class EvenementAnimalPreCreationForm(DsfrBaseForm):
@@ -23,6 +26,13 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
 
 
 class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
+    type_detenteur = forms.ChoiceField(
+        choices=TypeDetenteur.choices,
+        initial=TypeDetenteur.ETABLISSEMENT,
+        required=True,
+        widget=forms.RadioSelect,
+    )
+
     date_statut_changed = forms.DateField(
         required=True,
         label=mark_safe("<span class='label-marked'>Date à prendre en compte pour le changement de statut</span>"),
@@ -31,6 +41,25 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             format="%Y-%m-%d",
             attrs={"type": "date"},
         ),
+    )
+
+    departement_etablissement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        label="Département",
+    )
+    pays_etablissement = CountryField(blank=True).formfield(
+        label="Pays", empty_label=settings.SELECT_EMPTY_CHOICE, widget=forms.Select(attrs={"class": "fr-select"})
+    )
+
+    departement_particulier = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        label="Département",
     )
 
     # Localisation
@@ -83,7 +112,11 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("core/map.mjs"), js_module("core/address_search_autocomplete.mjs")),
+            js=(
+                js_module("core/map.mjs"),
+                js_module("core/address_search_autocomplete.mjs"),
+                js_module("sa/detenteur.mjs"),
+            ),
         )
 
     class Meta:
@@ -94,6 +127,26 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "statut_animal",
             "statut_evenement",
             "date_statut_changed",
+            # Détenteur etablissement
+            "numero_identifiant_etablissement",
+            "raison_sociale_etablissement",
+            "departement_etablissement",
+            "autre_identifiant_etablissement",
+            "adresse_lieu_dit_etablissement",
+            "code_insee_etablissement",
+            "siret_etablissement",
+            "commune_etablissement",
+            "pays_etablissement",
+            # Détenteur particulier
+            "nom_particulier",
+            "prenom_particulier",
+            "adresse_particulier",
+            "commune_particulier",
+            "departement_particulier",
+            "code_insee_particulier",
+            "email_particulier",
+            "telephone_particulier",
+            # Localisation
             "adresse_lieu_dit",
             "commune",
             "code_insee",
@@ -128,8 +181,52 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         self.fields["date_statut_changed"].widget.attrs["max"] = today
         self.fields["date_first_symptoms"].widget.attrs["max"] = today
 
+        type_detenteur = self.fields["type_detenteur"].initial
+        if self.is_bound:
+            type_detenteur = self.data.get("type_detenteur")
+        if type_detenteur == TypeDetenteur.PARTICULIER:
+            self.fields["numero_identifiant_etablissement"].required = False
+            self.fields["nom_particulier"].required = True
+        else:
+            self.fields["numero_identifiant_etablissement"].required = True
+            self.fields["nom_particulier"].required = False
+
     def save(self, commit=True):
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
         return instance
+
+    def clean(self):
+        cleaned_data = super().clean()
+        type_detenteur = cleaned_data.get("type_detenteur")
+
+        if type_detenteur == TypeDetenteur.ETABLISSEMENT:
+            particulier_fields = (
+                "nom_particulier",
+                "prenom_particulier",
+                "adresse_particulier",
+                "commune_particulier",
+                "departement_particulier",
+                "code_insee_particulier",
+                "email_particulier",
+                "telephone_particulier",
+            )
+            for field in particulier_fields:
+                self.cleaned_data.pop(field, None)
+        elif type_detenteur == TypeDetenteur.PARTICULIER:
+            etablissement_fields = (
+                "numero_identifiant_etablissement",
+                "raison_sociale_etablissement",
+                "departement_etablissement",
+                "autre_identifiant_etablissement",
+                "adresse_lieu_dit_etablissement",
+                "code_insee_etablissement",
+                "siret_etablissement",
+                "commune_etablissement",
+                "pays_etablissement",
+            )
+            for field in etablissement_fields:
+                self.cleaned_data.pop(field, None)
+
+        return cleaned_data

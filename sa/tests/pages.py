@@ -107,6 +107,26 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
     fields = [
         "statut_evenement",
         "date_statut_changed",
+        # Détenteur - Etablissement
+        "numero_identifiant_etablissement",
+        "raison_sociale_etablissement",
+        "departement_etablissement",
+        "autre_identifiant_etablissement",
+        "adresse_lieu_dit_etablissement",
+        "code_insee_etablissement",
+        "siret_etablissement",
+        "commune_etablissement",
+        "pays_etablissement",
+        # Détenteur - Particulier
+        "nom_particulier",
+        "prenom_particulier",
+        "adresse_particulier",
+        "commune_particulier",
+        "departement_particulier",
+        "code_insee_particulier",
+        "email_particulier",
+        "telephone_particulier",
+        # Localisation
         "type_lieu",
         "numero_identifiant",
         "coordinates_0",  # Lat
@@ -132,11 +152,25 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         self.coordinates_1.fill(str(point.x))
         self.coordinates_0.fill(str(point.y))
 
+    @property
+    def particulier_label(self):
+        return self.page.locator("label", has_text="Particulier")
+
     def fill_required_fields(self, evenement: EvenementAnimal):
         self.statut_evenement.select_option(evenement.statut_evenement)
         self.date_statut_changed.fill(evenement.date_statut_changed.strftime("%Y-%m-%d"))
         self.fill_coordinates(evenement.coordinates)
         self.type_lieu.select_option(evenement.get_type_lieu_display())
+
+        if evenement.numero_identifiant_etablissement:
+            self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
+        elif evenement.nom_particulier:
+            self.particulier_label.click()
+            self.nom_particulier.fill(evenement.nom_particulier)
+        else:
+            raise ValueError(
+                "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
+            )
 
     def submit(self):
         self.page.get_by_role("button", name="Enregistrer", exact=True).click()
@@ -148,3 +182,26 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         self.date_first_symptoms.fill(evenement.date_first_symptoms.strftime("%Y-%m-%d"))
         self.description.fill(evenement.description)
         self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()
+
+    def fill_detenteur_etablissement_block(self, evenement):
+        self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
+        self.raison_sociale_etablissement.fill(evenement.raison_sociale_etablissement)
+        self.departement_etablissement.select_option(str(evenement.departement_etablissement))
+        self.autre_identifiant_etablissement.fill(evenement.autre_identifiant_etablissement)
+        self.adresse_lieu_dit_etablissement.fill(evenement.adresse_lieu_dit_etablissement)
+        self.code_insee_etablissement.fill(evenement.code_insee_etablissement)
+        self.siret_etablissement.fill(evenement.siret_etablissement)
+        self.commune_etablissement.fill(evenement.commune_etablissement)
+        self.pays_etablissement.select_option(evenement.pays_etablissement.code)
+
+    def fill_detenteur_particulier_block(self, evenement):
+        self.particulier_label.click()
+
+        self.nom_particulier.fill(evenement.nom_particulier)
+        self.prenom_particulier.fill(evenement.prenom_particulier)
+        self.adresse_particulier.fill(evenement.adresse_particulier)
+        self.commune_particulier.fill(evenement.commune_particulier)
+        self.departement_particulier.select_option(str(evenement.departement_particulier))
+        self.code_insee_particulier.fill(evenement.code_insee_particulier)
+        self.email_particulier.fill(evenement.email_particulier)
+        self.telephone_particulier.fill(evenement.telephone_particulier)
