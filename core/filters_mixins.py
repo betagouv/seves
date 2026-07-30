@@ -73,7 +73,7 @@ class WithAgentContactFilterMixin(django_filters.FilterSet):
         label="Agent en contact",
         queryset=Contact.objects.none(),
         method="filter_agent_contact",
-        widget=TreeselectCheckbox(choices=(), attrs={"placeholder": "Rechercher"}),
+        widget=TreeselectCheckbox(choices=(), attrs={"min_search_length": 3, "placeholder": "Rechercher"}),
     )
 
     def __init__(self, *args, **kwargs):

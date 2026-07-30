@@ -1,3 +1,7 @@
+import {debounce} from "Utils"
+
+const SEARCH_DEBOUNCE_MS = 250
+
 const dsfrInitialized = new Promise((resolve, reject) => {
     if (typeof window.dsfr === "function") {
         return resolve(window.dsfr)
@@ -46,7 +50,7 @@ dsfrInitialized.then(dsfr => {
             this._boundListeners = {
                 '.fr-input[type="search"]': {
                     focus: this.onChange.bind(this),
-                    input: this.onChange.bind(this),
+                    input: debounce(this.onChange.bind(this), SEARCH_DEBOUNCE_MS),
                 },
             }
 
