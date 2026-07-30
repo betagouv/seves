@@ -124,7 +124,6 @@ class InvestigationCasHumainUpdateView(UserPassesTestMixin, InvestigationCasHuma
         self.object.save()
         self.etablissement_formset.instance = self.object
         self.etablissement_formset.save()
-        self.add_user_contacts(self.object)
 
         messages.success(self.request, self.success_message)
         return HttpResponseRedirect(self.object.get_absolute_url())

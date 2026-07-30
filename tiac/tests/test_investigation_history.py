@@ -59,7 +59,6 @@ def test_can_view_investigation_tiac_history(live_server, page, mus_contact):
                 "One for the repas that is added",
                 "One for the analyse that is added",
                 "One for the aliment that is added",
-                "One for the contact added while editing the object",
             ]
         )
     )

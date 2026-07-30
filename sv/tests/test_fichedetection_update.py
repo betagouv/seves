@@ -1172,46 +1172,6 @@ def test_laboratoire_enable_for_analyse_premiere_intention(
         )
 
 
-def test_update_fichedetection_adds_agent_and_structure_contacts(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    """Test que la modification d'une fiche détection ajoute l'agent et sa structure comme contacts"""
-    fiche = FicheDetectionFactory()
-
-    evenement_page = EvenementUpdatePage(page, live_server)
-    evenement_page.navigate(fiche)
-
-    form_elements.commentaire_input.fill("Nouveau commentaire")
-    evenement_page.save()
-
-    fiche.refresh_from_db()
-    assert fiche.commentaire == "Nouveau commentaire"
-    assert fiche.evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
-    assert fiche.evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
-
-
-def test_update_fichedetection_multiple_times_adds_contacts_once(
-    live_server, page: Page, form_elements: FicheDetectionFormDomElements, mocked_authentification_user
-):
-    """Test que plusieurs modifications d'une fiche détection n'ajoutent qu'une fois les contacts"""
-    fiche = FicheDetectionFactory()
-
-    evenement_page = EvenementUpdatePage(page, live_server)
-    evenement_page.navigate(fiche)
-
-    form_elements.commentaire_input.fill("Première modification")
-    evenement_page.save()
-
-    page.goto(f"{live_server.url}{fiche.get_update_url()}")
-    form_elements.commentaire_input.fill("Seconde modification")
-    evenement_page.save()
-
-    fiche.refresh_from_db()
-    assert fiche.commentaire == "Seconde modification"
-    assert fiche.evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
-    assert fiche.evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
-
-
 @pytest.mark.django_db
 def test_fiche_detection_update_has_locking_protection(
     live_server,
