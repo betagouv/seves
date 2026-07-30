@@ -138,7 +138,8 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
         context = super().create_option(name, value, label, selected, index, subindex, attrs)
-        context["attrs"]["required"] = False  # `require` on checkboxes forces to check all checkboxes
+        # We don't want individual options to check requirement as this is the responsability of the parent widget
+        context["attrs"]["required"] = False
         context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
         if group_option:
             context["group_index"] = self.parent.get_next_id()

@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "sv",
     "ssa",
     "core",
+    "sa",
     "account",
     "importmap",
     "django_filters",
@@ -79,6 +80,7 @@ INSTALLED_APPS = [
     "django_countries",
     "django.contrib.postgres",
     "reversion_compare",
+    "django.contrib.gis",
 ]
 if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
@@ -117,6 +119,7 @@ TEMPLATES = [
                 "seves.context_processors.select_empty_choice",
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
+                "sa.context_processors.pre_creation_form",
             ],
         },
     },
@@ -131,7 +134,10 @@ WSGI_APPLICATION = "seves.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db(),
+    "default": {
+        **env.db(),
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+    },
 }
 
 CACHES = {
@@ -299,6 +305,7 @@ LOGGING = {
 CAN_GIVE_ACCESS_GROUP = "access_admin"
 SV_GROUP = "sv_user"
 SSA_GROUP = "ssa_user"
+SA_GROUP = "sa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
 SECURE_CSP = {
@@ -330,7 +337,6 @@ SECURE_CSP = {
         "https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css",
         "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css",
         "https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css",
-        "https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css",
     ),
     "font-src": (CSP.SELF, "cdn.jsdelivr.net"),
@@ -394,3 +400,5 @@ USERS_DEFAULT_GROUPS = env.list("USERS_DEFAULT_GROUPS", default=[])
 GEOCODE_URL = "https://data.geopf.fr/geocodage"
 MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
 MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)
+
+VOLUMINOUS_EXTRACT_THRESHOLD = 1000

@@ -162,7 +162,9 @@ def test_edit_investigation_show_previous_danger_value(live_server, page: Page):
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
-    expect(detail_page.current_modal.get_by_text("Allergène - Lait")).to_be_visible()
+    expect(
+        detail_page.current_modal.get_by_role("button", name="Allergène - composition ou étiquetage > Allergène - Lait")
+    ).to_be_visible()
 
 
 def test_edit_investigation_show_previous_danger_values(live_server, page: Page):
@@ -178,7 +180,7 @@ def test_edit_investigation_show_previous_danger_values(live_server, page: Page)
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
     detail_page.edit_conclusion_button.click()
-    expect(detail_page.current_modal.get_by_text("3 éléments sélectionnés")).to_be_visible()
+    expect(detail_page.current_modal.get_by_text("3 éléments")).to_be_visible()
 
 
 def test_conclusion_investigation_tiac_conditional_ui(
@@ -333,7 +335,7 @@ def test_conclusion_form_is_initialized_when_dangers_syndromiques_are_not_set(li
     detail_page.navigate(evenement)
     detail_page.add_conclusion_button.click()
     expect(detail_page.suspicion_conclusion_field).to_have_value("")
-    expect(detail_page.page.locator("#selected_hazard-treeselect .treeselect--disabled")).to_have_count(1)
+    expect(detail_page.page.locator("#treeselect-confirmed .fr-treeselect--disabled")).to_have_count(1)
 
 
 def test_conclusion_form_shows_notice_when_multiple_repas(live_server, page: Page):
@@ -412,23 +414,30 @@ def test_conclusion_form_required_fields(live_server, page: Page):
     detail_page.navigate(evenement)
     detail_page.add_conclusion_button.click()
 
+    expect(detail_page.treeselect_confirmed.main_button).to_have_attribute("aria-required", "true")
+    expect(detail_page.treeselect_suspected.main_button).to_have_attribute("aria-required", "true")
+
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
-    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_enabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) =>   getComputedStyle(el, '::after').content") == '"*"'
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.SUSPECTED)
-    expect(detail_page.selected_hazard_hidden_field).to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_enabled()
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == '"*"'
     expect(detail_page.repas_field).to_have_attribute("required", "")
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
-    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
 
     detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.UNKNOWN)
-    expect(detail_page.selected_hazard_hidden_field).not_to_have_attribute("required", "")
+    expect(detail_page.treeselect_confirmed.main_button).to_be_disabled()
+    expect(detail_page.treeselect_suspected.main_button).to_be_disabled()
     expect(detail_page.repas_field).not_to_have_attribute("required", "")
     assert detail_page.selected_hazard_label.evaluate("(el) => getComputedStyle(el, '::after').content") == "none"
 

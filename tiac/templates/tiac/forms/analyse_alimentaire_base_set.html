@@ -14,11 +14,6 @@
             class="fr-modal analyse-modal"
             aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
             data-analyse-alimentaire-form-target="dialog"
-            {% comment %}
-            	Do not remove `:self`; it prevents treeselect from interacting with its enclosing modal
-            	Also action needs to be present on dsfr modal itself otherwise `:self` doesn't work as expected
-            {% endcomment %}
-            data-action="dsfr.conceal->analyse-alimentaire-form#onCloseForm:self"
         >
             <div class="fr-container fr-container--fluid fr-container-md">
                 <div class="fr-grid-row fr-grid-row--center">

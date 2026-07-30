@@ -1,5 +1,3 @@
-import {addLevel2CategoryIfAllChildrenAreSelected, patchItems, tsDefaultOptions} from "CustomTreeSelect"
-
 document.addEventListener("DOMContentLoaded", () => {
     function clearSidebarFilters(event) {
         event.preventDefault()

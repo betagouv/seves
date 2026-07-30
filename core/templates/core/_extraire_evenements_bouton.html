@@ -1,0 +1,18 @@
+{% if paginator.count > voluminous_extract_threshold %}
+    <button
+        type="button"
+        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line"
+        data-fr-opened="false"
+        aria-controls="fr-modal-extraire-evenements"
+    >
+        Extraire ({{ paginator.count }})
+    </button>
+    {% include "core/_extraire_evenements_modal.html" with export_url_name=export_url_name %}
+{% elif paginator.count > 0 %}
+    <form method="post" action="{% url export_url_name %}{% querystring %}">
+        {% csrf_token %}
+        <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">
+            Extraire ({{ paginator.count }})
+        </button>
+    </form>
+{% endif %}

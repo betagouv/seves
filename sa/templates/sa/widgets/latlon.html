@@ -1,0 +1,7 @@
+
+{% for subwidget in widget.subwidgets %}
+  <div class="fr-input-group">
+    <label class="fr-label" for="{{ subwidget.attrs.id }}">{{ subwidget.label }}</label>
+    {% include subwidget.template_name with widget=subwidget %}
+  </div>
+{% endfor %}

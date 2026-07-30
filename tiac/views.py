@@ -4,6 +4,7 @@ import io
 import json
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
@@ -38,8 +39,7 @@ from core.mixins import (
     WithMessageMixin,
 )
 from core.models import Contact, CustomRevisionMetaData, LienLibre
-from ssa.constants import CategorieDanger, CategorieProduit
-from ssa.models.mixins import build_combined_options
+from ssa.constants import CategorieDanger
 from tiac import forms
 from tiac.mixins import WithFilteredListMixin
 from tiac.models import EvenementSimple, InvestigationFollowUp, InvestigationTiac
@@ -253,11 +253,9 @@ class TiacListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
             object_list.append(DisplayItem.from_object(evenement))
 
         context["total_object_count"] = self.get_raw_queryset.count()
+        context["voluminous_extract_threshold"] = settings.VOLUMINOUS_EXTRACT_THRESHOLD
         context["object_list"] = object_list
         context["filter"] = self.filter
-        context["categorie_produit_data"] = json.dumps(CategorieProduit.build_options())
-        context["categorie_danger_data"] = json.dumps(CategorieDanger.build_options(sorted_results=True))
-        context["selected_hazard_data"] = json.dumps(build_combined_options(DangersSyndromiques, CategorieDanger))
         return context
 
 

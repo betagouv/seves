@@ -14,12 +14,6 @@ fieldset.form-fieldset.analyses-alimentaires-fieldset {
     border: 1px var(--grey-975-100-active) solid;
 }
 
-.fieldset-header {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-}
-
 .etiologie-info {
     color: var(--text-default-info);
 }

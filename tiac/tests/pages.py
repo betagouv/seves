@@ -10,7 +10,6 @@ from playwright.sync_api import Locator, Page, expect
 from core.pages import WithActionsPage
 from core.tests.pages import TreeselectPage
 from ssa.constants import CategorieDanger, CategorieProduit
-from ssa.tests.pages import WithTreeSelect
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
 from tiac.models import (
     AlimentSuspect,
@@ -251,7 +250,7 @@ class EvenementSimpleEditFormPage(EvenementSimpleFormPage):
         expect(locator).to_have_count(previous - 1)
 
 
-class EvenementListPage(WithTreeSelect):
+class EvenementListPage:
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -261,6 +260,13 @@ class EvenementListPage(WithTreeSelect):
         self.conclusion_field_treeselect = TreeselectPage(
             self.page, self.page.locator("label", has_text="Conclusion").locator("..")
         )
+        self.selected_hazard_treeselect = TreeselectPage(self.page, self.page.locator("#danger-retenu"))
+        locator = self.page.locator("label", has_text="Agent pathogène confirmé par l'ARS").locator("..")
+        self.agents_pathogenes_treeselect = TreeselectPage(self.page, locator)
+        locator = self.page.locator("label", has_text="Analyse - Danger détecté").locator("..")
+        self.analyse_danger_treeselect = TreeselectPage(self.page, locator)
+        locator = self.page.locator("label", has_text=" Aliment - Catégorie de produit").locator("..")
+        self.categorie_produit_treeselect = TreeselectPage(self.page, locator)
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('tiac:evenement-liste')}")
@@ -306,10 +312,12 @@ class EvenementListPage(WithTreeSelect):
         TreeselectPage(self.page, element).check_option(value)
 
     def submit_search(self):
-        return self.page.get_by_test_id("submit-search").click()
+        with self.page.expect_navigation():
+            return self.page.get_by_test_id("submit-search").click()
 
-    def submit_export(self):
-        return self.page.get_by_role("button", name="Extraire", exact=True).click()
+    def submit_export(self, nb_evenements=None):
+        name = "Extraire" if nb_evenements is None else f"Extraire ({nb_evenements})"
+        return self.page.get_by_role("button", name=name, exact=nb_evenements is not None).click()
 
     def _cell_content(self, line_index, cell_index):
         return self.page.locator(f"tbody tr:nth-child({line_index}) td:nth-child({cell_index})")
@@ -413,24 +421,23 @@ class EvenementListPage(WithTreeSelect):
         choice_js_fill_from_element_with_value(self.page, field.locator(".."), choices)
 
     def select_hazard(self, label):
-        self._set_treeselect_option("danger-retenu", label)
+        self.selected_hazard_treeselect.check_option(label)
 
-    def set_agents_pathogenes_from_shortcut(self, label):
-        container = self.page.locator("#id_agents_pathogenes").locator("..")
-        container.locator(".treeselect-input__edit").click()
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".shortcut", has_text=label).locator("..").click()
+    def set_agents_pathogenes_from_shortcut(self, categorie_danger):
+        label = categorie_danger.label.split(">")[-1].strip()
+        self.agents_pathogenes_treeselect.check_option_by_shortcut("Dangers les plus courants", label)
 
-    def set_analyse_danger_from_shortcut(self, label):
-        container = self.page.locator("#id_analyse_categorie_danger").locator("..")
-        container.locator(".treeselect-input__edit").click()
-        container.evaluate("el => el.scrollIntoView()")
-        container.locator(".shortcut", has_text=label).locator("..").click()
+    def set_analyse_danger_from_shortcut(self, categorie_danger):
+        label = categorie_danger.label.split(">")[-1].strip()
+        self.analyse_danger_treeselect.check_option_by_shortcut("Dangers les plus courants", label)
 
     def set_categorie_produit(self, aliment):
-        label = aliment.get_categorie_produit_display()
-        self.page.locator("#categorie-produit").evaluate("el => el.scrollIntoView()")
-        self._set_treeselect_option("categorie-produit", label)
+        label = aliment.categorie_produit.label.split(">")[-1].strip()
+        self.categorie_produit_treeselect.check_option(label)
+
+    @property
+    def filter_counter(self):
+        return self.page.locator("#more-filters-btn-counter")
 
 
 class EvenementSimpleDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
@@ -714,10 +721,12 @@ class InvestigationTiacEditPage(InvestigationTiacFormPage):
         )
 
 
-class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin, WithTreeSelect):
+class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self.treeselect_confirmed = TreeselectPage(self.page, self.page.locator("#treeselect-confirmed"))
+        self.treeselect_suspected = TreeselectPage(self.page, self.page.locator("#treeselect-suspected"))
 
     @property
     def title(self):
@@ -793,11 +802,7 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
 
     @property
     def selected_hazard_label(self):
-        return self.page.locator("[for=id_selected_hazard]")
-
-    @property
-    def selected_hazard_hidden_field(self):
-        return self.page.locator("#id_selected_hazard")
+        return self.page.locator("label", has_text="Dangers retenus").filter(visible=True)
 
     @property
     def delete_conclusion_button(self):
@@ -827,15 +832,14 @@ class InvestigationTiacDetailsPage(WithEtablissementMixin, WithActionsPage, With
             }"""
         )
         if input_data["suspicion_conclusion"] == SuspicionConclusion.CONFIRMED:
-            self.clear_treeselect("selected_hazard-treeselect")
+            self.treeselect_confirmed.uncheck_all()
             for item in input_data["selected_hazard"]:
                 final_label = CategorieDanger(item).label.split(">")[-1].strip()
-                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", final_label, final_label)
+                self.treeselect_confirmed.check_option(final_label)
         elif input_data["suspicion_conclusion"] == SuspicionConclusion.SUSPECTED:
-            self.clear_treeselect("selected_hazard-treeselect")
+            self.treeselect_suspected.uncheck_all()
             for item in input_data["selected_hazard"]:
-                label = DangersSyndromiques(item).short_name
-                self._set_treeselect_option_by_search_term("selected_hazard-treeselect", label, label)
+                self.treeselect_suspected.check_option(DangersSyndromiques(item).short_name)
         self.page.locator("#id_conclusion_comment").fill(input_data["conclusion_comment"])
 
         if input_data["suspicion_conclusion"] != SuspicionConclusion.DISCARDED:

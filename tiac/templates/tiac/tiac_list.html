@@ -4,12 +4,9 @@
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'tiac/list.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.13.1/dist/treeselectjs.css" />
-    <link rel="stylesheet" href="{% static 'ssa/form/widgets/_custom_tree_select.css' %}">
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/sidebar.js' %}"></script>
-    <script type="module" src="{% static 'ssa/treeselectjs.umd.js' %}"></script>
 {% endblock %}
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 {% block content %}
@@ -41,10 +38,7 @@
                 {% endfor %}
                 <div class="fr-mb-2w fr-px-1w">
                     <div class="fr-select-group" id="danger-retenu">
-                        <label class="fr-label">Dangers retenus</label>
                         {% dsfr_form_field filter.form.selected_hazard|set_data:"search-form-target:selectedHazardInput" %}
-                        <div data-search-form-target="selectedHazardContainer"></div>
-                        <div data-search-form-target="jsonConfigSelectedHazard" class="fr-hidden">{{ selected_hazard_data|safe }}</div>
                     </div>
                 </div>
                 <div class="fr-mb-2w fr-px-1w">
@@ -60,12 +54,7 @@
     <main class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
-            <form action="{% url 'tiac:export-tiac' %}?{{ request.GET.urlencode }}" method="post">
-                {% csrf_token %}
-                {% if paginator.count > 0 %}
-                    <button type="submit" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-file-download-line">Extraire</button>
-                {% endif %}
-            </form>
+            {% include "core/_extraire_evenements_bouton.html" with export_url_name="tiac:export-tiac" %}
         </div>
         {% if paginator.count > 0 %}
             <div class="fr-table fr-table--no-caption fr-table--layout-fixed">

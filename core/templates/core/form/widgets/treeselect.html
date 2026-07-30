@@ -98,6 +98,7 @@
                 type="button"
                 data-treeselect-target="button"
                 {% if widget.attrs.disabled %}disabled{% endif %}
+                aria-required="{{ widget.attrs.required|yesno:"true,false" }}"
                 aria-controls="fr-treeselect__collapse-{{ widget.attrs.id }}"
                 aria-expanded="false"
             >
@@ -171,6 +172,9 @@
                         {% for optgroup in widget.optgroups %}
                             {% include optgroup.template_name with widget=optgroup %}
                         {% endfor %}
+                    </section>
+                    <section class="fr-treeselect__empty">
+                        Aucun résultat
                     </section>
                 </div>
             </div>
