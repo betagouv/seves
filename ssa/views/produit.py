@@ -150,7 +150,6 @@ class EvenementProduitDetailView(
 
 class EvenementUpdateView(
     UserPassesTestMixin,
-    WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     MediaDefiningMixin,
     UpdateView,
@@ -186,11 +185,6 @@ class EvenementUpdateView(
         formset = EtablissementFormSet(instance=self.get_object(), queryset=queryset)
         context["formset"] = formset
         return context
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        self.add_user_contacts(form.instance)
-        return response
 
     def _trigger_notifications(self):
         dirty_fields = self.object.get_dirty_fields()
@@ -229,7 +223,6 @@ class EvenementUpdateView(
             self._trigger_notifications()
             self.object.save()
             formset.save()
-            self.add_user_contacts(self.object)
 
         messages.success(self.request, "L'événement produit a bien été modifié.")
         return HttpResponseRedirect(self.get_success_url())

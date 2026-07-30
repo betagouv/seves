@@ -33,7 +33,6 @@ from core.diffs import force_update_on_version
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     MediaDefiningMixin,
-    WithAddUserContactsMixin,
     WithBlocCommunPermission,
     WithClotureContextMixin,
     WithContactFormsInContextMixin,
@@ -172,7 +171,6 @@ class EvenementDetailView(
 class EvenementUpdateView(
     WithStatusToOrganismeNuisibleMixin,
     UserPassesTestMixin,
-    WithAddUserContactsMixin,
     WithFormErrorsAsMessagesMixin,
     UpdateView,
 ):
@@ -189,11 +187,6 @@ class EvenementUpdateView(
 
     def test_func(self) -> bool | None:
         return self.get_object().can_be_updated(self.request.user)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        self.add_user_contacts(self.object)
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -341,7 +334,6 @@ class FicheDetectionUpdateView(
     FicheDetectionViewMixin,
     WithStatusToOrganismeNuisibleMixin,
     WithPrelevementHandlingMixin,
-    WithAddUserContactsMixin,
     WithPrelevementResultatsMixin,
     UserPassesTestMixin,
     WithFormErrorsAsMessagesMixin,
@@ -433,7 +425,7 @@ class FicheDetectionUpdateView(
                 for message in e.messages:
                     messages.error(self.request, message)
                 return self.form_invalid(form)
-            self.add_user_contacts(self.object.evenement)
+            reversion.add_to_revision(self.object.evenement)
         messages.success(self.request, "La fiche détection a été modifiée avec succès.")
         return HttpResponseRedirect(self.get_success_url())
 
@@ -593,9 +585,7 @@ class FicheZoneDelimiteeCreateView(MediaDefiningMixin, WithFormErrorsAsMessagesM
         return self.render_to_response(self.get_context_data())
 
 
-class FicheZoneDelimiteeUpdateView(
-    MediaDefiningMixin, WithAddUserContactsMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView
-):
+class FicheZoneDelimiteeUpdateView(MediaDefiningMixin, UserPassesTestMixin, WithFormErrorsAsMessagesMixin, UpdateView):
     model = FicheZoneDelimitee
     form_class = FicheZoneDelimiteeForm
     context_object_name = "fiche"
@@ -694,7 +684,6 @@ class FicheZoneDelimiteeUpdateView(
                     for d in f.cleaned_data["detections"].all():
                         force_update_on_version(d)
 
-                self.add_user_contacts(self.object.evenement)
                 reversion.add_to_revision(self.object.evenement)
                 reversion.set_user(self.request.user)
 

@@ -61,7 +61,6 @@ from .notifications import notify_conclusion, notify_investigation_coordonnee, n
 
 class EvenementSimpleManipulationMixin(
     WithFormErrorsAsMessagesMixin,
-    WithAddUserContactsMixin,
     MediaDefiningMixin,
     WithFormsetInvalidMixin,
     ProcessFormView,
@@ -109,7 +108,6 @@ class EvenementSimpleManipulationMixin(
         self.get_etablissement_formset().instance = self.object
         self.get_etablissement_formset().save()
 
-        self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return super().form_valid(form)
 
@@ -129,7 +127,12 @@ class EvenementSimpleManipulationMixin(
         return super().post(request, *args, **kwargs)
 
 
-class EvenementSimpleCreationView(EvenementSimpleManipulationMixin, CreateView):
+class EvenementSimpleCreationView(EvenementSimpleManipulationMixin, WithAddUserContactsMixin, CreateView):
+    def form_valid(self, form):
+        self.object = form.save()
+        self.add_user_contacts(self.object)
+        return super().form_valid(form)
+
     def form_invalid(self, form):
         self.object = None
         return super().form_invalid(form)
@@ -474,6 +477,7 @@ class InvestigationTiacBaseView(
                 self.object.contacts.add(Contact.objects.get_mus())
 
     def form_valid(self, form):
+        is_creation = self.object is None
         dirty_fields = None
         if self.object:
             dirty_fields = self.object.get_dirty_fields()
@@ -486,7 +490,8 @@ class InvestigationTiacBaseView(
         self.etablissement_formset.save()
         self.analyse_alimentaire_formset.instance = self.object
         self.analyse_alimentaire_formset.save()
-        self.add_user_contacts(self.object)
+        if is_creation:
+            self.add_user_contacts(self.object)
         self.send_notifications(dirty_fields)
 
         messages.success(self.request, self.get_success_message())
@@ -673,9 +678,7 @@ class TiacExportView(WithFilteredListMixin, WithExportHeterogeneousQuerysetMixin
 
 
 @method_decorator(require_POST, name="dispatch")
-class ConclusionUpdateView(
-    MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithAddUserContactsMixin, UserPassesTestMixin, UpdateView
-):
+class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, UserPassesTestMixin, UpdateView):
     form_class = ConclusionForm
 
     def get_queryset(self):
@@ -698,7 +701,6 @@ class ConclusionUpdateView(
         form = self.get_form()
         if "delete" in self.request.POST:
             self._empty_conclusion()
-            self.add_user_contacts(self.object)
             notify_conclusion(self.object, self.request.user)
             messages.success(self.request, "La conclusion a été supprimée.")
             return HttpResponseRedirect(self.object.get_absolute_url())
@@ -709,7 +711,6 @@ class ConclusionUpdateView(
     def form_valid(self, form):
         dirty_fields = self.object.get_dirty_fields()
         self.object = form.save()
-        self.add_user_contacts(self.object)
         if "suspicion_conclusion" in dirty_fields:
             notify_conclusion(self.object, self.request.user)
         messages.success(self.request, "L’évènement a été mis à jour avec succès.")
