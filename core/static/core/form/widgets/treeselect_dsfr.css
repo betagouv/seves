@@ -221,3 +221,7 @@
         var(--underline-hover-width) calc(var(--underline-thickness) * 2),
         var(--underline-idle-width) var(--underline-thickness);
 }
+
+.fr-treeselect:has(.fr-treeselect__group:not([hidden]), .fr-treeselect__element:not([hidden])) .fr-treeselect__empty {
+    display: none;
+}
