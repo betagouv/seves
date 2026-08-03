@@ -65,6 +65,7 @@ class Evenement(
     date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
     numero_europhyt = models.CharField(max_length=8, verbose_name="Numéro Europhyt", blank=True)
     numero_rasff = models.CharField(max_length=255, verbose_name="Numéro RASFF", blank=True)
+    need_notification_contact_added = models.BooleanField(default=True)
 
     objects = EvenementManager()
 
