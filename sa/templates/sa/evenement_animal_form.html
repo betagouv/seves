@@ -75,6 +75,63 @@
                 </div>
             </fieldset>
 
+            <fieldset class="form-fieldset fr-mt-4v" data-controller="detenteur-form">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Détenteur</legend>
+                </div>
+
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12">
+                        <fieldset class="fr-segmented">
+                            <div class="fr-segmented__elements">
+                                <div class="fr-segmented__element">
+                                    <input value="etablissement" checked type="radio" id="etablissement-btn" name="type_detenteur">
+                                    <label class="fr-label" for="etablissement-btn" data-action="click->detenteur-form#showEtablissement">Établissement</label>
+                                </div>
+                                <div class="fr-segmented__element">
+                                    <input value="particulier" type="radio" id="particulier-btn" name="type_detenteur">
+                                    <label class="fr-label" for="particulier-btn" data-action="click->detenteur-form#showParticulier">Particulier</label>
+                                </div>
+                            </div>
+                        </fieldset></div>
+                </div>
+
+                <div class="fr-grid-row fr-grid-row--gutters fr-col" data-detenteur-form-target="etablissementForm">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.numero_identifiant_etablissement|set_data:"detenteur-form-target:numeroIdentifiantEtablissement" %}
+                        {% dsfr_form_field form.raison_sociale_etablissement %}
+                        {% dsfr_form_field form.departement_etablissement %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.autre_identifiant_etablissement %}
+                        {% dsfr_form_field form.adresse_lieu_dit_etablissement %}
+                        {% dsfr_form_field form.code_insee_etablissement %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.siret_etablissement %}
+                        {% dsfr_form_field form.commune_etablissement %}
+                        {% dsfr_form_field form.pays_etablissement %}
+                    </div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"  data-detenteur-form-target="particulierForm">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.nom_particulier|set_data:"detenteur-form-target:nomParticulier" %}
+                        {% dsfr_form_field form.commune_particulier %}
+                        {% dsfr_form_field form.email_particulier %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.prenom_particulier %}
+                        {% dsfr_form_field form.departement_particulier %}
+                        {% dsfr_form_field form.telephone_particulier %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.adresse_particulier %}
+                        {% dsfr_form_field form.code_insee_particulier %}
+                    </div>
+                </div>
+
+            </fieldset>
+
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v ">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Localisation

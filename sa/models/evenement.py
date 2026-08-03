@@ -4,6 +4,7 @@ from django.contrib.gis.db.models import PointField
 from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
+from django_countries.fields import CountryField
 
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
@@ -52,6 +53,11 @@ class HumanInvolved(models.TextChoices):
     NE_SAIS_PAS = auto(), "Je ne sais pas"
 
 
+class TypeDetenteur(models.TextChoices):
+    ETABLISSEMENT = "etablissement", "Établissement"
+    PARTICULIER = "particulier", "Particulier"
+
+
 class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, models.Model):
     # Common fields for event handling
     statut_evenement = models.CharField(
@@ -75,6 +81,79 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, mod
         verbose_name="Statut de l'animal",
         null=False,
     )
+
+    # Détenteur block
+    numero_identifiant_etablissement = models.CharField(
+        max_length=255, verbose_name="N° identifiant", blank=False, null=True
+    )
+    raison_sociale_etablissement = models.CharField(
+        max_length=100, verbose_name="Raison sociale", blank=True, null=True
+    )
+    departement_etablissement = models.ForeignKey(
+        "core.Departement",
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+        related_name="sa_evenements_etablissements",
+    )
+    autre_identifiant_etablissement = models.CharField(
+        max_length=255, verbose_name="Autre identifiant / Numagrit", blank=True, null=True
+    )
+    adresse_lieu_dit_etablissement = models.CharField(max_length=255, verbose_name="Adresse ou lieu-dit", blank=True)
+    code_insee_etablissement = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE",
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{5}$",
+                message="Le code INSEE doit contenir exactement 5 chiffres",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    siret_etablissement = models.CharField(
+        max_length=14,
+        verbose_name="SIRET",
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{14}$",
+                message="Le SIRET doit contenir exactement 14 chiffres",
+                code="invalid_siret",
+            ),
+        ],
+    )
+    commune_etablissement = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    pays_etablissement = CountryField(null=True, blank=True)
+
+    nom_particulier = models.CharField(max_length=255, verbose_name="Nom", null=True)
+    prenom_particulier = models.CharField(max_length=255, blank=True, verbose_name="Prénom")
+    adresse_particulier = models.CharField(max_length=255, verbose_name="Adresse", blank=True)
+    commune_particulier = models.CharField(max_length=100, verbose_name="Commune", blank=True)
+    departement_particulier = models.ForeignKey(
+        "core.Departement",
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+        related_name="sa_evenements_particuliers",
+    )
+    code_insee_particulier = models.CharField(
+        max_length=5,
+        blank=True,
+        verbose_name="Code INSEE",
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{5}$",
+                message="Le code INSEE doit contenir exactement 5 chiffres",
+                code="invalid_code_insee",
+            ),
+        ],
+    )
+    email_particulier = models.EmailField(blank=True, verbose_name="Courriel")
+    telephone_particulier = models.CharField(max_length=20, blank=True, verbose_name="Numéro de téléphone")
 
     # Localisation block
     adresse_lieu_dit = models.CharField(max_length=255, verbose_name="Adresse ou lieu-dit", blank=True)
@@ -131,3 +210,28 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, mod
 
     def get_absolute_url(self):
         return reverse("sa:evenement-animal-details", kwargs={"numero": self.numero})
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    (
+                        ~models.Q(numero_identifiant_etablissement="")
+                        & models.Q(numero_identifiant_etablissement__isnull=False)
+                        & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
+                    )
+                    | (
+                        (
+                            models.Q(numero_identifiant_etablissement="")
+                            | models.Q(numero_identifiant_etablissement__isnull=True)
+                        )
+                        & ~models.Q(nom_particulier="")
+                        & models.Q(nom_particulier__isnull=False)
+                    )
+                ),
+                name="evenementanimal_detenteur_etablissement_or_particulier",
+                violation_error_message=(
+                    "Un détenteur établissement ou un détenteur particulier doit être renseigné (l'un ou l'autre)"
+                ),
+            ),
+        ]

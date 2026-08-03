@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import Point
+from django_countries import Countries
 import factory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
@@ -35,6 +36,16 @@ class EvenementAnimalFactory(DjangoModelFactory):
     statut_evenement = FuzzyChoice([choice[0] for choice in StatutEvenement.choices])
     numero_annee = factory.Faker("year")
 
+    numero_identifiant_etablissement = factory.Sequence(lambda n: f"ID-{n:06d}")
+    raison_sociale_etablissement = factory.Faker("company", locale="fr_FR")
+    departement_etablissement = factory.SubFactory("core.factories.DepartementFactory")
+    autre_identifiant_etablissement = factory.Sequence(lambda n: f"TEST-{n:06d}")
+    adresse_lieu_dit_etablissement = factory.Faker("street_address", locale="fr_FR")
+    code_insee_etablissement = factory.LazyFunction(lambda: fake.numerify("#####"))
+    siret_etablissement = factory.LazyFunction(lambda: fake.numerify("##############"))
+    commune_etablissement = factory.Faker("city", locale="fr_FR")
+    pays_etablissement = FuzzyChoice([c.code for c in Countries()])
+
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
@@ -47,6 +58,27 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     class Meta:
         model = EvenementAnimal
+
+    class Params:
+        particulier = factory.Trait(
+            numero_identifiant_etablissement="",
+            raison_sociale_etablissement="",
+            departement_etablissement=None,
+            autre_identifiant_etablissement="",
+            adresse_lieu_dit_etablissement="",
+            code_insee_etablissement="",
+            siret_etablissement="",
+            commune_etablissement="",
+            pays_etablissement="",
+            nom_particulier=factory.Faker("last_name", locale="fr_FR"),
+            prenom_particulier=factory.Faker("first_name", locale="fr_FR"),
+            adresse_particulier=factory.Faker("street_address", locale="fr_FR"),
+            commune_particulier=factory.Faker("city", locale="fr_FR"),
+            departement_particulier=factory.SubFactory("core.factories.DepartementFactory"),
+            code_insee_particulier=factory.LazyFunction(lambda: fake.numerify("#####")),
+            email_particulier=factory.Faker("email"),
+            telephone_particulier=factory.Faker("phone_number", locale="fr_FR"),
+        )
 
     @factory.lazy_attribute
     def createur(self):
