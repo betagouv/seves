@@ -1,6 +1,6 @@
 import json
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
@@ -194,3 +194,105 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     ]
     for field in fields:
         assert getattr(evenement_produit, field) == getattr(input_data, field)
+
+
+def test_no_confirmation_modal_when_switching_detenteur_type_without_data(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+
+    creation_page.particulier_label.click()
+
+    expect(creation_page.type_change_modal).not_to_be_visible()
+    expect(creation_page.nom_particulier).to_be_visible()
+    expect(creation_page.numero_identifiant_etablissement).to_be_hidden()
+
+
+def test_confirmation_modal_when_switching_from_etablissement_to_particulier_with_data(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.numero_identifiant_etablissement.fill(input_data.numero_identifiant_etablissement)
+    creation_page.raison_sociale_etablissement.fill(input_data.raison_sociale_etablissement)
+
+    creation_page.particulier_label.click()
+
+    expect(creation_page.type_change_modal).to_be_visible()
+    expect(creation_page.numero_identifiant_etablissement).to_be_visible()
+
+
+def test_cancelling_detenteur_type_change_keeps_current_type_and_data(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.numero_identifiant_etablissement.fill(input_data.numero_identifiant_etablissement)
+    creation_page.raison_sociale_etablissement.fill(input_data.raison_sociale_etablissement)
+
+    creation_page.particulier_label.click()
+    creation_page.cancel_type_change()
+
+    expect(creation_page.type_change_modal).not_to_be_visible()
+    expect(creation_page.numero_identifiant_etablissement).to_be_visible()
+    assert creation_page.numero_identifiant_etablissement.input_value() == input_data.numero_identifiant_etablissement
+    assert creation_page.raison_sociale_etablissement.input_value() == input_data.raison_sociale_etablissement
+
+
+def test_confirming_detenteur_type_change_clears_previous_block_data(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.numero_identifiant_etablissement.fill(input_data.numero_identifiant_etablissement)
+    creation_page.raison_sociale_etablissement.fill(input_data.raison_sociale_etablissement)
+
+    creation_page.particulier_label.click()
+    creation_page.confirm_type_change()
+
+    expect(creation_page.type_change_modal).not_to_be_visible()
+    expect(creation_page.nom_particulier).to_be_visible()
+    expect(creation_page.numero_identifiant_etablissement).to_be_hidden()
+    assert creation_page.numero_identifiant_etablissement.input_value() == ""
+    assert creation_page.raison_sociale_etablissement.input_value() == ""
+
+
+def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build(particulier=True)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.particulier_label.click()
+    creation_page.nom_particulier.fill(input_data.nom_particulier)
+
+    creation_page.etablissement_label.click()
+
+    expect(creation_page.type_change_modal).to_be_visible()
+
+    creation_page.confirm_type_change()
+
+    expect(creation_page.type_change_modal).not_to_be_visible()
+    expect(creation_page.numero_identifiant_etablissement).to_be_visible()
+    expect(creation_page.nom_particulier).to_be_hidden()
+    assert creation_page.nom_particulier.input_value() == ""
