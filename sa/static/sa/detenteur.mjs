@@ -1,11 +1,75 @@
 import {applicationReady} from "Application"
+import {resetForm} from "Forms"
 import {Controller} from "Stimulus"
 
 class DetenteurFormController extends Controller {
-    static targets = ["etablissementForm", "particulierForm", "numeroIdentifiantEtablissement", "nomParticulier"]
+    static targets = [
+        "etablissementForm",
+        "particulierForm",
+        "numeroIdentifiantEtablissement",
+        "nomParticulier",
+        "etablissementRadio",
+        "particulierRadio",
+        "confirmModal",
+    ]
 
     connect() {
+        this.currentType = "etablissement"
+        // Type we're about to switch to, waiting for confirmation in the modal
+        this.pendingType = null
         this.showEtablissement()
+    }
+
+    onEtablissementLabelClick(event) {
+        this.handleTypeClick(event, "etablissement")
+    }
+
+    onParticulierLabelClick(event) {
+        this.handleTypeClick(event, "particulier")
+    }
+
+    handleTypeClick(event, type) {
+        if (type === this.currentType) {
+            return
+        }
+        if (this.currentBlockHasData()) {
+            // preventDefault prevents the click on the <label> from checking its radio input:
+            // the switch only happens once the user confirms in the modal
+            event.preventDefault()
+            this.pendingType = type
+            dsfr(this.confirmModalTarget).modal.disclose()
+        } else {
+            this.switchTo(type)
+        }
+    }
+
+    onConfirmSwitch() {
+        resetForm(this.currentType === "etablissement" ? this.etablissementFormTarget : this.particulierFormTarget)
+        this.switchTo(this.pendingType)
+        this.pendingType = null
+        dsfr(this.confirmModalTarget).modal.conceal()
+    }
+
+    onCancelSwitch() {
+        this.pendingType = null
+        dsfr(this.confirmModalTarget).modal.conceal()
+    }
+
+    switchTo(type) {
+        this.currentType = type
+        // Check the radio manually (as the native check was prevented in handleTypeClick)
+        if (type === "etablissement") {
+            this.etablissementRadioTarget.checked = true
+            this.showEtablissement()
+        } else {
+            this.particulierRadioTarget.checked = true
+            this.showParticulier()
+        }
+    }
+
+    currentBlockHasData() {
+        const target = this.currentType === "etablissement" ? this.etablissementFormTarget : this.particulierFormTarget
+        return [...target.querySelectorAll("input, select, textarea")].some(field => field.value.trim() !== "")
     }
 
     showEtablissement() {

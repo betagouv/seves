@@ -80,17 +80,45 @@
                     <legend class="fr-fieldset__legend fr-h3">Détenteur</legend>
                 </div>
 
+                <dialog id="detenteur-type-change-modal" class="fr-modal" aria-labelledby="detenteur-type-change-modal-title" data-detenteur-form-target="confirmModal">
+                    <div class="fr-container fr-container--fluid fr-container-md">
+                        <div class="fr-grid-row fr-grid-row--center">
+                            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                                <div class="fr-modal__body">
+                                    <div class="fr-modal__header">
+                                        <button aria-controls="detenteur-type-change-modal" title="Fermer" type="button" class="fr-btn--close fr-btn" data-action="click->detenteur-form#onCancelSwitch">Fermer</button>
+                                    </div>
+                                    <div class="fr-modal__content">
+                                        <h2 id="detenteur-type-change-modal-title" class="fr-modal__title">
+                                            Changement de type de détenteur
+                                        </h2>
+                                        <p>Un détenteur ne peut avoir qu'un seul statut : établissement ou particulier. Si vous continuez, les informations saisies dans l'onglet actuel seront perdues.</p>
+                                    </div>
+                                    <div class="fr-modal__footer">
+                                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                                            <button class="fr-btn fr-btn--secondary" type="button" data-action="click->detenteur-form#onCancelSwitch">
+                                                Annuler
+                                            </button>
+                                            <button class="fr-btn" type="button" data-action="click->detenteur-form#onConfirmSwitch">Continuer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </dialog>
+
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12">
                         <fieldset class="fr-segmented">
                             <div class="fr-segmented__elements">
                                 <div class="fr-segmented__element">
-                                    <input value="etablissement" checked type="radio" id="etablissement-btn" name="type_detenteur">
-                                    <label class="fr-label" for="etablissement-btn" data-action="click->detenteur-form#showEtablissement">Établissement</label>
+                                    <input value="etablissement" checked type="radio" id="etablissement-btn" name="type_detenteur" data-detenteur-form-target="etablissementRadio">
+                                    <label class="fr-label" for="etablissement-btn" data-action="click->detenteur-form#onEtablissementLabelClick">Établissement</label>
                                 </div>
                                 <div class="fr-segmented__element">
-                                    <input value="particulier" type="radio" id="particulier-btn" name="type_detenteur">
-                                    <label class="fr-label" for="particulier-btn" data-action="click->detenteur-form#showParticulier">Particulier</label>
+                                    <input value="particulier" type="radio" id="particulier-btn" name="type_detenteur" data-detenteur-form-target="particulierRadio">
+                                    <label class="fr-label" for="particulier-btn" data-action="click->detenteur-form#onParticulierLabelClick">Particulier</label>
                                 </div>
                             </div>
                         </fieldset></div>

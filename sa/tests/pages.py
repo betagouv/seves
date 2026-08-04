@@ -156,6 +156,20 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
     def particulier_label(self):
         return self.page.locator("label", has_text="Particulier")
 
+    @property
+    def etablissement_label(self):
+        return self.page.locator("label", has_text="Établissement")
+
+    @property
+    def type_change_modal(self):
+        return self.page.locator("#detenteur-type-change-modal")
+
+    def confirm_type_change(self):
+        self.type_change_modal.get_by_role("button", name="Continuer").click()
+
+    def cancel_type_change(self):
+        self.type_change_modal.get_by_role("button", name="Annuler").click()
+
     def fill_required_fields(self, evenement: EvenementAnimal):
         self.statut_evenement.select_option(evenement.statut_evenement)
         self.date_statut_changed.fill(evenement.date_statut_changed.strftime("%Y-%m-%d"))
