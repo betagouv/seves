@@ -117,7 +117,7 @@ class MapController extends BaseMapController {
             center: center,
             zoom: zoom,
             attributionControl: false,
-            style: "https://openmaptiles.data.gouv.fr/styles/osm-bright/style.json",
+            style: this.initialStyleUrl,
         })
         this.addStyleSwitcher()
         this.map.addControl(
