@@ -1,6 +1,6 @@
 import json
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
@@ -194,3 +194,112 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     ]
     for field in fields:
         assert getattr(evenement_produit, field) == getattr(input_data, field)
+
+
+RPG_WFS_URL = "https://data.geopf.fr/wfs/ows"
+
+
+def _set_parcelles_checkbox(creation_page, checked):
+    creation_page.parcelles_checkbox.set_checked(checked, force=True)
+
+
+def _rpg_response():
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"id_parcel": "1", "code_cultu": "BTH"},
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [[[[2.35, 48.85], [2.351, 48.85], [2.351, 48.851], [2.35, 48.851], [2.35, 48.85]]]],
+                },
+            }
+        ],
+    }
+
+
+def test_parcelles_checkbox_unchecked_by_default(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    input_data = EvenementAnimalFactory.build()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+
+    expect(creation_page.parcelles_checkbox).to_be_visible()
+    expect(creation_page.parcelles_checkbox).not_to_be_checked()
+
+
+def test_parcelles_checkbox_displays_and_hides_rpg_layer(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    input_data = EvenementAnimalFactory.build()
+    call_count = {"count": 0}
+
+    def handle(route):
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(_rpg_response()))
+        call_count["count"] += 1
+
+    page.route(lambda url: url.startswith(RPG_WFS_URL), handle)
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_coordinates(input_data.coordinates)
+    page.wait_for_timeout(600)
+
+    _set_parcelles_checkbox(creation_page, True)
+    page.wait_for_timeout(800)
+
+    assert call_count["count"] == 1
+    expect(creation_page.parcelles_message).to_be_hidden()
+
+    _set_parcelles_checkbox(creation_page, False)
+    page.mouse.wheel(0, -100)
+    page.wait_for_timeout(800)
+
+    assert call_count["count"] == 1
+
+
+def test_parcelles_insufficient_zoom_shows_message(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    input_data = EvenementAnimalFactory.build()
+    call_count = {"count": 0}
+
+    def handle(route):
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(_rpg_response()))
+        call_count["count"] += 1
+
+    page.route(lambda url: url.startswith(RPG_WFS_URL), handle)
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+
+    _set_parcelles_checkbox(creation_page, True)
+    page.wait_for_timeout(800)
+
+    expect(creation_page.parcelles_message).to_be_visible()
+    expect(creation_page.parcelles_message).to_have_text("Zoomez pour afficher les parcelles.")
+    assert call_count["count"] == 0
+
+
+def test_parcelles_api_failure_shows_message(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    input_data = EvenementAnimalFactory.build()
+    page_errors = []
+    page.on("pageerror", lambda exc: page_errors.append(exc))
+
+    page.route(lambda url: url.startswith(RPG_WFS_URL), lambda route: route.fulfill(status=500, body="error"))
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_coordinates(input_data.coordinates)
+
+    _set_parcelles_checkbox(creation_page, True)
+    page.wait_for_timeout(800)
+
+    expect(creation_page.parcelles_message).to_be_visible()
+    expect(creation_page.parcelles_message).to_have_text("Les parcelles ne sont pas disponibles pour le moment.")
+    assert page_errors == []
