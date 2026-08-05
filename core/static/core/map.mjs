@@ -11,18 +11,33 @@ const DEFAULT_CENTER_CONFIG = {center: {lat: 48.866667, lon: 2.333333}, zoom: DI
 const RPG_WFS_URL = "https://data.geopf.fr/wfs/ows"
 const RPG_TYPENAME = "RPG.LATEST:parcelles_graphiques" // "CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle"
 const RPG_MIN_ZOOM = 10
-const RPG_DEBOUNCE_MS = 450
+const RPG_THROTTLE_MS = 400
+const RPG_FADE_IN_MS = 300
+const RPG_FILL_OPACITY = 0.15
+const RPG_OUTLINE_OPACITY = 1
 const RPG_SOURCE_ID = "rpg-parcelles-source"
 const RPG_FILL_LAYER_ID = "rpg-parcelles-fill"
 const RPG_OUTLINE_LAYER_ID = "rpg-parcelles-outline"
 const RPG_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment."
 const RPG_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles."
 
-function debounce(func, wait) {
-    let timeout
+function throttle(func, wait) {
+    let lastCall = 0
+    let timeout = null
     return function (...args) {
-        clearTimeout(timeout)
-        timeout = setTimeout(() => func.apply(this, args), wait)
+        const remaining = wait - (Date.now() - lastCall)
+        if (remaining <= 0) {
+            clearTimeout(timeout)
+            timeout = null
+            lastCall = Date.now()
+            func.apply(this, args)
+        } else if (!timeout) {
+            timeout = setTimeout(() => {
+                lastCall = Date.now()
+                timeout = null
+                func.apply(this, args)
+            }, remaining)
+        }
     }
 }
 
@@ -139,7 +154,9 @@ class MapController extends BaseMapController {
             attributionControl: false,
             style: "https://openmaptiles.data.gouv.fr/styles/osm-bright/style.json",
         })
-        this.addStyleSwitcher()
+        this.addStyleSwitcher(() => {
+            if (this.parcellesEnabled) this.refreshParcelles()
+        })
         this.map.addControl(
             new maplibregl.NavigationControl({
                 showZoom: true,
@@ -154,12 +171,9 @@ class MapController extends BaseMapController {
 
         if (this.hasParcellesCheckboxTarget) {
             this.parcellesEnabled = false
-            const debouncedRefresh = debounce(() => this.refreshParcelles(), RPG_DEBOUNCE_MS)
-            this.map.on("moveend", debouncedRefresh)
-            this.map.on("zoomend", debouncedRefresh)
-            this.map.on("style.load", () => {
-                if (this.parcellesEnabled) this.refreshParcelles()
-            })
+            const throttledRefresh = throttle(() => this.refreshParcelles(), RPG_THROTTLE_MS)
+            this.map.on("move", throttledRefresh)
+            this.map.on("moveend", () => this.refreshParcelles())
         }
     }
 
@@ -232,21 +246,40 @@ class MapController extends BaseMapController {
         const source = this.map.getSource(RPG_SOURCE_ID)
         if (source) {
             source.setData(geojson)
+            this.map.once("render", () => this.revealParcellesFeatures(geojson))
             return
         }
-        this.map.addSource(RPG_SOURCE_ID, {type: "geojson", data: geojson})
+        this.map.addSource(RPG_SOURCE_ID, {type: "geojson", data: geojson, promoteId: "id_parcel"})
         this.map.addLayer({
             id: RPG_FILL_LAYER_ID,
             type: "fill",
             source: RPG_SOURCE_ID,
-            paint: {"fill-color": "#6a4dc4", "fill-opacity": 0.15},
+            paint: {
+                "fill-color": "#6a4dc4",
+                "fill-opacity": ["*", RPG_FILL_OPACITY, ["coalesce", ["feature-state", "revealed"], 0]],
+                "fill-opacity-transition": {duration: RPG_FADE_IN_MS},
+            },
         })
         this.map.addLayer({
             id: RPG_OUTLINE_LAYER_ID,
             type: "line",
             source: RPG_SOURCE_ID,
-            paint: {"line-color": "#6a4dc4", "line-width": 1.5},
+            paint: {
+                "line-color": "#6a4dc4",
+                "line-width": 2,
+                "line-opacity": ["*", RPG_OUTLINE_OPACITY, ["coalesce", ["feature-state", "revealed"], 0]],
+                "line-opacity-transition": {duration: RPG_FADE_IN_MS},
+            },
         })
+        this.map.once("render", () => this.revealParcellesFeatures(geojson))
+    }
+
+    revealParcellesFeatures(geojson) {
+        for (const feature of geojson.features) {
+            const id = feature.properties?.id_parcel
+            if (id === undefined || id === null) continue
+            this.map.setFeatureState({source: RPG_SOURCE_ID, id}, {revealed: 1})
+        }
     }
 
     removeParcellesLayer() {

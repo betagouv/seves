@@ -6,7 +6,7 @@ export class BaseMapController extends Controller {
         jsonFile: String,
     }
 
-    addStyleSwitcher() {
+    addStyleSwitcher(onStyleChanged) {
         const styles = [
             {
                 id: "osm",
@@ -29,6 +29,7 @@ export class BaseMapController extends Controller {
             showImages: false,
             onAfterStyleChange: (_from, to) => {
                 this.map.setStyle(to.styleUrl)
+                if (onStyleChanged) this.map.once("idle", onStyleChanged)
             },
         })
         this.map.addControl(control, "bottom-left")
