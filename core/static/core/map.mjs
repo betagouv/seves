@@ -17,8 +17,8 @@ const PARCEL_OUTLINE_OPACITY = 1
 const PARCEL_SOURCE_ID = "parcel-source"
 const PARCEL_FILL_LAYER_ID = "parcel-fill"
 const PARCEL_OUTLINE_LAYER_ID = "parcel-outline"
-const PARCEL_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment."
-const PARCEL_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles."
+const PARCEL_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment"
+const PARCEL_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles"
 
 class ParcellesControl {
     constructor(container) {

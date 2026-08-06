@@ -280,7 +280,7 @@ def test_parcelles_insufficient_zoom_shows_message(live_server, page: Page):
     page.wait_for_timeout(800)
 
     expect(creation_page.parcelles_message).to_be_visible()
-    expect(creation_page.parcelles_message).to_have_text("Zoomez pour afficher les parcelles.")
+    expect(creation_page.parcelles_message).to_have_text("Zoomez pour afficher les parcelles")
     assert call_count["count"] == 0
 
 
@@ -301,5 +301,5 @@ def test_parcelles_api_failure_shows_message(live_server, page: Page):
     page.wait_for_timeout(800)
 
     expect(creation_page.parcelles_message).to_be_visible()
-    expect(creation_page.parcelles_message).to_have_text("Les parcelles ne sont pas disponibles pour le moment.")
+    expect(creation_page.parcelles_message).to_have_text("Les parcelles ne sont pas disponibles pour le moment")
     assert page_errors == []
