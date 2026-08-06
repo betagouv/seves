@@ -206,6 +206,7 @@ class MapController extends BaseMapController {
     refreshParcelles() {
         if (!this.parcellesEnabled) return
         if (this.map.getZoom() < PARCEL_MIN_ZOOM) {
+            this._parcelAbortController?.abort()
             this.removeParcellesLayer()
             this.showParcellesMessage(PARCEL_ZOOM_MESSAGE)
             return
@@ -230,6 +231,11 @@ class MapController extends BaseMapController {
                 return res.json()
             })
             .then(geojson => {
+                if (geojson.numberReturned < geojson.numberMatched) {
+                    this.removeParcellesLayer()
+                    this.showParcellesMessage(PARCEL_ZOOM_MESSAGE)
+                    return
+                }
                 this.clearParcellesMessage()
                 this.displayParcellesLayer(geojson)
             })
