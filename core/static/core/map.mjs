@@ -8,18 +8,17 @@ const PRECISE_ZOOM = 15
 
 const DEFAULT_CENTER_CONFIG = {center: {lat: 48.866667, lon: 2.333333}, zoom: DISTANT_ZOOM}
 
-const RPG_WFS_URL = "https://data.geopf.fr/wfs/ows"
-const RPG_TYPENAME = "RPG.LATEST:parcelles_graphiques" // "CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle"
-const RPG_MIN_ZOOM = 10
-const RPG_THROTTLE_MS = 400
-const RPG_FADE_IN_MS = 300
-const RPG_FILL_OPACITY = 0.15
-const RPG_OUTLINE_OPACITY = 1
-const RPG_SOURCE_ID = "rpg-parcelles-source"
-const RPG_FILL_LAYER_ID = "rpg-parcelles-fill"
-const RPG_OUTLINE_LAYER_ID = "rpg-parcelles-outline"
-const RPG_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment."
-const RPG_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles."
+const PARCEL_WFS_URL = "https://data.geopf.fr/wfs/ows"
+const PARCEL_TYPENAME = "CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle" // "RPG.LATEST:parcelles_graphiques"
+const PARCEL_MIN_ZOOM = 12
+const PARCEL_THROTTLE_MS = 400
+const PARCEL_FILL_OPACITY = 0.15
+const PARCEL_OUTLINE_OPACITY = 1
+const PARCEL_SOURCE_ID = "parcel-source"
+const PARCEL_FILL_LAYER_ID = "parcel-fill"
+const PARCEL_OUTLINE_LAYER_ID = "parcel-outline"
+const PARCEL_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment."
+const PARCEL_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles."
 
 function throttle(func, wait) {
     let lastCall = 0
@@ -171,14 +170,14 @@ class MapController extends BaseMapController {
 
         if (this.hasParcellesCheckboxTarget) {
             this.parcellesEnabled = false
-            const throttledRefresh = throttle(() => this.refreshParcelles(), RPG_THROTTLE_MS)
+            const throttledRefresh = throttle(() => this.refreshParcelles(), PARCEL_THROTTLE_MS)
             this.map.on("move", throttledRefresh)
             this.map.on("moveend", () => this.refreshParcelles())
         }
     }
 
     disconnect() {
-        this._rpgAbortController?.abort()
+        this._parcelAbortController?.abort()
         this.map?.remove()
     }
 
@@ -198,7 +197,7 @@ class MapController extends BaseMapController {
         if (this.parcellesEnabled) {
             this.refreshParcelles()
         } else {
-            this._rpgAbortController?.abort()
+            this._parcelAbortController?.abort()
             this.removeParcellesLayer()
             this.clearParcellesMessage()
         }
@@ -206,24 +205,24 @@ class MapController extends BaseMapController {
 
     refreshParcelles() {
         if (!this.parcellesEnabled) return
-        if (this.map.getZoom() < RPG_MIN_ZOOM) {
+        if (this.map.getZoom() < PARCEL_MIN_ZOOM) {
             this.removeParcellesLayer()
-            this.showParcellesMessage(RPG_ZOOM_MESSAGE)
+            this.showParcellesMessage(PARCEL_ZOOM_MESSAGE)
             return
         }
         this.fetchAndDisplayParcelles()
     }
 
     fetchAndDisplayParcelles() {
-        this._rpgAbortController?.abort()
+        this._parcelAbortController?.abort()
         const abortController = new AbortController()
-        this._rpgAbortController = abortController
+        this._parcelAbortController = abortController
 
         const bounds = this.map.getBounds()
         const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()},EPSG:4326`
         const url =
-            `${RPG_WFS_URL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${RPG_TYPENAME}`
-            + `&OUTPUTFORMAT=application/json&SRSNAME=EPSG:4326&COUNT=1000&BBOX=${bbox}`
+            `${PARCEL_WFS_URL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${PARCEL_TYPENAME}`
+            + `&OUTPUTFORMAT=application/json&SRSNAME=EPSG:4326&COUNT=5000&BBOX=${bbox}`
 
         fetch(url, {signal: abortController.signal})
             .then(res => {
@@ -238,54 +237,35 @@ class MapController extends BaseMapController {
                 if (error.name === "AbortError") return
                 console.error("Erreur lors de la récupération des parcelles:", error)
                 this.removeParcellesLayer()
-                this.showParcellesMessage(RPG_UNAVAILABLE_MESSAGE)
+                this.showParcellesMessage(PARCEL_UNAVAILABLE_MESSAGE)
             })
     }
 
     displayParcellesLayer(geojson) {
-        const source = this.map.getSource(RPG_SOURCE_ID)
+        const source = this.map.getSource(PARCEL_SOURCE_ID)
         if (source) {
             source.setData(geojson)
-            this.map.once("render", () => this.revealParcellesFeatures(geojson))
             return
         }
-        this.map.addSource(RPG_SOURCE_ID, {type: "geojson", data: geojson, promoteId: "id_parcel"})
+        this.map.addSource(PARCEL_SOURCE_ID, {type: "geojson", data: geojson})
         this.map.addLayer({
-            id: RPG_FILL_LAYER_ID,
+            id: PARCEL_FILL_LAYER_ID,
             type: "fill",
-            source: RPG_SOURCE_ID,
-            paint: {
-                "fill-color": "#6a4dc4",
-                "fill-opacity": ["*", RPG_FILL_OPACITY, ["coalesce", ["feature-state", "revealed"], 0]],
-                "fill-opacity-transition": {duration: RPG_FADE_IN_MS},
-            },
+            source: PARCEL_SOURCE_ID,
+            paint: {"fill-color": "#6a4dc4", "fill-opacity": PARCEL_FILL_OPACITY},
         })
         this.map.addLayer({
-            id: RPG_OUTLINE_LAYER_ID,
+            id: PARCEL_OUTLINE_LAYER_ID,
             type: "line",
-            source: RPG_SOURCE_ID,
-            paint: {
-                "line-color": "#6a4dc4",
-                "line-width": 2,
-                "line-opacity": ["*", RPG_OUTLINE_OPACITY, ["coalesce", ["feature-state", "revealed"], 0]],
-                "line-opacity-transition": {duration: RPG_FADE_IN_MS},
-            },
+            source: PARCEL_SOURCE_ID,
+            paint: {"line-color": "#6a4dc4", "line-width": 2, "line-opacity": PARCEL_OUTLINE_OPACITY},
         })
-        this.map.once("render", () => this.revealParcellesFeatures(geojson))
-    }
-
-    revealParcellesFeatures(geojson) {
-        for (const feature of geojson.features) {
-            const id = feature.properties?.id_parcel
-            if (id === undefined || id === null) continue
-            this.map.setFeatureState({source: RPG_SOURCE_ID, id}, {revealed: 1})
-        }
     }
 
     removeParcellesLayer() {
-        if (this.map.getLayer(RPG_OUTLINE_LAYER_ID)) this.map.removeLayer(RPG_OUTLINE_LAYER_ID)
-        if (this.map.getLayer(RPG_FILL_LAYER_ID)) this.map.removeLayer(RPG_FILL_LAYER_ID)
-        if (this.map.getSource(RPG_SOURCE_ID)) this.map.removeSource(RPG_SOURCE_ID)
+        if (this.map.getLayer(PARCEL_OUTLINE_LAYER_ID)) this.map.removeLayer(PARCEL_OUTLINE_LAYER_ID)
+        if (this.map.getLayer(PARCEL_FILL_LAYER_ID)) this.map.removeLayer(PARCEL_FILL_LAYER_ID)
+        if (this.map.getSource(PARCEL_SOURCE_ID)) this.map.removeSource(PARCEL_SOURCE_ID)
     }
 
     showParcellesMessage(text) {
