@@ -31,9 +31,11 @@ class HandlePermissionsView(FormView):
         can_give_access = settings.CAN_GIVE_ACCESS_GROUP in self.user_groups
         self.can_manage_sv = settings.SV_GROUP in self.user_groups
         self.can_manage_ssa = settings.SSA_GROUP in self.user_groups
-        if can_give_access and (self.can_manage_sv or self.can_manage_ssa):
+        self.can_manage_sa = settings.SA_GROUP in self.user_groups
+        if can_give_access and (self.can_manage_sv or self.can_manage_ssa or self.can_manage_sa):
             self.sv_group = Group.objects.get(name=settings.SV_GROUP)
             self.ssa_group = Group.objects.get(name=settings.SSA_GROUP)
+            self.sa_group = Group.objects.get(name=settings.SA_GROUP)
             return super().dispatch(request, *args, **kwargs)
         raise PermissionDenied
 
@@ -56,6 +58,7 @@ class HandlePermissionsView(FormView):
             user_groups = user.groups.all()
             initial[f"sv_{user.pk}"] = self.sv_group in user_groups
             initial[f"ssa_{user.pk}"] = self.ssa_group in user_groups
+            initial[f"sa_{user.pk}"] = self.sa_group in user_groups
         return initial
 
     def get_form_kwargs(self):
@@ -65,6 +68,7 @@ class HandlePermissionsView(FormView):
                 "users": self.get_users_in_structure(),
                 "can_manage_sv": self.can_manage_sv,
                 "can_manage_ssa": self.can_manage_ssa,
+                "can_manage_sa": self.can_manage_sa,
             }
         )
         return kwargs
@@ -81,10 +85,15 @@ class HandlePermissionsView(FormView):
                 user_data["sv_field"] = form[f"sv_{user_obj.pk}"]
             if self.can_manage_ssa:
                 user_data["ssa_field"] = form[f"ssa_{user_obj.pk}"]
+            if self.can_manage_sa:
+                user_data["sa_field"] = form[f"sa_{user_obj.pk}"]
             users_with_fields.append(user_data)
         context["users_with_fields"] = users_with_fields
         context["can_manage_sv"] = self.can_manage_sv
         context["can_manage_ssa"] = self.can_manage_ssa
+        context["can_manage_sa"] = self.can_manage_sa
+        nb_managed_columns = sum([self.can_manage_sv, self.can_manage_ssa, self.can_manage_sa])
+        context["name_col_span"] = 12 - 2 * nb_managed_columns
         return context
 
     def form_valid(self, form):
@@ -92,11 +101,17 @@ class HandlePermissionsView(FormView):
 
         for key in form.changed_data:
             value = form.cleaned_data[key]
-            if not (value in (True, False) and (key.startswith("sv_") or key.startswith("ssa_"))):
+            if not (
+                value in (True, False) and (key.startswith("sv_") or key.startswith("ssa_") or key.startswith("sa_"))
+            ):
                 continue
             group_name, user_pk = key.upper().split("_")
             user = self.get_users_in_structure().get(pk=user_pk)
-            group_mapping = {"SV": (self.sv_group, self.can_manage_sv), "SSA": (self.ssa_group, self.can_manage_ssa)}
+            group_mapping = {
+                "SV": (self.sv_group, self.can_manage_sv),
+                "SSA": (self.ssa_group, self.can_manage_ssa),
+                "SA": (self.sa_group, self.can_manage_sa),
+            }
             target_group, can_manage = group_mapping.get(group_name)
             if can_manage:
                 if value:
@@ -111,7 +126,8 @@ class HandlePermissionsView(FormView):
             user = contact_agent.agent.user
             is_in_sv = user.groups.filter(name=settings.SV_GROUP).exists()
             is_in_ssa = user.groups.filter(name=settings.SSA_GROUP).exists()
-            should_be_active = is_in_sv or is_in_ssa
+            is_in_sa = user.groups.filter(name=settings.SA_GROUP).exists()
+            should_be_active = is_in_sv or is_in_ssa or is_in_sa
             if user.is_active != should_be_active:
                 user.is_active = should_be_active
                 user.save()

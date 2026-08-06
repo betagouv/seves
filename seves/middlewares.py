@@ -59,7 +59,7 @@ class HomeRedirectMiddleware:
                 return redirect("ssa:evenement-produit-liste")
             if settings.SV_GROUP in groups:
                 return redirect("sv:evenement-liste")
-            if settings.SSA_GROUP in groups:
+            if settings.SA_GROUP in groups:
                 return redirect("sa:evenement-liste")
         return self.get_response(request)
 

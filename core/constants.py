@@ -15,6 +15,7 @@ SEVES_STRUCTURE = "Seves"
 SERVICE_ACCOUNT_NAME = "service_account"
 SV_DOMAIN = "Santé des végétaux"
 SSA_DOMAIN = "SSA (Produit & cas + TIAC & plaintes)"
+SA_DOMAIN = "Santé animale"
 SSA_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 TIAC_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 

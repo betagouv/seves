@@ -18,22 +18,28 @@
                 {% csrf_token %}
 
                 <div class="fr-grid-row fr-grid-row--middle fr-mb-1w">
-                    <div class="fr-col-offset-{% if can_manage_sv and can_manage_ssa %}8{% else %}10{% endif %}"></div>
+                    <div class="fr-col-offset-{{ name_col_span }}"></div>
                     {% if can_manage_sv %}
                         <div class="group-name fr-col-2 fr-p-3v">SV</div>
                     {% endif %}
                     {% if can_manage_ssa %}
                         <div class="group-name fr-col-2 fr-p-3v">SSA</div>
                     {% endif %}
+                    {% if can_manage_sa %}
+                        <div class="group-name fr-col-2 fr-p-3v">SA</div>
+                    {% endif %}
                 </div>
                 {% for user_data in users_with_fields %}
                     <div class="user fr-grid-row fr-grid-row--middle fr-mb-1w">
-                        <div class="fr-col-{% if can_manage_sv and can_manage_ssa %}8{% else %}10{% endif %} fr-pl-2w">{{ user_data.user.agent }}</div>
+                        <div class="fr-col-{{ name_col_span }} fr-pl-2w">{{ user_data.user.agent }}</div>
                         {% if can_manage_sv %}
                             <div class="fr-col-2 fr-pt-1w fr-pl-2w">{{ user_data.sv_field }}</div>
                         {% endif %}
                         {% if can_manage_ssa %}
                             <div class="fr-col-2 fr-pt-1w fr-pl-3w">{{ user_data.ssa_field }}</div>
+                        {% endif %}
+                        {% if can_manage_sa %}
+                            <div class="fr-col-2 fr-pt-1w fr-pl-3w">{{ user_data.sa_field }}</div>
                         {% endif %}
                     </div>
                 {% endfor %}
