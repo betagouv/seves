@@ -20,6 +20,21 @@ const PARCEL_OUTLINE_LAYER_ID = "parcel-outline"
 const PARCEL_UNAVAILABLE_MESSAGE = "Les parcelles ne sont pas disponibles pour le moment."
 const PARCEL_ZOOM_MESSAGE = "Zoomez pour afficher les parcelles."
 
+class ParcellesControl {
+    constructor(container) {
+        this._container = container
+        this._container.classList.add("maplibregl-ctrl")
+    }
+
+    onAdd() {
+        return this._container
+    }
+
+    onRemove() {
+        this._container.remove()
+    }
+}
+
 function throttle(func, wait) {
     let lastCall = 0
     let timeout = null
@@ -170,6 +185,10 @@ class MapController extends BaseMapController {
 
         if (this.hasParcellesCheckboxTarget) {
             this.parcellesEnabled = false
+            const parcellesControlContainer = this.parcellesCheckboxTarget.closest(".map-parcelles-control")
+            if (parcellesControlContainer) {
+                this.map.addControl(new ParcellesControl(parcellesControlContainer), "top-right")
+            }
             const throttledRefresh = throttle(() => this.refreshParcelles(), PARCEL_THROTTLE_MS)
             this.map.on("move", throttledRefresh)
             this.map.on("moveend", () => this.refreshParcelles())
