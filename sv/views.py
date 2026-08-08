@@ -56,6 +56,7 @@ from sv.forms import (
     FicheZoneDelimiteeForm,
     LieuFormSet,
     PrelevementForm,
+    PrelevementFormSet,
     StructureSelectionForVisibiliteForm,
     ZoneInfesteeFormSet,
     ZoneInfesteeFormSetUpdate,
@@ -201,6 +202,7 @@ class FicheDetectionViewMixin(FormMixin, MediaDefiningMixin):
             super().get_media(**context_data)
             + context_data["element_infeste_formset"].media
             + context_data["lieu_formset"].media
+            + context_data["prelevement_formset"].media
         )
 
     def get_element_infeste_formset_kwargs(self):
@@ -221,11 +223,24 @@ class FicheDetectionViewMixin(FormMixin, MediaDefiningMixin):
             kwargs["instance"] = instance
         return LieuFormSet(**kwargs)
 
+    def get_prelevement_formset_kwargs(self):
+        return super().get_form_kwargs()
+
+    def get_prelevement_formset(self, *, fiche_detection, instance=None):
+        kwargs = self.get_prelevement_formset_kwargs()
+        kwargs["fiche_detection"] = fiche_detection
+        if instance:
+            kwargs["instance"] = instance
+        return PrelevementFormSet(**kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = context["form"]
         context["element_infeste_formset"] = self.get_element_infeste_formset(instance=form.instance)
         context["lieu_formset"] = self.get_lieu_formset(instance=form.instance)
+        context["prelevement_formset"] = self.get_prelevement_formset(
+            fiche_detection=form.instance, instance=[form.instance for form in context["lieu_formset"].forms]
+        )
         return context
 
 
@@ -266,14 +281,6 @@ class FicheDetectionCreateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = True
-        forms = [
-            PrelevementForm(
-                convert_required_to_data_required=True,
-                prefix=f"prelevements-{i}",
-            )
-            for i in range(0, 10)
-        ]
-        context["prelevement_forms"] = forms
         context["evenement"] = self.evenement
         return context
 
@@ -384,16 +391,6 @@ class FicheDetectionUpdateView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_creation"] = False
-        existing_prelevements = Prelevement.objects.filter(lieu__fiche_detection=self.object)
-        context["existing_prelevements"] = self._get_existing_prelevement_forms(existing_prelevements)
-
-        existing_prelevements_ids = [p.id for p in existing_prelevements]
-        possible_ids = list(range(100))
-        possible_ids = [i for i in possible_ids if i not in existing_prelevements_ids][:20]
-        forms = [
-            PrelevementForm(convert_required_to_data_required=True, prefix=f"prelevements-{i}") for i in possible_ids
-        ]
-        context["prelevement_forms"] = forms
         context["evenement"] = self.get_object().evenement
         return context
 
@@ -407,9 +404,10 @@ class FicheDetectionUpdateView(
         self.object = self.get_object()
         form = self.get_form()
         lieu_formset = self.get_lieu_formset(instance=self.object)
+        prelevement_formset = self.get_prelevement_formset(instance=self.object)
         elements_infestes = self.get_element_infeste_formset(instance=self.object)
 
-        if not form.is_valid() or not elements_infestes.is_valid() or not lieu_formset.is_valid():
+        if not all(it.is_valid() for it in (form, elements_infestes, lieu_formset, prelevement_formset)):
             return self.form_invalid(form)
 
         with transaction.atomic():
