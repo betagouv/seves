@@ -82,7 +82,7 @@ export function setUpAddressChoices(element) {
         addressCommunes.abort()
         addressCommunes.setChoices(defaultChoices, "value", "label", true)
 
-        if (query.length >= 5) {
+        if (query.replaceAll(" ", "").length >= 5) {
             fetchAddress(query, {abortController: addressCommunes.abortController}).then(results => {
                 if (Array.isArray(results)) {
                     addressCommunes.setChoices([...defaultChoices, ...results], "value", "label", true)

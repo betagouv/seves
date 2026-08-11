@@ -1,6 +1,7 @@
 import {applicationReady} from "Application"
 import {resetForm} from "Forms"
 import {Controller} from "Stimulus"
+import {setUpSiretChoices} from "siret"
 
 class DetenteurFormController extends Controller {
     static targets = [
@@ -11,7 +12,20 @@ class DetenteurFormController extends Controller {
         "etablissementRadio",
         "particulierRadio",
         "confirmModal",
+        "siretEtablissement",
+        "raisonSocialeInput",
     ]
+
+    /** @type {?Choices} */
+    #sireneWidget = null
+
+    /** @return {AddressSearchAutocompleteController} */
+    get etablissementAddressOutlet() {
+        return this.application.getControllerForElementAndIdentifier(
+            this.etablissementFormTarget,
+            "address-search-autocomplete",
+        )
+    }
 
     connect() {
         this.currentType = this.particulierRadioTarget.checked ? "particulier" : "etablissement"
@@ -93,6 +107,28 @@ class DetenteurFormController extends Controller {
 
         this.particulierFormTarget.classList.remove("fr-hidden")
         this.nomParticulierTarget.required = true
+    }
+
+    siretEtablissementTargetConnected(el) {
+        this.#sireneWidget = setUpSiretChoices(el, "top")
+    }
+
+    siretEtablissementTargetDisconnected() {
+        this.#sireneWidget?.destroy()
+        this.#sireneWidget = null
+    }
+
+    onSireneChoice({detail: {customProperties}}) {
+        this.etablissementAddressOutlet.setAddress({
+            value: customProperties.streetData,
+            context: customProperties.code_commune?.substring(0, 2),
+            city: customProperties.commune,
+            inseeCode: customProperties.code_commune,
+            postCode: customProperties.code_postal,
+        })
+        if (customProperties.raison) {
+            this.raisonSocialeInputTarget.value = customProperties.raison
+        }
     }
 }
 

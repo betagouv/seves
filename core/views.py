@@ -542,6 +542,9 @@ def sirene_api(request, siret: str):
             headers={"X-INSEE-Api-Key-Integration": settings.SIRENE_API_KEY},
             timeout=4,
         )
+        if response.status_code == 404:
+            return JsonResponse({"etablissements": []})
+
         if response.status_code != 200:
             return HttpResponseServerError()
 

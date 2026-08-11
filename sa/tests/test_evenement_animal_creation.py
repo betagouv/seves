@@ -1,5 +1,6 @@
 import json
 
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
@@ -163,11 +164,68 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
         "adresse_lieu_dit_etablissement",
         "code_insee_etablissement",
         "siret_etablissement",
-        "commune_etablissement",
         "pays_etablissement",
     ]
     for field in fields:
         assert getattr(evenement_produit, field) == getattr(input_data, field)
+    assert evenement_produit.commune_etablissement == "Lille"
+
+
+def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocomplete(
+    live_server, page: Page, ensure_departements
+):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    ensure_departements("Paris")
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    call_count = {"count": 0}
+    siret = "12007901700030"
+
+    def handle(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": siret,
+                    "uniteLegale": {
+                        "denominationUniteLegale": "DIRECTION GENERALE DE L'ALIMENTATION",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "175",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU CHEVALERET",
+                        "codePostalEtablissement": "75013",
+                        "libelleCommuneEtablissement": "PARIS",
+                        "codeCommuneEtablissement": "75013",
+                    },
+                }
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    creation_page.page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
+    creation_page.fill_siret_etablissement(
+        "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12007901700030 - 175 RUE DU CHEVALERET - 75013 PARIS",
+        search="120 079 017",
+    )
+    assert call_count["count"] == 1
+    creation_page.submit()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.siret_etablissement == siret
+    assert evenement_produit.raison_sociale_etablissement == "DIRECTION GENERALE DE L'ALIMENTATION"
+    assert evenement_produit.adresse_lieu_dit_etablissement == "175 RUE DU CHEVALERET"
+    assert evenement_produit.commune_etablissement == "PARIS"
+    assert evenement_produit.code_insee_etablissement == "75013"
+    assert evenement_produit.pays_etablissement == "FR"
+    assert evenement_produit.departement_etablissement.numero == "75"
 
 
 def test_can_create_evenement_animal_with_detenteur_particulier_block(live_server, page: Page):
