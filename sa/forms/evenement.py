@@ -120,6 +120,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             js=(
                 js_module("core/map.mjs"),
                 js_module("core/address_search_autocomplete.mjs"),
+                js_module("core/siret.mjs"),
                 js_module("sa/detenteur.mjs"),
             ),
         )
@@ -169,6 +170,9 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "statut_animal": forms.HiddenInput,
             "code_insee": forms.HiddenInput,
             "commune": forms.Select(attrs={"hidden": "hidden"}),
+            "siret_etablissement": forms.Select(attrs={"hidden": "hidden"}),
+            "adresse_lieu_dit_etablissement": forms.Select(attrs={"hidden": "hidden"}),
+            "commune_etablissement": forms.Select(attrs={"hidden": "hidden"}),
         }
 
     def __init__(self, *args, **kwargs):

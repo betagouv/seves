@@ -124,21 +124,34 @@
                         </fieldset></div>
                 </div>
 
-                <div class="fr-grid-row fr-grid-row--gutters fr-col" data-detenteur-form-target="etablissementForm">
+                <div
+                    class="fr-grid-row fr-grid-row--gutters fr-col"
+                    data-detenteur-form-target="etablissementForm"
+                    data-controller="address-search-autocomplete"
+                >
                     <div class="fr-col-12 fr-col-lg-4">
                         {% dsfr_form_field form.numero_identifiant_etablissement|set_data:"detenteur-form-target:numeroIdentifiantEtablissement" %}
-                        {% dsfr_form_field form.raison_sociale_etablissement %}
-                        {% dsfr_form_field form.departement_etablissement %}
+                        {% dsfr_form_field form.raison_sociale_etablissement|set_data:"detenteur-form-target:raisonSocialeInput" %}
+                        {% dsfr_form_field form.departement_etablissement|set_data:"address-search-autocomplete-target:departement" %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
                         {% dsfr_form_field form.autre_identifiant_etablissement %}
-                        {% dsfr_form_field form.adresse_lieu_dit_etablissement %}
-                        {% dsfr_form_field form.code_insee_etablissement %}
+                        <div class="fr-select-group" data-testid="ban-search-etablissement">
+                            <label for="{{ form.adresse_lieu_dit_etablissement.id_for_label }}" class="fr-label">{{ form.adresse_lieu_dit_etablissement.label }}</label>
+                            {{ form.adresse_lieu_dit_etablissement|set_data:"address-search-autocomplete-target:address" }}
+                        </div>
+                        {% dsfr_form_field form.code_insee_etablissement|set_data:"address-search-autocomplete-target:codeInsee" %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
-                        {% dsfr_form_field form.siret_etablissement %}
-                        {% dsfr_form_field form.commune_etablissement %}
-                        {% dsfr_form_field form.pays_etablissement %}
+                        <div class="fr-select-group" data-testid="siret-etablissement">
+                            <label for="{{ form.siret_etablissement.id_for_label }}" class="fr-label">{{ form.siret_etablissement.label }}</label>
+                            {{ form.siret_etablissement|set_data:"detenteur-form-target:siretEtablissement"|set_data:"action:choice->detenteur-form#onSireneChoice" }}
+                        </div>
+                        <div class="fr-select-group" data-testid="communes-search-etablissement">
+                            <label for="{{ form.commune_etablissement.id_for_label }}" class="fr-label">{{ form.commune_etablissement.label }}</label>
+                            {{ form.commune_etablissement|set_data:"address-search-autocomplete-target:commune" }}
+                        </div>
+                        {% dsfr_form_field form.pays_etablissement|set_data:"address-search-autocomplete-target:country" %}
                     </div>
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"  data-detenteur-form-target="particulierForm">

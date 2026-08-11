@@ -10,6 +10,23 @@ from sa.models import EvenementAnimal
 from seves import settings
 
 
+def _default_lille_commune_config():
+    response_body = [
+        {
+            "codesPostaux": ["59000", "59160", "59260", "59777", "59800"],
+            "nom": "Lille",
+            "code": "59350",
+            "_score": 1.8082078747980779,
+            "departement": {"code": "59", "nom": "Nord"},
+        }
+    ]
+    return {
+        "search_text": "Lille",
+        "option_name": f"Lille ({response_body[0]['codesPostaux'][0]})",
+        "response_body": json.dumps(response_body),
+    }
+
+
 class WithAddressAndCommuneUtils:
     def __init__(self, page: Page, *args, **kwargs):
         self.page = page
@@ -42,21 +59,7 @@ class WithAddressAndCommuneUtils:
             self.fill_address(f"{address} (Forcer la valeur)", search=address)
 
     def force_commune(self, config=None):
-        if not config:
-            response_body = [
-                {
-                    "codesPostaux": ["59000", "59160", "59260", "59777", "59800"],
-                    "nom": "Lille",
-                    "code": "59350",
-                    "_score": 1.8082078747980779,
-                    "departement": {"code": "59", "nom": "Nord"},
-                }
-            ]
-            config = {
-                "search_text": "Lille",
-                "option_name": f"Lille ({response_body[0]['codesPostaux'][0]})",
-                "response_body": json.dumps(response_body),
-            }
+        config = config or _default_lille_commune_config()
 
         url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
 
@@ -71,6 +74,50 @@ class WithAddressAndCommuneUtils:
 
         self._commune_choicejs.try_select_option(config["option_name"], search=config["search_text"])
         self.page.unroute(url)
+
+
+class WithEtablissementDetenteurUtils:
+    def __init__(self, page: Page, *args, **kwargs):
+        self.page = page
+
+    @cached_property
+    def _address_etablissement_choicejs(self):
+        return ChoiceJSPage(self.page, self.page.get_by_test_id("ban-search-etablissement"))
+
+    @cached_property
+    def _commune_etablissement_choicejs(self):
+        return ChoiceJSPage(self.page, self.page.get_by_test_id("communes-search-etablissement"))
+
+    @cached_property
+    def _siret_choicejs(self):
+        return ChoiceJSPage(self.page, self.page.get_by_test_id("siret-etablissement"))
+
+    def force_address_etablissement(self, address: str):
+        with self.mock_ban():
+            self._address_etablissement_choicejs.try_select_option(f"{address} (Forcer la valeur)", search=address)
+
+    def force_commune_etablissement(self, config=None):
+        config = config or _default_lille_commune_config()
+
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+
+        self.page.route(
+            url,
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=config["response_body"],
+            ),
+        )
+
+        self._commune_etablissement_choicejs.try_select_option(config["option_name"], search=config["search_text"])
+        self.page.unroute(url)
+
+    def fill_siret_etablissement(self, exact_siret, *, search=None):
+        self._siret_choicejs.try_select_option(exact_siret, search=search)
+
+    def force_siret_etablissement(self, siret: str):
+        self.fill_siret_etablissement(f"{siret} (Forcer la valeur)", search=siret)
 
 
 class WithPreCreationFormPage:
@@ -140,7 +187,7 @@ class EvenementListPage(WithPreCreationFormPage):
         return self.page.locator(".evenements__list-row").filter(has_text=numero)
 
 
-class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtils):
+class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtils, WithEtablissementDetenteurUtils):
     fields = [
         "statut_evenement",
         "date_statut_changed",
@@ -249,12 +296,13 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
     def fill_detenteur_etablissement_block(self, evenement):
         self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
         self.raison_sociale_etablissement.fill(evenement.raison_sociale_etablissement)
-        self.departement_etablissement.select_option(str(evenement.departement_etablissement))
         self.autre_identifiant_etablissement.fill(evenement.autre_identifiant_etablissement)
-        self.adresse_lieu_dit_etablissement.fill(evenement.adresse_lieu_dit_etablissement)
+
+        self.force_siret_etablissement(evenement.siret_etablissement)
+        self.force_address_etablissement(evenement.adresse_lieu_dit_etablissement)
+        self.force_commune_etablissement()
         self.code_insee_etablissement.fill(evenement.code_insee_etablissement)
-        self.siret_etablissement.fill(evenement.siret_etablissement)
-        self.commune_etablissement.fill(evenement.commune_etablissement)
+        self.departement_etablissement.select_option(str(evenement.departement_etablissement))
         self.pays_etablissement.select_option(evenement.pays_etablissement.code)
 
     def fill_detenteur_particulier_block(self, evenement):
