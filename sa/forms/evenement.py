@@ -173,6 +173,8 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "siret_etablissement": forms.Select(attrs={"hidden": "hidden"}),
             "adresse_lieu_dit_etablissement": forms.Select(attrs={"hidden": "hidden"}),
             "commune_etablissement": forms.Select(attrs={"hidden": "hidden"}),
+            "adresse_particulier": forms.Select(attrs={"hidden": "hidden"}),
+            "commune_particulier": forms.Select(attrs={"hidden": "hidden"}),
         }
 
     def __init__(self, *args, **kwargs):

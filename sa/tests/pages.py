@@ -120,6 +120,40 @@ class WithEtablissementDetenteurUtils:
         self.fill_siret_etablissement(f"{siret} (Forcer la valeur)", search=siret)
 
 
+class WithParticulierDetenteurUtils:
+    def __init__(self, page: Page, *args, **kwargs):
+        self.page = page
+
+    @cached_property
+    def _address_particulier_choicejs(self):
+        return ChoiceJSPage(self.page, self.page.get_by_test_id("ban-search-particulier"))
+
+    @cached_property
+    def _commune_particulier_choicejs(self):
+        return ChoiceJSPage(self.page, self.page.get_by_test_id("communes-search-particulier"))
+
+    def force_address_particulier(self, address: str):
+        with self.mock_ban():
+            self._address_particulier_choicejs.try_select_option(f"{address} (Forcer la valeur)", search=address)
+
+    def force_commune_particulier(self, config=None):
+        config = config or _default_lille_commune_config()
+
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+
+        self.page.route(
+            url,
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=config["response_body"],
+            ),
+        )
+
+        self._commune_particulier_choicejs.try_select_option(config["option_name"], search=config["search_text"])
+        self.page.unroute(url)
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -187,7 +221,9 @@ class EvenementListPage(WithPreCreationFormPage):
         return self.page.locator(".evenements__list-row").filter(has_text=numero)
 
 
-class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtils, WithEtablissementDetenteurUtils):
+class EvenementAnimalFormPage(
+    WithPreCreationFormPage, WithAddressAndCommuneUtils, WithEtablissementDetenteurUtils, WithParticulierDetenteurUtils
+):
     fields = [
         "statut_evenement",
         "date_statut_changed",
@@ -309,8 +345,9 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
 
         self.nom_particulier.fill(evenement.nom_particulier)
         self.prenom_particulier.fill(evenement.prenom_particulier)
-        self.adresse_particulier.fill(evenement.adresse_particulier)
-        self.commune_particulier.fill(evenement.commune_particulier)
+
+        self.force_address_particulier(evenement.adresse_particulier)
+        self.force_commune_particulier()
         self.departement_particulier.select_option(str(evenement.departement_particulier))
         self.code_insee_particulier.fill(evenement.code_insee_particulier)
         self.email_particulier.fill(evenement.email_particulier)

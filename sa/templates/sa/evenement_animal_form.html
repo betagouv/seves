@@ -154,20 +154,30 @@
                         {% dsfr_form_field form.pays_etablissement|set_data:"address-search-autocomplete-target:country" %}
                     </div>
                 </div>
-                <div class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"  data-detenteur-form-target="particulierForm">
+                <div
+                    class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"
+                    data-detenteur-form-target="particulierForm"
+                    data-controller="address-search-autocomplete"
+                >
                     <div class="fr-col-12 fr-col-lg-4">
                         {% dsfr_form_field form.nom_particulier|set_data:"detenteur-form-target:nomParticulier" %}
-                        {% dsfr_form_field form.commune_particulier %}
+                        <div class="fr-select-group" data-testid="communes-search-particulier">
+                            <label for="{{ form.commune_particulier.id_for_label }}" class="fr-label">{{ form.commune_particulier.label }}</label>
+                            {{ form.commune_particulier|set_data:"address-search-autocomplete-target:commune" }}
+                        </div>
                         {% dsfr_form_field form.email_particulier %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
                         {% dsfr_form_field form.prenom_particulier %}
-                        {% dsfr_form_field form.departement_particulier %}
+                        {% dsfr_form_field form.departement_particulier|set_data:"address-search-autocomplete-target:departement" %}
                         {% dsfr_form_field form.telephone_particulier %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
-                        {% dsfr_form_field form.adresse_particulier %}
-                        {% dsfr_form_field form.code_insee_particulier %}
+                        <div class="fr-select-group" data-testid="ban-search-particulier">
+                            <label for="{{ form.adresse_particulier.id_for_label }}" class="fr-label">{{ form.adresse_particulier.label }}</label>
+                            {{ form.adresse_particulier|set_data:"address-search-autocomplete-target:address" }}
+                        </div>
+                        {% dsfr_form_field form.code_insee_particulier|set_data:"address-search-autocomplete-target:codeInsee" %}
                     </div>
                 </div>
 
