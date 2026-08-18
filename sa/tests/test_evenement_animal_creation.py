@@ -244,7 +244,6 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
         "nom_particulier",
         "prenom_particulier",
         "adresse_particulier",
-        "commune_particulier",
         "departement_particulier",
         "code_insee_particulier",
         "email_particulier",
@@ -252,6 +251,7 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     ]
     for field in fields:
         assert getattr(evenement_produit, field) == getattr(input_data, field)
+    assert evenement_produit.commune_particulier == "Lille"
 
 
 PARCEL_WFS_URL = "https://data.geopf.fr/wfs/ows"
