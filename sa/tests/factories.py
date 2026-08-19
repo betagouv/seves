@@ -7,7 +7,7 @@ from faker import Faker
 
 from core.models import Structure
 from sa.models import Espece, EvenementAnimal, Maladie
-from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement
+from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement, TypeLieu
 from sa.models.maladie import DescriptionType
 
 fake = Faker()
@@ -85,7 +85,6 @@ class EvenementAnimalFactory(DjangoModelFactory):
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
     numero_identifiant = factory.Faker("numerify", text="##### #####")
-    type_lieu = FuzzyChoice([c[0] for c in StatutAnimal.choices])
 
     context_suspicion = FuzzyChoice(ContexteSuspicion.values)
     human_involved = FuzzyChoice(HumanInvolved.values)
@@ -150,3 +149,7 @@ class EvenementAnimalFactory(DjangoModelFactory):
     def date_levee(self):
         if self.maladie.needs_arrete:
             return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def type_lieu(self):
+        return FuzzyChoice([value for value, _ in TypeLieu.choices_for_statut_animal(self.statut_animal)]).fuzz()

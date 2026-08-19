@@ -4,6 +4,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
+from sa.models.evenement import StatutAnimal, TypeLieu
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
 from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
 from seves import settings
@@ -51,6 +52,18 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     assert evenement_produit.statut_animal == input_data.statut_animal
     assert evenement_produit.statut_evenement == input_data.statut_evenement
     assert evenement_produit.date_statut_changed == input_data.date_statut_changed
+
+
+def test_type_lieu_options_depend_on_statut_animal(live_server, page: Page, check_select_options):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+
+    creation_page.navigate(maladie, espece, StatutAnimal.DETENU)
+    check_select_options(page, "id_type_lieu", [label for _, label in TypeLieu.choices_detenu])
+
+    creation_page.navigate(maladie, espece, StatutAnimal.SAUVAGE)
+    check_select_options(page, "id_type_lieu", [label for _, label in TypeLieu.choices_sauvage])
 
 
 def test_can_create_evenement_animal_with_localisation_block(live_server, mocked_authentification_user, page: Page):
