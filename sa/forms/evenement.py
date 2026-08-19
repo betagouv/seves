@@ -11,7 +11,14 @@ from core.form_mixins import js_module
 from core.models import Departement
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
-from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolved, StatutAnimal, TypeDetenteur
+from sa.models.evenement import (
+    ContexteSuspicion,
+    EvenementAnimal,
+    HumanInvolved,
+    StatutAnimal,
+    TypeDetenteur,
+    TypeLieu,
+)
 
 
 class EvenementAnimalPreCreationForm(DsfrBaseForm):
@@ -72,7 +79,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
     )
     type_lieu = SEVESChoiceField(
-        choices=StatutAnimal.choices,
+        choices=TypeLieu.choices,
         label="Type de lieu",
         widget=forms.Select(attrs={"required": True}),
     )
@@ -218,6 +225,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         self.maladie = Maladie.objects.get(id=self.maladie_id)
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
+        self.fields["type_lieu"].choices = (
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *TypeLieu.choices_for_statut_animal(self.statut_animal),
+        )
 
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_statut_changed"].widget.attrs["max"] = today

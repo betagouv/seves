@@ -7,6 +7,8 @@ allowed_patterns:
 - '\.passedElement'
 - 'url("[^"]*")'  # Allow css' url() function
 fileignoreconfig:
+- filename: sa/models/evenement.py
+  checksum: 0ba1e626d3fb4e933abe64df2e6fa13131576d3b9b5b8eaaad76dde09e1d5c65
 - filename: core/forms.py
   checksum: 5a1b5f58ad9a86eba63e40ed849afb3a9795141c52ee64555ffae52319fd2299
 - filename: core/models.py
