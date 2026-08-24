@@ -15,6 +15,11 @@ from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolve
 
 
 class EvenementAnimalPreCreationForm(DsfrBaseForm):
+    STATUT_ANIMAL_TOOLTIPS = {
+        StatutAnimal.SAUVAGE: "Animal vivant à l'état naturel, non soumis à la surveillance humaine directe",
+        StatutAnimal.DETENU: "Animal maintenu sous la responsabilité d'une personne (élevage, zoo, particulier, ruche…)",
+    }
+
     maladie = forms.ModelChoiceField(queryset=Maladie.objects.all())
     espece = forms.ModelChoiceField(queryset=Espece.objects.all())
     statut_animal = forms.ChoiceField(

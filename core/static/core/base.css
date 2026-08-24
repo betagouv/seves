@@ -258,6 +258,12 @@ fieldset {
     display: flex;
 }
 
+.fr-fieldset__element--with-tooltip {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
 .generic-card-container {
     padding: 1.5rem;
     margin-bottom: 2rem;
