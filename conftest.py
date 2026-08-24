@@ -69,7 +69,8 @@ def mocked_authentification_user(db, request):
         )
         sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
         ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
-        user.groups.add(ssa_group, sv_group)
+        sa_group, _ = Group.objects.get_or_create(name=settings.SA_GROUP)
+        user.groups.add(sv_group, ssa_group, sa_group)
         Contact.objects.create(agent=agent, email="text@example.com")
         user = (
             User.objects.filter(pk=user.pk)

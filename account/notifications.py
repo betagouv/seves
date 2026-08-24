@@ -1,18 +1,26 @@
 from django.conf import settings
 from post_office.mail import send
 
-from core.constants import SSA_DOMAIN, SV_DOMAIN
+from core.constants import SA_DOMAIN, SSA_DOMAIN, SV_DOMAIN
 from core.models import Contact
 
 
 def format_groups_for_email(groups: list[str]) -> str:
-    match groups:
+    match sorted(groups):
         case ["SV"]:
             return SV_DOMAIN
         case ["SSA"]:
             return SSA_DOMAIN
-        case ["SV", "SSA"]:
+        case ["SA"]:
+            return SA_DOMAIN
+        case ["SSA", "SV"]:
             return f"{SV_DOMAIN} et {SSA_DOMAIN}"
+        case ["SA", "SV"]:
+            return f"{SV_DOMAIN} et {SA_DOMAIN}"
+        case ["SA", "SSA"]:
+            return f"{SSA_DOMAIN} et {SA_DOMAIN}"
+        case ["SA", "SSA", "SV"]:
+            return f"{SV_DOMAIN}, {SSA_DOMAIN} et {SA_DOMAIN}"
         case _:
             return ""
 
