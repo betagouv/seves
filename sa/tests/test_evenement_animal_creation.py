@@ -196,9 +196,7 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
         assert getattr(evenement_produit, field) == getattr(input_data, field)
 
 
-def test_no_confirmation_modal_when_switching_detenteur_type_without_data(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_no_confirmation_modal_when_switching_detenteur_type_without_data(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
     maladie = MaladieFactory()
     espece = EspeceFactory()
@@ -213,9 +211,7 @@ def test_no_confirmation_modal_when_switching_detenteur_type_without_data(
     expect(creation_page.numero_identifiant_etablissement).to_be_hidden()
 
 
-def test_confirmation_modal_when_switching_from_etablissement_to_particulier_with_data(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_confirmation_modal_when_switching_from_etablissement_to_particulier_with_data(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
     maladie = MaladieFactory()
     espece = EspeceFactory()
@@ -231,9 +227,7 @@ def test_confirmation_modal_when_switching_from_etablissement_to_particulier_wit
     expect(creation_page.numero_identifiant_etablissement).to_be_visible()
 
 
-def test_cancelling_detenteur_type_change_keeps_current_type_and_data(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_cancelling_detenteur_type_change_keeps_current_type_and_data(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
     maladie = MaladieFactory()
     espece = EspeceFactory()
@@ -248,13 +242,11 @@ def test_cancelling_detenteur_type_change_keeps_current_type_and_data(
 
     expect(creation_page.type_change_modal).not_to_be_visible()
     expect(creation_page.numero_identifiant_etablissement).to_be_visible()
-    assert creation_page.numero_identifiant_etablissement.input_value() == input_data.numero_identifiant_etablissement
-    assert creation_page.raison_sociale_etablissement.input_value() == input_data.raison_sociale_etablissement
+    expect(creation_page.numero_identifiant_etablissement).to_have_value(input_data.numero_identifiant_etablissement)
+    expect(creation_page.raison_sociale_etablissement).to_have_value(input_data.raison_sociale_etablissement)
 
 
-def test_confirming_detenteur_type_change_clears_previous_block_data(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_confirming_detenteur_type_change_clears_previous_block_data(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
     maladie = MaladieFactory()
     espece = EspeceFactory()
@@ -270,13 +262,11 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(
     expect(creation_page.type_change_modal).not_to_be_visible()
     expect(creation_page.nom_particulier).to_be_visible()
     expect(creation_page.numero_identifiant_etablissement).to_be_hidden()
-    assert creation_page.numero_identifiant_etablissement.input_value() == ""
-    assert creation_page.raison_sociale_etablissement.input_value() == ""
+    expect(creation_page.numero_identifiant_etablissement).to_have_value("")
+    expect(creation_page.raison_sociale_etablissement).to_have_value("")
 
 
-def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(live_server, page: Page):
     input_data = EvenementAnimalFactory.build(particulier=True)
     maladie = MaladieFactory()
     espece = EspeceFactory()
@@ -295,4 +285,4 @@ def test_confirmation_modal_when_switching_from_particulier_to_etablissement_wit
     expect(creation_page.type_change_modal).not_to_be_visible()
     expect(creation_page.numero_identifiant_etablissement).to_be_visible()
     expect(creation_page.nom_particulier).to_be_hidden()
-    assert creation_page.nom_particulier.input_value() == ""
+    expect(creation_page.nom_particulier).to_have_value("")

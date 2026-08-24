@@ -14,10 +14,17 @@ class DetenteurFormController extends Controller {
     ]
 
     connect() {
-        this.currentType = "etablissement"
+        this.currentType = this.particulierRadioTarget.checked ? "particulier" : "etablissement"
         // Type we're about to switch to, waiting for confirmation in the modal
         this.pendingType = null
-        this.showEtablissement()
+        if (this.currentType === "particulier") {
+            this.showParticulier()
+        } else {
+            this.showEtablissement()
+        }
+        this.confirmModalTarget.addEventListener("close", () => {
+            this.pendingType = null
+        })
     }
 
     onEtablissementLabelClick(event) {
