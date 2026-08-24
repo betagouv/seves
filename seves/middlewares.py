@@ -73,3 +73,13 @@ class SevesCSPMiddleware(ContentSecurityPolicyMiddleware):
             response._csp_config = csp_config
 
         return super().process_response(request, response)
+
+
+class XXSSProtectionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        response.headers["X-XSS-Protection"] = "0"
+        return response
