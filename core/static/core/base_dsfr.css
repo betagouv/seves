@@ -52,6 +52,12 @@
     margin: 0;
 }
 
+.fr-icon-pig-line:after,
+.fr-icon-pig-line:before {
+    -webkit-mask-image: url("icons/pig-line.svg");
+    mask-image: url("icons/pig-line.svg");
+}
+
 .fr-tabs__panel {
     transition: none !important;
 }

@@ -173,7 +173,7 @@ class Domains(StrEnum, ExtendedChoices):
         "value": "sa",
         "group": settings.SA_GROUP,
         "label": "Santé Animale",
-        "icon": "ri-syringe-line",
+        "icon": "fr-icon-pig-line fr-icon--sm",
         "url": reverse_lazy("sa:evenement-liste"),
         "help_url": "",
     }
