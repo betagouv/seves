@@ -9,13 +9,7 @@ from django_countries.fields import CountryField
 from core.mixins import WithEtatMixin, WithNumeroMixin
 from core.models import Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
-
-
-class Maladie(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Nom", unique=True)
-
-    def __str__(self):
-        return self.name
+from sa.models.maladie import Maladie
 
 
 class Espece(models.Model):
