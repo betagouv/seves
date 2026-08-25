@@ -369,11 +369,7 @@ class Document(models.Model):
 
     @property
     def can_be_viewed(self):
-        return self.is_infected is False and self.mimetype in [
-            AllowedMimeTypes.IMAGE_PNG,
-            AllowedMimeTypes.IMAGE_JPEG,
-            AllowedMimeTypes.IMAGE_GIF,
-        ]
+        return self.is_infected is False and self.mimetype in AllowedMimeTypes.images_types
 
     @property
     def can_pdf_be_viewed(self):
