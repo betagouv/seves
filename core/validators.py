@@ -6,7 +6,10 @@ import re
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.deconstruct import deconstructible
+from django.utils.functional import classproperty
 import magic
+import pikepdf
+from PIL import Image
 
 MAX_UPLOAD_SIZE_MEGABYTES = 15
 MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MEGABYTES * 1024 * 1024
@@ -54,6 +57,10 @@ class AllowedMimeTypes(models.TextChoices):
     TEXT_PLAIN = "text/plain"
     MESSAGE_RFC822 = "message/rfc822"
 
+    @classproperty
+    def images_types(cls):
+        return (cls.IMAGE_PNG, cls.IMAGE_GIF, cls.IMAGE_JPEG)
+
 
 @deconstructible
 class AnyOfValidator:
@@ -90,6 +97,23 @@ class MagicMimeValidator:
                 file_mime = mimetypes.guess_type(file.name)[0]
         if file_mime not in AllowedMimeTypes.values:
             raise ValidationError(f"Type de fichier non autorisé : {file_mime}")
+
+        if file_mime in AllowedMimeTypes.images_types:
+            file.seek(0)
+            try:
+                Image.open(file).verify()
+            except Exception:
+                raise ValidationError(f"Le fichier n'est pas une image {file_mime} valide")
+            finally:
+                file.seek(0)
+        elif file_mime == AllowedMimeTypes.APPLICATION_PDF:
+            file.seek(0)
+            try:
+                pikepdf.open(file).close()
+            except Exception:
+                raise ValidationError("Le fichier n'est pas un PDF valide")
+            finally:
+                file.seek(0)
         return file_mime
 
 

@@ -38,3 +38,5 @@ pytest-rerunfailures
 playwright
 ruff
 requests-mock
+pikepdf
+pillow
