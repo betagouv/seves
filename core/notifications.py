@@ -155,6 +155,8 @@ def notify_contact_agent_added_or_removed(contact: Contact, obj, added, user):
     if added is False:
         if contact.structure == users_structure or (contact.agent and contact.agent.structure == users_structure):
             return  # Never send the notification if the removal is performed by a user inside the same structure
+    if added is True and getattr(obj, "need_notification_contact_added", False) is False:
+        return
 
     action = "ajouté au" if added else "retiré du"
     subject = "Ajout aux contacts" if added else "Retrait des contacts"
