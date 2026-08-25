@@ -69,8 +69,7 @@ class EvenementAnimalDetailsView(DetailView):
         if queryset is None:
             queryset = self.get_queryset()
         try:
-            annee, numero_evenement = self.kwargs["numero"].split(".")
-            self.object = queryset.get(numero_annee=annee, numero_evenement=numero_evenement)
+            self.object = queryset.get(pk=self.kwargs["pk"])
             return self.object
         except (ValueError, EvenementAnimal.DoesNotExist):
             raise Http404("Fiche non trouvée")

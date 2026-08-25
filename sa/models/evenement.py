@@ -1,3 +1,4 @@
+import datetime
 from enum import auto
 
 from django.contrib.gis.db.models import PointField
@@ -201,15 +202,34 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     )
     description = models.TextField(verbose_name="Description de la situation", blank=True)
 
+    @classmethod
+    def _get_annee_and_numero(cls, acronym):
+        annee_courante = datetime.datetime.now().year
+        last_fiche = (
+            cls._base_manager.filter(numero_annee=annee_courante, maladie__acronym=acronym)
+            .select_for_update()
+            .order_by("-numero_evenement")
+            .first()
+        )
+        numero_evenement = last_fiche.numero_evenement + 1 if last_fiche else 1
+        return annee_courante, numero_evenement
+
+    @property
+    def numero(self):
+        return f"{self.maladie.acronym}-{self.numero_annee}.{self.numero_evenement}"
+
+    def __str__(self):
+        return self.numero
+
     def save(self, *args, **kwargs):
         if not self.numero_annee and not self.numero_evenement:
-            annee, numero = EvenementAnimal._get_annee_and_numero()
+            annee, numero = EvenementAnimal._get_annee_and_numero(self.maladie.acronym)
             self.numero_annee = annee
             self.numero_evenement = numero
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("sa:evenement-animal-details", kwargs={"numero": self.numero})
+        return reverse("sa:evenement-animal-details", kwargs={"pk": self.pk})
 
     @property
     def latest_version(self):

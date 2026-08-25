@@ -15,7 +15,7 @@ urlpatterns = [
         name="evenement-animal-creation",
     ),
     path(
-        "evenement-animal/<str:numero>/",
+        "evenement-animal/<int:pk>/",
         EvenementAnimalDetailsView.as_view(),
         name="evenement-animal-details",
     ),
