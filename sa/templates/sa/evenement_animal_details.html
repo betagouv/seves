@@ -1,4 +1,186 @@
 {% extends "sa/base.html" %}
+{% load static l10n %}
+{% load or_empty_value_tag %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'sa/evenement_animal_details.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css">
+{% endblock extrahead %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'core/map_viewer.mjs' %}"></script>
+{% endblock scripts %}
 
 {% block content %}
+    <main class="main-container">
+        <div data-testid="evenement-header">
+            <div class="details-top-row">
+                <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+            </div>
+            {% include "sa/_evenement_animal_badges.html" %}
+            {% include "core/_latest_revision.html" with content_type_pk=content_type.pk object_pk=object.pk %}
+        </div>
+
+        <div class="detail-content">
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Informations générales</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Maladie suspectée</div>
+                        <div>{{ object.maladie.name|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Espèce concernée</div>
+                        <div>{{ object.espece.name|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Statut de l'animal</div>
+                        <div>{{ object.get_statut_animal_display|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Informations</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="bold">Date de création</div>
+                        <div>{{ object.date_creation|date:"d/m/Y"|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="bold">Statut de l'événement</div>
+                        <div>{{ object.get_statut_evenement_display|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="bold">Date à prendre en compte pour le changement de statut</div>
+                        <div>{{ object.date_statut_changed|date:"d/m/Y"|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                {% if object.numero_identifiant_etablissement %}
+                    <h2 class="fr-h6">Détenteur : Établissement</h2>
+                    <div class="fr-grid-row fr-grid-row--gutters">
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">N° identifiant</div>
+                            <div>{{ object.numero_identifiant_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Autre identifiant / Numagrit</div>
+                            <div>{{ object.autre_identifiant_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">SIRET</div>
+                            <div>{{ object.siret_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Raison sociale</div>
+                            <div>{{ object.raison_sociale_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Adresse</div>
+                            <div>{{ object.adresse_lieu_dit_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Commune</div>
+                            <div>{{ object.commune_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Département</div>
+                            <div>{{ object.departement_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Code INSEE</div>
+                            <div>{{ object.code_insee_etablissement|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Pays</div>
+                            <div>{{ object.get_pays_etablissement_display|or_empty_value_tag }}</div>
+                        </div>
+                    </div>
+                {% elif object.nom_particulier %}
+                    <h2 class="fr-h6">Détenteur : Particulier</h2>
+                    <div class="fr-grid-row fr-grid-row--gutters">
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Nom</div>
+                            <div>{{ object.nom_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Prénom</div>
+                            <div>{{ object.prenom_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Adresse</div>
+                            <div>{{ object.adresse_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Commune</div>
+                            <div>{{ object.commune_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Département</div>
+                            <div>{{ object.departement_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Code INSEE</div>
+                            <div>{{ object.code_insee_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Courriel</div>
+                            <div>{{ object.email_particulier|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Numéro de téléphone</div>
+                            <div>{{ object.telephone_particulier|or_empty_value_tag }}</div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Localisation</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-7">
+                        <div data-controller="map-viewer" class="map"
+                             data-map-viewer-lat-value="{{ object.coordinates.y|unlocalize }}"
+                             data-map-viewer-long-value="{{ object.coordinates.x|unlocalize }}"
+                             data-map-viewer-json-file-value="{% static 'core/style_ign.json' %}"
+                        ></div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-5">
+                        <div class="fr-mb-2v">
+                            <div class="bold">Adresse ou lieu-dit</div>
+                            <div>{{ object.adresse_lieu_dit|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-mb-2v">
+                            <div class="bold">Commune</div>
+                            <div>{{ object.commune|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-mb-2v">
+                            <div class="bold">Code INSEE</div>
+                            <div>{{ object.code_insee|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-mb-2v">
+                            <div class="bold">Identifiant parcelle, culture</div>
+                            <div>{{ object.numero_identifiant|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-mb-2v">
+                            <div class="bold">Type de lieu</div>
+                            <div>{{ object.get_type_lieu_display|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-mb-2v">
+                            <div class="bold">Latitude</div>
+                            <div>{{ object.coordinates.y|unlocalize }}</div>
+                        </div>
+                        <div>
+                            <div class="bold">Longitude</div>
+                            <div>{{ object.coordinates.x|unlocalize }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 {% endblock content %}

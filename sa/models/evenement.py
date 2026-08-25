@@ -5,10 +5,13 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 from django_countries.fields import CountryField
+import reversion
+from reversion.models import Version
 
-from core.mixins import WithEtatMixin, WithNumeroMixin
+from core.mixins import AllowModificationMixin, WithNumeroMixin
 from core.models import Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
+from sa.managers import EvenementAnimalManager
 from sa.models.maladie import Maladie
 
 
@@ -52,7 +55,10 @@ class TypeDetenteur(models.TextChoices):
     PARTICULIER = "particulier", "Particulier"
 
 
-class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, models.Model):
+@reversion.register()
+class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationMixin, models.Model):
+    objects = EvenementAnimalManager()
+
     # Common fields for event handling
     statut_evenement = models.CharField(
         max_length=100,
@@ -204,6 +210,15 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, WithEtatMixin, mod
 
     def get_absolute_url(self):
         return reverse("sa:evenement-animal-details", kwargs={"numero": self.numero})
+
+    @property
+    def latest_version(self):
+        return (
+            Version.objects.get_for_object(self)
+            .select_related("revision")
+            .select_related("revision__user__agent__structure")
+            .first()
+        )
 
     class Meta:
         constraints = [
