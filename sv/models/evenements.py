@@ -45,6 +45,8 @@ class Evenement(
     WithBlocCommunFieldsMixin,
     models.Model,
 ):
+    need_notification_contact_added = True
+
     numero_annee = models.IntegerField(verbose_name="Année")
     numero_evenement = models.IntegerField(verbose_name="Numéro")
     organisme_nuisible = models.ForeignKey(
