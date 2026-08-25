@@ -167,8 +167,16 @@ class MapController extends BaseMapController {
             })
     }
 
+    setMarkerPosition(lngLat) {
+        if (this.marker) {
+            this.marker.setLngLat(lngLat)
+        } else {
+            this.marker = new maplibregl.Marker({draggable: false}).setLngLat(lngLat).addTo(this.map)
+        }
+    }
+
     handleDoubleClickOnMap(e) {
-        this.marker.setLngLat(e.lngLat)
+        this.setMarkerPosition(e.lngLat)
         this.latitudeInputTarget.value = e.lngLat.lat
         this.longitudeInputTarget.value = e.lngLat.lng
         this.setAddressFieldsByLongLat(e)
@@ -276,7 +284,10 @@ class MapController extends BaseMapController {
         )
 
         this.map.doubleClickZoom.disable()
-        this.marker = new maplibregl.Marker({draggable: false}).setLngLat(center).addTo(this.map)
+        this.marker = null
+        if (this.latitudeInputTarget.value && this.longitudeInputTarget.value) {
+            this.setMarkerPosition(center)
+        }
         this.map.on("dblclick", e => {
             this.handleDoubleClickOnMap(e)
         })
@@ -304,7 +315,7 @@ class MapController extends BaseMapController {
         if (Number.isNaN(lat) || Number.isNaN(lon)) {
             return
         }
-        this.marker.setLngLat({lat, lon})
+        this.setMarkerPosition({lat, lon})
         this.map.setCenter({lat, lon})
         this.map.setZoom(PRECISE_ZOOM)
     }
