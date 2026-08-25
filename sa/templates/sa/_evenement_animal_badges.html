@@ -1,0 +1,5 @@
+{% load etat_tags %}
+<div>
+    <p class="fr-badge fr-badge--{{ etat.etat|etat_color }} fr-badge--no-icon">{{ etat.readable_etat }}</p>
+    <p class="fr-badge fr-badge--no-icon">{{ object.get_statut_evenement_display }}</p>
+</div>

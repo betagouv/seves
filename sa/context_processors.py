@@ -11,4 +11,4 @@ def pre_creation_form(request):
         return {}
     if match.app_name != SaConfig.name:
         return {}
-    return {"pre_creation_form": EvenementAnimalPreCreationForm()}
+    return {"pre_creation_form": EvenementAnimalPreCreationForm(auto_id="id_pre_creation_%s")}

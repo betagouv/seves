@@ -78,19 +78,23 @@ class WithPreCreationFormPage:
         self.page = page
         self.base_url = base_url
 
+    @property
+    def pre_creation_modal(self):
+        return self.page.locator("#modal-pre-creation")
+
     def open_pre_creation_form(self):
         self.page.get_by_role("button", name="Créer un évènement", exact=True).click()
 
     def set_statut_animal(self, value):
-        self.page.locator("#radio-id_statut_animal").locator(
+        self.page.locator("#radio-id_pre_creation_statut_animal").locator(
             f"input[type='radio'][value='{str(value).lower()}' i]"
         ).check(force=True)
 
     def fill_pre_creation_form(self, evenement: EvenementAnimal):
-        self.page.get_by_label("Maladie").select_option(evenement.maladie.name)
-        self.page.get_by_label("Espece").select_option(evenement.espece.name)
+        self.pre_creation_modal.get_by_label("Maladie").select_option(evenement.maladie.name)
+        self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
         self.set_statut_animal(evenement.statut_animal)
-        self.page.get_by_role("button", name="Suivant >", exact=True).click()
+        self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 
 
 class EvenementListPage(WithPreCreationFormPage):
@@ -101,6 +105,39 @@ class EvenementListPage(WithPreCreationFormPage):
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('sa:evenement-liste')}")
+
+    @property
+    def search_form(self):
+        return self.page.locator("#search-form")
+
+    @property
+    def annee_field(self):
+        return self.search_form.get_by_label("Année")
+
+    @property
+    def numero_field(self):
+        return self.search_form.get_by_label("N° événement")
+
+    @property
+    def maladie_field(self):
+        return self.search_form.get_by_label("Maladie")
+
+    @property
+    def espece_field(self):
+        return self.search_form.get_by_label("Espèce")
+
+    @property
+    def etat_field(self):
+        return self.search_form.get_by_label("État de l'événement")
+
+    def submit_search(self):
+        self.page.get_by_role("button", name="Rechercher").click()
+
+    def reset_search(self):
+        self.page.get_by_role("button", name="Effacer", exact=True).click()
+
+    def row(self, numero):
+        return self.page.locator(".evenements__list-row").filter(has_text=numero)
 
 
 class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtils):
@@ -219,3 +256,27 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         self.code_insee_particulier.fill(evenement.code_insee_particulier)
         self.email_particulier.fill(evenement.email_particulier)
         self.telephone_particulier.fill(evenement.telephone_particulier)
+
+
+class EvenementAnimalDetailsPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self, evenement: EvenementAnimal):
+        self.page.goto(f"{self.base_url}{evenement.get_absolute_url()}")
+
+    @property
+    def title(self):
+        return self.page.locator(".details-top-row h1")
+
+    @property
+    def etat_badge(self):
+        return self.page.get_by_test_id("evenement-header").locator(".fr-badge").nth(0)
+
+    @property
+    def statut_evenement_badge(self):
+        return self.page.get_by_test_id("evenement-header").locator(".fr-badge").nth(1)
+
+    def block(self, title):
+        return self.page.get_by_role("heading", name=title, exact=True).locator("..")
