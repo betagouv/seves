@@ -1,3 +1,4 @@
-from .evenement import Espece, EvenementAnimal, Maladie
+from .evenement import Espece, EvenementAnimal
+from .maladie import Maladie
 
-__all__ = ("EvenementAnimal", "Maladie", "Espece")
+__all__ = ("EvenementAnimal", "Espece", "Maladie")
