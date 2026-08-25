@@ -284,8 +284,7 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
 
     def submit(self):
         self.page.get_by_role("button", name="Enregistrer", exact=True).click()
-        redirect = reverse("sa:evenement-animal-details", kwargs={"numero": "*"})
-        self.page.wait_for_url(f"**{redirect}")
+        self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):
         self.context_suspicion.select_option(evenement.context_suspicion)

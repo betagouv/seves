@@ -8,8 +8,20 @@ from faker import Faker
 from core.models import Structure
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement
+from sa.models.maladie import DescriptionType
 
 fake = Faker()
+
+
+REALISTIC_MALADIES = [
+    ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True),
+    ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True),
+    ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True),
+    ("Tuberculose", "TUB", DescriptionType.TUBERCULOSE, True, False, True),
+    ("Fièvre catarrhale ovine", "FCO", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
+    ("Acarapiose des abeilles (Acarapis woodi)", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
+    ("Adénomatose pulmonaire ovine", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
+]
 
 
 class MaladieFactory(DjangoModelFactory):
@@ -17,7 +29,30 @@ class MaladieFactory(DjangoModelFactory):
         model = Maladie
         django_get_or_create = ("name",)
 
-    name = factory.Faker("sentence", nb_words=3)
+    class Params:
+        maladie_ref = factory.Iterator(REALISTIC_MALADIES)
+
+    name = factory.LazyAttribute(lambda o: o.maladie_ref[0])
+    acronym = factory.LazyAttribute(lambda o: o.maladie_ref[1])
+    description_type = factory.LazyAttribute(lambda o: o.maladie_ref[2])
+    needs_arrete = factory.LazyAttribute(lambda o: o.maladie_ref[3])
+    needs_dates_desinfection = factory.LazyAttribute(lambda o: o.maladie_ref[4])
+    needs_date_nd = factory.LazyAttribute(lambda o: o.maladie_ref[5])
+
+
+class TuberculoseFactory(MaladieFactory):
+    class Params:
+        maladie_ref = REALISTIC_MALADIES[3]
+
+
+class AcarapioseFactory(MaladieFactory):
+    class Params:
+        maladie_ref = REALISTIC_MALADIES[5]
+
+
+class AdenomatoseFactory(MaladieFactory):
+    class Params:
+        maladie_ref = REALISTIC_MALADIES[6]
 
 
 class EspeceFactory(DjangoModelFactory):
