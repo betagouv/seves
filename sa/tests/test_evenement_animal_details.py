@@ -99,3 +99,15 @@ def test_evenement_animal_details_page_with_missing_information(live_server, pag
 
     block = details_page.block("Localisation")
     expect(block.get_by_text("Vide").first).to_be_visible()
+
+
+def test_evenement_animal_details_page_mesures_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory(maladie__needs_arrete=True)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Mesures de gestion")
+    expect(block.get_by_text(evenement.date_apms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_apdi.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_levee.strftime("%d/%m/%Y"), exact=True)).to_be_visible()

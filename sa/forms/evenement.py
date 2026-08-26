@@ -114,6 +114,32 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         label="Description de la situation",
     )
 
+    # Mesures de gestion
+    date_apms = forms.DateField(
+        required=False,
+        label="Date APMS",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_apdi = forms.DateField(
+        required=False,
+        label="Date APDI",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_levee = forms.DateField(
+        required=False,
+        label="Date levée APMS ou APDI",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+
     @property
     def media(self):
         return super().media + Media(
@@ -163,6 +189,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_first_symptoms",
             "human_involved",
             "description",
+            # Mesures de gestion
+            "date_apms",
+            "date_apdi",
+            "date_levee",
         ]
         widgets = {
             "maladie": forms.HiddenInput,
@@ -179,12 +209,13 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-        self.maladie = kwargs.pop("maladie")
+        self.maladie_id = kwargs.pop("maladie")
         self.espece = kwargs.pop("espece")
         self.statut_animal = kwargs.pop("statut_animal")
         self.structure = kwargs.pop("structure")
         super().__init__(*args, **kwargs)
-        self.fields["maladie"].initial = self.maladie
+        self.fields["maladie"].initial = self.maladie_id
+        self.maladie = Maladie.objects.get(id=self.maladie_id)
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
 
@@ -201,6 +232,19 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         else:
             self.fields["numero_identifiant_etablissement"].required = True
             self.fields["nom_particulier"].required = False
+
+        if not self.maladie.needs_arrete:
+            self.fields.pop("date_apms")
+            self.fields.pop("date_apdi")
+            self.fields.pop("date_levee")
+
+    @property
+    def show_mesures_first_row(self):
+        return self.maladie.needs_arrete
+
+    @property
+    def show_mesures_block(self):
+        return self.show_mesures_first_row
 
     def save(self, commit=True):
         if not self.instance.pk:

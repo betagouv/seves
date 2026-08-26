@@ -254,6 +254,10 @@ class EvenementAnimalFormPage(
         "context_suspicion",
         "date_first_symptoms",
         "description",
+        # Mesures de gestions
+        "date_apms",
+        "date_apdi",
+        "date_levee",
     ]
 
     def __init__(self, page: Page, base_url):

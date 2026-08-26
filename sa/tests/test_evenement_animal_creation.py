@@ -510,3 +510,35 @@ def test_double_click_on_map_without_parcelle_leaves_numero_identifiant_unchange
 
     assert call_count["count"] == 1
     expect(creation_page.numero_identifiant).to_have_value("valeur-existante")
+
+
+def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    maladie = MaladieFactory(needs_arrete=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_apms.fill(input_data.date_apms.strftime("%Y-%m-%d"))
+    creation_page.date_apdi.fill(input_data.date_apdi.strftime("%Y-%m-%d"))
+    creation_page.date_levee.fill(input_data.date_levee.strftime("%Y-%m-%d"))
+    creation_page.submit()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.date_apms == input_data.date_apms
+    assert evenement_produit.date_apdi == input_data.date_apdi
+    assert evenement_produit.date_levee == input_data.date_levee
+
+
+def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory(needs_arrete=False)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    expect(creation_page.date_apms).not_to_be_visible()
+    expect(creation_page.date_apdi).not_to_be_visible()
+    expect(creation_page.date_levee).not_to_be_visible()
