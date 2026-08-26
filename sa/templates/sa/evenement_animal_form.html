@@ -258,7 +258,27 @@
                     </div>
                 </div>
             </fieldset>
-
+            {% if form.show_mesures_block %}
+                <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="mesures">
+                    <div class="fieldset-header">
+                        <legend class="fr-fieldset__legend fr-h3">Mesures de gestion
+                        </legend>
+                    </div>
+                    {% if form.show_mesures_first_row %}
+                        <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_apms %}
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_apdi %}
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_levee %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </fieldset>
+            {% endif %}
         </main>
     </form>
 {% endblock content %}

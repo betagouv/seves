@@ -202,6 +202,11 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     )
     description = models.TextField(verbose_name="Description de la situation", blank=True)
 
+    # Mesures
+    date_apms = models.DateField(verbose_name="Date APMS", null=True, blank=True)
+    date_apdi = models.DateField(verbose_name="Date APDI", null=True, blank=True)
+    date_levee = models.DateField(verbose_name="Date levée APMS ou APDI", null=True, blank=True)
+
     @classmethod
     def _get_annee_and_numero(cls, acronym):
         annee_courante = datetime.datetime.now().year
@@ -239,6 +244,10 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
             .select_related("revision__user__agent__structure")
             .first()
         )
+
+    @property
+    def show_mesures_block(self):
+        return self.maladie.needs_arrete
 
     class Meta:
         constraints = [

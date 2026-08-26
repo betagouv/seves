@@ -135,3 +135,18 @@ class EvenementAnimalFactory(DjangoModelFactory):
     def coordinates(self):
         lat, lon = fake.local_latlng(country_code="FR", coords_only=True)
         return Point(float(lon), float(lat))
+
+    @factory.lazy_attribute
+    def date_apms(self):
+        if self.maladie.needs_arrete:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def date_apdi(self):
+        if self.maladie.needs_arrete:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def date_levee(self):
+        if self.maladie.needs_arrete:
+            return fake.date_this_decade()

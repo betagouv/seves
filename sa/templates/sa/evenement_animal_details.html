@@ -181,6 +181,27 @@
                     </div>
                 </div>
             </div>
+            {% if object.show_mesures_block %}
+                <div class="white-container fr-mb-4v">
+                    <h2 class="fr-h6">Mesures de gestion</h2>
+                    <div class="fr-grid-row fr-grid-row--gutters">
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date APMS</div>
+                            <div>{{ object.date_apms|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date APDI</div>
+                            <div>{{ object.date_apdi|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date levée APMS ou APDI</div>
+                            <div>{{ object.date_levee|date:"d/m/Y"|or_empty_value_tag }}</div>
+
+                        </div>
+
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </main>
 {% endblock content %}
