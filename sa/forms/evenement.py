@@ -10,6 +10,7 @@ from core.fields import SEVESChoiceField
 from core.form_mixins import js_module
 from core.mixins import WithEtatMixin
 from core.models import Departement
+from core.widgets import TreeselectRadio
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
 from sa.models.evenement import (
@@ -28,7 +29,15 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         StatutAnimal.DETENU: "Animal maintenu sous la responsabilité d'une personne (élevage, zoo, particulier, ruche…)",
     }
 
-    maladie = forms.ModelChoiceField(queryset=Maladie.objects.all())
+    maladie = forms.ModelChoiceField(
+        queryset=Maladie.objects.all(),
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        required=True,
+        widget=TreeselectRadio(
+            choices=Maladie.treeselect_choices, attrs={"placeholder": "Rechercher", "required": True}
+        ),
+        label="Maladie suspectée",
+    )
     espece = forms.ModelChoiceField(queryset=Espece.objects.all())
     statut_animal = forms.ChoiceField(
         required=True,
