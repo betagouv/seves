@@ -1,6 +1,10 @@
 {% extends "core/base.html" %}
 {% load dsfr_tags render_field_with_inline_label %}
 
+{% block base_override %}
+    {% for tag in pre_creation_form.media.render_css %}{{ tag }}{% endfor %}
+{% endblock base_override %}
+
 {% block product_nav %}
     <li>
         <button type="button" data-fr-opened="false" aria-controls="modal-pre-creation" class="fr-btn fr-btn--header-blue fr-btn--icon-left fr-icon-add-line fr-my-auto">Créer un évènement</button>
@@ -41,3 +45,7 @@
         </div>
     </dialog>
 {% endblock %}
+
+{% block scripts %}
+    {% for tag in pre_creation_form.media.render_js %}{{ tag }}{% endfor %}
+{% endblock scripts %}

@@ -5,7 +5,7 @@ import json
 from django.urls import reverse
 from playwright.sync_api import Page
 
-from core.tests.pages import ChoiceJSPage
+from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import EvenementAnimal
 from seves import settings
 
@@ -158,6 +158,9 @@ class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self._maladie_treeselect = TreeselectPage(
+            self.page, self.page.locator("#fr-treeselect-id_pre_creation_maladie")
+        )
 
     @property
     def pre_creation_modal(self):
@@ -172,7 +175,8 @@ class WithPreCreationFormPage:
         ).check(force=True)
 
     def fill_pre_creation_form(self, evenement: EvenementAnimal):
-        self.pre_creation_modal.get_by_label("Maladie").select_option(evenement.maladie.name)
+        group = "Les plus fréquentes" if evenement.maladie.is_highlighted else "Autre"
+        self._maladie_treeselect.check_option(group, evenement.maladie.name_with_acronym)
         self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
