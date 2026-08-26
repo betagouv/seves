@@ -190,6 +190,18 @@ class EvenementAnimalFormPage(WithPreCreationFormPage, WithAddressAndCommuneUtil
         self.coordinates_0.fill(str(point.y))
 
     @property
+    def parcelles_checkbox(self):
+        return self.page.locator("#map-parcelles-checkbox")
+
+    @property
+    def parcelles_message(self):
+        return self.page.locator("#map-parcelles-message")
+
+    @property
+    def map_canvas(self):
+        return self.page.locator('[data-map-target="mapDisplay"] canvas')
+
+    @property
     def particulier_label(self):
         return self.page.locator("label", has_text="Particulier")
 

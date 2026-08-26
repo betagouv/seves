@@ -176,7 +176,27 @@
                      data-map-departement-value="{{ form.structure.departement.nom }}"
                 >
                     <div class="fr-col-12 fr-col-lg-7">
-                        <div data-map-target="mapDisplay" class="map"></div>
+                        <div class="map-wrapper">
+                            <div data-map-target="mapDisplay" class="map"></div>
+                            <div class="map-parcelles-control">
+                                <div class="fr-checkbox-group fr-checkbox-group--sm">
+                                    <input
+                                        type="checkbox"
+                                        id="map-parcelles-checkbox"
+                                        data-map-target="parcellesCheckbox"
+                                        data-action="change->map#toggleParcelles"
+                                        aria-describedby="map-parcelles-message"
+                                    >
+                                    <label class="fr-label" for="map-parcelles-checkbox">Parcelles</label>
+                                </div>
+                                <p
+                                    id="map-parcelles-message"
+                                    class="map-parcelles-message fr-hint-text"
+                                    data-map-target="parcellesMessage"
+                                    hidden
+                                ></p>
+                            </div>
+                        </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-5">
 
@@ -190,7 +210,7 @@
                         </div>
 
                         {% dsfr_form_field form.code_insee|set_data:"map-target:codeInseeInput"|set_data:"address-search-autocomplete-target:codeInsee"%}
-                        {% dsfr_form_field form.numero_identifiant %}
+                        {% dsfr_form_field form.numero_identifiant|set_data:"map-target:numeroIdentifiantInput"|append_attr:"data-action:input->map#handleNumeroIdentifiantInput" %}
                         {% dsfr_form_field form.type_lieu %}
                         {% dsfr_form_field form.coordinates %}
                     </div>
