@@ -337,6 +337,9 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.numero_identifiant_etablissement.fill(input_data.numero_identifiant_etablissement)
     creation_page.raison_sociale_etablissement.fill(input_data.raison_sociale_etablissement)
+    creation_page.force_siret_etablissement(input_data.siret_etablissement)
+    creation_page.force_address_etablissement(input_data.adresse_lieu_dit_etablissement)
+    creation_page.force_commune_etablissement()
 
     creation_page.particulier_label.click()
     creation_page.confirm_type_change()
@@ -346,6 +349,16 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
     expect(creation_page.numero_identifiant_etablissement).to_be_hidden()
     expect(creation_page.numero_identifiant_etablissement).to_have_value("")
     expect(creation_page.raison_sociale_etablissement).to_have_value("")
+    selected_item = ".choices__list--single .choices__item"
+    expect(creation_page._siret_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+        input_data.siret_etablissement
+    )
+    expect(creation_page._address_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+        input_data.adresse_lieu_dit_etablissement
+    )
+    expect(creation_page._commune_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+        "Lille"
+    )
 
 
 def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(live_server, page: Page):
@@ -357,6 +370,8 @@ def test_confirmation_modal_when_switching_from_particulier_to_etablissement_wit
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.particulier_label.click()
     creation_page.nom_particulier.fill(input_data.nom_particulier)
+    creation_page.force_address_particulier(input_data.adresse_particulier)
+    creation_page.force_commune_particulier()
 
     creation_page.etablissement_label.click()
 
@@ -368,6 +383,13 @@ def test_confirmation_modal_when_switching_from_particulier_to_etablissement_wit
     expect(creation_page.numero_identifiant_etablissement).to_be_visible()
     expect(creation_page.nom_particulier).to_be_hidden()
     expect(creation_page.nom_particulier).to_have_value("")
+    selected_item = ".choices__list--single .choices__item"
+    expect(creation_page._address_particulier_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+        input_data.adresse_particulier
+    )
+    expect(creation_page._commune_particulier_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+        "Lille"
+    )
 
 
 def test_parcelles_checkbox_unchecked_by_default(live_server, page: Page):
