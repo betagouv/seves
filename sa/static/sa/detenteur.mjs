@@ -1,5 +1,5 @@
 import {applicationReady} from "Application"
-import {resetForm} from "Forms"
+import {clearChoiceJs, resetForm} from "Forms"
 import {Controller} from "Stimulus"
 import {setUpSiretChoices} from "siret"
 
@@ -23,6 +23,14 @@ class DetenteurFormController extends Controller {
     get etablissementAddressOutlet() {
         return this.application.getControllerForElementAndIdentifier(
             this.etablissementFormTarget,
+            "address-search-autocomplete",
+        )
+    }
+
+    /** @return {AddressSearchAutocompleteController} */
+    get particulierAddressOutlet() {
+        return this.application.getControllerForElementAndIdentifier(
+            this.particulierFormTarget,
             "address-search-autocomplete",
         )
     }
@@ -65,7 +73,16 @@ class DetenteurFormController extends Controller {
     }
 
     onConfirmSwitch() {
-        resetForm(this.currentType === "etablissement" ? this.etablissementFormTarget : this.particulierFormTarget)
+        if (this.currentType === "etablissement") {
+            resetForm(this.etablissementFormTarget)
+            clearChoiceJs(this.#sireneWidget)
+            clearChoiceJs(this.etablissementAddressOutlet.addressWidget)
+            clearChoiceJs(this.etablissementAddressOutlet.communeWidget)
+        } else {
+            resetForm(this.particulierFormTarget)
+            clearChoiceJs(this.particulierAddressOutlet.addressWidget)
+            clearChoiceJs(this.particulierAddressOutlet.communeWidget)
+        }
         this.switchTo(this.pendingType)
         this.pendingType = null
         dsfr(this.confirmModalTarget).modal.conceal()
