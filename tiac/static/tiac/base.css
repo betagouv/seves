@@ -12,3 +12,7 @@
 .analyse-card .fr-card__title a {
     background-image: none !important;
 }
+
+.stats-link {
+    font-weight: 500;
+}

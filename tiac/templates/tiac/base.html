@@ -23,4 +23,13 @@
     <li>
         <a class="fr-btn {% block highlight_menu_evenements %}{% endblock %}" href="{% url 'tiac:evenement-liste' %}">Liste des événements</a>
     </li>
+    <li class="fr-nav__item">
+        <button class="fr-nav__btn fr-btn stats-link" aria-expanded="false" aria-controls="menu-stats">Statistiques</button>
+        <div class="fr-collapse fr-menu" id="menu-stats">
+            <ul class="fr-menu__list">
+                <li class="fr-nav__link"><a href="{% url 'ssa:stats-evenement' %}">Événements</a></li>
+                <li class="fr-nav__link"><a href="{% url 'ssa:stats-activite' %}">Mesure d'activité</a></li>
+            </ul>
+        </div>
+    </li>
 {% endblock product_nav %}

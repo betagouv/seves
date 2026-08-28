@@ -10,7 +10,7 @@ from .views import (
     InvestigationCasHumainCreateView,
 )
 from .views.api import FindFreeLinksView
-from .views.common import CsvExportView
+from .views.common import CsvExportView, StatsActiviteView, StatsEvenementsView
 from .views.investigation_cas_humain import (
     InvestigationCasHumainDetailView,
     InvestigationCasHumainDocumentExportView,
@@ -86,5 +86,15 @@ urlpatterns = [
         "export/investigation-cas-humain/<int:pk>/document/",
         InvestigationCasHumainDocumentExportView.as_view(),
         name="export-investigation-cas-humain-document",
+    ),
+    path(
+        "stats/evenements/",
+        StatsEvenementsView.as_view(),
+        name="stats-evenement",
+    ),
+    path(
+        "stats/activite/",
+        StatsActiviteView.as_view(),
+        name="stats-activite",
     ),
 ]
