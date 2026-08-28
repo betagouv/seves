@@ -1,6 +1,6 @@
 import {applicationReady, dsfrDisclosePromise} from "Application"
 import {Controller} from "Stimulus"
-import {search} from "Utils"
+import {normalize} from "Utils"
 
 const WIDGET_IDENTIFIER = "treeselect"
 const GROUP_IDENTIFIER = "treeselect-group"
@@ -8,7 +8,24 @@ const CHOICES_CHANGED_EVENT = "choices"
 
 let counter = 0
 
+/**
+ * `input.labels` is an API that searches the document for matching `<label>` elements on every access.
+ * The markup here always renders the label as a sibling of its input in the same wrapper, so a scoped query should be faster
+ * @param {HTMLInputElement} input
+ * @return {HTMLLabelElement[]}
+ */
+function labelsFor(input) {
+    return Array.from(input.parentElement.querySelectorAll("label"))
+}
+
 class TreeselectChoicesListener extends Controller {
+    get normalizedLabels() {
+        if (!this._normalizedLabels) {
+            this._normalizedLabels = this.labels.map(normalize)
+        }
+        return this._normalizedLabels
+    }
+
     connect() {
         /** @type {Treeselect} */
         this.treeselect = this.application.getControllerForElementAndIdentifier(
@@ -83,7 +100,7 @@ class TreeselectElement extends TreeselectGroupConnectable {
 
     get labels() {
         return [
-            ...Array.from(this.inputTarget.labels).map(it => it.textContent.trim()),
+            ...labelsFor(this.inputTarget).map(it => it.textContent.trim()),
             this.inputTarget.ariaLabel?.trim() ?? "",
         ]
     }
@@ -102,16 +119,14 @@ class TreeselectElement extends TreeselectGroupConnectable {
         }
     }
 
-    async search(value, minlength) {
+    async search(value, minlength, normalizedNeedle) {
         if (value.length < minlength) {
             this.hiddenValue = false
             return true
         }
-        for (const label of this.labels) {
-            if (search(label, value)) {
-                this.hiddenValue = false
-                return true
-            }
+        if (this.normalizedLabels.some(it => it.includes(normalizedNeedle))) {
+            this.hiddenValue = false
+            return true
         }
         this.hiddenValue = true
         return false
@@ -142,7 +157,7 @@ class TreeselectGroup extends TreeselectGroupConnectable {
     get labels() {
         const result = []
         for (const it of this.inputTargets) {
-            result.push(...Array.from(it.labels).map(it => it.textContent.trim()))
+            result.push(...labelsFor(it).map(it => it.textContent.trim()))
             result.push(it.ariaLabel?.trim() ?? "")
         }
         return result
@@ -165,9 +180,11 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         this.children.delete(id)
     }
 
-    async search(value, minlength) {
+    async search(value, minlength, normalizedNeedle) {
         // We need to trigger search on the children anyway to always ensure proper visibility
-        const results = await Promise.all(this.children.values().map(it => it.search(value, minlength)))
+        const results = await Promise.all(
+            this.children.values().map(it => it.search(value, minlength, normalizedNeedle)),
+        )
 
         // If search is less than MIN_SEARCH_LEN, resets the group: everything is visible, accordions are collapsed
         if (value.length < minlength) {
@@ -184,11 +201,9 @@ class TreeselectGroup extends TreeselectGroupConnectable {
         }
 
         // Finally, search self
-        for (const label of this.labels) {
-            if (search(label, value)) {
-                this.hiddenValue = false
-                return true
-            }
+        if (this.normalizedLabels.some(it => it.includes(normalizedNeedle))) {
+            this.hiddenValue = false
+            return true
         }
 
         this.hiddenValue = true
@@ -298,6 +313,7 @@ class Treeselect extends Controller {
     initialize() {
         this.choices = new Map()
         this.children = new Map()
+        this.isFiltered = false
         this.element.dataset.action = [
             `${this.identifier}:${CHOICES_CHANGED_EVENT}->${this.identifier}#onChoicesChange`,
             ...(this.element.dataset.action ?? "").split(/\s+/g),
@@ -351,7 +367,14 @@ class Treeselect extends Controller {
     }
 
     async onSearch({detail: {search}}) {
-        await Promise.all(this.children.values().map(it => it.search(search, this.minSearchLengthValue)))
+        const belowThreshold = search.length < this.minSearchLengthValue
+        if (belowThreshold && !this.isFiltered) return
+
+        this.isFiltered = !belowThreshold
+        const normalizedNeedle = normalize(search)
+        await Promise.all(
+            this.children.values().map(it => it.search(search, this.minSearchLengthValue, normalizedNeedle)),
+        )
     }
 
     /**
