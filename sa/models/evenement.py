@@ -4,6 +4,7 @@ from enum import auto
 from django.contrib.gis.db.models import PointField
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.functional import classproperty
 from django_countries.fields import CountryField
@@ -277,6 +278,10 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     date_apdi = models.DateField(verbose_name="Date APDI", null=True, blank=True)
     date_levee = models.DateField(verbose_name="Date levée APMS ou APDI", null=True, blank=True)
 
+    date_d_zero = models.DateField(verbose_name="Date D zéro", null=True, blank=True)
+    date_nd1 = models.DateField(verbose_name="Date ND1", null=True, blank=True)
+    date_nd2 = models.DateField(verbose_name="Date ND2", null=True, blank=True)
+
     @classmethod
     def _get_annee_and_numero(cls, acronym):
         annee_courante = datetime.datetime.now().year
@@ -358,5 +363,14 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
                 ),
                 name="evenementanimal_type_lieu_consistent_with_statut_animal",
                 violation_error_message="Le type de lieu n'est pas compatible avec le statut de l'animal sélectionné",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(date_d_zero__isnull=True) | Q(date_nd1__isnull=True) | Q(date_d_zero__lte=F("date_nd1")))
+                    & (Q(date_nd1__isnull=True) | Q(date_nd2__isnull=True) | Q(date_nd1__lte=F("date_nd2")))
+                    & (Q(date_d_zero__isnull=True) | Q(date_nd2__isnull=True) | Q(date_d_zero__lte=F("date_nd2")))
+                ),
+                name="evenementanimal_dates_desinfection_order",
+                violation_error_message="Les dates D0, ND1 et ND2 doivent respecter l'ordre D0 ≤ ND1 ≤ ND2.",
             ),
         ]

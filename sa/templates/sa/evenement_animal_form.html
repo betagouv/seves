@@ -286,15 +286,21 @@
                         </legend>
                     </div>
                     {% if form.show_mesures_first_row %}
-                        <div class="fr-grid-row fr-grid-row--gutters fr-col">
-                            <div class="fr-col-12 fr-col-lg-4">
-                                {% dsfr_form_field form.date_apms %}
+                        <div class="fr-container--fluid fr-w-100">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_apms %}</div>
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_apdi %}</div>
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_levee %}</div>
                             </div>
-                            <div class="fr-col-12 fr-col-lg-4">
-                                {% dsfr_form_field form.date_apdi %}
-                            </div>
-                            <div class="fr-col-12 fr-col-lg-4">
-                                {% dsfr_form_field form.date_levee %}
+                        </div>
+
+                    {% endif %}
+                    {% if form.show_mesures_second_row %}
+                        <div class="fr-container--fluid fr-w-100 fr-mt-4v">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_d_zero %}</div>
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_nd1 %}</div>
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_nd2 %}</div>
                             </div>
                         </div>
                     {% endif %}

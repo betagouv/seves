@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.gis.geos import Point
 from django_countries import Countries
 import factory
@@ -153,3 +155,18 @@ class EvenementAnimalFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def type_lieu(self):
         return FuzzyChoice([value for value, _ in TypeLieu.choices_for_statut_animal(self.statut_animal)]).fuzz()
+
+    @factory.lazy_attribute
+    def date_d_zero(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def date_nd1(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_between(start_date=self.date_d_zero, end_date=self.date_d_zero + timedelta(days=30))
+
+    @factory.lazy_attribute
+    def date_nd2(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_between(start_date=self.date_nd1, end_date=self.date_nd1 + timedelta(days=30))
