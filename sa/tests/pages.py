@@ -265,6 +265,9 @@ class EvenementAnimalFormPage(
         "date_apms",
         "date_apdi",
         "date_levee",
+        "date_d_zero",
+        "date_nd1",
+        "date_nd2",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -333,9 +336,10 @@ class EvenementAnimalFormPage(
                 "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
             )
 
-    def submit_as_draft(self):
+    def submit_as_draft(self, wait_for="**/sa/evenement-animal/**/"):
         self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
-        self.page.wait_for_url("**/sa/evenement-animal/**/")
+        if wait_for:
+            self.page.wait_for_url(wait_for)
 
     def publish(self):
         self.page.get_by_role("button", name="Publier", exact=True).click()

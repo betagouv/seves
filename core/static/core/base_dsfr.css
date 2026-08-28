@@ -261,3 +261,7 @@
     color: white;
     background-color: var(--text-default-error) !important;
 }
+
+.fr-w-100 {
+    width: 100%;
+}

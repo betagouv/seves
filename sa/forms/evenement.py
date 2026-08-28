@@ -156,6 +156,33 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             attrs={"type": "date"},
         ),
     )
+    date_d_zero = forms.DateField(
+        required=False,
+        label="Date D zéro",
+        help_text="Date de la désinfection préliminaire (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_nd1 = forms.DateField(
+        required=False,
+        label="Date ND1",
+        help_text="Date du premier nettoyage de désinfection (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_nd2 = forms.DateField(
+        required=False,
+        label="Date ND2",
+        help_text="Date du deuxième nettoyage de désinfection (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
 
     @property
     def media(self):
@@ -211,6 +238,9 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_apms",
             "date_apdi",
             "date_levee",
+            "date_d_zero",
+            "date_nd1",
+            "date_nd2",
         ]
         widgets = {
             "maladie": forms.HiddenInput,
@@ -260,13 +290,22 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             self.fields.pop("date_apdi")
             self.fields.pop("date_levee")
 
+        if self.maladie.needs_dates_desinfection is False:
+            self.fields.pop("date_d_zero")
+            self.fields.pop("date_nd1")
+            self.fields.pop("date_nd2")
+
     @property
     def show_mesures_first_row(self):
         return self.maladie.needs_arrete
 
     @property
+    def show_mesures_second_row(self):
+        return self.maladie.needs_dates_desinfection
+
+    @property
     def show_mesures_block(self):
-        return self.show_mesures_first_row
+        return self.show_mesures_first_row or self.show_mesures_second_row
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":

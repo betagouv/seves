@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
 from sa.models.evenement import StatutAnimal, TypeLieu
-from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
+from sa.tests.factories import AcarapioseFactory, EspeceFactory, EvenementAnimalFactory, MaladieFactory
 from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
 from seves import settings
 from sv.models import Evenement
@@ -586,9 +586,46 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     assert evenement_produit.date_levee == input_data.date_levee
 
 
-def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page: Page):
+def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    maladie = MaladieFactory(name="Needs date desinfection", needs_date_nd=False, needs_dates_desinfection=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_d_zero.fill(input_data.date_d_zero.strftime("%Y-%m-%d"))
+    creation_page.date_nd1.fill(input_data.date_nd1.strftime("%Y-%m-%d"))
+    creation_page.date_nd2.fill(input_data.date_nd2.strftime("%Y-%m-%d"))
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.date_d_zero == input_data.date_d_zero
+    assert evenement_produit.date_nd1 == input_data.date_nd1
+    assert evenement_produit.date_nd2 == input_data.date_nd2
+
+
+def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    maladie = MaladieFactory(name="Needs date desinfection order", needs_date_nd=False, needs_dates_desinfection=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_d_zero.fill("2026-01-01")
+    creation_page.date_nd1.fill("2025-01-01")
+    creation_page.submit_as_draft(wait_for=None)
+
+    expect(
+        creation_page.page.get_by_text("Les dates D0, ND1 et ND2 doivent respecter l'ordre D0 ≤ ND1 ≤ ND2.", exact=True)
+    ).to_have_count(2)
+    assert EvenementAnimal.objects.count() == 0
+
+
+def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
-    maladie = MaladieFactory(needs_arrete=False)
+    maladie = AcarapioseFactory()
     espece = EspeceFactory()
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
@@ -597,6 +634,9 @@ def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page
     expect(creation_page.date_apms).not_to_be_visible()
     expect(creation_page.date_apdi).not_to_be_visible()
     expect(creation_page.date_levee).not_to_be_visible()
+    expect(creation_page.date_d_zero).not_to_be_visible()
+    expect(creation_page.date_nd1).not_to_be_visible()
+    expect(creation_page.date_nd2).not_to_be_visible()
 
 
 def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
