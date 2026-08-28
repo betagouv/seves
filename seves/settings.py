@@ -309,11 +309,25 @@ SSA_GROUP = "ssa_user"
 SA_GROUP = "sa_user"
 REFERENT_NATIONAL_GROUP = "referent_national"
 
+
+METABASE_SECRET_KEY = env("METABASE_SECRET_KEY", default="")
+METABASE_URL = env("METABASE_URL", default="")
+METABASE_EVENEMENT_PRODUIT = env("METABASE_EVENEMENT_PRODUIT", default="")
+METABASE_EVENEMENT_ICH = env("METABASE_EVENEMENT_ICH", default="")
+METABASE_EVENEMENT_INVESTIGATION_TIAC = env("METABASE_EVENEMENT_INVESTIGATION_TIAC", default="")
+METABASE_EVENEMENT_ENREGISTREMENT_SIMPLE = env("METABASE_EVENEMENT_ENREGISTREMENT_SIMPLE", default="")
+METABASE_MESURE_ACTIVITE_PRODUIT = env("METABASE_MESURE_ACTIVITE_PRODUIT", default="")
+METABASE_MESURE_ACTIVITE_ICH = env("METABASE_MESURE_ACTIVITE_ICH", default="")
+METABASE_MESURE_ACTIVITE_INVESTIGATION_TIAC = env("METABASE_MESURE_ACTIVITE_INVESTIGATION_TIAC", default="")
+METABASE_MESURE_ACTIVITE_ENREGISTREMENT_SIMPLE = env("METABASE_MESURE_ACTIVITE_ENREGISTREMENT_SIMPLE", default="")
+
+
 SECURE_CSP = {
     "default-src": (CSP.SELF,),
     "script-src": (
         CSP.SELF,
         CSP.NONCE,
+        METABASE_URL,
         "https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js",
         "https://cdn.jsdelivr.net/npm/stimulus-store@0.0.3/dist/bundle.esm.js",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
@@ -354,6 +368,7 @@ SECURE_CSP = {
     "frame-src": (
         "s3.rbx.io.cloud.ovh.net",
         "s3.eu-west-par.io.cloud.ovh.net",
+        METABASE_URL,
     ),
     "connect-src": (
         CSP.SELF,
@@ -370,7 +385,7 @@ SECURE_CSP = {
 if DEBUG:
     SECURE_CSP["img-src"] = (CSP.SELF, "data:", "127.0.0.1:9000")
     SECURE_CSP["object-src"] = (CSP.SELF, "127.0.0.1:9000")
-    SECURE_CSP["frame-src"] = (CSP.SELF, "127.0.0.1:9000")
+    SECURE_CSP["frame-src"] = (CSP.SELF, "127.0.0.1:9000", METABASE_URL)
 
 if ENVIRONMENT != "test":
     SENTRY_REPORT_URL = env("SENTRY_REPORT_URL", None)

@@ -189,7 +189,9 @@ pygments==2.20.0
     #   pytest
     #   rich
 pyjwt==2.13.0
-    # via mozilla-django-oidc
+    # via
+    #   -r requirements.in
+    #   mozilla-django-oidc
 pytest==9.0.3
     # via
     #   pytest-base-url

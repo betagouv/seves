@@ -1,0 +1,8 @@
+.main-container--header {
+    --background-disabled-grey: var(--grey-625-425);
+    background-color: var(--background-open-blue-france);
+}
+
+iframe {
+    min-height: 3000px !important;
+}

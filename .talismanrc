@@ -16,7 +16,9 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 187533b0a152bf17db332d575f9fa054eae3ce05186a72d69c7b19e96bba5f8a
+  checksum: 9f2521452a12d8c7d56b55e8ca737d8d3a51139ddf0a67d92ee9dbbc2af020c7
+- filename: core/metabase.py
+  checksum: 8a6a0752928f53a563c87baa9c7132c124da822dedd424e37c653484dfed99a2
   ignore_detectors: [filename]
 - filename: ssa/static/ssa/etablissement_form.mjs
   checksum: d94c97728a3f7afe71f035d1cb6b6c3155fc74c694d7d24251274b76cb897a1e

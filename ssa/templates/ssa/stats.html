@@ -1,0 +1,50 @@
+{% extends "ssa/base.html" %}
+{% load static %}
+{% block scripts %}
+    <script type="module" src="{% static 'ssa/stats.mjs' %}"></script>
+    <link rel="stylesheet" href="{% static 'ssa/stats.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="main-container--header">
+        <h2 class="fr-h3 fr-ml-6v fr-py-4v">{{ title }}</h2>
+    </div>
+    {% if METABASE_URL %}
+        <main class="main-container" data-controller="metabase" data-metabase-url-value="{{ METABASE_URL }}">
+
+            <div class="fr-tabs">
+                <ul class="fr-tabs__list" role="tablist" aria-label="Choisir l'objet a consulter">
+                    <li role="presentation">
+                        <button type="button" id="tab-1" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="tab-1-panel">Produit</button>
+                    </li>
+                    <li role="presentation">
+                        <button type="button" id="tab-2" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tab-2-panel">Investigation cas humain</button>
+                    </li>
+                    <li role="presentation">
+                        <button type="button" id="tab-3" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tab-3-panel">Investigation TIAC</button>
+                    </li>
+                    <li role="presentation">
+                        <button type="button" id="tab-4" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="tab-4-panel">Enregistrement simple</button>
+                    </li>
+                </ul>
+                <div id="tab-1-panel" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tab-1" tabindex="0">
+                    <metabase-dashboard token="{{ evenement_produit_token }}" with-title="false" with-downloads="true"></metabase-dashboard>
+                </div>
+                <div id="tab-2-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tab-2" tabindex="0">
+                    <metabase-dashboard token="{{ ich_token }}" with-title="false" with-downloads="true"></metabase-dashboard>
+                </div>
+                <div id="tab-3-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tab-3" tabindex="0">
+                    <metabase-dashboard token="{{ investigation_tiac_token }}" with-title="false" with-downloads="true"></metabase-dashboard>
+                </div>
+                <div id="tab-4-panel" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tab-4" tabindex="0">
+                    <metabase-dashboard token="{{ enregistrement_simple_token }}" with-title="false" with-downloads="true"></metabase-dashboard>
+                </div>
+            </div>
+
+        </main>
+    {% else %}
+        <main class="main-container">
+            <p>Les tableaux Metabase ne sont pas disponibles dans cet environnement.</p>
+        </main>
+    {% endif %}
+{% endblock content %}
