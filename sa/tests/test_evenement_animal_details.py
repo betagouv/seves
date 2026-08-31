@@ -1,7 +1,9 @@
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from sa.tests.factories import EvenementAnimalFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
+from sv.models import Evenement
 
 
 def test_evenement_animal_details_page_header(live_server, page: Page):
@@ -111,3 +113,31 @@ def test_evenement_animal_details_page_mesures_block(live_server, page: Page):
     expect(block.get_by_text(evenement.date_apms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_apdi.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_levee.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+
+
+def test_can_publish_from_evenement_animal_details_page(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    assert evenement.is_draft is True
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    details_page.publish()
+
+    evenement.refresh_from_db()
+    assert evenement.is_draft is False
+    assert evenement.etat == Evenement.Etat.EN_COURS
+
+    assert details_page.title.text_content() == f"Événement {evenement.numero}"
+    assert details_page.etat_badge.text_content() == evenement.get_etat_display()
+    assert details_page.statut_evenement_badge.text_content() == evenement.get_statut_evenement_display()
+    expect(details_page.page.get_by_text("Évènement publié avec succès", exact=True)).to_be_visible()
+
+
+def test_cant_view_draft_from_other_structure(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    evenement.createur = StructureFactory()
+    evenement.save()
+    assert evenement.is_draft is True
+
+    response = page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
+    assert response.status == 403

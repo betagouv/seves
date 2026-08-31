@@ -249,6 +249,9 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     def show_mesures_block(self):
         return self.maladie.needs_arrete
 
+    def get_publish_success_message(self):
+        return "Évènement publié avec succès"
+
     class Meta:
         constraints = [
             models.CheckConstraint(

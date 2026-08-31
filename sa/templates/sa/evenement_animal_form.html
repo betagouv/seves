@@ -21,9 +21,18 @@
                     <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm">
                         {% block buttons %}
                             {% partialdef buttons inline %}
-                                <button type="submit" class="fr-btn fr-btn--secondary">
-                                    Enregistrer
-                                </button>
+                                {% if form.instance and form.instance.is_draft %}
+                                    <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w form-action-btn">Enregistrer le brouillon</button>
+                                {% endif %}
+                                {% if form.instance.pk and not form.instance.is_draft %}
+                                    <button type="submit" class="fr-btn form-action-btn">
+                                        Enregistrer
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action" value="publish" class="fr-btn form-action-btn">
+                                        Publier
+                                    </button>
+                                {% endif %}
                             {% endpartialdef %}
                         {% endblock %}
                     </ul>
