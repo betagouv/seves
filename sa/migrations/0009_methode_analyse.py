@@ -6,94 +6,74 @@ METHODES_ANALYSE = [
     (
         "METH_ELISA",
         "ELISA ; ELISA (gB et gE) ; ELISA Stimulation Interféron Gamma",
-        "ELISA",
     ),
     (
         "METH_INTERFERON_GAMMA",
-        "Interféron Gamma",
         "Interféron Gamma",
     ),
     (
         "METH_PCR",
         "PCR temps réel ; RT-PCR ; RT-PCR temps réel ; RT-PCR en temps réel",
-        "PCR",
     ),
     (
         "METH_BACTERIOLOGIE_ISOLEMENT",
-        "Bactériologie et isolement ; Bactériologie : Isolement et identification ; "
-        "Bactériologie : Recherche et isolement",
-        "Bactériologie (isolement)",
+        "Bactériologie et isolement ; Bactériologie : Isolement et identification ; Bactériologie : Recherche et isolement",
     ),
     (
         "METH_SERONEUTRALISATION_VIRALE",
         "Séroneutralisation virale ; Neutralisation virale",
-        "Séroneutralisation virale",
     ),
     (
         "METH_IMMUNOFLUORESCENCE",
         "Immunofluorescence indirect ; Isolement sur culture cellulaire et identification par immunofluorescence",
-        "Immunofluorescence",
     ),
     (
         "METH_HISTOLOGIE",
         "Histologie ; Histopathologie : Coloration à l'hémalun-éosine-safran et coloration de Ziehl-Neelsen",
-        "Histologie",
     ),
     (
         "METH_IHA",
         "IHA (Inhibition de l'hémagglutination)",
-        "Inhibition de l'hémagglutination (IHA)",
     ),
     (
         "METH_IDG",
         "IDG (Immunodiffusion en gélose)",
-        "Immunodiffusion en gélose (IDG)",
     ),
     (
         "METH_EAT",
         "EAT",
-        "Épreuve à l'antigène tamponné (EAT)",
     ),
     (
         "METH_FIXATION_COMPLEMENT",
         "FC ; Fixation du complément",
-        "Fixation du complément (FC)",
     ),
     (
         "METH_OVOCULTURE",
-        "Ovoculture",
         "Ovoculture",
     ),
     (
         "METH_MICROSCOPIE",
         "Microscopie",
-        "Microscopie",
     ),
     (
         "METH_EXAMEN_MACROSCOPIQUE",
-        "Examen macroscopique",
         "Examen macroscopique",
     ),
     (
         "METH_DIGESTION_ARTIFICIELLE",
         "Digestion artificielle de prélèvements musculaires et observation microscopique",
-        "Digestion artificielle",
     ),
     (
         "METH_SAW",
         "SAW",
-        "SAW",
     ),
     (
         "METH_TESTS_ESB",
-        "test ESB 1 Biorad TeSeE SAP ; test ESB 2 Prionics® Check Western ; test ESB 4 Prionics® Check "
-        "PrioSTRIP ; test ESB 5 Herdchek- antigen EIA IDEXX",
-        "Test ESB",
+        "test ESB 1 Biorad TeSeE SAP ; test ESB 2 Prionics® Check Western ; test ESB 4 Prionics® Check PrioSTRIP ; test ESB 5 Herdchek- antigen EIA IDEXX",
     ),
     (
         "METH_TESTS_ESST",
         "test ESST 1 BioradTeSsE Sheep/Goat ; test ESST 2 BioradTeSsE SAP ; test ESST 3 Herdchek-Antigen EIA IDEXX",
-        "Test ESST",
     ),
 ]
 
@@ -102,13 +82,11 @@ DATE_MAJ_SOURCE = "2026-06-04"
 
 def populate_methodes_analyse(apps, schema_editor):
     MethodeAnalyse = apps.get_model("sa", "MethodeAnalyse")
-    for id_seves, libelle_source, libelle_affichage in METHODES_ANALYSE:
+    for id_seves, libelle_source in METHODES_ANALYSE:
         MethodeAnalyse.objects.update_or_create(
             id_seves=id_seves,
             defaults={
                 "libelle_source": libelle_source,
-                "libelle_affichage": libelle_affichage,
-                "actif": True,
                 "date_maj_source": DATE_MAJ_SOURCE,
             },
         )
@@ -138,15 +116,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "libelle_source",
-                    models.TextField(verbose_name="Libellé(s) source(s)"),
-                ),
-                (
-                    "libelle_affichage",
-                    models.CharField(max_length=255, unique=True, verbose_name="Libellé affiché"),
-                ),
-                (
-                    "actif",
-                    models.BooleanField(default=True, verbose_name="Actif"),
+                    models.CharField(max_length=255, verbose_name="Libellé(s) source(s)"),
                 ),
                 (
                     "date_maj_source",
@@ -165,7 +135,7 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Méthode d'analyse",
                 "verbose_name_plural": "Méthodes d'analyse",
-                "ordering": ["libelle_affichage"],
+                "ordering": ["libelle_source"],
             },
         ),
         migrations.RunPython(populate_methodes_analyse, migrations.RunPython.noop),
