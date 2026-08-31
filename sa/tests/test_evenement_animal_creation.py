@@ -8,6 +8,7 @@ from sa.models.evenement import StatutAnimal, TypeLieu
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
 from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
 from seves import settings
+from sv.models import Evenement
 
 
 def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
@@ -22,7 +23,7 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     list_page.page.wait_for_url("**/sa/evenement-animal/creation**")
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.fill_required_fields(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     assert evenement_produit.createur == mocked_authentification_user.agent.structure
@@ -43,15 +44,33 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.createur == mocked_authentification_user.agent.structure
-    assert evenement_produit.maladie == maladie
-    assert evenement_produit.espece == espece
-    assert evenement_produit.statut_animal == input_data.statut_animal
-    assert evenement_produit.statut_evenement == input_data.statut_evenement
-    assert evenement_produit.date_statut_changed == input_data.date_statut_changed
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.maladie == maladie
+    assert evenement.espece == espece
+    assert evenement.statut_animal == input_data.statut_animal
+    assert evenement.statut_evenement == input_data.statut_evenement
+    assert evenement.date_statut_changed == input_data.date_statut_changed
+    assert evenement.is_draft is True
+
+
+def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.publish()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.date_publication is not None
+    assert evenement.is_draft is False
+    assert evenement.etat == Evenement.Etat.EN_COURS
 
 
 def test_type_lieu_options_depend_on_statut_animal(live_server, page: Page, check_select_options):
@@ -77,7 +96,7 @@ def test_can_create_evenement_animal_with_localisation_block(live_server, mocked
     creation_page.force_address(input_data.adresse_lieu_dit)
     creation_page.force_commune()
     creation_page.numero_identifiant.fill(input_data.numero_identifiant)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit
@@ -132,7 +151,7 @@ def test_can_create_evenement_animal_with_ban_auto_complete(
         "251 Rue de Vaugirard 75015 Paris",
     )
     assert call_count["count"] == 1
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.adresse_lieu_dit == "251 Rue de Vaugirard"
@@ -149,7 +168,7 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_context_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.context_suspicion == input_data.context_suspicion
@@ -167,7 +186,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_detenteur_etablissement_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
@@ -229,7 +248,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
         search="120 079 017",
     )
     assert call_count["count"] == 1
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.siret_etablissement == siret
@@ -250,7 +269,7 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_detenteur_particulier_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
@@ -558,7 +577,7 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     creation_page.date_apms.fill(input_data.date_apms.strftime("%Y-%m-%d"))
     creation_page.date_apdi.fill(input_data.date_apdi.strftime("%Y-%m-%d"))
     creation_page.date_levee.fill(input_data.date_levee.strftime("%Y-%m-%d"))
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.date_apms == input_data.date_apms

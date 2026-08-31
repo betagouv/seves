@@ -322,8 +322,12 @@ class EvenementAnimalFormPage(
                 "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
             )
 
-    def submit(self):
-        self.page.get_by_role("button", name="Enregistrer", exact=True).click()
+    def submit_as_draft(self):
+        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+        self.page.wait_for_url("**/sa/evenement-animal/**/")
+
+    def publish(self):
+        self.page.get_by_role("button", name="Publier", exact=True).click()
         self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):
@@ -380,3 +384,7 @@ class EvenementAnimalDetailsPage:
 
     def block(self, title):
         return self.page.get_by_role("heading", name=title, exact=True).locator("..")
+
+    def publish(self):
+        self.page.get_by_role("button", name="Publier", exact=True).click()
+        self.page.wait_for_url("**/sa/evenement-animal/**/")

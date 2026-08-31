@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404
@@ -55,9 +56,12 @@ class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMi
         return context
 
 
-class EvenementAnimalDetailsView(DetailView):
+class EvenementAnimalDetailsView(UserPassesTestMixin, DetailView):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
+
+    def test_func(self):
+        return self.get_object().can_user_access(self.request.user)
 
     def get_queryset(self):
         return EvenementAnimal.objects.all()
@@ -78,6 +82,7 @@ class EvenementAnimalDetailsView(DetailView):
         context = super().get_context_data(**kwargs)
         contact = self.request.user.agent.structure.contact_set.get()
         context["etat"] = self.object.get_etat_data_for_contact(contact)
+        context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.object)
         context["latest_version"] = self.object.latest_version
         return context

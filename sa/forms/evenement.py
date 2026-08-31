@@ -8,6 +8,7 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
 from core.form_mixins import js_module
+from core.mixins import WithEtatMixin
 from core.models import Departement
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
@@ -258,6 +259,9 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         return self.show_mesures_first_row
 
     def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
