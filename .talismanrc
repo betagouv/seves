@@ -138,5 +138,7 @@ fileignoreconfig:
   checksum: de0caaa5587cb8a90054dd9715e047abbedc50683f8eedb5acf21a823c7c89ef
 - filename: core/static/core/form/widgets/treeselect.mjs
   checksum: ba4564b7f9f62ca759e7e9a4951331717d458569c9f3dbd5c19ad32c9fa24e03
+- filename: sa/migrations/0010_analyse.py
+  checksum: ae08f5940a3e3513cc524d8e395a89621ef822ff5ec852a5d4cb46745a9a2b6f
 
 version: "1.0"

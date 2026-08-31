@@ -3,10 +3,10 @@ from functools import cached_property
 import json
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Locator, Page
 
 from core.tests.pages import ChoiceJSPage, TreeselectPage
-from sa.models import EvenementAnimal
+from sa.models import Analyse, EvenementAnimal
 from seves import settings
 
 
@@ -154,6 +154,62 @@ class WithParticulierDetenteurUtils:
         self.page.unroute(url)
 
 
+class WithAnalyseMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def get_analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
+    @property
+    def add_analyse_button(self):
+        return self.page.locator(".analyses-fieldset").get_by_role("button", name="Ajouter")
+
+    def open_analyse_modal(self):
+        self.add_analyse_button.click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def fill_analyse(self, modal: Locator, analyse: Analyse):
+        modal.locator('[id$="-maladie"]').select_option(str(analyse.maladie_id))
+        modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
+        if analyse.date_resultat:
+            modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
+        modal.locator('[id$="-laboratoire"]').select_option(str(analyse.laboratoire_id))
+        modal.locator('[id$="-methode"]').select_option(str(analyse.methode_id))
+        modal.locator('[id$="-resultat"]').select_option(analyse.resultat)
+        if analyse.resultat_confirmation:
+            modal.locator('[id$="resultat_confirmation"]').check(force=True)
+
+    def close_analyse_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_analyse(self, analyse: Analyse):
+        modal = self.open_analyse_modal()
+        self.fill_analyse(modal, analyse)
+        self.close_analyse_modal()
+
+    def delete_analyse(self, index=0):
+        self.get_analyse_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_analyse(self, index=0, **kwargs):
+        card = self.get_analyse_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".analyse-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").locator("visible=true").count()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -226,7 +282,11 @@ class EvenementListPage(WithPreCreationFormPage):
 
 
 class EvenementAnimalFormPage(
-    WithPreCreationFormPage, WithAddressAndCommuneUtils, WithEtablissementDetenteurUtils, WithParticulierDetenteurUtils
+    WithPreCreationFormPage,
+    WithAddressAndCommuneUtils,
+    WithEtablissementDetenteurUtils,
+    WithParticulierDetenteurUtils,
+    WithAnalyseMixin,
 ):
     fields = [
         "statut_evenement",
@@ -403,3 +463,16 @@ class EvenementAnimalDetailsPage:
     def publish(self):
         self.page.get_by_role("button", name="Publier", exact=True).click()
         self.page.wait_for_url("**/sa/evenement-animal/**/")
+
+    def get_analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").count()
+
+    def open_analyse_detail(self, index=0):
+        self.get_analyse_card(index).get_by_role("button", name="Voir le détail").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+        modal.wait_for(state="visible")
+        return modal

@@ -1,0 +1,96 @@
+{% load dsfr_tags widget_tweaks %}
+
+{% partialdef form-dialog %}
+    <div
+        class="modal-analyse-container fr-col-12 fr-col-lg-6 fr-col-xl-3"
+        data-controller="analyse-form"
+        data-analyse-form-form-prefix-value="{{ form.prefix }}"
+        data-analyse-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-analyse-form-methodes-par-laboratoire-value="{{ form.methodes_par_laboratoire_json }}"
+        data-analyse-form-laboratoires-types-value="{{ form.laboratoires_types_json }}"
+    >
+        <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
+        <dialog
+            id="fr-modal-{{ form.prefix }}"
+            class="fr-modal analyse-modal"
+            aria-labelledby="fr-modal-title-modal-{{ form.prefix }}"
+            data-analyse-form-target="dialog"
+        >
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button
+                                    class="fr-btn--close fr-btn"
+                                    title="Fermer la fenêtre modale"
+                                    aria-controls="fr-modal-{{ form.prefix }}"
+                                    type="button"
+                                >Fermer</button>
+                            </div>
+                            <div class="fr-modal__content">
+                                <h1 id="fr-modal-title-modal--{{ form.prefix }}" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg"></span>
+                                    Ajouter une analyse
+                                </h1>
+                                <p class="fr-hint-text">* Champs obligatoires</p>
+                                <fieldset data-analyse-form-target="fieldset">
+                                    {{ form }}
+                                </fieldset>
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
+                                    <button
+                                        class="fr-btn fr-btn--secondary"
+                                        aria-controls="fr-modal-{{ form.prefix }}"
+                                        type="button"
+                                        data-action="analyse-form#closeDialog:prevent:stop"
+                                    >Annuler</button>
+                                    <button
+                                        type="submit"
+                                        class="fr-btn save-btn"
+                                        data-action="analyse-form#onValidateForm:prevent:stop"
+                                    >Enregistrer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </div>
+{% endpartialdef %}
+
+<fieldset
+    class="fr-fieldset form-fieldset analyses-fieldset fr-mt-4v"
+    data-controller="analyse-formset"
+    data-analyse-formset-max-analyses-value="{{ formset.max_num }}"
+    data-action="analyse-form:deleted->analyse-formset#refreshAddButton"
+>
+    <div class="fieldset-header">
+        <legend class="fr-fieldset__legend fr-h3">Flux analytique</legend>
+        <button
+            type="button"
+            class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+            data-action="analyse-formset#onAddForm:prevent:stop"
+            data-analyse-formset-target="addButton"
+            data-testid="add-analyse"
+            {% if formset.forms|length >= formset.max_num %}disabled{% endif %}
+        >Ajouter</button>
+    </div>
+    {{ formset.non_form_errors }}
+    <div class="fr-col-12 fr-grid-row fr-grid-row--gutters fr-m-0" data-analyse-formset-target="formsetContainer">
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"analyse-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        {% for form in formset %}
+            {% partial form-dialog %}
+        {% endfor %}
+    </div>
+    <template data-analyse-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
+    </template>
+</fieldset>
