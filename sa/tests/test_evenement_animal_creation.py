@@ -248,6 +248,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
         search="120 079 017",
     )
     assert call_count["count"] == 1
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
     creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
@@ -596,3 +597,119 @@ def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page
     expect(creation_page.date_apms).not_to_be_visible()
     expect(creation_page.date_apdi).not_to_be_visible()
     expect(creation_page.date_levee).not_to_be_visible()
+
+
+def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
+    response = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                "properties": {
+                    "label": "251 Rue de Vaugirard 75015 Paris",
+                    "name": "251 Rue de Vaugirard",
+                    "citycode": "75115",
+                    "postcode": "75015",
+                    "city": "Paris",
+                    "context": "75, Paris, Île-de-France",
+                },
+            },
+        ],
+    }
+    page.route(
+        f"{settings.GEOCODE_URL}/search/?*",
+        lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(response)),
+    )
+
+
+def test_reuse_address_button_is_disabled_when_detenteur_is_empty(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_disabled()
+
+    creation_page.force_address_etablissement(input_data.adresse_lieu_dit_etablissement)
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
+
+    creation_page.particulier_label.click()
+    creation_page.confirm_type_change()
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_disabled()
+
+    creation_page.force_address_particulier("12 rue des Lilas")
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
+
+
+def test_can_reuse_address_from_detenteur_etablissement_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_etablissement_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+    expect(creation_page.commune).to_have_value("Lille")
+    expect(creation_page.code_insee).to_have_value(input_data.code_insee_etablissement)
+    expect(creation_page.coordinates_0).to_have_value("48.840234")
+    expect(creation_page.coordinates_1).to_have_value("2.304014")
+
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit_etablissement
+    assert evenement_produit.commune == "Lille"
+    assert evenement_produit.code_insee == input_data.code_insee_etablissement
+
+
+def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory(particulier=True)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_particulier_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_particulier)
+    expect(creation_page.commune).to_have_value("Lille")
+    expect(creation_page.code_insee).to_have_value(input_data.code_insee_particulier)
+
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement_produit.adresse_lieu_dit == input_data.adresse_particulier
+    assert evenement_produit.commune == "Lille"
+    assert evenement_produit.code_insee == input_data.code_insee_particulier
+
+
+def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_etablissement_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+
+    creation_page.force_address_etablissement("Nouvelle adresse jamais reprise")
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)

@@ -25,6 +25,15 @@
     display: none;
 }
 
+.fieldset-header > .fr-fieldset__legend {
+    min-width: 0;
+}
+
+.reprendre-adresse-detenteur-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 #context .fr-radio-group {
     margin-top: 0.5rem;
     margin-right: 2rem;

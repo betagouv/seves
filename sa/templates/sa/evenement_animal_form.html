@@ -12,7 +12,7 @@
 {% block content %}
     <form class="fr-container--fluid fr-background-alt--grey" method="post">
         {% csrf_token %}
-        <main class="main-container">
+        <main class="main-container" data-controller="localisation-from-detenteur">
             <div class="fr-grid-row" data-testid="top-action-btns">
                 <h1 class="fr-col-6">
                     Créer un événement cas ou suspicion
@@ -147,9 +147,9 @@
                         {% dsfr_form_field form.autre_identifiant_etablissement %}
                         <div class="fr-select-group" data-testid="ban-search-etablissement">
                             <label for="{{ form.adresse_lieu_dit_etablissement.id_for_label }}" class="fr-label">{{ form.adresse_lieu_dit_etablissement.label }}</label>
-                            {{ form.adresse_lieu_dit_etablissement|set_data:"address-search-autocomplete-target:address" }}
+                            {{ form.adresse_lieu_dit_etablissement|set_data:"address-search-autocomplete-target:address"|set_data:"localisation-from-detenteur-target:etablissementAdresse"|set_data:"action:addItem->localisation-from-detenteur#updateButtonState removeItem->localisation-from-detenteur#updateButtonState" }}
                         </div>
-                        {% dsfr_form_field form.code_insee_etablissement|set_data:"address-search-autocomplete-target:codeInsee" %}
+                        {% dsfr_form_field form.code_insee_etablissement|set_data:"address-search-autocomplete-target:codeInsee"|set_data:"localisation-from-detenteur-target:etablissementCodeInsee" %}
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="fr-select-group" data-testid="siret-etablissement">
@@ -158,7 +158,7 @@
                         </div>
                         <div class="fr-select-group" data-testid="communes-search-etablissement">
                             <label for="{{ form.commune_etablissement.id_for_label }}" class="fr-label">{{ form.commune_etablissement.label }}</label>
-                            {{ form.commune_etablissement|set_data:"address-search-autocomplete-target:commune" }}
+                            {{ form.commune_etablissement|set_data:"address-search-autocomplete-target:commune"|set_data:"localisation-from-detenteur-target:etablissementCommune" }}
                         </div>
                         {% dsfr_form_field form.pays_etablissement|set_data:"address-search-autocomplete-target:country" %}
                     </div>
@@ -167,12 +167,13 @@
                     class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"
                     data-detenteur-form-target="particulierForm"
                     data-controller="address-search-autocomplete"
+                    data-localisation-from-detenteur-target="particulierFields"
                 >
                     <div class="fr-col-12 fr-col-lg-4">
                         {% dsfr_form_field form.nom_particulier|set_data:"detenteur-form-target:nomParticulier" %}
                         <div class="fr-select-group" data-testid="communes-search-particulier">
                             <label for="{{ form.commune_particulier.id_for_label }}" class="fr-label">{{ form.commune_particulier.label }}</label>
-                            {{ form.commune_particulier|set_data:"address-search-autocomplete-target:commune" }}
+                            {{ form.commune_particulier|set_data:"address-search-autocomplete-target:commune"|set_data:"localisation-from-detenteur-target:particulierCommune" }}
                         </div>
                         {% dsfr_form_field form.email_particulier %}
                     </div>
@@ -184,9 +185,9 @@
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="fr-select-group" data-testid="ban-search-particulier">
                             <label for="{{ form.adresse_particulier.id_for_label }}" class="fr-label">{{ form.adresse_particulier.label }}</label>
-                            {{ form.adresse_particulier|set_data:"address-search-autocomplete-target:address" }}
+                            {{ form.adresse_particulier|set_data:"address-search-autocomplete-target:address"|set_data:"localisation-from-detenteur-target:particulierAdresse"|set_data:"action:addItem->localisation-from-detenteur#updateButtonState removeItem->localisation-from-detenteur#updateButtonState" }}
                         </div>
-                        {% dsfr_form_field form.code_insee_particulier|set_data:"address-search-autocomplete-target:codeInsee" %}
+                        {% dsfr_form_field form.code_insee_particulier|set_data:"address-search-autocomplete-target:codeInsee"|set_data:"localisation-from-detenteur-target:particulierCodeInsee" %}
                     </div>
                 </div>
 
@@ -197,9 +198,20 @@
                     <legend class="fr-fieldset__legend fr-h3">Localisation
                         <div class="helptext fr-hint-text">Placez votre repère en double cliquant sur la zone correspondante ou renseignez manuellement les coordonnées GPS.</div>
                     </legend>
+                    <button
+                        type="button"
+                        class="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-refresh-line fr-my-auto reprendre-adresse-detenteur-btn"
+                        data-testid="reprendre-adresse-detenteur-btn"
+                        data-localisation-from-detenteur-target="reprendreAdresseBtn"
+                        data-action="click->localisation-from-detenteur#onReprendre"
+                        disabled
+                    >
+                        Reprendre l'adresse du détenteur
+                    </button>
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-col"
                      data-controller="map address-search-autocomplete"
+                     data-localisation-from-detenteur-target="localisationAddressFields"
                      data-map-json-file-value="{% static 'core/style_ign.json' %}"
                      data-map-default-style-value="satellite"
                      data-map-reverse-api-value="{{ REVERSE_GEO_API }}"
