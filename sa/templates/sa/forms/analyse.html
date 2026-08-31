@@ -1,0 +1,12 @@
+{% load dsfr_tags widget_tweaks %}
+
+{% dsfr_form_field form.maladie|set_data:"analyse-form-target:maladieSelect" %}
+{% dsfr_form_field form.date_prelevement %}
+{% dsfr_form_field form.date_resultat %}
+{% dsfr_form_field form.laboratoire|set_data:"analyse-form-target:laboratoireSelect"|set_data:"action:change->analyse-form#onLaboratoireChange" %}
+{% dsfr_form_field form.methode|set_data:"analyse-form-target:methodeSelect" %}
+{% dsfr_form_field form.resultat %}
+{% dsfr_form_field form.resultat_confirmation|dsfr_inline %}
+{% dsfr_notice title="Ajoutez le rapport d'analyse dans les documents" %}
+{{ form.DELETE|set_data:"analyse-form-target:deleteInput" }}
+{{ form.id }}

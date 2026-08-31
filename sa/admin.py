@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.gis import forms
 
-from .models import Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from .models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
 
 
 class EvenementAnimalAdminForm(forms.ModelForm):
@@ -52,6 +52,18 @@ class MethodeAnalyseAdmin(admin.ModelAdmin):
     )
     list_filter = ("actif",)
     filter_horizontal = ("laboratoires",)
+
+
+@admin.register(Analyse)
+class AnalyseAdmin(admin.ModelAdmin):
+    list_display = (
+        "evenement",
+        "maladie",
+        "laboratoire",
+        "methode",
+        "get_resultat_display",
+        "date_prelevement",
+    )
 
 
 admin.site.register(Espece)

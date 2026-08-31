@@ -1,11 +1,15 @@
+from functools import cached_property
+
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
-from core.mixins import MediaDefiningMixin, WithFormErrorsAsMessagesMixin
+from core.mixins import MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
 from sa.forms.evenement import EvenementAnimalForm
+from sa.formsets import AnalyseFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
 
@@ -32,13 +36,66 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         return context
 
 
-class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMixin, CreateView):
-    form_class = EvenementAnimalForm
+class EvenementAnimalBaseView(
+    WithFormErrorsAsMessagesMixin,
+    MediaDefiningMixin,
+    WithFormsetInvalidMixin,
+    ModelFormMixin,
+    ProcessFormView,
+):
     template_name = "sa/evenement_animal_form.html"
+    form_class = EvenementAnimalForm
+    model = EvenementAnimal
 
-    def get_media(self, **context_data):
-        return context_data["form"].media
+    @cached_property
+    def analyse_formset(self):
+        return AnalyseFormSet(**self.get_analyse_formset_kwargs())
 
+    def get_analyse_formset_kwargs(self):
+        kwargs = {"form_kwargs": {"maladie_initial": self.request.GET.get("maladie")}}
+        if self.object:
+            kwargs["instance"] = self.object
+        if self.request.POST:
+            kwargs["data"] = self.request.POST
+        return kwargs
+
+    def get_object(self, queryset=None):
+        if not self.kwargs.get(self.pk_url_kwarg):
+            return None
+        return super().get_object(queryset)
+
+    def get_media(self, **context_data) -> Media:
+        return context_data["form"].media + self.analyse_formset.media
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["analyse_formset"] = self.analyse_formset
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not hasattr(self, "object"):
+            self.object = self.get_object()
+
+        if not self.analyse_formset.is_valid():
+            return self.formset_invalid(
+                self.analyse_formset,
+                "Erreurs dans le(s) formulaire(s) Analyse",
+                "Erreur dans le formulaire analyse",
+            )
+
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return self.form_valid(form)
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.analyse_formset.instance = self.object
+        self.analyse_formset.save()
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user

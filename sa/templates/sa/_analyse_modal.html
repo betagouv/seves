@@ -1,0 +1,39 @@
+{% load or_empty_value_tag %}
+<dialog aria-labelledby="fr-modal-title-modal-analyse-{{ analyse.pk }}" role="dialog"
+        id="fr-modal-analyse-{{ analyse.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-analyse-{{ analyse.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-analyse-{{ analyse.pk }}"
+                            class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg">{{ analyse.maladie.name }}</h1>
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Maladie</div>
+                                <div class="fr-col-3">{{ analyse.maladie.name|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Date du prélèvement</div>
+                                <div class="fr-col-3">{{ analyse.date_prelevement|date:"d/m/Y"|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Date du résultat</div>
+                                <div class="fr-col-3">{{ analyse.date_resultat|date:"d/m/Y"|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Laboratoire</div>
+                                <div class="fr-col-3">{{ analyse.laboratoire.name|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Méthode</div>
+                                <div class="fr-col-3">{{ analyse.methode.libelle_affichage|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Résultat</div>
+                                <div class="fr-col-3">{{ analyse.get_resultat_display|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Résultat valant confirmation</div>
+                                <div class="fr-col-3">{{ analyse.resultat_confirmation|yesno:"Oui,Non" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
