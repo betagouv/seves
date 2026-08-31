@@ -48,7 +48,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==49.0.0
+cryptography==50.0.0
     # via mozilla-django-oidc
 diff-match-patch==20241021
     # via django-reversion-compare
