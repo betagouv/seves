@@ -32,7 +32,7 @@ def fix_invalid_type_lieu(apps, _):
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0064_auto_20260727_1357"),
-        ("sa", "0007_evenementanimal_date_apdi_evenementanimal_date_apms_and_more"),
+        ("sa", "0008_laboratoire"),
     ]
 
     operations = [
