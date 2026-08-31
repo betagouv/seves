@@ -75,6 +75,114 @@
                 </div>
             </fieldset>
 
+            <fieldset class="form-fieldset fr-mt-4v" data-controller="detenteur-form">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Détenteur</legend>
+                </div>
+
+                <dialog id="detenteur-type-change-modal" class="fr-modal" aria-labelledby="detenteur-type-change-modal-title" data-detenteur-form-target="confirmModal">
+                    <div class="fr-container fr-container--fluid fr-container-md">
+                        <div class="fr-grid-row fr-grid-row--center">
+                            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                                <div class="fr-modal__body">
+                                    <div class="fr-modal__header">
+                                        <button aria-controls="detenteur-type-change-modal" title="Fermer" type="button" class="fr-btn--close fr-btn" data-action="click->detenteur-form#onCancelSwitch">Fermer</button>
+                                    </div>
+                                    <div class="fr-modal__content">
+                                        <h2 id="detenteur-type-change-modal-title" class="fr-modal__title">
+                                            Changement de type de détenteur
+                                        </h2>
+                                        <p>Un détenteur ne peut avoir qu'un seul statut : établissement ou particulier. Si vous continuez, les informations saisies dans l'onglet actuel seront perdues.</p>
+                                    </div>
+                                    <div class="fr-modal__footer">
+                                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                                            <button class="fr-btn fr-btn--secondary" type="button" data-action="click->detenteur-form#onCancelSwitch">
+                                                Annuler
+                                            </button>
+                                            <button class="fr-btn" type="button" data-action="click->detenteur-form#onConfirmSwitch">Continuer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </dialog>
+
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12">
+                        <fieldset class="fr-segmented">
+                            <div class="fr-segmented__elements">
+                                <div class="fr-segmented__element">
+                                    <input value="etablissement" checked type="radio" id="etablissement-btn" name="type_detenteur" data-detenteur-form-target="etablissementRadio">
+                                    <label class="fr-label" for="etablissement-btn" data-action="click->detenteur-form#onEtablissementLabelClick">Établissement</label>
+                                </div>
+                                <div class="fr-segmented__element">
+                                    <input value="particulier" type="radio" id="particulier-btn" name="type_detenteur" data-detenteur-form-target="particulierRadio">
+                                    <label class="fr-label" for="particulier-btn" data-action="click->detenteur-form#onParticulierLabelClick">Particulier</label>
+                                </div>
+                            </div>
+                        </fieldset></div>
+                </div>
+
+                <div
+                    class="fr-grid-row fr-grid-row--gutters fr-col"
+                    data-detenteur-form-target="etablissementForm"
+                    data-controller="address-search-autocomplete"
+                >
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.numero_identifiant_etablissement|set_data:"detenteur-form-target:numeroIdentifiantEtablissement" %}
+                        {% dsfr_form_field form.raison_sociale_etablissement|set_data:"detenteur-form-target:raisonSocialeInput" %}
+                        {% dsfr_form_field form.departement_etablissement|set_data:"address-search-autocomplete-target:departement" %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.autre_identifiant_etablissement %}
+                        <div class="fr-select-group" data-testid="ban-search-etablissement">
+                            <label for="{{ form.adresse_lieu_dit_etablissement.id_for_label }}" class="fr-label">{{ form.adresse_lieu_dit_etablissement.label }}</label>
+                            {{ form.adresse_lieu_dit_etablissement|set_data:"address-search-autocomplete-target:address" }}
+                        </div>
+                        {% dsfr_form_field form.code_insee_etablissement|set_data:"address-search-autocomplete-target:codeInsee" %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="fr-select-group" data-testid="siret-etablissement">
+                            <label for="{{ form.siret_etablissement.id_for_label }}" class="fr-label">{{ form.siret_etablissement.label }}</label>
+                            {{ form.siret_etablissement|set_data:"detenteur-form-target:siretEtablissement"|set_data:"action:choice->detenteur-form#onSireneChoice" }}
+                        </div>
+                        <div class="fr-select-group" data-testid="communes-search-etablissement">
+                            <label for="{{ form.commune_etablissement.id_for_label }}" class="fr-label">{{ form.commune_etablissement.label }}</label>
+                            {{ form.commune_etablissement|set_data:"address-search-autocomplete-target:commune" }}
+                        </div>
+                        {% dsfr_form_field form.pays_etablissement|set_data:"address-search-autocomplete-target:country" %}
+                    </div>
+                </div>
+                <div
+                    class="fr-grid-row fr-grid-row--gutters fr-col fr-hidden"
+                    data-detenteur-form-target="particulierForm"
+                    data-controller="address-search-autocomplete"
+                >
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.nom_particulier|set_data:"detenteur-form-target:nomParticulier" %}
+                        <div class="fr-select-group" data-testid="communes-search-particulier">
+                            <label for="{{ form.commune_particulier.id_for_label }}" class="fr-label">{{ form.commune_particulier.label }}</label>
+                            {{ form.commune_particulier|set_data:"address-search-autocomplete-target:commune" }}
+                        </div>
+                        {% dsfr_form_field form.email_particulier %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.prenom_particulier %}
+                        {% dsfr_form_field form.departement_particulier|set_data:"address-search-autocomplete-target:departement" %}
+                        {% dsfr_form_field form.telephone_particulier %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="fr-select-group" data-testid="ban-search-particulier">
+                            <label for="{{ form.adresse_particulier.id_for_label }}" class="fr-label">{{ form.adresse_particulier.label }}</label>
+                            {{ form.adresse_particulier|set_data:"address-search-autocomplete-target:address" }}
+                        </div>
+                        {% dsfr_form_field form.code_insee_particulier|set_data:"address-search-autocomplete-target:codeInsee" %}
+                    </div>
+                </div>
+
+            </fieldset>
+
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v ">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Localisation
@@ -84,13 +192,34 @@
                 <div class="fr-grid-row fr-grid-row--gutters fr-col"
                      data-controller="map address-search-autocomplete"
                      data-map-json-file-value="{% static 'core/style_ign.json' %}"
+                     data-map-default-style-value="satellite"
                      data-map-reverse-api-value="{{ REVERSE_GEO_API }}"
                      data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
                      data-map-region-value="{{ form.structure.region.nom }}"
                      data-map-departement-value="{{ form.structure.departement.nom }}"
                 >
                     <div class="fr-col-12 fr-col-lg-7">
-                        <div data-map-target="mapDisplay" class="map"></div>
+                        <div class="map-wrapper">
+                            <div data-map-target="mapDisplay" class="map"></div>
+                            <div class="map-parcelles-control">
+                                <div class="fr-checkbox-group fr-checkbox-group--sm">
+                                    <input
+                                        type="checkbox"
+                                        id="map-parcelles-checkbox"
+                                        data-map-target="parcellesCheckbox"
+                                        data-action="change->map#toggleParcelles"
+                                        aria-describedby="map-parcelles-message"
+                                    >
+                                    <label class="fr-label" for="map-parcelles-checkbox">Parcelles</label>
+                                </div>
+                                <p
+                                    id="map-parcelles-message"
+                                    class="map-parcelles-message fr-hint-text"
+                                    data-map-target="parcellesMessage"
+                                    hidden
+                                ></p>
+                            </div>
+                        </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-5">
 
@@ -104,7 +233,7 @@
                         </div>
 
                         {% dsfr_form_field form.code_insee|set_data:"map-target:codeInseeInput"|set_data:"address-search-autocomplete-target:codeInsee"%}
-                        {% dsfr_form_field form.numero_identifiant %}
+                        {% dsfr_form_field form.numero_identifiant|set_data:"map-target:numeroIdentifiantInput"|append_attr:"data-action:input->map#handleNumeroIdentifiantInput" %}
                         {% dsfr_form_field form.type_lieu %}
                         {% dsfr_form_field form.coordinates %}
                     </div>
@@ -129,7 +258,27 @@
                     </div>
                 </div>
             </fieldset>
-
+            {% if form.show_mesures_block %}
+                <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="mesures">
+                    <div class="fieldset-header">
+                        <legend class="fr-fieldset__legend fr-h3">Mesures de gestion
+                        </legend>
+                    </div>
+                    {% if form.show_mesures_first_row %}
+                        <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_apms %}
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_apdi %}
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                {% dsfr_form_field form.date_levee %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </fieldset>
+            {% endif %}
         </main>
     </form>
 {% endblock content %}

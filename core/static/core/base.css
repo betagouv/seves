@@ -79,6 +79,10 @@ fieldset {
     background-image: inherit !important;
 }
 
+.fr-label + .choices {
+    margin-top: 0.5rem;
+}
+
 .choices__list--multiple .choices__item {
     /* Customize ChoicesJS multiple choices picker */
     min-width: 0px;
@@ -256,6 +260,12 @@ fieldset {
 
 .fieldset-flex-options {
     display: flex;
+}
+
+.fr-fieldset__element--with-tooltip {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
 }
 
 .generic-card-container {

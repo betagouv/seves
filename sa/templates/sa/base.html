@@ -28,7 +28,7 @@
                             <form method="get" action="{% url 'sa:evenement-animal-creation' %}">
                                 {% dsfr_form_field pre_creation_form.maladie  %}
                                 {% dsfr_form_field pre_creation_form.espece  %}
-                                {% dsfr_inline_radio_field pre_creation_form.statut_animal %}
+                                {% dsfr_inline_radio_field pre_creation_form.statut_animal tooltips=pre_creation_form.STATUT_ANIMAL_TOOLTIPS %}
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
                                     <button class="fr-btn fr-btn--secondary" aria-controls="modal-pre-creation" type="button">Annuler</button>
                                     <button type="submit" class="fr-btn">Suivant > </button>

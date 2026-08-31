@@ -86,6 +86,7 @@ if ADMIN_ENABLED:
     INSTALLED_APPS.append("django.contrib.admin")
 
 MIDDLEWARE = [
+    "seves.middlewares.XXSSProtectionMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

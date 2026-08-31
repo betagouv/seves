@@ -29,13 +29,15 @@ def test_user_cant_see_navigation_without_group(live_server, page, mocked_authen
 def test_can_add_permissions(live_server, page, mocked_authentification_user):
     sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
     ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
+    sa_group, _ = Group.objects.get_or_create(name=settings.SA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group)
+    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group, sa_group)
     contact_agent_1 = ContactAgentFactory(agent__structure=structure)
     contact_agent_2 = ContactAgentFactory(agent__structure=structure)
     contact_agent_3 = ContactAgentFactory(agent__structure=structure)
     contact_agent_4 = ContactAgentFactory()
+    contact_agent_5 = ContactAgentFactory(agent__structure=structure)
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=False)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
@@ -44,11 +46,13 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
     expect(page.get_by_text(str(contact_agent_2))).to_be_visible()
     expect(page.get_by_text(str(contact_agent_3))).to_be_visible()
     expect(page.get_by_text(str(contact_agent_4))).not_to_be_visible()
+    expect(page.get_by_text(str(contact_agent_5))).to_be_visible()
 
     page.locator(f"input[id='sv_{contact_agent_1.agent.user.pk}']").click(force=True)
     page.locator(f"input[id='ssa_{contact_agent_2.agent.user.pk}']").click(force=True)
     page.locator(f"input[id='sv_{contact_agent_3.agent.user.pk}']").click(force=True)
     page.locator(f"input[id='ssa_{contact_agent_3.agent.user.pk}']").click(force=True)
+    page.locator(f"input[id='sa_{contact_agent_5.agent.user.pk}']").click(force=True)
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
     expect(page.get_by_role("heading", name="Modification de droits")).to_be_visible()
@@ -57,33 +61,39 @@ def test_can_add_permissions(live_server, page, mocked_authentification_user):
     contact_agent_2.refresh_from_db()
     contact_agent_3.refresh_from_db()
     contact_agent_4.refresh_from_db()
+    contact_agent_5.refresh_from_db()
 
     assert set(contact_agent_1.agent.user.groups.all()) == {sv_group}
     assert set(contact_agent_2.agent.user.groups.all()) == {ssa_group}
     assert set(contact_agent_3.agent.user.groups.all()) == {sv_group, ssa_group}
     assert contact_agent_4.agent.user.groups.count() == 0
+    assert set(contact_agent_5.agent.user.groups.all()) == {sa_group}
 
     assert contact_agent_1.agent.user.is_active is True
     assert contact_agent_2.agent.user.is_active is True
     assert contact_agent_3.agent.user.is_active is True
     assert contact_agent_4.agent.user.is_active is False
+    assert contact_agent_5.agent.user.is_active is True
 
 
 @pytest.mark.django_db
 def test_can_remove_permissions(live_server, page, mocked_authentification_user):
     sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
     ssa_group, _ = Group.objects.get_or_create(name=settings.SSA_GROUP)
+    sa_group, _ = Group.objects.get_or_create(name=settings.SA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     structure = mocked_authentification_user.agent.structure
-    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group)
+    mocked_authentification_user.groups.add(access_admin_group, sv_group, ssa_group, sa_group)
     contact_agent_1 = ContactAgentFactory(agent__structure=structure)
     contact_agent_2 = ContactAgentFactory(agent__structure=structure)
     contact_agent_3 = ContactAgentFactory(agent__structure=structure)
     contact_agent_4 = ContactAgentFactory(agent__structure=structure)
+    contact_agent_5 = ContactAgentFactory(agent__structure=structure)
     contact_agent_1.agent.user.groups.add(sv_group)
     contact_agent_2.agent.user.groups.add(ssa_group)
     contact_agent_3.agent.user.groups.add(sv_group, ssa_group)
     contact_agent_4.agent.user.groups.add(sv_group, ssa_group)
+    contact_agent_5.agent.user.groups.add(sa_group)
     User.objects.exclude(pk=mocked_authentification_user.pk).update(is_active=True)
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
@@ -92,6 +102,7 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
     page.locator(f"input[id='sv_{contact_agent_3.agent.user.pk}']").click(force=True)
     page.locator(f"input[id='ssa_{contact_agent_3.agent.user.pk}']").click(force=True)
     page.locator(f"input[id='sv_{contact_agent_4.agent.user.pk}']").click(force=True)
+    page.locator(f"input[id='sa_{contact_agent_5.agent.user.pk}']").click(force=True)
     page.get_by_role("button", name="Enregistrer les modifications").click()
 
     expect(page.get_by_role("heading", name="Modification de droits")).to_be_visible()
@@ -100,16 +111,19 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
     contact_agent_2.refresh_from_db()
     contact_agent_3.refresh_from_db()
     contact_agent_4.refresh_from_db()
+    contact_agent_5.refresh_from_db()
 
     assert set(contact_agent_1.agent.user.groups.all()) == set()
     assert set(contact_agent_2.agent.user.groups.all()) == set()
     assert set(contact_agent_3.agent.user.groups.all()) == set()
     assert set(contact_agent_4.agent.user.groups.all()) == {ssa_group}
+    assert set(contact_agent_5.agent.user.groups.all()) == set()
 
     assert contact_agent_1.agent.user.is_active is False
     assert contact_agent_2.agent.user.is_active is False
     assert contact_agent_3.agent.user.is_active is False
     assert contact_agent_4.agent.user.is_active is True
+    assert contact_agent_5.agent.user.is_active is False
 
 
 @pytest.mark.django_db
@@ -156,11 +170,33 @@ def test_ssa_user_cant_manage_sv_permissions(live_server, page, mocked_authentif
 
 
 @pytest.mark.django_db
+def test_sa_user_cant_manage_sv_ssa_permissions(live_server, page, mocked_authentification_user):
+    Group.objects.get_or_create(name=settings.SV_GROUP)
+    Group.objects.get_or_create(name=settings.SSA_GROUP)
+    sa_group, _ = Group.objects.get_or_create(name=settings.SA_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.set([access_admin_group, sa_group])
+    agent = AgentFactory(structure=structure, prenom="Test", nom="User")
+
+    page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
+
+    expect(page.get_by_text("SA")).to_be_visible()
+    expect(page.get_by_text("SV")).not_to_be_visible()
+    expect(page.get_by_text("SSA")).not_to_be_visible()
+    expect(page.locator(f"input[id='sa_{agent.user.pk}']")).to_be_visible()
+    expect(page.locator(f"input[id='sv_{agent.user.pk}']")).not_to_be_visible()
+    expect(page.locator(f"input[id='ssa_{agent.user.pk}']")).not_to_be_visible()
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "user_group_name,permission_to_forge",
     [
         (settings.SV_GROUP, "ssa"),  # SV user trying to forge SSA permissions
         (settings.SSA_GROUP, "sv"),  # SSA user trying to forge SV permissions
+        (settings.SV_GROUP, "sa"),  # SV user trying to forge SA permissions
+        (settings.SA_GROUP, "sv"),  # SA user trying to forge SV permissions
     ],
 )
 def test_users_cant_forge_other_group_permissions(
@@ -168,6 +204,7 @@ def test_users_cant_forge_other_group_permissions(
 ):
     Group.objects.get_or_create(name=settings.SV_GROUP)
     Group.objects.get_or_create(name=settings.SSA_GROUP)
+    Group.objects.get_or_create(name=settings.SA_GROUP)
     access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
     user_group = Group.objects.get(name=user_group_name)
     mocked_authentification_user.groups.set([access_admin_group, user_group])

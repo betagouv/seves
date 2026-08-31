@@ -1,3 +1,81 @@
 {% extends "sa/base.html" %}
+{% load etat_tags or_empty_value_tag static dsfr_tags %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/list.css' %}">
+{% endblock %}
 
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
+
+{% block content %}
+    <form id="search-form" method="get">
+        <div class="fr-p-4v evenements_liste__header">
+            <div class="evenements_liste__header--title">
+                <h2 class="fr-h3">Rechercher un événement</h2>
+            </div>
+            <div class="evenements_liste__search-form">
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.annee %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.numero %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.maladie %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.espece %}
+                </div>
+                <div class="fr-fieldset__element">
+                    {% dsfr_form_field filter.form.etat %}
+                </div>
+                <div class="fr-fieldset__element evenements_liste__header--actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn">Effacer</button>
+                    <button type="submit" class="fr-btn" data-testid="submit-search">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="main-container">
+        <div class="evenements_liste__table--header">
+            <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
+        </div>
+
+        {% if paginator.count > 0 %}
+            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Événement' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='espece' display_name='Espèce' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut de l’événement' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Date de création' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evenement in evenementanimal_list %}
+                            <tr class="evenements__list-row">
+                                <td>
+                                    <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
+                                </td>
+                                <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.espece|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.get_statut_evenement_display|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
+                                <td>{{ evenement.createur|truncatechars:30 }}</td>
+                                <td>
+                                    <span class="fr-badge fr-badge--{{ evenement.etat|etat_color }} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% include "core/_pagination.html" %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

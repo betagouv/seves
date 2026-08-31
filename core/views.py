@@ -41,7 +41,6 @@ from .mixins import (
     GetFicheObjectMixin,
     PreventActionIfVisibiliteBrouillonMixin,
     WithACNotificationMixin,
-    WithAddUserContactsMixin,
     WithEtatMixin,
     WithFormErrorsAsMessagesMixin,
     WithPublishMixin,
@@ -53,7 +52,7 @@ from .redirect import safe_redirect
 logger = logging.getLogger(__name__)
 
 
-class DocumentUploadView(GetFicheObjectMixin, WithAddUserContactsMixin, UserPassesTestMixin, FormView):
+class DocumentUploadView(GetFicheObjectMixin, UserPassesTestMixin, FormView):
     form_class = DocumentUploadForm
     template_name = "core/form/document_upload.html#form_content"
 
@@ -89,7 +88,7 @@ class DocumentUploadView(GetFicheObjectMixin, WithAddUserContactsMixin, UserPass
 
     def form_valid(self, form):
         form.save()
-        self.add_user_contacts(self.fiche_objet)
+        reversion.add_to_revision(self.fiche_objet)
         return super().render_to_response(self.get_context_data(form=form))
 
 
@@ -543,6 +542,9 @@ def sirene_api(request, siret: str):
             headers={"X-INSEE-Api-Key-Integration": settings.SIRENE_API_KEY},
             timeout=4,
         )
+        if response.status_code == 404:
+            return JsonResponse({"etablissements": []})
+
         if response.status_code != 200:
             return HttpResponseServerError()
 

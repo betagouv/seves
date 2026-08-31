@@ -96,22 +96,6 @@ def test_can_update_evenement_produit_descripteur_and_publish(live_server, page)
     assert evenement.description == "New value"
 
 
-def test_contact_added_to_evenement_when_edit(live_server, page, mocked_authentification_user):
-    evenement: EvenementProduit = EvenementProduitFactory(
-        createur=StructureFactory(), etat=EvenementProduit.Etat.EN_COURS, not_bacterie=True
-    )
-    assert evenement.contacts.count() == 0
-    update_page = EvenementProduitFormPage(page, live_server.url)
-    update_page.navigate_update_page(evenement)
-    update_page.description.fill("New value")
-    update_page.publish()
-
-    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
-    assert evenement.contacts.count() == 2
-    assert mocked_authentification_user.agent.contact_set.get() in evenement.contacts.all()
-    assert mocked_authentification_user.agent.structure.contact_set.get() in evenement.contacts.all()
-
-
 def test_update_evenement_produit_will_not_change_createur(live_server, page):
     createur = StructureFactory()
     evenement: EvenementProduit = EvenementProduitFactory(
@@ -125,32 +109,6 @@ def test_update_evenement_produit_will_not_change_createur(live_server, page):
     expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
     evenement.refresh_from_db()
     assert evenement.createur == createur
-
-
-def test_update_adds_agent_and_structure_to_contacts(live_server, page, mocked_authentification_user):
-    createur = StructureFactory()
-    evenement: EvenementProduit = EvenementProduitFactory(
-        createur=createur, not_bacterie=True, etat=EvenementProduit.Etat.EN_COURS
-    )
-    structure = ContactStructureFactory()
-    agent = ContactAgentFactory()
-    evenement.contacts.add(structure)
-    evenement.contacts.add(agent)
-    assert evenement.contacts.count() == 2
-
-    update_page = EvenementProduitFormPage(page, live_server.url)
-    update_page.navigate_update_page(evenement)
-    update_page.description.fill("New value")
-    update_page.publish()
-
-    expect(update_page.page.get_by_text("L'événement produit a bien été modifié.")).to_be_visible()
-    evenement.refresh_from_db()
-    assert set(evenement.contacts.all()) == {
-        agent,
-        structure,
-        mocked_authentification_user.agent.contact_set.get(),
-        mocked_authentification_user.agent.structure.contact_set.get(),
-    }
 
 
 def test_can_update_evenement_danger_that_had_pam_info_to_not_bacterie(live_server, page):

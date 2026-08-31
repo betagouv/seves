@@ -5,7 +5,7 @@ from core.constants import AC_STRUCTURE, Visibilite
 from core.factories import StructureFactory
 from core.models import LienLibre, Structure
 
-from ..factories import EvenementFactory, OrganismeNuisibleFactory, StatutReglementaireFactory
+from ..factories import EvenementFactory, OrganismeNuisibleFactory
 from ..models import Evenement, StatutReglementaire
 
 
@@ -93,71 +93,6 @@ def test_cant_update_evenement_i_cant_see(client):
     assert response.status_code == 403
     evenement.refresh_from_db()
     assert evenement.organisme_nuisible != organisme_nuisible
-
-
-def test_update_evenement_adds_agent_and_structure_contacts(
-    live_server, page: Page, choice_js_fill, mocked_authentification_user
-):
-    """Test que la modification d'un événement ajoute l'agent et sa structure comme contacts"""
-    evenement = EvenementFactory()
-    statut = StatutReglementaireFactory()
-
-    # Modification de l'événement
-    page.goto(f"{live_server.url}{evenement.get_update_url()}")
-    page.get_by_label("Statut réglementaire").select_option(str(statut.pk))
-    page.get_by_role("button", name="Enregistrer").click()
-
-    # Vérification des contacts
-    evenement.refresh_from_db()
-    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).exists()
-    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).exists()
-
-    # Vérification de l'interface
-    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
-    page.get_by_test_id("contacts").click()
-    expect(
-        page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
-    ).to_be_visible()
-    expect(
-        page.locator("[data-testid='contacts-structures']").get_by_text(
-            str(mocked_authentification_user.agent.structure), exact=True
-        )
-    ).to_be_visible()
-
-
-def test_update_evenement_multiple_times_adds_contacts_once(
-    live_server, page: Page, choice_js_fill, mocked_authentification_user
-):
-    """Test que plusieurs modifications d'un événement n'ajoutent qu'une fois les contacts"""
-    evenement = EvenementFactory()
-    statut1, statut2 = StatutReglementaireFactory.create_batch(2)
-
-    # Première modification
-    page.goto(f"{live_server.url}{evenement.get_update_url()}")
-    page.get_by_label("Statut réglementaire").select_option(str(statut1.pk))
-    page.get_by_role("button", name="Enregistrer").click()
-
-    # Seconde modification
-    page.goto(f"{live_server.url}{evenement.get_update_url()}")
-    page.get_by_label("Statut réglementaire").select_option(str(statut2.pk))
-    page.get_by_role("button", name="Enregistrer").click()
-
-    # Vérification des contacts
-    evenement.refresh_from_db()
-    assert evenement.contacts.filter(agent=mocked_authentification_user.agent).count() == 1
-    assert evenement.contacts.filter(structure=mocked_authentification_user.agent.structure).count() == 1
-
-    # Vérification de l'interface
-    page.wait_for_url(f"**/sv/evenement/{evenement.numero}/**")
-    page.get_by_test_id("contacts").click()
-    expect(
-        page.locator("[data-testid='contacts-agents']").get_by_text(str(mocked_authentification_user.agent), exact=True)
-    ).to_be_visible()
-    expect(
-        page.locator("[data-testid='contacts-structures']").get_by_text(
-            str(mocked_authentification_user.agent.structure), exact=True
-        )
-    ).to_be_visible()
 
 
 def test_update_evenement_cant_select_draft_evenement_in_free_links(

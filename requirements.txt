@@ -48,7 +48,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==49.0.0
+cryptography==50.0.0
     # via mozilla-django-oidc
 diff-match-patch==20241021
     # via django-reversion-compare
@@ -75,7 +75,7 @@ django==6.0.7
     #   sentry-sdk
 django-countries==8.2.0
     # via -r requirements.in
-django-debug-toolbar==7.0.0
+django-debug-toolbar==7.1.1
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
@@ -139,6 +139,7 @@ lxml==6.1.0
     # via
     #   docxcompose3
     #   docxtpl
+    #   pikepdf
     #   python-docx
 markdown-it-py==4.0.0
     # via rich
@@ -156,17 +157,24 @@ packaging==24.0
     # via
     #   gunicorn
     #   kombu
+    #   pikepdf
     #   pytest
     #   pytest-rerunfailures
+pikepdf==10.12.0
+    # via -r requirements.in
+pillow==12.3.0
+    # via
+    #   -r requirements.in
+    #   pikepdf
 platformdirs==4.2.0
     # via virtualenv
-playwright==1.61.0
+playwright==1.62.0
     # via
     #   -r requirements.in
     #   pytest-playwright
 pluggy==1.5.0
     # via pytest
-pre-commit==4.6.1
+pre-commit==4.6.2
     # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
@@ -221,7 +229,7 @@ python-slugify==8.0.4
     # via pytest-playwright
 pyyaml==6.0.1
     # via pre-commit
-redis==8.0.1
+redis==8.1.0
     # via -r requirements.in
 requests==2.33.0
     # via
@@ -244,7 +252,7 @@ six==1.16.0
     #   python-dateutil
 soupsieve==2.8.4
     # via beautifulsoup4
-sqlparse==0.5.4
+sqlparse==0.6.0
     # via
     #   django
     #   django-debug-toolbar

@@ -48,7 +48,13 @@ export function fetchSiret(value) {
             }
             data.etablissements.forEach(etablissement => {
                 const address = etablissement.adresseEtablissement
-                const streetData = `${address.numeroVoieEtablissement} ${address.typeVoieEtablissement} ${address.libelleVoieEtablissement}`
+                const streetData = [
+                    address.numeroVoieEtablissement,
+                    address.typeVoieEtablissement,
+                    address.libelleVoieEtablissement,
+                ]
+                    .filter(Boolean)
+                    .join(" ")
                 const fullStreetData = `${streetData} - ${address.codePostalEtablissement} ${address.libelleCommuneEtablissement}`
                 const resultEtablissement = `${etablissement.siret} - ${fullStreetData}`
                 const uniteLegale = etablissement.uniteLegale

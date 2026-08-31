@@ -46,9 +46,7 @@ test_data = [
 @pytest.mark.parametrize("suspicion_conclusion,selected_hazard", test_data)
 def test_can_add_conclusion_to_investigation_tiac(
     live_server,
-    mocked_authentification_user,
     page: Page,
-    assert_models_are_equal,
     suspicion_conclusion,
     selected_hazard,
 ):
@@ -61,8 +59,6 @@ def test_can_add_conclusion_to_investigation_tiac(
     )
     detail_page = InvestigationTiacDetailsPage(page, live_server.url)
     detail_page.navigate(evenement)
-    contact = mocked_authentification_user.agent.contact_set.get()
-    assert contact not in evenement.contacts.all()
 
     input_data = {
         "conclusion_comment": "Mon commentaire",
@@ -84,7 +80,6 @@ def test_can_add_conclusion_to_investigation_tiac(
     if suspicion_conclusion != SuspicionConclusion.DISCARDED:
         assert investigation.conclusion_repas == evenement.repas.get()
         assert investigation.conclusion_aliment == evenement.aliments.get()
-    assert contact in evenement.contacts.all()
 
 
 def test_can_add_conclusion_button_is_hidden_for_other_states(live_server, page: Page):

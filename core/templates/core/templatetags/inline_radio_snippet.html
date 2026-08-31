@@ -1,4 +1,4 @@
-{% load widget_tweaks dsfr_tags %}
+{% load widget_tweaks dsfr_tags get_item %}
 <fieldset class="fr-fieldset{% if field.errors %} fr-fieldset--error{% endif %} fieldset-flex"
           id="radio-{{ field.auto_id }}"
           aria-labelledby="{{ field.auto_id }}-legend{% if field.errors %} {{ field.auto_id }}-desc-error{% endif %}">
@@ -12,9 +12,14 @@
   <div class="fieldset-flex-options">
     {% with field=field|dsfr_input_class_attr %}
       {% for subwidget in field.subwidgets %}
-        <div class="fr-fieldset__element{% if field.field.widget.inline %} fr-fieldset__element--inline{% endif %}">
-          {{ subwidget }}
-        </div>
+        {% with tooltip_content=tooltips|get_item:subwidget.data.value %}
+          <div class="fr-fieldset__element{% if field.field.widget.inline %} fr-fieldset__element--inline{% endif %}{% if tooltip_content %} fr-fieldset__element--with-tooltip{% endif %}">
+            {{ subwidget }}
+            {% if tooltip_content %}
+              {% dsfr_tooltip content=tooltip_content is_clickable=True id=subwidget.id_for_label|add:"-tooltip" %}
+            {% endif %}
+          </div>
+        {% endwith %}
       {% endfor %}
     {% endwith %}
   </div>

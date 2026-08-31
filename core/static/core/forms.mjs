@@ -169,6 +169,12 @@ export function restoreFormValues(fieldset, initialValues) {
     }
 }
 
+export function clearChoiceJs(choice) {
+    if (!choice) return
+    choice.setValue([{value: "", label: ""}])
+    choice.setChoiceByValue("")
+}
+
 export function resetChoiceJsValue(choice, initialValues, key) {
     const labelKey = Object.keys(initialValues).find(k => k.endsWith(`${key}Label`))
     const valueKey = Object.keys(initialValues).find(k => k.endsWith(key))

@@ -25,7 +25,11 @@
 	    "size": "M"
 	  },
 	  {
-		"command": "10 * * * * python manage.py refresh_evenement_produit_view",
+		"command": "10 * * * * python manage.py refresh_ssa_materialized_views",
+	    "size": "M"
+	  },
+	  {
+		"command": "10 * * * * python manage.py refresh_tiac_materialized_views",
 	    "size": "M"
 	  }
 	]

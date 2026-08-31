@@ -15,6 +15,7 @@ SEVES_STRUCTURE = "Seves"
 SERVICE_ACCOUNT_NAME = "service_account"
 SV_DOMAIN = "Santé des végétaux"
 SSA_DOMAIN = "SSA (Produit & cas + TIAC & plaintes)"
+SA_DOMAIN = "Santé animale"
 SSA_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 TIAC_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 
@@ -173,7 +174,7 @@ class Domains(StrEnum, ExtendedChoices):
         "value": "sa",
         "group": settings.SA_GROUP,
         "label": "Santé Animale",
-        "icon": "ri-syringe-line",
+        "icon": "fr-icon-pig-line fr-icon--sm",
         "url": reverse_lazy("sa:evenement-liste"),
         "help_url": "",
     }

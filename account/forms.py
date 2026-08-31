@@ -15,6 +15,7 @@ class UserPermissionForm(DSFRForm, forms.Form):
         users = kwargs.pop("users")
         can_manage_sv = kwargs.pop("can_manage_sv", False)
         can_manage_ssa = kwargs.pop("can_manage_ssa", False)
+        can_manage_sa = kwargs.pop("can_manage_sa", False)
         super().__init__(**kwargs)
         for user in users:
             if can_manage_sv:
@@ -30,6 +31,14 @@ class UserPermissionForm(DSFRForm, forms.Form):
                     required=False,
                     widget=DSFRCheckboxInput(
                         attrs={"id": f"ssa_{user.pk}"},
+                        label="",
+                    ),
+                )
+            if can_manage_sa:
+                self.fields[f"sa_{user.pk}"] = forms.BooleanField(
+                    required=False,
+                    widget=DSFRCheckboxInput(
+                        attrs={"id": f"sa_{user.pk}"},
                         label="",
                     ),
                 )
