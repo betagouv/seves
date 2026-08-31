@@ -251,6 +251,9 @@ class EvenementAnimalFormPage(
         "email_particulier",
         "telephone_particulier",
         # Localisation
+        "adresse_lieu_dit",
+        "commune",
+        "code_insee",
         "type_lieu",
         "numero_identifiant",
         "coordinates_0",  # Lat
@@ -309,6 +312,10 @@ class EvenementAnimalFormPage(
 
     def cancel_type_change(self):
         self.type_change_modal.get_by_role("button", name="Annuler").click()
+
+    @property
+    def reprendre_adresse_detenteur_btn(self):
+        return self.page.get_by_test_id("reprendre-adresse-detenteur-btn")
 
     def fill_required_fields(self, evenement: EvenementAnimal):
         self.statut_evenement.select_option(evenement.statut_evenement)

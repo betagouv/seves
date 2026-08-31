@@ -165,6 +165,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
                 js_module("core/address_search_autocomplete.mjs"),
                 js_module("core/siret.mjs"),
                 js_module("sa/detenteur.mjs"),
+                js_module("sa/localisation_from_detenteur.mjs"),
             ),
         )
 
