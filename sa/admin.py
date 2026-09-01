@@ -46,7 +46,6 @@ class LaboratoireAdmin(admin.ModelAdmin):
 class MethodeAnalyseAdmin(admin.ModelAdmin):
     list_display = (
         "libelle_source",
-        "id_seves",
         "date_maj_source",
     )
     filter_horizontal = ("laboratoires",)
