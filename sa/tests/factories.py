@@ -81,13 +81,10 @@ class LaboratoireFactory(DjangoModelFactory):
 class MethodeAnalyseFactory(DjangoModelFactory):
     class Meta:
         model = MethodeAnalyse
-        django_get_or_create = ("libelle_affichage",)
+        django_get_or_create = ("libelle_source",)
         skip_postgeneration_save = True
 
-    id_seves = factory.Sequence(lambda n: f"METH-{n:06d}")
-    libelle_source = factory.Faker("sentence")
-    libelle_affichage = factory.Sequence(lambda n: f"Méthode {n}")
-    actif = True
+    libelle_source = factory.Sequence(lambda n: f"Méthode {n}")
     date_maj_source = factory.Faker("date_this_decade")
 
     @factory.post_generation

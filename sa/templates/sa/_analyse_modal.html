@@ -24,7 +24,7 @@
                                 <div class="fr-col-3 bold">Laboratoire</div>
                                 <div class="fr-col-3">{{ analyse.laboratoire.name|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Méthode</div>
-                                <div class="fr-col-3">{{ analyse.methode.libelle_affichage|or_empty_value_tag }}</div>
+                                <div class="fr-col-3">{{ analyse.methode.libelle_source|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Résultat</div>
                                 <div class="fr-col-3">{{ analyse.get_resultat_display|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Résultat valant confirmation</div>

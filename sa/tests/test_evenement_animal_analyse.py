@@ -29,7 +29,7 @@ def test_can_add_analyse(live_server, page: Page, assert_models_are_equal):
 
     assert creation_page.nb_analyse == 1
 
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     saved_analyse = EvenementAnimal.objects.get().analyses.get()
     assert_models_are_equal(analyse, saved_analyse, to_exclude=FIELDS_TO_EXCLUDE_ANALYSE)
@@ -56,7 +56,7 @@ def test_can_add_and_cancel_analyse(live_server, page: Page):
     creation_page.current_modal.get_by_role("button", name="Annuler").click()
     creation_page.current_modal.wait_for(state="hidden", timeout=2_000)
 
-    creation_page.submit()
+    creation_page.submit_as_draft()
     assert EvenementAnimal.objects.get().analyses.count() == 0
 
 
@@ -78,7 +78,7 @@ def test_add_button_is_disabled_after_five_analyses(live_server, page: Page):
     assert creation_page.nb_analyse == 5
     assert creation_page.add_analyse_button.is_disabled()
 
-    creation_page.submit()
+    creation_page.submit_as_draft()
     assert EvenementAnimal.objects.get().analyses.count() == 5
 
 
@@ -127,7 +127,7 @@ def test_analyse_is_displayed_readonly_on_details_page(live_server, page: Page):
     assert card.get_by_role("button", name="Supprimer").count() == 0
 
     modal = details_page.open_analyse_detail(0)
-    assert methode.libelle_affichage in modal.inner_text()
+    assert methode.libelle_source in modal.inner_text()
 
 
 def test_deleting_evenement_deletes_its_analyses(live_server, page: Page, db):

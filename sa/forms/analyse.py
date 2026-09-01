@@ -55,10 +55,10 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
     @property
     def methodes_par_laboratoire_json(self):
         mapping = {}
-        for methode in MethodeAnalyse.objects.filter(actif=True).prefetch_related("laboratoires"):
+        for methode in MethodeAnalyse.objects.prefetch_related("laboratoires"):
             for laboratoire in methode.laboratoires.all():
                 mapping.setdefault(str(laboratoire.pk), []).append(
-                    {"value": methode.pk, "label": methode.libelle_affichage}
+                    {"value": methode.pk, "label": methode.libelle_source}
                 )
         return json.dumps(mapping)
 
