@@ -3,78 +3,24 @@
 from django.db import migrations, models
 
 METHODES_ANALYSE = [
-    (
-        "METH_ELISA",
-        "ELISA ; ELISA (gB et gE) ; ELISA Stimulation Interféron Gamma",
-    ),
-    (
-        "METH_INTERFERON_GAMMA",
-        "Interféron Gamma",
-    ),
-    (
-        "METH_PCR",
-        "PCR temps réel ; RT-PCR ; RT-PCR temps réel ; RT-PCR en temps réel",
-    ),
-    (
-        "METH_BACTERIOLOGIE_ISOLEMENT",
-        "Bactériologie et isolement ; Bactériologie : Isolement et identification ; Bactériologie : Recherche et isolement",
-    ),
-    (
-        "METH_SERONEUTRALISATION_VIRALE",
-        "Séroneutralisation virale ; Neutralisation virale",
-    ),
-    (
-        "METH_IMMUNOFLUORESCENCE",
-        "Immunofluorescence indirect ; Isolement sur culture cellulaire et identification par immunofluorescence",
-    ),
-    (
-        "METH_HISTOLOGIE",
-        "Histologie ; Histopathologie : Coloration à l'hémalun-éosine-safran et coloration de Ziehl-Neelsen",
-    ),
-    (
-        "METH_IHA",
-        "IHA (Inhibition de l'hémagglutination)",
-    ),
-    (
-        "METH_IDG",
-        "IDG (Immunodiffusion en gélose)",
-    ),
-    (
-        "METH_EAT",
-        "EAT",
-    ),
-    (
-        "METH_FIXATION_COMPLEMENT",
-        "FC ; Fixation du complément",
-    ),
-    (
-        "METH_OVOCULTURE",
-        "Ovoculture",
-    ),
-    (
-        "METH_MICROSCOPIE",
-        "Microscopie",
-    ),
-    (
-        "METH_EXAMEN_MACROSCOPIQUE",
-        "Examen macroscopique",
-    ),
-    (
-        "METH_DIGESTION_ARTIFICIELLE",
-        "Digestion artificielle de prélèvements musculaires et observation microscopique",
-    ),
-    (
-        "METH_SAW",
-        "SAW",
-    ),
-    (
-        "METH_TESTS_ESB",
-        "test ESB 1 Biorad TeSeE SAP ; test ESB 2 Prionics® Check Western ; test ESB 4 Prionics® Check PrioSTRIP ; test ESB 5 Herdchek- antigen EIA IDEXX",
-    ),
-    (
-        "METH_TESTS_ESST",
-        "test ESST 1 BioradTeSsE Sheep/Goat ; test ESST 2 BioradTeSsE SAP ; test ESST 3 Herdchek-Antigen EIA IDEXX",
-    ),
+    "ELISA ; ELISA (gB et gE) ; ELISA Stimulation Interféron Gamma",
+    "Interféron Gamma",
+    "PCR temps réel ; RT-PCR ; RT-PCR temps réel ; RT-PCR en temps réel",
+    "Bactériologie et isolement ; Bactériologie : Isolement et identification ; Bactériologie : Recherche et isolement",
+    "Séroneutralisation virale ; Neutralisation virale",
+    "Immunofluorescence indirect ; Isolement sur culture cellulaire et identification par immunofluorescence",
+    "Histologie ; Histopathologie : Coloration à l'hémalun-éosine-safran et coloration de Ziehl-Neelsen",
+    "IHA (Inhibition de l'hémagglutination)",
+    "IDG (Immunodiffusion en gélose)",
+    "EAT",
+    "FC ; Fixation du complément",
+    "Ovoculture",
+    "Microscopie",
+    "Examen macroscopique",
+    "Digestion artificielle de prélèvements musculaires et observation microscopique",
+    "SAW",
+    "test ESB 1 Biorad TeSeE SAP ; test ESB 2 Prionics® Check Western ; test ESB 4 Prionics® Check PrioSTRIP ; test ESB 5 Herdchek- antigen EIA IDEXX",
+    "test ESST 1 BioradTeSsE Sheep/Goat ; test ESST 2 BioradTeSsE SAP ; test ESST 3 Herdchek-Antigen EIA IDEXX",
 ]
 
 DATE_MAJ_SOURCE = "2026-06-04"
@@ -82,13 +28,10 @@ DATE_MAJ_SOURCE = "2026-06-04"
 
 def populate_methodes_analyse(apps, schema_editor):
     MethodeAnalyse = apps.get_model("sa", "MethodeAnalyse")
-    for id_seves, libelle_source in METHODES_ANALYSE:
+    for libelle_source in METHODES_ANALYSE:
         MethodeAnalyse.objects.update_or_create(
-            id_seves=id_seves,
-            defaults={
-                "libelle_source": libelle_source,
-                "date_maj_source": DATE_MAJ_SOURCE,
-            },
+            libelle_source=libelle_source,
+            defaults={"date_maj_source": DATE_MAJ_SOURCE},
         )
 
 
@@ -109,10 +52,6 @@ class Migration(migrations.Migration):
                         serialize=False,
                         verbose_name="ID",
                     ),
-                ),
-                (
-                    "id_seves",
-                    models.CharField(max_length=255, unique=True, verbose_name="Identifiant Sèves"),
                 ),
                 (
                     "libelle_source",
