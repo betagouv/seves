@@ -33,8 +33,7 @@ class AnalyseFormController extends BaseFormInModal {
     }
 
     onLaboratoireChange() {
-        this.methodeSelectTarget.value = ""
-        this.refreshMethodeOptions({keepSelection: false})
+        this.refreshMethodeOptions({keepSelection: true})
     }
 
     refreshMethodeOptions({keepSelection}) {
