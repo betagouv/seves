@@ -1,6 +1,7 @@
 from playwright.sync_api import Page
 
 from sa.models import Analyse, EvenementAnimal
+from sa.models.laboratoire import LaboratoireType
 from sa.tests.factories import (
     AnalyseFactory,
     EspeceFactory,
@@ -107,6 +108,75 @@ def test_methode_options_are_filtered_by_selected_laboratoire(live_server, page:
     modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
     assert methode_select.locator("option").count() == 2  # placeholder + methode_2
     assert methode_select.input_value() == ""
+
+
+def test_methode_stays_selected_when_new_laboratoire_also_offers_it(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire_1 = LaboratoireFactory()
+    laboratoire_2 = LaboratoireFactory()
+    methode_commune = MethodeAnalyseFactory(laboratoires=[laboratoire_1, laboratoire_2])
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    methode_select = modal.locator('[id$="-methode"]')
+
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_1.pk))
+    methode_select.select_option(str(methode_commune.pk))
+
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
+    assert methode_select.input_value() == str(methode_commune.pk)
+
+
+def test_methode_options_include_all_methodes_sorted_alphabetically_for_autre_laboratoire(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire_autre = LaboratoireFactory(laboratoire_type=LaboratoireType.AUTRE)
+    autre_laboratoire = LaboratoireFactory()
+    MethodeAnalyseFactory(libelle="Culture cellulaire", laboratoires=[laboratoire_autre])
+    MethodeAnalyseFactory(libelle="Analyse ELISA", laboratoires=[laboratoire_autre])
+    MethodeAnalyseFactory(libelle="Bactériologie", laboratoires=[laboratoire_autre, autre_laboratoire])
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_autre.pk))
+
+    methode_select = modal.locator('[id$="-methode"]')
+    labels = methode_select.locator("option").all_inner_texts()
+    assert labels == ["Choisir dans la liste", "Analyse ELISA", "Bactériologie", "Culture cellulaire"]
+
+
+def test_changing_laboratoire_when_editing_saved_analyse_clears_incompatible_methode(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire_1 = LaboratoireFactory()
+    laboratoire_2 = LaboratoireFactory()
+    methode_1 = MethodeAnalyseFactory(laboratoires=[laboratoire_1])
+    MethodeAnalyseFactory(laboratoires=[laboratoire_2])
+    analyse = AnalyseFactory.build(maladie=maladie, laboratoire=laboratoire_1, methode=methode_1)
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.add_analyse(analyse)
+
+    creation_page.get_analyse_card(0).locator(".modify-button").click()
+    modal = creation_page.current_modal
+    methode_select = modal.locator('[id$="-methode"]')
+    assert methode_select.input_value() == str(methode_1.pk)
+
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
+    assert methode_select.input_value() == ""
+    assert methode_select.locator("option").count() == 2  # placeholder + methode_2
 
 
 def test_analyse_is_displayed_readonly_on_details_page(live_server, page: Page):
