@@ -381,7 +381,7 @@ def generic_test_handle_document_validation_error(live_server, page: Page, choic
     )
 
 
-def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa"]):
+def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa", "sa"]):
     ContactAgentFactory(with_active_agent__with_groups=[])
     ContactStructureFactory(with_one_active_agent__with_groups=[])
     sv_contacts = (
@@ -392,14 +392,21 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
         ContactStructureFactory(with_one_active_agent__with_groups=[settings.SSA_GROUP]),
         ContactAgentFactory(with_active_agent__with_groups=[settings.SSA_GROUP]),
     )
+    sa_contacts = (
+        ContactStructureFactory(with_one_active_agent__with_groups=[settings.SA_GROUP]),
+        ContactAgentFactory(with_active_agent__with_groups=[settings.SA_GROUP]),
+    )
 
     match app:
         case "sv":
             present = sv_contacts
-            absent = ssa_contacts
+            absent = ssa_contacts + sa_contacts
         case "ssa":
             present = ssa_contacts
-            absent = sv_contacts
+            absent = sv_contacts + sa_contacts
+        case "sa":
+            present = sa_contacts
+            absent = sv_contacts + ssa_contacts
 
     page.goto(f"{live_server.url}{record.get_absolute_url()}")
     message_page = CreateMessagePage(page)

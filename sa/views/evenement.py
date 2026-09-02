@@ -4,7 +4,7 @@ from django.forms import Media
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, ListView
 
-from core.mixins import MediaDefiningMixin, WithFormErrorsAsMessagesMixin
+from core.mixins import MediaDefiningMixin, WithBlocCommunMixin, WithFormErrorsAsMessagesMixin
 from sa.forms.evenement import EvenementAnimalForm
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
@@ -56,7 +56,7 @@ class EvenementAnimalCreationView(WithFormErrorsAsMessagesMixin, MediaDefiningMi
         return context
 
 
-class EvenementAnimalDetailsView(UserPassesTestMixin, DetailView):
+class EvenementAnimalDetailsView(UserPassesTestMixin, WithBlocCommunMixin, DetailView):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
 

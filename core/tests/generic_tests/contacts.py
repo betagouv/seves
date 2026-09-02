@@ -2,13 +2,13 @@ from playwright.sync_api import expect
 
 from core.factories import ContactAgentFactory, ContactStructureFactory
 from core.pages import WithContactsPage
-from seves.settings import SSA_GROUP, SV_GROUP
+from seves.settings import SA_GROUP, SSA_GROUP, SV_GROUP
 
 
 def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_fill, object, mailoutbox):
     contact_structure = ContactStructureFactory()
     contact = ContactAgentFactory(
-        with_active_agent__with_groups=(SSA_GROUP, SV_GROUP), agent__structure=contact_structure.structure
+        with_active_agent__with_groups=(SSA_GROUP, SV_GROUP, SA_GROUP), agent__structure=contact_structure.structure
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
@@ -31,7 +31,7 @@ def generic_test_add_contact_agent_to_an_evenement(live_server, page, choice_js_
 
 
 def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice_js_fill, object, mailoutbox):
-    contact_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SSA_GROUP, SV_GROUP))
+    contact_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SSA_GROUP, SV_GROUP, SA_GROUP))
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     contact_page = WithContactsPage(page)
@@ -55,7 +55,7 @@ def generic_test_add_contact_structure_to_an_evenement(live_server, page, choice
 def generic_test_add_contact_structure_to_an_evenement_with_dedicated_email(
     live_server, page, choice_js_fill, object, mailoutbox, domain
 ):
-    contact_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SSA_GROUP, SV_GROUP))
+    contact_structure = ContactStructureFactory(with_one_active_agent__with_groups=(SSA_GROUP, SV_GROUP, SA_GROUP))
     setattr(contact_structure, f"{domain}_email", "testemail@test.com")
     contact_structure.save()
 
@@ -119,7 +119,7 @@ def generic_test_remove_contact_structure_from_an_evenement(live_server, page, o
 def generic_test_add_multiple_contacts_agents_to_an_evenement(live_server, page, object, choice_js_fill, mailoutbox):
     contact_structure = ContactStructureFactory()
     contact_agent_1, contact_agent_2 = ContactAgentFactory.create_batch(
-        2, with_active_agent__with_groups=(SSA_GROUP, SV_GROUP), agent__structure=contact_structure.structure
+        2, with_active_agent__with_groups=(SSA_GROUP, SV_GROUP, SA_GROUP), agent__structure=contact_structure.structure
     )
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")

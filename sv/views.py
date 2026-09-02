@@ -33,17 +33,12 @@ from core.diffs import force_update_on_version
 from core.mixins import (
     CanUpdateVisibiliteRequiredMixin,
     MediaDefiningMixin,
-    WithBlocCommunPermission,
+    WithBlocCommunMixin,
     WithClotureContextMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
     WithDocumentExportContextMixin,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFreeLinksListInContextMixin,
-    WithMessageMixin,
 )
 from core.models import Contact
 from core.redirect import safe_redirect
@@ -112,12 +107,7 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
 @audit_log("page view")
 class EvenementDetailView(
     EvenementDetailMixin,
-    WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
-    WithMessageMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
+    WithBlocCommunMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     WithFinDeSuiviMixin,

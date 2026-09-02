@@ -148,6 +148,7 @@ class Contact(models.Model):
                         & (Q(sv_email="") | Q(sv_email__isnull=True))
                         & (Q(ssa_email="") | Q(ssa_email__isnull=True))
                         & (Q(tiac_email="") | Q(tiac_email__isnull=True))
+                        & (Q(sa_email="") | Q(sa_email__isnull=True))
                     )
                 ),
                 name="contact_agent_email_only",
@@ -161,6 +162,7 @@ class Contact(models.Model):
     sv_email = models.EmailField(null=True, blank=True)
     ssa_email = models.EmailField(null=True, blank=True)
     tiac_email = models.EmailField(null=True, blank=True)
+    sa_email = models.EmailField(null=True, blank=True)
 
     objects = ContactManager.from_queryset(ContactQueryset)()
 

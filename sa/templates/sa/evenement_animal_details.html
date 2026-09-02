@@ -10,6 +10,8 @@
 
 {% block scripts %}
     <script type="module" src="{% static 'core/map_viewer.mjs' %}"></script>
+    <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+
 {% endblock scripts %}
 
 {% block content %}
@@ -229,5 +231,10 @@
                 </div>
             {% endif %}
         </div>
+
+        {% if not object.is_draft %}
+            {% include "core/_fiche_bloc_commun.html" with object=object %}
+        {% endif %}
+
     </main>
 {% endblock content %}
