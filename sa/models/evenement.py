@@ -13,7 +13,8 @@ import reversion
 from reversion.models import Version
 
 from core.mixins import AllowModificationMixin, WithNumeroMixin, normalize
-from core.models import Structure
+from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithFicheDocumentPermissionMixin
+from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from sa.managers import EvenementAnimalManager
 from sa.models.maladie import Maladie
@@ -228,8 +229,16 @@ class TypeDetenteur(models.TextChoices):
     PARTICULIER = "particulier", "Particulier"
 
 
-@reversion.register()
-class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationMixin, models.Model):
+@reversion.register
+class EvenementAnimal(
+    AllowsSoftDeleteMixin,
+    WithNumeroMixin,
+    AllowModificationMixin,
+    WithContactPermissionMixin,
+    WithFicheDocumentPermissionMixin,
+    WithBlocCommunFieldsMixin,
+    models.Model,
+):
     objects = EvenementAnimalManager()
 
     # Common fields for event handling
@@ -466,6 +475,38 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     @property
     def mesures_controle_labels(self):
         return ", ".join(sorted(MesureDeControle(d).label for d in self.mesures_controle))
+
+    def get_allowed_document_types(self):
+        return [
+            Document.TypeDocument.AUTRE,
+        ]
+
+    def _user_can_interact(self, user):
+        return not self.is_cloture and self.can_user_access(user)
+
+    def get_email_subject(self):
+        return f"Événement animal {self.numero}"
+
+    def get_short_email_display_name(self):
+        return f"Événement animal {self.numero}"
+
+    def get_long_email_display_name(self):
+        return f"{self.get_short_email_display_name()} {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_as_html(self):
+        return f"<b>{self.get_short_email_display_name()}</b> {self.get_long_email_display_name_suffix()}"
+
+    def get_long_email_display_name_suffix(self):
+        return f"(Maladie : {self.maladie.name} / Espéce : {self.espece.name})"
+
+    def get_crdi_form(self):
+        from sa.forms.message import CompteRenduDemandeInterventionForm
+
+        return CompteRenduDemandeInterventionForm
+
+    @property
+    def limit_contacts_to_user_from_app(self):
+        return "sa"
 
     class Meta:
         constraints = [

@@ -88,7 +88,7 @@ class ContactQueryset(QuerySet):
     def with_structure_and_agent(self):
         return self.select_related("structure", "agent")
 
-    def for_apps(self, *apps: None | Literal["sv", "ssa"]):
+    def for_apps(self, *apps: None | Literal["sv", "ssa", "sa"]):
         groups = set()
         for app in apps:
             match app:
@@ -96,6 +96,8 @@ class ContactQueryset(QuerySet):
                     groups.add(settings.SV_GROUP)
                 case "ssa":
                     groups.add(settings.SSA_GROUP)
+                case "sa":
+                    groups.add(settings.SA_GROUP)
         return self.filter(
             Q(agent__user__groups__name__in=groups)
             | Q(structure__agent__user__groups__name__in=groups)
