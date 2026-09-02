@@ -23,16 +23,11 @@ METHODES_ANALYSE = [
     "test ESST 1 BioradTeSsE Sheep/Goat ; test ESST 2 BioradTeSsE SAP ; test ESST 3 Herdchek-Antigen EIA IDEXX",
 ]
 
-DATE_MAJ_SOURCE = "2026-06-04"
-
 
 def populate_methodes_analyse(apps, schema_editor):
     MethodeAnalyse = apps.get_model("sa", "MethodeAnalyse")
-    for libelle_source in METHODES_ANALYSE:
-        MethodeAnalyse.objects.update_or_create(
-            libelle_source=libelle_source,
-            defaults={"date_maj_source": DATE_MAJ_SOURCE},
-        )
+    for libelle in METHODES_ANALYSE:
+        MethodeAnalyse.objects.update_or_create(libelle=libelle)
 
 
 class Migration(migrations.Migration):
@@ -54,12 +49,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "libelle_source",
+                    "libelle",
                     models.CharField(max_length=255, verbose_name="Libellé(s) source(s)"),
-                ),
-                (
-                    "date_maj_source",
-                    models.DateField(verbose_name="Date de mise à jour de la source"),
                 ),
                 (
                     "laboratoires",
@@ -74,7 +65,7 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Méthode d'analyse",
                 "verbose_name_plural": "Méthodes d'analyse",
-                "ordering": ["libelle_source"],
+                "ordering": ["libelle"],
             },
         ),
         migrations.RunPython(populate_methodes_analyse, migrations.RunPython.noop),

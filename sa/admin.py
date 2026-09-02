@@ -44,10 +44,7 @@ class LaboratoireAdmin(admin.ModelAdmin):
 
 @admin.register(MethodeAnalyse)
 class MethodeAnalyseAdmin(admin.ModelAdmin):
-    list_display = (
-        "libelle_source",
-        "date_maj_source",
-    )
+    list_display = ("libelle",)
     filter_horizontal = ("laboratoires",)
 
 

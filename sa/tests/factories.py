@@ -81,11 +81,10 @@ class LaboratoireFactory(DjangoModelFactory):
 class MethodeAnalyseFactory(DjangoModelFactory):
     class Meta:
         model = MethodeAnalyse
-        django_get_or_create = ("libelle_source",)
+        django_get_or_create = ("libelle",)
         skip_postgeneration_save = True
 
-    libelle_source = factory.Sequence(lambda n: f"Méthode {n}")
-    date_maj_source = factory.Faker("date_this_decade")
+    libelle = factory.Sequence(lambda n: f"Méthode {n}")
 
     @factory.post_generation
     def laboratoires(self, create, extracted, **kwargs):
@@ -213,7 +212,7 @@ class AnalyseFactory(DjangoModelFactory):
     laboratoire = factory.SubFactory(LaboratoireFactory)
     methode = factory.SubFactory(MethodeAnalyseFactory)
     resultat = FuzzyChoice(ResultatAnalyse.values)
-    resultat_confirmation = False
+    resultat_confirmation = FuzzyChoice([True, False])
 
     @factory.post_generation
     def link_methode_to_laboratoire(self, create, extracted, **kwargs):
