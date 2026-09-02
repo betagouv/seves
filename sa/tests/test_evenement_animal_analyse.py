@@ -127,7 +127,7 @@ def test_analyse_is_displayed_readonly_on_details_page(live_server, page: Page):
     assert card.get_by_role("button", name="Supprimer").count() == 0
 
     modal = details_page.open_analyse_detail(0)
-    assert methode.libelle_source in modal.inner_text()
+    assert methode.libelle in modal.inner_text()
 
 
 def test_deleting_evenement_deletes_its_analyses(live_server, page: Page, db):
