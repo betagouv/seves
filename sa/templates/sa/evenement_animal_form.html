@@ -304,6 +304,13 @@
                             </div>
                         </div>
                     {% endif %}
+                    {% if form.show_mesures_third_row %}
+                        <div class="fr-container--fluid fr-w-100 fr-mt-4v">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-12 fr-col-lg-4">{% dsfr_form_field form.date_nd %}</div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </fieldset>
             {% endif %}
         </main>

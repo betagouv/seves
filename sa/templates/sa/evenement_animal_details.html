@@ -225,6 +225,10 @@
                             <div class="bold">Date ND2</div>
                             <div>{{ object.date_nd2|date:"d/m/Y"|or_empty_value_tag }}</div>
                         </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date ND</div>
+                            <div>{{ object.date_nd|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
                     </div>
                 </div>
             {% endif %}

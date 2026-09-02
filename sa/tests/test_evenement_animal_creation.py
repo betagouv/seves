@@ -637,6 +637,22 @@ def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page:
     expect(creation_page.date_d_zero).not_to_be_visible()
     expect(creation_page.date_nd1).not_to_be_visible()
     expect(creation_page.date_nd2).not_to_be_visible()
+    expect(creation_page.date_nd).to_be_visible()
+
+
+def test_can_create_evenement_animal_when_maladie_needs_date_nd(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True)
+    maladie = AcarapioseFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_nd.fill(input_data.date_nd.strftime("%Y-%m-%d"))
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.date_nd == input_data.date_nd
 
 
 def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
