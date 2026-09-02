@@ -46,6 +46,7 @@ MALADIES = [
     ("Fièvre catarrhale ovine", "FCO", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
     ("Acarapiose des abeilles (Acarapis woodi)", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
     ("Adénomatose pulmonaire ovine", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
+    ("Dermatose nodulaire contagieuse", "DNC", DescriptionType.CARTOGIP, True, True, False),
 ]
 
 
@@ -78,6 +79,11 @@ class AcarapioseFactory(MaladieFactory):
 class AdenomatoseFactory(MaladieFactory):
     class Params:
         maladie_ref = MALADIES[6]
+
+
+class DNCFactory(MaladieFactory):
+    class Params:
+        maladie_ref = MALADIES[7]
 
 
 class EspeceFactory(DjangoModelFactory):
@@ -215,6 +221,11 @@ class EvenementAnimalFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def date_levee(self):
         if self.maladie.needs_arrete:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def date_nd(self):
+        if self.maladie.needs_date_nd:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
