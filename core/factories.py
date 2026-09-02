@@ -193,11 +193,15 @@ class MessageFactory(DjangoModelFactory):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
                 self.recipients.add(
-                    ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                    ContactAgentFactory(
+                        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+                    )
                 )
             else:
                 self.recipients.add(
-                    ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                    ContactStructureFactory(
+                        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+                    )
                 )
 
     @factory.post_generation
@@ -211,11 +215,15 @@ class MessageFactory(DjangoModelFactory):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
                 self.recipients.add(
-                    ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                    ContactAgentFactory(
+                        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+                    )
                 )
             else:
                 self.recipients.add(
-                    ContactStructureFactory(with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+                    ContactStructureFactory(
+                        with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+                    )
                 )
 
 

@@ -8,7 +8,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
-from core.mixins import MediaDefiningMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
+from core.mixins import MediaDefiningMixin, WithBlocCommunMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
 from sa.forms.evenement import EvenementAnimalForm
 from sa.formsets import AnalyseFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
@@ -122,7 +122,7 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
         )
 
 
-class EvenementAnimalDetailsView(UserPassesTestMixin, DetailView):
+class EvenementAnimalDetailsView(UserPassesTestMixin, WithBlocCommunMixin, DetailView):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
 

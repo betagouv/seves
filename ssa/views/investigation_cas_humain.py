@@ -17,18 +17,13 @@ from core.audit import audit_log
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
-    WithBlocCommunPermission,
+    WithBlocCommunMixin,
     WithClotureContextMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
     WithDocumentExportContextMixin,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
-    WithMessageMixin,
 )
 
 from ..forms import InvestigationCasHumainForm
@@ -134,12 +129,7 @@ class InvestigationCasHumainDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
-    WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
-    WithMessageMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
+    WithBlocCommunMixin,
     WithFinDeSuiviMixin,
     DetailView,
 ):

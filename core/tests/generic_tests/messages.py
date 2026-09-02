@@ -17,7 +17,9 @@ User = get_user_model()
 
 
 def generic_test_can_add_and_see_message_without_document(live_server, page: Page, choice_js_fill, object):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -45,7 +47,9 @@ def generic_test_can_add_and_see_message_without_document(live_server, page: Pag
 
 
 def generic_test_can_add_and_see_message_with_rich_text_editor(live_server, page: Page, choice_js_fill, object):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -114,7 +118,7 @@ def generic_test_can_update_draft_message_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):
     contact, contact_cc, contact_to_add, contact_cc_to_add = ContactAgentFactory.create_batch(
-        4, with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+        4, with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
     )
     message = MessageFactory(
         content_object=object,
@@ -221,7 +225,7 @@ def generic_test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):
     contact, contact_cc, contact_to_add, contact_cc_to_add = ContactStructureFactory.create_batch(
-        4, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)
+        4, with_one_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
     )
     message = MessageFactory(
         content_object=object,
@@ -362,7 +366,9 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
 
 
 def generic_test_handle_document_validation_error(live_server, page: Page, choice_js_fill, object):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -381,7 +387,7 @@ def generic_test_handle_document_validation_error(live_server, page: Page, choic
     )
 
 
-def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa"]):
+def generic_test_only_displays_app_contacts(live_server, page: Page, record, app: Literal["sv", "ssa", "sa"]):
     ContactAgentFactory(with_active_agent__with_groups=[])
     ContactStructureFactory(with_one_active_agent__with_groups=[])
     sv_contacts = (
@@ -392,14 +398,21 @@ def generic_test_only_displays_app_contacts(live_server, page: Page, record, app
         ContactStructureFactory(with_one_active_agent__with_groups=[settings.SSA_GROUP]),
         ContactAgentFactory(with_active_agent__with_groups=[settings.SSA_GROUP]),
     )
+    sa_contacts = (
+        ContactStructureFactory(with_one_active_agent__with_groups=[settings.SA_GROUP]),
+        ContactAgentFactory(with_active_agent__with_groups=[settings.SA_GROUP]),
+    )
 
     match app:
         case "sv":
             present = sv_contacts
-            absent = ssa_contacts
+            absent = ssa_contacts + sa_contacts
         case "ssa":
             present = ssa_contacts
-            absent = sv_contacts
+            absent = sv_contacts + sa_contacts
+        case "sa":
+            present = sa_contacts
+            absent = sv_contacts + ssa_contacts
 
     page.goto(f"{live_server.url}{record.get_absolute_url()}")
     message_page = CreateMessagePage(page)
@@ -419,11 +432,11 @@ def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page
     contact_structure = ContactStructureFactory()
     agent_1 = ContactAgentFactory(
         agent__structure=contact_structure.structure,
-        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP),
     )
     agent_2 = ContactAgentFactory(
         agent__structure=contact_structure.structure,
-        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP),
     )
 
     page.goto(f"{live_server.url}{record.get_absolute_url()}")
@@ -446,7 +459,9 @@ def generic_test_structure_show_only_one_entry_in_select(live_server, page: Page
 def generic_test_can_add_and_see_message_in_new_tab_without_document(
     live_server, page: Page, choice_js_fill, object, mocked_authentification_user
 ):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
@@ -479,7 +494,9 @@ def generic_test_can_add_and_see_message_in_new_tab_without_document(
 def generic_test_can_add_see_message_in_new_tab_without_document_in_draft(
     live_server, page: Page, choice_js_fill, object
 ):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
@@ -560,10 +577,12 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     agent = mocked_authentification_user.agent
     agent.structure = structure
     agent.save()
-    groups = (settings.SSA_GROUP, settings.SV_GROUP)
+    groups = (settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
     contact = ContactStructureFactory(structure__libelle="Foo", with_one_active_agent__with_groups=groups)
     contact_cc = ContactStructureFactory(structure__libelle="Bar", with_one_active_agent__with_groups=groups)
-    contact_cc_agent = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    contact_cc_agent = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    )
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_demande_intervention()
@@ -635,7 +654,9 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
 
 
 def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, object, mailoutbox):
-    active_contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP)).agent
+    active_contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    ).agent
 
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
@@ -717,8 +738,12 @@ def generic_test_can_delete_my_own_draft_message(
 
 
 def generic_test_can_reply_to_message(live_server, page: Page, choice_js_fill, object, type_message):
-    contact = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
-    sender = ContactAgentFactory(with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP))
+    contact = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    )
+    sender = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    )
     message = MessageFactory(content_object=object, message_type=type_message, sender=sender)
     contact_sender_structure = ContactStructureFactory(structure=message.sender_structure)
 
@@ -760,12 +785,12 @@ def generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi(
     contact_structure = ContactStructureFactory()
     contact_agent = ContactAgentFactory(
         agent__structure=contact_structure.structure,
-        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP),
     )
     other_contact_structure = ContactStructureFactory()
     other_contact_agent = ContactAgentFactory(
         agent__structure=other_contact_structure.structure,
-        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP),
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP),
     )
     object.contacts.add(contact_structure, contact_agent, other_contact_structure, other_contact_agent)
 

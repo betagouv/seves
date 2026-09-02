@@ -17,18 +17,13 @@ from core.audit import audit_log
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
-    WithBlocCommunPermission,
+    WithBlocCommunMixin,
     WithClotureContextMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
     WithDocumentExportContextMixin,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
-    WithMessageMixin,
 )
 from ssa.forms import EvenementProduitForm
 from ssa.formsets import EtablissementFormSet
@@ -102,12 +97,7 @@ class EvenementProduitCreateView(
 
 @audit_log("page view")
 class EvenementProduitDetailView(
-    WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
-    WithMessageMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
+    WithBlocCommunMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
     UserPassesTestMixin,
