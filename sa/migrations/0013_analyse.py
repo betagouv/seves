@@ -6,7 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0009_methode_analyse"),
+        ("sa", "0012_methode_analyse"),
     ]
 
     operations = [

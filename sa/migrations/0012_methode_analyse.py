@@ -32,7 +32,7 @@ def populate_methodes_analyse(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0008_laboratoire"),
+        ("sa", "0011_evenementanimal_date_d_zero_evenementanimal_date_nd1_and_more"),
     ]
 
     operations = [
