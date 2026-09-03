@@ -73,6 +73,32 @@ def test_can_publish_evenement_animal_with_required_fields_only(live_server, moc
     assert evenement.etat == Evenement.Etat.EN_COURS
 
 
+def test_cancel_creation_without_required_fields_redirects_to_list_and_creates_nothing(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, StatutAnimal.DETENU)
+    creation_page.cancel(wait_for=f"**{reverse('sa:evenement-liste')}")
+
+    assert page.url == f"{live_server.url}{reverse('sa:evenement-liste')}"
+    assert EvenementAnimal.objects.count() == 0
+
+
+def test_cancel_creation_after_filling_fields_discards_data(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.cancel(wait_for=f"**{reverse('sa:evenement-liste')}")
+
+    assert page.url == f"{live_server.url}{reverse('sa:evenement-liste')}"
+    assert EvenementAnimal.objects.count() == 0
+
+
 def test_type_lieu_options_depend_on_statut_animal(live_server, page: Page, check_select_options):
     maladie = MaladieFactory()
     espece = EspeceFactory()

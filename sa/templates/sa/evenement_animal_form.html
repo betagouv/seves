@@ -21,6 +21,7 @@
                     <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm">
                         {% block buttons %}
                             {% partialdef buttons inline %}
+                                <a href="{% url 'sa:evenement-liste' %}" class="fr-link fr-mr-3w">Annuler</a>
                                 {% if form.instance and form.instance.is_draft %}
                                     <button type="submit" name="action" value="draft" class="fr-btn fr-btn--secondary fr-mr-2w form-action-btn">Enregistrer le brouillon</button>
                                 {% endif %}
