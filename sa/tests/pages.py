@@ -328,6 +328,7 @@ class EvenementAnimalFormPage(
         "date_d_zero",
         "date_nd1",
         "date_nd2",
+        "date_nd",
     ]
 
     def __init__(self, page: Page, base_url):

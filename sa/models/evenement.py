@@ -281,6 +281,7 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     date_d_zero = models.DateField(verbose_name="Date D zéro", null=True, blank=True)
     date_nd1 = models.DateField(verbose_name="Date ND1", null=True, blank=True)
     date_nd2 = models.DateField(verbose_name="Date ND2", null=True, blank=True)
+    date_nd = models.DateField(verbose_name="Date ND", null=True, blank=True)
 
     @classmethod
     def _get_annee_and_numero(cls, acronym):
