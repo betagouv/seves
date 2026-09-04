@@ -1,4 +1,5 @@
 from datetime import timedelta
+import random
 
 from django.contrib.gis.geos import Point
 from django_countries import Countries
@@ -10,7 +11,16 @@ from faker import Faker
 from core.models import Structure
 from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
 from sa.models.analyse import ResultatAnalyse
-from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement, TypeLieu
+from sa.models.evenement import (
+    ContexteSuspicion,
+    Foyer,
+    HumanInvolved,
+    MesureDeControle,
+    OrigineInfection,
+    StatutAnimal,
+    StatutEvenement,
+    TypeLieu,
+)
 from sa.models.laboratoire import LaboratoireType
 from sa.models.maladie import DescriptionType
 
@@ -121,6 +131,11 @@ class EvenementAnimalFactory(DjangoModelFactory):
     human_involved = FuzzyChoice(HumanInvolved.values)
     description = factory.Faker("paragraph")
 
+    foyer = FuzzyChoice(Foyer.values)
+    numero_adis = factory.Faker("numerify", text="#####")
+    effectif_retenu = factory.Faker("pyint", min_value=0, max_value=100)
+    origine_infection = FuzzyChoice(OrigineInfection.values)
+
     class Meta:
         model = EvenementAnimal
 
@@ -162,6 +177,14 @@ class EvenementAnimalFactory(DjangoModelFactory):
         return fake.date_this_decade(before_today=True)
 
     @factory.lazy_attribute
+    def date_notification_adis(self):
+        return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
+    def date_cloture_adis(self):
+        return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
     def coordinates(self):
         lat, lon = fake.local_latlng(country_code="FR", coords_only=True)
         return Point(float(lon), float(lat))
@@ -199,6 +222,10 @@ class EvenementAnimalFactory(DjangoModelFactory):
     def date_nd2(self):
         if self.maladie.needs_dates_desinfection:
             return fake.date_between(start_date=self.date_nd1, end_date=self.date_nd1 + timedelta(days=30))
+
+    @factory.lazy_attribute
+    def mesures_controle(self):
+        return random.sample(MesureDeControle.values, k=random.randint(1, 3))
 
 
 class AnalyseFactory(DjangoModelFactory):
