@@ -5,6 +5,7 @@ import json
 from django.urls import reverse
 from playwright.sync_api import Locator, Page
 
+from core.pages import WithActionsPage
 from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import Analyse, EvenementAnimal
 from seves import settings
@@ -437,7 +438,7 @@ class EvenementAnimalFormPage(
         self.telephone_particulier.fill(evenement.telephone_particulier)
 
 
-class EvenementAnimalDetailsPage:
+class EvenementAnimalDetailsPage(WithActionsPage):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
