@@ -142,4 +142,5 @@ class EvenementAnimalDetailsView(UserPassesTestMixin, DetailView):
         context["can_publish"] = self.get_object().can_publish(self.request.user)
         context["content_type"] = ContentType.objects.get_for_model(self.object)
         context["latest_version"] = self.object.latest_version
+        context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
