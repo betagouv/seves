@@ -1,6 +1,6 @@
 from django import forms
 from django.conf import settings
-from django.forms import Media
+from django.forms import Media, MultipleChoiceField
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
@@ -16,7 +16,10 @@ from sa.models import Espece, Maladie
 from sa.models.evenement import (
     ContexteSuspicion,
     EvenementAnimal,
+    Foyer,
     HumanInvolved,
+    MesureDeControle,
+    OrigineInfection,
     StatutAnimal,
     TypeDetenteur,
     TypeLieu,
@@ -184,6 +187,30 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         ),
     )
 
+    foyer = forms.ChoiceField(choices=Foyer.choices, required=False, widget=forms.RadioSelect, label="Foyer")
+    date_notification_adis = forms.DateField(
+        required=False,
+        label="Date notification ADIS",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_cloture_adis = forms.DateField(
+        required=False,
+        label="Date clôture ADIS",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    origine_infection = SEVESChoiceField(
+        required=False, label="Origine de l'infection", choices=OrigineInfection.choices
+    )
+    mesures_controle = MultipleChoiceField(
+        choices=MesureDeControle.choices, label="Mesures de contrôle mises en œuvre", required=False
+    )
+
     @property
     def media(self):
         return super().media + Media(
@@ -193,11 +220,23 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
                 js_module("core/siret.mjs"),
                 js_module("sa/detenteur.mjs"),
                 js_module("sa/localisation_from_detenteur.mjs"),
+                js_module("sa/adis.mjs"),
             ),
         )
 
     class Meta:
         model = EvenementAnimal
+
+        adis_fields = [
+            "foyer",
+            "numero_adis",
+            "date_notification_adis",
+            "date_cloture_adis",
+            "effectif_retenu",
+            "origine_infection",
+            "mesures_controle",
+        ]
+
         fields = [
             "maladie",
             "espece",
@@ -241,6 +280,8 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_d_zero",
             "date_nd1",
             "date_nd2",
+            # Adis
+            *adis_fields,
         ]
         widgets = {
             "maladie": forms.HiddenInput,
@@ -274,6 +315,8 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_statut_changed"].widget.attrs["max"] = today
         self.fields["date_first_symptoms"].widget.attrs["max"] = today
+        self.fields["date_notification_adis"].widget.attrs["max"] = today
+        self.fields["date_cloture_adis"].widget.attrs["max"] = today
 
         type_detenteur = self.fields["type_detenteur"].initial
         if self.is_bound:
@@ -294,6 +337,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             self.fields.pop("date_d_zero")
             self.fields.pop("date_nd1")
             self.fields.pop("date_nd2")
+
+        if self.user.agent.structure.is_ac is False:
+            for field in self.Meta.adis_fields:
+                self.fields.pop(field)
 
     @property
     def show_mesures_first_row(self):
