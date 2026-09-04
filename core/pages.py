@@ -420,12 +420,15 @@ class WithContactsPage:
 
 
 class WithActionsPage:
+    @property
+    def action_dropdown(self):
+        return self.page.locator("#action-1")
+
     @playwright_repeatable
     def download(self):
-        action_dropdown = self.page.locator("#action-1")
-        if not action_dropdown.is_visible():
+        if not self.action_dropdown.is_visible():
             self.page.get_by_role("button", name="Actions").click()
-            expect(action_dropdown).to_be_visible()
+            expect(self.action_dropdown).to_be_visible()
         with self.page.expect_download() as download_info:
             self.page.get_by_text("Télécharger le document", exact=True).click()
         return download_info
@@ -437,5 +440,5 @@ class WithActionsPage:
 
     def delete(self):
         self.page.get_by_role("button", name="Actions").click()
-        self.page.get_by_text("Supprimer l'événement", exact=True).click()
+        self.action_dropdown.get_by_text("Supprimer l'événement", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
