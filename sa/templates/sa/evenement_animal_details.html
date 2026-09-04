@@ -231,6 +231,39 @@
             <div class="white-container fr-mb-4v">
                 {% include "sa/_evenement_analyses.html" %}
             </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">ADIS</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-6">
+                        <div class="bold">Foyer</div>
+                        <div>{{ object.get_foyer_display|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">N° ADIS</div>
+                        <div>{{ object.numero_adis|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Effectif retenu notification ADIS</div>
+                        <div>{{ object.effectif_retenu|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Date notification ADIS</div>
+                        <div>{{ object.date_notification_adis|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Origine de l'infection</div>
+                        <div>{{ object.get_origine_infection_display|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Date clôture ADIS</div>
+                        <div>{{ object.date_cloture_adis|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Mesures de contrôle mises en œuvre</div>
+                        <div>
+                            {{ object.mesures_controle_labels|or_empty_value_tag }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 {% endblock content %}

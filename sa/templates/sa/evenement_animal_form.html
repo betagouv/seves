@@ -311,6 +311,43 @@
                 </fieldset>
             {% endif %}
             {{ analyse_formset }}
+
+            {% if form.numero_adis %}
+                <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="adis" data-controller="adis">
+                    <div class="fieldset-header">
+                        <legend class="fr-fieldset__legend fr-h3">ADIS</legend>
+                    </div>
+
+                    <div class="fr-w-100">
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-12 fr-col-lg-2">
+                                {{ form.foyer.label_tag }}
+                                <div class="fr-flex-only fr-flex--space-between fr-mt-2v">
+                                    {{ form.foyer }}
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="fr-w-100 fr-mt-4v">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-12 fr-col-lg-4">
+                                    {% dsfr_form_field form.numero_adis %}
+                                    {% dsfr_form_field form.effectif_retenu %}
+                                </div>
+                                <div class="fr-col-12 fr-col-lg-4">
+                                    {% dsfr_form_field form.date_notification_adis %}
+                                    {% dsfr_form_field form.origine_infection %}
+                                </div>
+                                <div class="fr-col-12 fr-col-lg-4">
+                                    {% dsfr_form_field form.date_cloture_adis %}
+                                    {% dsfr_form_field form.mesures_controle|set_data:"adis-target:mesures" %}
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+            {% endif %}
+
+
         </main>
     </form>
 {% endblock content %}
