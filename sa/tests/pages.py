@@ -328,6 +328,12 @@ class EvenementAnimalFormPage(
         "date_d_zero",
         "date_nd1",
         "date_nd2",
+        # Adis
+        "numero_adis",
+        "date_notification_adis",
+        "date_cloture_adis",
+        "effectif_retenu",
+        "origine_infection",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -410,6 +416,22 @@ class EvenementAnimalFormPage(
         self.date_first_symptoms.fill(evenement.date_first_symptoms.strftime("%Y-%m-%d"))
         self.description.fill(evenement.description)
         self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()
+
+    @property
+    def adis_block(self):
+        return self.page.locator("#adis")
+
+    def fill_adis_block(self, evenement, choice_js_fill):
+        self.adis_block.locator(f"input[type='radio'][value='{str(evenement.foyer).lower()}' i]").check(force=True)
+
+        self.numero_adis.fill(evenement.numero_adis)
+        self.date_notification_adis.fill(evenement.date_notification_adis.strftime("%Y-%m-%d"))
+        self.date_cloture_adis.fill(evenement.date_cloture_adis.strftime("%Y-%m-%d"))
+        self.effectif_retenu.fill(str(evenement.effectif_retenu))
+        self.origine_infection.select_option(evenement.origine_infection)
+
+        for value in evenement.mesures_controle_labels.split(", "):
+            choice_js_fill(self.page, "#adis .choices__list", value, value)
 
     def fill_detenteur_etablissement_block(self, evenement):
         self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)

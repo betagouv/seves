@@ -753,3 +753,37 @@ def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_serv
     creation_page.force_address_etablissement("Nouvelle adresse jamais reprise")
 
     expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+
+
+def test_can_create_evenement_animal_with_adis_block(
+    live_server, choice_js_fill, mocked_authentification_user, mus_contact, page: Page
+):
+    mocked_authentification_user.agent.structure = mus_contact.structure
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_adis_block(input_data, choice_js_fill)
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.foyer == input_data.foyer
+    assert evenement_produit.numero_adis == input_data.numero_adis
+    assert evenement_produit.date_notification_adis == input_data.date_notification_adis
+    assert evenement_produit.date_cloture_adis == input_data.date_cloture_adis
+    assert evenement_produit.effectif_retenu == input_data.effectif_retenu
+    assert evenement_produit.origine_infection == input_data.origine_infection
+    assert evenement_produit.mesures_controle_labels == input_data.mesures_controle_labels
+
+
+def test_cant_see_adis_block_if_not_ac(live_server, choice_js_fill, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    expect(creation_page.adis_block).not_to_be_visible()

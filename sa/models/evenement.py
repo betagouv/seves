@@ -2,6 +2,7 @@ import datetime
 from enum import auto
 
 from django.contrib.gis.db.models import PointField
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import F, Q
@@ -35,6 +36,106 @@ class StatutEvenement(models.TextChoices):
     CONFIRME = auto(), "Confirmé"
     INFIRME = auto(), "Infirmé"
     NON_RETENU = auto(), "Non retenu"
+
+
+class Foyer(models.TextChoices):
+    PRIMAIRE = "primaire", "Primaire"
+    SECONDAIRE = "secondaire", "Secondaire"
+
+
+class OrigineInfection(models.TextChoices):
+    CONTACT_DIRECT = auto(), "Contact direct"
+    IMPORTATION = auto(), "Importation"
+    INCONNUE = auto(), "Inconnue"
+    INTERVENTION_HUMAINE = auto(), "Intervention humaine"
+    VECTEUR = auto(), "Vecteur"
+
+
+class MesureDeControle(models.TextChoices):
+    # Values in English to ease the integration with ADIS system
+    ANTE_AND_POST_MORTEM_INSPECTIONS = (
+        "Ante and post-mortem inspections",
+        "Inspections ante mortem et post mortem",
+    )
+    COMPARTMENTALISATION = "Compartmentalisation", "Compartimentation"
+    CONTROL_OF_VECTORS = "Control of vectors", "Contrôle des vecteurs"
+    CONTROL_OF_WILDLIFE_RESERVOIRS = (
+        "Control of wildlife reservoirs",
+        "Contrôle des réservoirs de la faune sauvage",
+    )
+    DECONTAMINATION_OF_PREMISES_DISINFECTION = (
+        "Decontamination of premises / Disinfection",
+        "Décontamination des locaux / désinfection",
+    )
+    DIPPING_SPRAYING_FOR_CONTROL_OF_VECTORS_OR_PARASITES = (
+        "Dipping / Spraying for control of vectors or parasites",
+        "Bains / pulvérisations pour lutter contre les vecteurs ou les parasites",
+    )
+    DISEASE_NOTIFICATION = "Disease notification", "Notification d’une maladie"
+    DISINFECTION = "Disinfection", "Désinfection"
+    DISINFECTION_DISINFESTATION = (
+        "Disinfection / Disinfestation",
+        "Désinfection / désinfestation",
+    )
+    DISINFESTATION = "Disinfestation", "Désinfestation"
+    EMERGENCY_HARVEST = "Emergency harvest", "Récolte d’urgence"
+    GENERAL_SURVEILLANCE = "General Surveillance", "Surveillance générale"
+    KILLING_FOR_COMMERCIAL_USE_OR_OWN_USE = (
+        "Killing for commercial use or own use",
+        "Abattage à des fins commerciales ou pour usage personnel",
+    )
+    MONITORING = "Monitoring", "Suivi"
+    MOVEMENT_CONTROL = "Movement control", "Contrôle des mouvements"
+    OFFICIAL_DESTRUCTION_OF_ANIMAL_PRODUCTS = (
+        "Official destruction of animal products",
+        "Destruction officielle des produits animaux",
+    )
+    OFFICIAL_DISPOSAL_OF_CARCASSES_BY_PRODUCTS_AND_WASTE = (
+        "Official disposal of carcasses, by-products and waste",
+        "Élimination officielle des carcasses, sous-produits animaux et déchets",
+    )
+    OFFICIAL_VACCINATION = "Official vaccination", "Vaccination officielle"
+    PRECAUTIONS_AT_THE_BORDERS = (
+        "Precautions at the borders",
+        "Mesures de précaution aux frontières",
+    )
+    PROCESS_TO_INACTIVATE_THE_PATHOGENIC_AGENT = (
+        "Process to inactivate the pathogenic agent in products or by-products",
+        "Procédé d’inactivation de l’agent pathogène dans les produits ou sous-produits animaux",
+    )
+    QUARANTINE = "Quarantine", "Quarantaine"
+    SCREENING = "Screening", "Dépistage"
+    SELECTIVE_KILLING_AND_DISPOSAL = (
+        "Selective killing and disposal",
+        "Abattage sélectif et élimination",
+    )
+    SLAUGHTER = (
+        "Slaughter",
+        "Abattage ciblé d’animaux infectés ou suspects",
+    )
+    STAMPING_OUT = (
+        "Stamping out",
+        "Abattage sanitaire total du foyer",
+    )
+    SURVEILLANCE_OUTSIDE_THE_RESTRICTED_ZONE = (
+        "Surveillance outside the restricted zone",
+        "Surveillance hors de la zone de restriction",
+    )
+    SURVEILLANCE_WITHIN_THE_RESTRICTED_ZONE = (
+        "Surveillance within the restricted zone",
+        "Surveillance à l’intérieur de la zone de restriction",
+    )
+    TARGETED_SURVEILLANCE = "Targeted Surveillance", "Surveillance ciblée"
+    TRACEABILITY = "Traceability", "Traçabilité"
+    TREATMENT = "Treatment", "Traitement"
+    VACCINATION = "Vaccination", "Vaccination"
+    VACCINATION_IN_RESPONSE_TO_THE_OUTBREAKS = (
+        "Vaccination in response to the outbreak(s)",
+        "Vaccination en réponse à un ou plusieurs foyers",
+    )
+    VACCINATION_PROHIBITED = "Vaccination prohibited", "Vaccination interdite"
+    VECTOR_SURVEILLANCE = "Vector surveillance", "Surveillance des vecteurs"
+    ZONING = "Zoning", "Zonage"
 
 
 class TypeLieu(models.TextChoices):
@@ -282,6 +383,41 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
     date_nd1 = models.DateField(verbose_name="Date ND1", null=True, blank=True)
     date_nd2 = models.DateField(verbose_name="Date ND2", null=True, blank=True)
 
+    # Adis
+    foyer = models.CharField(
+        max_length=100,
+        choices=Foyer.choices,
+        verbose_name="Foyer",
+        blank=True,
+    )
+    numero_adis = models.CharField(max_length=255, verbose_name="Numéro ADIS", blank=True)
+    date_notification_adis = models.DateField(
+        verbose_name="Date de notification ADIS",
+        null=True,
+        blank=True,
+    )
+    date_cloture_adis = models.DateField(
+        verbose_name="Date clôture ADIS",
+        null=True,
+        blank=True,
+    )
+    effectif_retenu = models.IntegerField(
+        verbose_name="Effectif retenu notification ADIS",
+        null=True,
+        blank=True,
+    )
+    origine_infection = models.CharField(
+        max_length=100,
+        choices=OrigineInfection.choices,
+        verbose_name="Origine de l'infection",
+        blank=True,
+    )
+    mesures_controle = ArrayField(
+        models.CharField(max_length=255, choices=MesureDeControle.choices),
+        default=list,
+        blank=True,
+    )
+
     @classmethod
     def _get_annee_and_numero(cls, acronym):
         annee_courante = datetime.datetime.now().year
@@ -326,6 +462,10 @@ class EvenementAnimal(AllowsSoftDeleteMixin, WithNumeroMixin, AllowModificationM
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"
+
+    @property
+    def mesures_controle_labels(self):
+        return ", ".join(MesureDeControle(d).label for d in self.mesures_controle)
 
     class Meta:
         constraints = [
