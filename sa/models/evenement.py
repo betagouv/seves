@@ -508,6 +508,15 @@ class EvenementAnimal(
     def limit_contacts_to_user_from_app(self):
         return "sa"
 
+    def can_user_delete(self, user):
+        return self.can_user_access(user)
+
+    def get_soft_delete_confirm_title(self):
+        return f"Supprimer l'événement animal {self.numero}"
+
+    def get_soft_delete_success_message(self):
+        return f"L’événement {self.numero} a bien été supprimé."
+
     class Meta:
         constraints = [
             models.CheckConstraint(
