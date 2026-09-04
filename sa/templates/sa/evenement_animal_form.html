@@ -76,6 +76,10 @@
                             <label class="fr-label" for="date-creation-input">Date de création</label>
                             <input type="text" id="date-creation-input" class="fr-input" value="{% if form.instance.date_creation %}{{ form.instance.date_creation|date:"d/m/Y" }}{% else %}{% now 'd/m/Y' %}{% endif %}" disabled>
                         </div>
+                        <div class="fr-input-group fr-mt-6w">
+                            <label class="fr-label" for="date-publication-input">Date de publication</label>
+                            <input type="text" id="date-publication-input" class="fr-input" value="jj/mm/aaaa" disabled>
+                        </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
                         {% dsfr_form_field form.statut_evenement %}
