@@ -342,6 +342,15 @@ class EvenementAnimalFormPage(
             f"{self.base_url}{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
         )
 
+    @property
+    def cancel_link(self):
+        return self.page.get_by_role("link", name="Annuler", exact=True)
+
+    def cancel(self, wait_for=None):
+        self.cancel_link.click()
+        if wait_for:
+            self.page.wait_for_url(wait_for)
+
     def fill_coordinates(self, point):
         self.coordinates_1.fill(str(point.x))
         self.coordinates_0.fill(str(point.y))
