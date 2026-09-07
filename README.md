@@ -136,6 +136,15 @@ Pour travailler avec un broker et Celery en local, il faut:
 - Pour lancer les tâches, dans un shell : `celery -A seves worker --loglevel=INFO`
 - Pour les tâches de mail les mails sont directement affichés dans la console du worker
 
+# Travailler avec le WAF en local
+
+Si vous souhaitez tester la configuration du WAF en local:
+- [Installer Go](https://go.dev/doc/install)
+- Installer caddy : `go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest`
+- Construire le binaire : `xcaddy build --with github.com/corazawaf/coraza-caddy/v2` avec le WAF
+
+Pour lancer caddy avec le WAF utilser la commande : `PORT=8080 ./caddy run --config Caddyfile` en plus du serveur applicatif classique.
+Le serveur est disponnible sur :8000 (sans WAF) et sur :8080 (avec WAF).
 
 # Tests
 ## E2E
