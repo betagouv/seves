@@ -75,6 +75,8 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     assert evenement.date_statut_changed == input_data.date_statut_changed
     assert evenement.is_draft is True
 
+    expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.", exact=True)).to_be_visible()
+
 
 def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementAnimalFactory.build()
@@ -91,6 +93,8 @@ def test_can_publish_evenement_animal_with_required_fields_only(live_server, moc
     assert evenement.date_publication is not None
     assert evenement.is_draft is False
     assert evenement.etat == Evenement.Etat.EN_COURS
+
+    expect(creation_page.page.get_by_text("L’évènement a été publié avec succès.", exact=True)).to_be_visible()
 
 
 def test_type_lieu_options_depend_on_statut_animal(live_server, page: Page, check_select_options):

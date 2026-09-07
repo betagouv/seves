@@ -1,5 +1,6 @@
 from functools import cached_property
 
+from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
@@ -92,6 +93,7 @@ class EvenementAnimalBaseView(
         self.object = form.save()
         self.analyse_formset.instance = self.object
         self.analyse_formset.save()
+        messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
 
@@ -111,6 +113,13 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
         context["espece"] = Espece.objects.get(pk=self.request.GET.get("espece"))
         context["statut_animal"] = StatutAnimal(self.request.GET.get("statut_animal"))
         return context
+
+    def get_success_message(self):
+        return (
+            "L’évènement a été publié avec succès."
+            if self.object.is_published
+            else "L’évènement a été créé avec succès."
+        )
 
 
 class EvenementAnimalDetailsView(UserPassesTestMixin, DetailView):
