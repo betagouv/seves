@@ -55,7 +55,7 @@ class StatsEvenementsView(TemplateView):
             int(settings.METABASE_EVENEMENT_ENREGISTREMENT_SIMPLE)
         )
         context["METABASE_URL"] = settings.METABASE_URL
-        context["title"] = "Analyse des évènements"
+        context["title"] = "Analyse des événements"
         return context
 
 
