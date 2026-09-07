@@ -46,6 +46,14 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         label="Statut de l'animal",
     )
 
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sa/maladie_description_message.mjs"),))
+
+    @property
+    def maladie_descriptions(self):
+        return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
+
 
 class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
     type_detenteur = forms.ChoiceField(

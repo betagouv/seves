@@ -5,7 +5,13 @@ from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
 from sa.models.evenement import StatutAnimal, TypeLieu
-from sa.tests.factories import AcarapioseFactory, EspeceFactory, EvenementAnimalFactory, MaladieFactory
+from sa.tests.factories import (
+    AcarapioseFactory,
+    EspeceFactory,
+    EvenementAnimalFactory,
+    MaladieFactory,
+    TuberculoseFactory,
+)
 from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
 from seves import settings
 from sv.models import Evenement
@@ -34,6 +40,20 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     assert evenement_produit.date_statut_changed == input_data.date_statut_changed
     assert evenement_produit.type_lieu == input_data.type_lieu
     assert evenement_produit.coordinates == input_data.coordinates
+
+
+def test_pre_creation_form_shows_description_message(live_server, page: Page):
+    input_data = EvenementAnimalFactory(maladie=TuberculoseFactory())
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+    list_page.fill_maladie(input_data)
+    expect(
+        list_page.pre_creation_modal.get_by_text(
+            "Les événements concernant une tuberculose peu commune ou dont on suspecte un impact zoonotique doivent être notifiés dans Sèves. Tous les autres événements restent traités dans SIGAL et CartoGIP.",
+            exact=True,
+        )
+    ).to_be_visible()
 
 
 def test_can_create_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):

@@ -230,9 +230,12 @@ class WithPreCreationFormPage:
             f"input[type='radio'][value='{str(value).lower()}' i]"
         ).check(force=True)
 
-    def fill_pre_creation_form(self, evenement: EvenementAnimal):
+    def fill_maladie(self, evenement):
         group = "Les plus fréquentes" if evenement.maladie.is_highlighted else "Autre"
         self._maladie_treeselect.check_option(group, evenement.maladie.name_with_acronym)
+
+    def fill_pre_creation_form(self, evenement: EvenementAnimal):
+        self.fill_maladie(evenement)
         self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
