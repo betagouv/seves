@@ -10,6 +10,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from core.mixins import (
     MediaDefiningMixin,
+    WithAddUserContactsMixin,
     WithBlocCommunMixin,
     WithClotureContextMixin,
     WithFinDeSuiviMixin,
@@ -49,6 +50,7 @@ class EvenementAnimalBaseView(
     WithFormErrorsAsMessagesMixin,
     MediaDefiningMixin,
     WithFormsetInvalidMixin,
+    WithAddUserContactsMixin,
     ModelFormMixin,
     ProcessFormView,
 ):
@@ -152,6 +154,7 @@ class EvenementAnimalBaseView(
         self.veterinaire_formset.save()
         self.especes_concernees_formset.instance = self.object
         self.especes_concernees_formset.save()
+        self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
