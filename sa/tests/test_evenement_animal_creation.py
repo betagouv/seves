@@ -77,6 +77,11 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     assert evenement.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.", exact=True)).to_be_visible()
+    contact_agent = mocked_authentification_user.agent.contact_set.get()
+    contact_structure = mocked_authentification_user.agent.structure.contact_set.get()
+    assert evenement.contacts.count() == 2
+    assert contact_agent in evenement.contacts.all()
+    assert contact_structure in evenement.contacts.all()
 
 
 def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
