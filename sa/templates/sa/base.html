@@ -48,6 +48,14 @@
                                 </div>
 
                                 {% dsfr_form_field pre_creation_form.espece %}
+                                <template id="espece-option-template">
+                                    <div class="fr-treeselect__element" data-controller="treeselect-element">
+                                        <div class="fr-radio-group">
+                                            <input type="radio" id="__id__" name="espece" value="__value__" data-action="change->treeselect#onChange">
+                                            <label class="fr-label" for="__id__">__label__</label>
+                                        </div>
+                                    </div>
+                                </template>
                                 {% dsfr_inline_radio_field pre_creation_form.statut_animal tooltips=pre_creation_form.STATUT_ANIMAL_TOOLTIPS %}
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
                                     <button class="fr-btn fr-btn--secondary" aria-controls="modal-pre-creation" type="button">Annuler</button>

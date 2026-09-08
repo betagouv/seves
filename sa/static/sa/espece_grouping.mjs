@@ -1,10 +1,10 @@
-import {applicationReady} from "Application"
+import {applicationReady, escapeHTML} from "Application"
 import {Controller} from "Stimulus"
 
 const FREQUENT_GROUP_LABEL = "Les plus fréquentes"
 const OTHER_GROUP_LABEL = "Autres"
 const ESPECE_WIDGET_ID = "fr-treeselect-id_pre_creation_espece"
-const ESPECE_FIELD_NAME = "espece"
+const OPTION_TEMPLATE_ID = "espece-option-template"
 
 let uid = 0
 
@@ -69,28 +69,15 @@ class EspeceGrouping extends Controller {
     }
 
     #buildOption({id, name}) {
-        const wrapper = document.createElement("div")
-        wrapper.className = "fr-treeselect__element"
-        wrapper.dataset.controller = "treeselect-element"
-
-        const radioGroup = document.createElement("div")
-        radioGroup.className = "fr-radio-group"
-
-        const input = document.createElement("input")
-        input.type = "radio"
-        input.name = ESPECE_FIELD_NAME
-        input.id = `id_pre_creation_espece_option_${uid++}`
-        input.value = String(id)
-        input.dataset.action = "change->treeselect#onChange"
-
-        const label = document.createElement("label")
-        label.className = "fr-label"
-        label.htmlFor = input.id
-        label.textContent = name
-
-        radioGroup.append(input, label)
-        wrapper.append(radioGroup)
-        return wrapper
+        const template = document.getElementById(OPTION_TEMPLATE_ID)
+        const inputId = `id_pre_creation_espece_option_${uid++}`
+        const html = template.innerHTML
+            .replaceAll("__id__", inputId)
+            .replaceAll("__value__", escapeHTML(id))
+            .replaceAll("__label__", escapeHTML(name))
+        const container = document.createElement("div")
+        container.innerHTML = html.trim()
+        return container.firstElementChild
     }
 
     #groupContainers() {
