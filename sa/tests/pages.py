@@ -332,6 +332,7 @@ class EvenementAnimalFormPage(
         "date_d_zero",
         "date_nd1",
         "date_nd2",
+        "date_nd",
         # Adis
         "numero_adis",
         "date_notification_adis",

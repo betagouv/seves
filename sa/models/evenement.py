@@ -391,6 +391,7 @@ class EvenementAnimal(
     date_d_zero = models.DateField(verbose_name="Date D zéro", null=True, blank=True)
     date_nd1 = models.DateField(verbose_name="Date ND1", null=True, blank=True)
     date_nd2 = models.DateField(verbose_name="Date ND2", null=True, blank=True)
+    date_nd = models.DateField(verbose_name="Date ND", null=True, blank=True)
 
     # Adis
     foyer = models.CharField(

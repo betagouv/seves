@@ -194,6 +194,14 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             attrs={"type": "date"},
         ),
     )
+    date_nd = forms.DateField(
+        required=False,
+        label="Date ND",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
 
     foyer = forms.ChoiceField(choices=Foyer.choices, required=False, widget=forms.RadioSelect, label="Foyer")
     date_notification_adis = forms.DateField(
@@ -288,6 +296,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_d_zero",
             "date_nd1",
             "date_nd2",
+            "date_nd",
             # Adis
             *adis_fields,
         ]
@@ -346,6 +355,9 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             self.fields.pop("date_nd1")
             self.fields.pop("date_nd2")
 
+        if self.maladie.needs_date_nd is False:
+            self.fields.pop("date_nd")
+
         if self.user.agent.structure.is_ac is False:
             for field in self.Meta.adis_fields:
                 self.fields.pop(field)
@@ -359,8 +371,12 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         return self.maladie.needs_dates_desinfection
 
     @property
+    def show_mesures_third_row(self):
+        return self.maladie.needs_date_nd
+
+    @property
     def show_mesures_block(self):
-        return self.show_mesures_first_row or self.show_mesures_second_row
+        return self.show_mesures_first_row or self.show_mesures_second_row or self.show_mesures_third_row
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
