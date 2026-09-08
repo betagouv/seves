@@ -3499,7 +3499,7 @@ def noop(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0014_populate_laboratoire_methode_mapping"),
+        ("sa", "0015_evenementanimal_date_cloture_adis_and_more"),
     ]
 
     operations = [
