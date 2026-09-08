@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.gis.geos import Point
 from django_countries import Countries
 import factory
@@ -6,8 +8,10 @@ from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from core.models import Structure
-from sa.models import Espece, EvenementAnimal, Maladie
-from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement
+from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from sa.models.analyse import ResultatAnalyse
+from sa.models.evenement import ContexteSuspicion, HumanInvolved, StatutAnimal, StatutEvenement, TypeLieu
+from sa.models.laboratoire import LaboratoireType
 from sa.models.maladie import DescriptionType
 
 fake = Faker()
@@ -63,6 +67,33 @@ class EspeceFactory(DjangoModelFactory):
     name = factory.Faker("sentence", nb_words=3)
 
 
+class LaboratoireFactory(DjangoModelFactory):
+    class Meta:
+        model = Laboratoire
+        django_get_or_create = ("name",)
+
+    name = factory.Sequence(lambda n: f"Laboratoire {n}")
+    external_id = factory.Sequence(lambda n: f"LAB-{n:06d}")
+    code = factory.Sequence(lambda n: f"CODE-{n}")
+    laboratoire_type = FuzzyChoice(LaboratoireType.values)
+
+
+class MethodeAnalyseFactory(DjangoModelFactory):
+    class Meta:
+        model = MethodeAnalyse
+        django_get_or_create = ("libelle",)
+        skip_postgeneration_save = True
+
+    libelle = factory.Sequence(lambda n: f"Méthode {n}")
+
+    @factory.post_generation
+    def laboratoires(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.laboratoires.set(extracted)
+
+
 class EvenementAnimalFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
     maladie = factory.SubFactory("sa.tests.factories.MaladieFactory")
@@ -85,7 +116,6 @@ class EvenementAnimalFactory(DjangoModelFactory):
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
     numero_identifiant = factory.Faker("numerify", text="##### #####")
-    type_lieu = FuzzyChoice([c[0] for c in StatutAnimal.choices])
 
     context_suspicion = FuzzyChoice(ContexteSuspicion.values)
     human_involved = FuzzyChoice(HumanInvolved.values)
@@ -150,3 +180,41 @@ class EvenementAnimalFactory(DjangoModelFactory):
     def date_levee(self):
         if self.maladie.needs_arrete:
             return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def type_lieu(self):
+        return FuzzyChoice([value for value, _ in TypeLieu.choices_for_statut_animal(self.statut_animal)]).fuzz()
+
+    @factory.lazy_attribute
+    def date_d_zero(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
+    def date_nd1(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_between(start_date=self.date_d_zero, end_date=self.date_d_zero + timedelta(days=30))
+
+    @factory.lazy_attribute
+    def date_nd2(self):
+        if self.maladie.needs_dates_desinfection:
+            return fake.date_between(start_date=self.date_nd1, end_date=self.date_nd1 + timedelta(days=30))
+
+
+class AnalyseFactory(DjangoModelFactory):
+    class Meta:
+        model = Analyse
+        skip_postgeneration_save = True
+
+    evenement = factory.SubFactory(EvenementAnimalFactory)
+    maladie = factory.SelfAttribute("evenement.maladie")
+    date_prelevement = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
+    laboratoire = factory.SubFactory(LaboratoireFactory)
+    methode = factory.SubFactory(MethodeAnalyseFactory)
+    resultat = FuzzyChoice(ResultatAnalyse.values)
+    resultat_confirmation = FuzzyChoice([True, False])
+
+    @factory.post_generation
+    def link_methode_to_laboratoire(self, create, extracted, **kwargs):
+        if create:
+            self.methode.laboratoires.add(self.laboratoire)

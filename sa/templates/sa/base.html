@@ -1,5 +1,9 @@
 {% extends "core/base.html" %}
-{% load dsfr_tags render_field_with_inline_label %}
+{% load dsfr_tags render_field_with_inline_label widget_tweaks %}
+
+{% block base_override %}
+    {% for tag in pre_creation_form.media.render_css %}{{ tag }}{% endfor %}
+{% endblock base_override %}
 
 {% block product_nav %}
     <li>
@@ -26,7 +30,23 @@
                             </h2>
 
                             <form method="get" action="{% url 'sa:evenement-animal-creation' %}">
-                                {% dsfr_form_field pre_creation_form.maladie  %}
+                                <div data-controller="maladie-description-message">
+                                    {% dsfr_form_field pre_creation_form.maladie|set_data:"action:change->maladie-description-message#onMaladieSelected"|set_data:"maladie-description-message-target:maladieInput" %}
+                                    {{ pre_creation_form.maladie_descriptions|json_script:"maladie-descriptions" }}
+                                    <div class="fr-my-2v fr-hidden" data-maladie-description-message-target="notice">
+                                        <div class="fr-notice fr-notice--info">
+                                            <div class="fr-container">
+                                                <div class="fr-notice__body">
+                                                    <p>
+                                                        <span class="fr-notice__title" data-maladie-description-message-target="noticeText"></span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 {% dsfr_form_field pre_creation_form.espece  %}
                                 {% dsfr_inline_radio_field pre_creation_form.statut_animal tooltips=pre_creation_form.STATUT_ANIMAL_TOOLTIPS %}
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
@@ -41,3 +61,7 @@
         </div>
     </dialog>
 {% endblock %}
+
+{% block scripts %}
+    {% for tag in pre_creation_form.media.render_js %}{{ tag }}{% endfor %}
+{% endblock scripts %}

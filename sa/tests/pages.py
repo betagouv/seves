@@ -3,10 +3,10 @@ from functools import cached_property
 import json
 
 from django.urls import reverse
-from playwright.sync_api import Page
+from playwright.sync_api import Locator, Page
 
-from core.tests.pages import ChoiceJSPage
-from sa.models import EvenementAnimal
+from core.tests.pages import ChoiceJSPage, TreeselectPage
+from sa.models import Analyse, EvenementAnimal
 from seves import settings
 
 
@@ -154,10 +154,69 @@ class WithParticulierDetenteurUtils:
         self.page.unroute(url)
 
 
+class WithAnalyseMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def get_analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
+    @property
+    def add_analyse_button(self):
+        return self.page.locator(".analyses-fieldset").get_by_role("button", name="Ajouter")
+
+    def open_analyse_modal(self):
+        self.add_analyse_button.click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def fill_analyse(self, modal: Locator, analyse: Analyse):
+        modal.locator('[id$="-maladie"]').select_option(str(analyse.maladie_id))
+        modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
+        if analyse.date_resultat:
+            modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
+        modal.locator('[id$="-laboratoire"]').select_option(str(analyse.laboratoire_id))
+        modal.locator('[id$="-methode"]').select_option(str(analyse.methode_id))
+        modal.locator('[id$="-resultat"]').select_option(analyse.resultat)
+        if analyse.resultat_confirmation:
+            modal.locator('[id$="resultat_confirmation"]').check(force=True)
+
+    def close_analyse_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_analyse(self, analyse: Analyse):
+        modal = self.open_analyse_modal()
+        self.fill_analyse(modal, analyse)
+        self.close_analyse_modal()
+
+    def delete_analyse(self, index=0):
+        self.get_analyse_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_analyse(self, index=0, **kwargs):
+        card = self.get_analyse_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".analyse-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").locator("visible=true").count()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
+        self._maladie_treeselect = TreeselectPage(
+            self.page, self.page.locator("#fr-treeselect-id_pre_creation_maladie")
+        )
 
     @property
     def pre_creation_modal(self):
@@ -171,8 +230,12 @@ class WithPreCreationFormPage:
             f"input[type='radio'][value='{str(value).lower()}' i]"
         ).check(force=True)
 
+    def fill_maladie(self, evenement):
+        group = "Les plus fréquentes" if evenement.maladie.is_highlighted else "Autre"
+        self._maladie_treeselect.check_option(group, evenement.maladie.name_with_acronym)
+
     def fill_pre_creation_form(self, evenement: EvenementAnimal):
-        self.pre_creation_modal.get_by_label("Maladie").select_option(evenement.maladie.name)
+        self.fill_maladie(evenement)
         self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
@@ -222,7 +285,11 @@ class EvenementListPage(WithPreCreationFormPage):
 
 
 class EvenementAnimalFormPage(
-    WithPreCreationFormPage, WithAddressAndCommuneUtils, WithEtablissementDetenteurUtils, WithParticulierDetenteurUtils
+    WithPreCreationFormPage,
+    WithAddressAndCommuneUtils,
+    WithEtablissementDetenteurUtils,
+    WithParticulierDetenteurUtils,
+    WithAnalyseMixin,
 ):
     fields = [
         "statut_evenement",
@@ -247,6 +314,9 @@ class EvenementAnimalFormPage(
         "email_particulier",
         "telephone_particulier",
         # Localisation
+        "adresse_lieu_dit",
+        "commune",
+        "code_insee",
         "type_lieu",
         "numero_identifiant",
         "coordinates_0",  # Lat
@@ -258,6 +328,9 @@ class EvenementAnimalFormPage(
         "date_apms",
         "date_apdi",
         "date_levee",
+        "date_d_zero",
+        "date_nd1",
+        "date_nd2",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -306,6 +379,10 @@ class EvenementAnimalFormPage(
     def cancel_type_change(self):
         self.type_change_modal.get_by_role("button", name="Annuler").click()
 
+    @property
+    def reprendre_adresse_detenteur_btn(self):
+        return self.page.get_by_test_id("reprendre-adresse-detenteur-btn")
+
     def fill_required_fields(self, evenement: EvenementAnimal):
         self.statut_evenement.select_option(evenement.statut_evenement)
         self.date_statut_changed.fill(evenement.date_statut_changed.strftime("%Y-%m-%d"))
@@ -322,8 +399,13 @@ class EvenementAnimalFormPage(
                 "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
             )
 
-    def submit(self):
-        self.page.get_by_role("button", name="Enregistrer", exact=True).click()
+    def submit_as_draft(self, wait_for="**/sa/evenement-animal/**/"):
+        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+        if wait_for:
+            self.page.wait_for_url(wait_for)
+
+    def publish(self):
+        self.page.get_by_role("button", name="Publier", exact=True).click()
         self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):
@@ -380,3 +462,20 @@ class EvenementAnimalDetailsPage:
 
     def block(self, title):
         return self.page.get_by_role("heading", name=title, exact=True).locator("..")
+
+    def publish(self):
+        self.page.get_by_role("button", name="Publier", exact=True).click()
+        self.page.wait_for_url("**/sa/evenement-animal/**/")
+
+    def get_analyse_card(self, index=0):
+        return self.page.locator(".analyse-card").nth(index)
+
+    @property
+    def nb_analyse(self):
+        return self.page.locator(".analyse-card").count()
+
+    def open_analyse_detail(self, index=0):
+        self.get_analyse_card(index).get_by_role("button", name="Voir le détail").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+        modal.wait_for(state="visible")
+        return modal

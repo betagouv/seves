@@ -21,7 +21,7 @@
 	    "size": "M"
 	  },
 	  {
-		"command": "0 4 * * * ./bin/fetch_and_import_contacts.sh",
+		"command": "0 4,16 * * * ./bin/fetch_and_import_contacts.sh",
 	    "size": "M"
 	  },
 	  {

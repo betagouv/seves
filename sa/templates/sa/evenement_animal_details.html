@@ -17,6 +17,22 @@
         <div data-testid="evenement-header">
             <div class="details-top-row">
                 <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+
+                <div class="details-top-row--actions">
+                    <ul class="fr-btns-group fr-btns-group--inline-md">
+                        {% if can_publish %}
+                            <li>
+                                <form action="{% url 'publish' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ object.get_absolute_url }}" name="next">
+                                    <input type="hidden" value="{{ content_type.id }}" name="content_type_id">
+                                    <input type="hidden" value="{{ object.pk }}" name="content_id">
+                                    <input type="submit" class="fr-btn fr-btn--secondary" value="Publier"/>
+                                </form>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
             {% include "sa/_evenement_animal_badges.html" %}
             {% include "core/_latest_revision.html" with content_type_pk=content_type.pk object_pk=object.pk %}
@@ -47,13 +63,13 @@
                     <div class="fr-col-12 fr-col-lg-6">
                         <div class="bold">Date de création</div>
                         <div>{{ object.date_creation|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Date de publication</div>
+                        <div>{{ object.date_publication|date:"d/m/Y"|or_empty_value_tag }}</div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
                         <div class="bold">Statut de l'événement</div>
                         <div>{{ object.get_statut_evenement_display|or_empty_value_tag }}</div>
-                    </div>
-                    <div class="fr-col-12 fr-col-lg-6">
-                        <div class="bold">Date à prendre en compte pour le changement de statut</div>
+                        <div class="bold fr-mt-2w">Date à prendre en compte pour le changement de statut</div>
                         <div>{{ object.date_statut_changed|date:"d/m/Y"|or_empty_value_tag }}</div>
                     </div>
                 </div>
@@ -196,12 +212,25 @@
                         <div class="fr-col-12 fr-col-lg-4">
                             <div class="bold">Date levée APMS ou APDI</div>
                             <div>{{ object.date_levee|date:"d/m/Y"|or_empty_value_tag }}</div>
-
                         </div>
-
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date D zéro</div>
+                            <div>{{ object.date_d_zero|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date ND1</div>
+                            <div>{{ object.date_nd1|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date ND2</div>
+                            <div>{{ object.date_nd2|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
                     </div>
                 </div>
             {% endif %}
+            <div class="white-container fr-mb-4v">
+                {% include "sa/_evenement_analyses.html" %}
+            </div>
         </div>
     </main>
 {% endblock content %}

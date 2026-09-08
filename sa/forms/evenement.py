@@ -8,10 +8,19 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
 from core.form_mixins import js_module
+from core.mixins import WithEtatMixin
 from core.models import Departement
+from core.widgets import TreeselectRadio
 from sa.forms.fields import LatLonField
 from sa.models import Espece, Maladie
-from sa.models.evenement import ContexteSuspicion, EvenementAnimal, HumanInvolved, StatutAnimal, TypeDetenteur
+from sa.models.evenement import (
+    ContexteSuspicion,
+    EvenementAnimal,
+    HumanInvolved,
+    StatutAnimal,
+    TypeDetenteur,
+    TypeLieu,
+)
 
 
 class EvenementAnimalPreCreationForm(DsfrBaseForm):
@@ -20,7 +29,15 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         StatutAnimal.DETENU: "Animal maintenu sous la responsabilité d'une personne (élevage, zoo, particulier, ruche…)",
     }
 
-    maladie = forms.ModelChoiceField(queryset=Maladie.objects.all())
+    maladie = forms.ModelChoiceField(
+        queryset=Maladie.objects.all(),
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        required=True,
+        widget=TreeselectRadio(
+            choices=Maladie.treeselect_choices, attrs={"placeholder": "Rechercher", "required": True}
+        ),
+        label="Maladie suspectée",
+    )
     espece = forms.ModelChoiceField(queryset=Espece.objects.all())
     statut_animal = forms.ChoiceField(
         required=True,
@@ -28,6 +45,14 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         widget=forms.RadioSelect(attrs={"class": "fr-fieldset__element--inline"}),
         label="Statut de l'animal",
     )
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("sa/maladie_description_message.mjs"),))
+
+    @property
+    def maladie_descriptions(self):
+        return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
 
 
 class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
@@ -72,7 +97,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
     )
     type_lieu = SEVESChoiceField(
-        choices=StatutAnimal.choices,
+        choices=TypeLieu.choices,
         label="Type de lieu",
         widget=forms.Select(attrs={"required": True}),
     )
@@ -139,6 +164,33 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             attrs={"type": "date"},
         ),
     )
+    date_d_zero = forms.DateField(
+        required=False,
+        label="Date D zéro",
+        help_text="Date de la désinfection préliminaire (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_nd1 = forms.DateField(
+        required=False,
+        label="Date ND1",
+        help_text="Date du premier nettoyage de désinfection (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    date_nd2 = forms.DateField(
+        required=False,
+        label="Date ND2",
+        help_text="Date du deuxième nettoyage de désinfection (maladies cat. A)",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
 
     @property
     def media(self):
@@ -148,6 +200,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
                 js_module("core/address_search_autocomplete.mjs"),
                 js_module("core/siret.mjs"),
                 js_module("sa/detenteur.mjs"),
+                js_module("sa/localisation_from_detenteur.mjs"),
             ),
         )
 
@@ -193,6 +246,9 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_apms",
             "date_apdi",
             "date_levee",
+            "date_d_zero",
+            "date_nd1",
+            "date_nd2",
         ]
         widgets = {
             "maladie": forms.HiddenInput,
@@ -218,6 +274,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         self.maladie = Maladie.objects.get(id=self.maladie_id)
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
+        self.fields["type_lieu"].choices = (
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *TypeLieu.choices_for_statut_animal(self.statut_animal),
+        )
 
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_statut_changed"].widget.attrs["max"] = today
@@ -238,15 +298,27 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             self.fields.pop("date_apdi")
             self.fields.pop("date_levee")
 
+        if self.maladie.needs_dates_desinfection is False:
+            self.fields.pop("date_d_zero")
+            self.fields.pop("date_nd1")
+            self.fields.pop("date_nd2")
+
     @property
     def show_mesures_first_row(self):
         return self.maladie.needs_arrete
 
     @property
+    def show_mesures_second_row(self):
+        return self.maladie.needs_dates_desinfection
+
+    @property
     def show_mesures_block(self):
-        return self.show_mesures_first_row
+        return self.show_mesures_first_row or self.show_mesures_second_row
 
     def save(self, commit=True):
+        if self.data.get("action") == "publish":
+            self.instance.etat = WithEtatMixin.Etat.EN_COURS
+            self.instance.date_publication = timezone.now()
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)

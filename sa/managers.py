@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from core.managers import EvenementManagerMixin
 
@@ -14,3 +15,8 @@ class EvenementAnimalQuerySet(EvenementManagerMixin, models.QuerySet):
 
     def optimized_for_list(self):
         return self.select_related("maladie", "espece", "createur")
+
+    def get_user_can_view(self, user):
+        from sa.models import EvenementAnimal
+
+        return self.filter(Q(createur=user.agent.structure) | ~Q(etat=EvenementAnimal.Etat.BROUILLON))

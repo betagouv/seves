@@ -1,5 +1,6 @@
 from playwright.sync_api import Page, expect
 
+from core.factories import StructureFactory
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
 from sa.tests.pages import EvenementListPage
 from seves import settings
@@ -86,3 +87,15 @@ def test_evenement_animal_list_filter_by_espece(live_server, page: Page):
 
     expect(search_page.row(matching.numero)).to_be_visible()
     expect(search_page.row(other.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_cant_see_draft_of_other_structure(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    evenement.createur = StructureFactory()
+    evenement.save()
+    assert evenement.is_draft is True
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+
+    expect(page.get_by_text("0 sur un total de 0")).to_be_visible()

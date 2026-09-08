@@ -19,8 +19,9 @@ class WithFilteredListMixin(WithOrderingMixin):
         return "creation"
 
     def get_raw_queryset(self):
+        user = self.request.user
         contact = self.request.user.agent.structure.contact_set.get()
-        return EvenementAnimal.objects.all().with_fin_de_suivi(contact).optimized_for_list()
+        return EvenementAnimal.objects.all().get_user_can_view(user).with_fin_de_suivi(contact).optimized_for_list()
 
     def get_queryset(self):
         queryset = self.apply_ordering(self.get_raw_queryset())

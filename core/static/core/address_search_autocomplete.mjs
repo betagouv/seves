@@ -35,7 +35,7 @@ class AddressSearchAutocompleteController extends Controller {
     addressTargetConnected(el) {
         this.addressWidget = setUpAddressChoices(el)
         el.dataset.action = [
-            ...(el.dataset.action || "").split(/s+/g),
+            ...(el.dataset.action || "").split(/\s+/g).filter(Boolean),
             `choice->${this.identifier}#onAddressChoice`,
         ].join(" ")
     }
@@ -48,7 +48,7 @@ class AddressSearchAutocompleteController extends Controller {
     communeTargetConnected(el) {
         this.communeWidget = setUpCommuneChoices(el)
         el.dataset.action = [
-            ...(el.dataset.action || "").split(/s+/g),
+            ...(el.dataset.action || "").split(/\s+/g).filter(Boolean),
             `choice->${this.identifier}#onCommuneChoice`,
             `removeItem->${this.identifier}#onRemoveItem`,
             `forcedChoice->${this.identifier}#onCommuneForcedChoice`,

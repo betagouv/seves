@@ -4,9 +4,17 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from sa.models import EvenementAnimal
-from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory
+from sa.models.evenement import StatutAnimal, TypeLieu
+from sa.tests.factories import (
+    AcarapioseFactory,
+    EspeceFactory,
+    EvenementAnimalFactory,
+    MaladieFactory,
+    TuberculoseFactory,
+)
 from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
 from seves import settings
+from sv.models import Evenement
 
 
 def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
@@ -21,7 +29,7 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     list_page.page.wait_for_url("**/sa/evenement-animal/creation**")
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.fill_required_fields(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     assert evenement_produit.createur == mocked_authentification_user.agent.structure
@@ -34,6 +42,20 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     assert evenement_produit.coordinates == input_data.coordinates
 
 
+def test_pre_creation_form_shows_description_message(live_server, page: Page):
+    input_data = EvenementAnimalFactory(maladie=TuberculoseFactory())
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+    list_page.fill_maladie(input_data)
+    expect(
+        list_page.pre_creation_modal.get_by_text(
+            "Les événements concernant une tuberculose peu commune ou dont on suspecte un impact zoonotique doivent être notifiés dans Sèves. Tous les autres événements restent traités dans SIGAL et CartoGIP.",
+            exact=True,
+        )
+    ).to_be_visible()
+
+
 def test_can_create_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
     input_data = EvenementAnimalFactory.build()
     maladie = MaladieFactory()
@@ -42,15 +64,45 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.createur == mocked_authentification_user.agent.structure
-    assert evenement_produit.maladie == maladie
-    assert evenement_produit.espece == espece
-    assert evenement_produit.statut_animal == input_data.statut_animal
-    assert evenement_produit.statut_evenement == input_data.statut_evenement
-    assert evenement_produit.date_statut_changed == input_data.date_statut_changed
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.maladie == maladie
+    assert evenement.espece == espece
+    assert evenement.statut_animal == input_data.statut_animal
+    assert evenement.statut_evenement == input_data.statut_evenement
+    assert evenement.date_statut_changed == input_data.date_statut_changed
+    assert evenement.is_draft is True
+
+
+def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.publish()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.date_publication is not None
+    assert evenement.is_draft is False
+    assert evenement.etat == Evenement.Etat.EN_COURS
+
+
+def test_type_lieu_options_depend_on_statut_animal(live_server, page: Page, check_select_options):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+
+    creation_page.navigate(maladie, espece, StatutAnimal.DETENU)
+    check_select_options(page, "id_type_lieu", [label for _, label in TypeLieu.choices_detenu])
+
+    creation_page.navigate(maladie, espece, StatutAnimal.SAUVAGE)
+    check_select_options(page, "id_type_lieu", [label for _, label in TypeLieu.choices_sauvage])
 
 
 def test_can_create_evenement_animal_with_localisation_block(live_server, mocked_authentification_user, page: Page):
@@ -64,7 +116,7 @@ def test_can_create_evenement_animal_with_localisation_block(live_server, mocked
     creation_page.force_address(input_data.adresse_lieu_dit)
     creation_page.force_commune()
     creation_page.numero_identifiant.fill(input_data.numero_identifiant)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit
@@ -119,7 +171,7 @@ def test_can_create_evenement_animal_with_ban_auto_complete(
         "251 Rue de Vaugirard 75015 Paris",
     )
     assert call_count["count"] == 1
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.adresse_lieu_dit == "251 Rue de Vaugirard"
@@ -136,7 +188,7 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_context_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.context_suspicion == input_data.context_suspicion
@@ -154,7 +206,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_detenteur_etablissement_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
@@ -216,7 +268,8 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
         search="120 079 017",
     )
     assert call_count["count"] == 1
-    creation_page.submit()
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.siret_etablissement == siret
@@ -237,7 +290,7 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     creation_page.fill_required_fields(input_data)
     creation_page.fill_detenteur_particulier_block(input_data)
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
@@ -545,7 +598,7 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     creation_page.date_apms.fill(input_data.date_apms.strftime("%Y-%m-%d"))
     creation_page.date_apdi.fill(input_data.date_apdi.strftime("%Y-%m-%d"))
     creation_page.date_levee.fill(input_data.date_levee.strftime("%Y-%m-%d"))
-    creation_page.submit()
+    creation_page.submit_as_draft()
 
     evenement_produit = EvenementAnimal.objects.get()
     assert evenement_produit.date_apms == input_data.date_apms
@@ -553,9 +606,46 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     assert evenement_produit.date_levee == input_data.date_levee
 
 
-def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page: Page):
+def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    maladie = MaladieFactory(name="Needs date desinfection", needs_date_nd=False, needs_dates_desinfection=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_d_zero.fill(input_data.date_d_zero.strftime("%Y-%m-%d"))
+    creation_page.date_nd1.fill(input_data.date_nd1.strftime("%Y-%m-%d"))
+    creation_page.date_nd2.fill(input_data.date_nd2.strftime("%Y-%m-%d"))
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.date_d_zero == input_data.date_d_zero
+    assert evenement_produit.date_nd1 == input_data.date_nd1
+    assert evenement_produit.date_nd2 == input_data.date_nd2
+
+
+def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    maladie = MaladieFactory(name="Needs date desinfection order", needs_date_nd=False, needs_dates_desinfection=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_d_zero.fill("2026-01-01")
+    creation_page.date_nd1.fill("2025-01-01")
+    creation_page.submit_as_draft(wait_for=None)
+
+    expect(
+        creation_page.page.get_by_text("Les dates D0, ND1 et ND2 doivent respecter l'ordre D0 ≤ ND1 ≤ ND2.", exact=True)
+    ).to_have_count(2)
+    assert EvenementAnimal.objects.count() == 0
+
+
+def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page: Page):
     input_data = EvenementAnimalFactory.build()
-    maladie = MaladieFactory(needs_arrete=False)
+    maladie = AcarapioseFactory()
     espece = EspeceFactory()
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
@@ -564,3 +654,122 @@ def test_evenement_animal_creation_hide_dates_when_not_needede(live_server, page
     expect(creation_page.date_apms).not_to_be_visible()
     expect(creation_page.date_apdi).not_to_be_visible()
     expect(creation_page.date_levee).not_to_be_visible()
+    expect(creation_page.date_d_zero).not_to_be_visible()
+    expect(creation_page.date_nd1).not_to_be_visible()
+    expect(creation_page.date_nd2).not_to_be_visible()
+
+
+def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
+    response = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                "properties": {
+                    "label": "251 Rue de Vaugirard 75015 Paris",
+                    "name": "251 Rue de Vaugirard",
+                    "citycode": "75115",
+                    "postcode": "75015",
+                    "city": "Paris",
+                    "context": "75, Paris, Île-de-France",
+                },
+            },
+        ],
+    }
+    page.route(
+        f"{settings.GEOCODE_URL}/search/?*",
+        lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(response)),
+    )
+
+
+def test_reuse_address_button_is_disabled_when_detenteur_is_empty(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_disabled()
+
+    creation_page.force_address_etablissement(input_data.adresse_lieu_dit_etablissement)
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
+
+    creation_page.particulier_label.click()
+    creation_page.confirm_type_change()
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_disabled()
+
+    creation_page.force_address_particulier("12 rue des Lilas")
+    expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
+
+
+def test_can_reuse_address_from_detenteur_etablissement_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_etablissement_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+    expect(creation_page.commune).to_have_value("Lille")
+    expect(creation_page.code_insee).to_have_value(input_data.code_insee_etablissement)
+    expect(creation_page.coordinates_0).to_have_value("48.840234")
+    expect(creation_page.coordinates_1).to_have_value("2.304014")
+
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit_etablissement
+    assert evenement_produit.commune == "Lille"
+    assert evenement_produit.code_insee == input_data.code_insee_etablissement
+
+
+def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: Page):
+    input_data = EvenementAnimalFactory(particulier=True)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_particulier_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_particulier)
+    expect(creation_page.commune).to_have_value("Lille")
+    expect(creation_page.code_insee).to_have_value(input_data.code_insee_particulier)
+
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement_produit.adresse_lieu_dit == input_data.adresse_particulier
+    assert evenement_produit.commune == "Lille"
+    assert evenement_produit.code_insee == input_data.code_insee_particulier
+
+
+def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_server, page: Page):
+    input_data = EvenementAnimalFactory()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_detenteur_etablissement_block(input_data)
+
+    _mock_geocode_search(creation_page.page)
+    creation_page.reprendre_adresse_detenteur_btn.click()
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+
+    creation_page.force_address_etablissement("Nouvelle adresse jamais reprise")
+
+    expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)

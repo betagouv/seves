@@ -40,3 +40,4 @@ ruff
 requests-mock
 pikepdf
 pillow
+pyjwt
