@@ -45,6 +45,12 @@ class Maladie(models.Model):
     needs_date_nd = models.BooleanField(default=True, verbose_name="Nécessite une date ND")
     needs_dates_desinfection = models.BooleanField(default=False, verbose_name="Nécessite des dates D0, ND1, ND2")
     is_highlighted = models.BooleanField(default=False, verbose_name="Est ce que c'est une maladie fréquente")
+    especes_concernees = models.ManyToManyField(
+        "sa.Espece",
+        blank=True,
+        related_name="maladies_concernees",
+        verbose_name="Espèces concernées",
+    )
 
     def __str__(self):
         return self.name

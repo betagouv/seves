@@ -1,12 +1,13 @@
 import datetime
 from enum import auto
+import functools
 
 from django.contrib.gis.db.models import PointField
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import F, Q
 from django.urls import reverse
-from django.utils.functional import classproperty
+from django.utils.functional import classproperty, lazy
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Version
@@ -14,15 +15,50 @@ from reversion.models import Version
 from core.mixins import AllowModificationMixin, WithNumeroMixin, normalize
 from core.models import Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
+from core.widgets import TreeselectGroup, TreeselectItem
 from sa.managers import EvenementAnimalManager
 from sa.models.maladie import Maladie
 
 
 class Espece(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nom", unique=True)
+    is_highlighted = models.BooleanField(default=False, verbose_name="Espèce courante")
 
     def __str__(self):
         return self.name
+
+    @property
+    def _treeselect_item(self):
+        return TreeselectItem(value=self.pk, label=self.name, categorised_label=self.name, html_name_prefix=None)
+
+    @staticmethod
+    def _build_treeselect_choices(maladie=None):
+        frequent_queryset = (
+            maladie.especes_concernees.order_by("name") if maladie is not None else Espece.objects.none()
+        )
+        if not frequent_queryset.exists():
+            frequent_queryset = Espece.objects.filter(is_highlighted=True).order_by("name")
+        frequent_especes = list(frequent_queryset)
+        frequent_choices = [espece._treeselect_item for espece in frequent_especes]
+        frequent_group = TreeselectGroup(
+            label="Les plus fréquentes",
+            choices=frequent_choices,
+            categorised_label=None,
+        )
+        frequent_ids = [espece.pk for espece in frequent_especes]
+        other_queryset = Espece.objects.exclude(pk__in=frequent_ids).order_by("name")
+        other_choices = [espece._treeselect_item for espece in other_queryset]
+        other_group = TreeselectGroup(
+            label="Autres",
+            choices=other_choices,
+            categorised_label=None,
+        )
+
+        return (frequent_group, other_group)
+
+    @classmethod
+    def treeselect_choices_for_maladie(cls, maladie=None):
+        return lazy(functools.partial(cls._build_treeselect_choices, maladie), tuple)()
 
 
 class StatutAnimal(models.TextChoices):

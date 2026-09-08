@@ -773,3 +773,48 @@ def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_serv
     creation_page.force_address_etablissement("Nouvelle adresse jamais reprise")
 
     expect(creation_page.adresse_lieu_dit).to_have_value(input_data.adresse_lieu_dit_etablissement)
+
+
+def _group_option_labels(treeselect, group_name):
+    collapse = treeselect.open_groups(group_name)
+    labels = collapse.locator("input").evaluate_all(
+        "inputs => inputs.map(input => input.labels?.[0]?.textContent.trim())"
+    )
+    treeselect.close_group(group_name)
+    return labels
+
+
+def test_espece_treeselect_regroups_when_maladie_changes(live_server, page: Page):
+    espece_bovin = EspeceFactory(name="Bovin de test (Bos test)", is_highlighted=True)
+    espece_ovin = EspeceFactory(name="Ovin de test (Ovis test)", is_highlighted=True)
+    espece_chien = EspeceFactory(name="Chien de test (Canis test)", is_highlighted=True)
+    espece_hors_referentiel = EspeceFactory(name="Espèce de test hors référentiel", is_highlighted=False)
+    maladie_avec_especes = MaladieFactory(
+        name="Maladie de test avec espèces concernées",
+        especes_concernees=[espece_bovin, espece_ovin],
+    )
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    # Initial state (the default "espèce courante" list is used)
+    default_frequent_labels = _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+    assert espece_chien.name in default_frequent_labels
+    list_page._espece_treeselect.check_option("Les plus fréquentes", espece_chien.name)
+
+    maladie_group = "Les plus fréquentes" if maladie_avec_especes.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie_avec_especes.name_with_acronym)
+
+    frequent_labels = _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+    assert frequent_labels == [espece_bovin.name, espece_ovin.name]
+    other_labels = _group_option_labels(list_page._espece_treeselect, "Autres")
+    assert espece_hors_referentiel.name in other_labels
+    assert espece_chien.name in other_labels
+    assert not set(frequent_labels) & set(other_labels)
+
+    # Previously checked "espèce" moved to "Autres" but remains checked.
+    checked_input = list_page._espece_treeselect.container.locator("input:checked")
+    expect(checked_input).to_have_count(1)
+    checked_label = checked_input.evaluate("el => el.labels?.[0]?.textContent.trim()")
+    assert checked_label == espece_chien.name

@@ -32,6 +32,7 @@ class MaladieFactory(DjangoModelFactory):
     class Meta:
         model = Maladie
         django_get_or_create = ("name",)
+        skip_postgeneration_save = True
 
     class Params:
         maladie_ref = factory.Iterator(REALISTIC_MALADIES)
@@ -42,6 +43,13 @@ class MaladieFactory(DjangoModelFactory):
     needs_arrete = factory.LazyAttribute(lambda o: o.maladie_ref[3])
     needs_dates_desinfection = factory.LazyAttribute(lambda o: o.maladie_ref[4])
     needs_date_nd = factory.LazyAttribute(lambda o: o.maladie_ref[5])
+
+    @factory.post_generation
+    def especes_concernees(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.especes_concernees.set(extracted)
 
 
 class TuberculoseFactory(MaladieFactory):
@@ -65,6 +73,7 @@ class EspeceFactory(DjangoModelFactory):
         django_get_or_create = ("name",)
 
     name = factory.Faker("sentence", nb_words=3)
+    is_highlighted = False
 
 
 class LaboratoireFactory(DjangoModelFactory):

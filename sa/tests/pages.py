@@ -217,6 +217,7 @@ class WithPreCreationFormPage:
         self._maladie_treeselect = TreeselectPage(
             self.page, self.page.locator("#fr-treeselect-id_pre_creation_maladie")
         )
+        self._espece_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_pre_creation_espece"))
 
     @property
     def pre_creation_modal(self):
@@ -234,9 +235,14 @@ class WithPreCreationFormPage:
         group = "Les plus fréquentes" if evenement.maladie.is_highlighted else "Autre"
         self._maladie_treeselect.check_option(group, evenement.maladie.name_with_acronym)
 
-    def fill_pre_creation_form(self, evenement: EvenementAnimal):
+    def fill_espece(self, evenement, group=None):
+        if group is None:
+            group = "Les plus fréquentes" if evenement.espece.is_highlighted else "Autres"
+        self._espece_treeselect.check_option(group, evenement.espece.name)
+
+    def fill_pre_creation_form(self, evenement: EvenementAnimal, *, espece_group=None):
         self.fill_maladie(evenement)
-        self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
+        self.fill_espece(evenement, group=espece_group)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 

@@ -30,6 +30,7 @@ class MaladieAdmin(admin.ModelAdmin):
         "needs_date_nd",
         "needs_dates_desinfection",
     )
+    filter_horizontal = ("especes_concernees",)
 
 
 @admin.register(Laboratoire)
@@ -60,4 +61,8 @@ class AnalyseAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Espece)
+@admin.register(Espece)
+class EspeceAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_highlighted")
+    list_editable = ("is_highlighted",)
+    search_fields = ("name",)

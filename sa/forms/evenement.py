@@ -38,7 +38,14 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         ),
         label="Maladie suspectée",
     )
-    espece = forms.ModelChoiceField(queryset=Espece.objects.all())
+    espece = forms.ModelChoiceField(
+        queryset=Espece.objects.all(),
+        required=True,
+        widget=TreeselectRadio(
+            choices=Espece.treeselect_choices_for_maladie(None), attrs={"placeholder": "Rechercher", "required": True}
+        ),
+        label="Espèce",
+    )
     statut_animal = forms.ChoiceField(
         required=True,
         choices=StatutAnimal,
@@ -48,11 +55,25 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
 
     @property
     def media(self):
-        return super().media + Media(js=(js_module("sa/maladie_description_message.mjs"),))
+        return super().media + Media(
+            js=(js_module("sa/maladie_description_message.mjs"), js_module("sa/espece_grouping.mjs"))
+        )
 
     @property
     def maladie_descriptions(self):
         return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
+
+    @property
+    def especes_concernees_by_maladie(self):
+        return {
+            str(maladie.pk): list(maladie.especes_concernees.values_list("pk", flat=True))
+            for maladie in self.fields["maladie"].queryset
+            if maladie.especes_concernees.exists()
+        }
+
+    @property
+    def especes_courantes_ids(self):
+        return list(Espece.objects.filter(is_highlighted=True).values_list("pk", flat=True))
 
 
 class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
