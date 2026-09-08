@@ -64,16 +64,28 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
 
     @property
-    def especes_concernees_by_maladie(self):
-        return {
-            str(maladie.pk): list(maladie.especes_concernees.values_list("pk", flat=True))
-            for maladie in self.fields["maladie"].queryset
-            if maladie.especes_concernees.exists()
-        }
+    def espece_options_by_maladie(self):
+        default_frequent = [
+            {"id": pk, "name": name}
+            for pk, name in Espece.objects.filter(is_highlighted=True).order_by("name").values_list("pk", "name")
+        ]
 
-    @property
-    def especes_courantes_ids(self):
-        return list(Espece.objects.filter(is_highlighted=True).values_list("pk", flat=True))
+        maladie_queryset = self.fields["maladie"].queryset
+        by_maladie = {}
+        rows = (
+            Espece.objects.filter(maladies_concernees__in=maladie_queryset)
+            .values("pk", "name", "is_highlighted", "maladies_concernees")
+            .order_by("name")
+        )
+        for row in rows:
+            entry = by_maladie.setdefault(row["maladies_concernees"], {"frequent": [], "other": []})
+            item = {"id": row["pk"], "name": row["name"]}
+            (entry["frequent"] if row["is_highlighted"] else entry["other"]).append(item)
+
+        return {
+            str(maladie.pk): by_maladie.get(maladie.pk, {"frequent": default_frequent, "other": []})
+            for maladie in maladie_queryset
+        }
 
 
 class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):

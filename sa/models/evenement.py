@@ -33,21 +33,25 @@ class Espece(models.Model):
 
     @staticmethod
     def _build_treeselect_choices(maladie=None):
-        frequent_queryset = (
-            maladie.especes_concernees.order_by("name") if maladie is not None else Espece.objects.none()
-        )
-        if not frequent_queryset.exists():
-            frequent_queryset = Espece.objects.filter(is_highlighted=True).order_by("name")
-        frequent_especes = list(frequent_queryset)
-        frequent_choices = [espece._treeselect_item for espece in frequent_especes]
+        if maladie is None:
+            source_queryset = Espece.objects.none()
+        elif maladie.especes_concernees.exists():
+            source_queryset = maladie.especes_concernees.all()
+        else:
+            source_queryset = Espece.objects.filter(is_highlighted=True)
+
+        frequent_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=True).order_by("name")
+        ]
+        other_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=False).order_by("name")
+        ]
+
         frequent_group = TreeselectGroup(
             label="Les plus fréquentes",
             choices=frequent_choices,
             categorised_label=None,
         )
-        frequent_ids = [espece.pk for espece in frequent_especes]
-        other_queryset = Espece.objects.exclude(pk__in=frequent_ids).order_by("name")
-        other_choices = [espece._treeselect_item for espece in other_queryset]
         other_group = TreeselectGroup(
             label="Autres",
             choices=other_choices,

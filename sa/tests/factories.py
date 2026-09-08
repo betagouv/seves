@@ -106,7 +106,6 @@ class MethodeAnalyseFactory(DjangoModelFactory):
 class EvenementAnimalFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
     maladie = factory.SubFactory("sa.tests.factories.MaladieFactory")
-    espece = factory.SubFactory("sa.tests.factories.EspeceFactory")
     statut_animal = FuzzyChoice([choice[0] for choice in StatutAnimal.choices])
     statut_evenement = FuzzyChoice([choice[0] for choice in StatutEvenement.choices])
     numero_annee = factory.Faker("year")
@@ -153,6 +152,14 @@ class EvenementAnimalFactory(DjangoModelFactory):
             email_particulier=factory.Faker("email"),
             telephone_particulier=factory.Faker("phone_number", locale="fr_FR"),
         )
+
+    @factory.lazy_attribute
+    def espece(self):
+        if self.maladie.pk is not None:
+            concernee = self.maladie.especes_concernees.order_by("name").first()
+            if concernee:
+                return concernee
+        return EspeceFactory(is_highlighted=True)
 
     @factory.lazy_attribute
     def createur(self):

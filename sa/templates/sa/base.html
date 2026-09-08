@@ -33,8 +33,7 @@
                                 <div data-controller="maladie-description-message espece-grouping">
                                     {% dsfr_form_field pre_creation_form.maladie|set_data:"action:change->maladie-description-message#onMaladieSelected change->espece-grouping#onMaladieSelected"|set_data:"maladie-description-message-target:maladieInput"|set_data:"espece-grouping-target:maladieInput" %}
                                     {{ pre_creation_form.maladie_descriptions|json_script:"maladie-descriptions" }}
-                                    {{ pre_creation_form.especes_concernees_by_maladie|json_script:"especes-concernees-by-maladie" }}
-                                    {{ pre_creation_form.especes_courantes_ids|json_script:"especes-courantes-ids" }}
+                                    {{ pre_creation_form.espece_options_by_maladie|json_script:"espece-options-by-maladie" }}
                                     <div class="fr-my-2v fr-hidden" data-maladie-description-message-target="notice">
                                         <div class="fr-notice fr-notice--info">
                                             <div class="fr-container">
@@ -46,11 +45,9 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div data-espece-grouping-target="especeWidget">
-                                        {% dsfr_form_field pre_creation_form.espece %}
-                                    </div>
                                 </div>
 
+                                {% dsfr_form_field pre_creation_form.espece %}
                                 {% dsfr_inline_radio_field pre_creation_form.statut_animal tooltips=pre_creation_form.STATUT_ANIMAL_TOOLTIPS %}
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
                                     <button class="fr-btn fr-btn--secondary" aria-controls="modal-pre-creation" type="button">Annuler</button>
