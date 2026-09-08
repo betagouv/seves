@@ -31,15 +31,15 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
-    assert evenement_produit.createur == mocked_authentification_user.agent.structure
-    assert evenement_produit.maladie == input_data.maladie
-    assert evenement_produit.espece == input_data.espece
-    assert evenement_produit.statut_animal == input_data.statut_animal
-    assert evenement_produit.statut_evenement == input_data.statut_evenement
-    assert evenement_produit.date_statut_changed == input_data.date_statut_changed
-    assert evenement_produit.type_lieu == input_data.type_lieu
-    assert evenement_produit.coordinates == input_data.coordinates
+    evenement = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.maladie == input_data.maladie
+    assert evenement.espece == input_data.espece
+    assert evenement.statut_animal == input_data.statut_animal
+    assert evenement.statut_evenement == input_data.statut_evenement
+    assert evenement.date_statut_changed == input_data.date_statut_changed
+    assert evenement.type_lieu == input_data.type_lieu
+    assert evenement.coordinates == input_data.coordinates
 
 
 def test_pre_creation_form_shows_description_message(live_server, page: Page):
@@ -122,13 +122,13 @@ def test_can_create_evenement_animal_with_localisation_block(live_server, mocked
     creation_page.numero_identifiant.fill(input_data.numero_identifiant)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit
-    assert evenement_produit.commune == "Lille"
-    assert evenement_produit.code_insee == "59350"
-    assert evenement_produit.numero_identifiant == input_data.numero_identifiant
-    assert evenement_produit.type_lieu == input_data.type_lieu
-    assert evenement_produit.coordinates == input_data.coordinates
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.adresse_lieu_dit == input_data.adresse_lieu_dit
+    assert evenement.commune == "Lille"
+    assert evenement.code_insee == "59350"
+    assert evenement.numero_identifiant == input_data.numero_identifiant
+    assert evenement.type_lieu == input_data.type_lieu
+    assert evenement.coordinates == input_data.coordinates
 
 
 def test_can_create_evenement_animal_with_ban_auto_complete(
@@ -177,10 +177,10 @@ def test_can_create_evenement_animal_with_ban_auto_complete(
     assert call_count["count"] == 1
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.adresse_lieu_dit == "251 Rue de Vaugirard"
-    assert evenement_produit.commune == "Paris"
-    assert evenement_produit.code_insee == "75115"
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.adresse_lieu_dit == "251 Rue de Vaugirard"
+    assert evenement.commune == "Paris"
+    assert evenement.code_insee == "75115"
 
 
 def test_can_create_evenement_animal_with_context_block(live_server, mocked_authentification_user, page: Page):
@@ -194,11 +194,11 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
     creation_page.fill_context_block(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.context_suspicion == input_data.context_suspicion
-    assert evenement_produit.date_first_symptoms == input_data.date_first_symptoms
-    assert evenement_produit.description == input_data.description
-    assert evenement_produit.human_involved == input_data.human_involved
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.context_suspicion == input_data.context_suspicion
+    assert evenement.date_first_symptoms == input_data.date_first_symptoms
+    assert evenement.description == input_data.description
+    assert evenement.human_involved == input_data.human_involved
 
 
 def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_server, page: Page):
@@ -212,7 +212,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
     creation_page.fill_detenteur_etablissement_block(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    evenement = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
         "numero_identifiant_etablissement",
         "raison_sociale_etablissement",
@@ -223,8 +223,8 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
         "pays_etablissement",
     ]
     for field in fields:
-        assert getattr(evenement_produit, field) == getattr(input_data, field)
-    assert evenement_produit.commune_etablissement == "Lille"
+        assert getattr(evenement, field) == getattr(input_data, field)
+    assert evenement.commune_etablissement == "Lille"
 
 
 def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocomplete(
@@ -275,14 +275,14 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
     expect(creation_page.reprendre_adresse_detenteur_btn).to_be_enabled()
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.siret_etablissement == siret
-    assert evenement_produit.raison_sociale_etablissement == "DIRECTION GENERALE DE L'ALIMENTATION"
-    assert evenement_produit.adresse_lieu_dit_etablissement == "175 RUE DU CHEVALERET"
-    assert evenement_produit.commune_etablissement == "PARIS"
-    assert evenement_produit.code_insee_etablissement == "75013"
-    assert evenement_produit.pays_etablissement == "FR"
-    assert evenement_produit.departement_etablissement.numero == "75"
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.siret_etablissement == siret
+    assert evenement.raison_sociale_etablissement == "DIRECTION GENERALE DE L'ALIMENTATION"
+    assert evenement.adresse_lieu_dit_etablissement == "175 RUE DU CHEVALERET"
+    assert evenement.commune_etablissement == "PARIS"
+    assert evenement.code_insee_etablissement == "75013"
+    assert evenement.pays_etablissement == "FR"
+    assert evenement.departement_etablissement.numero == "75"
 
 
 def test_can_create_evenement_animal_with_detenteur_particulier_block(live_server, page: Page):
@@ -296,7 +296,7 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
     creation_page.fill_detenteur_particulier_block(input_data)
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    evenement = EvenementAnimal.objects.exclude(id=input_data.pk).get()
     fields = [
         "nom_particulier",
         "prenom_particulier",
@@ -307,8 +307,8 @@ def test_can_create_evenement_animal_with_detenteur_particulier_block(live_serve
         "telephone_particulier",
     ]
     for field in fields:
-        assert getattr(evenement_produit, field) == getattr(input_data, field)
-    assert evenement_produit.commune_particulier == "Lille"
+        assert getattr(evenement, field) == getattr(input_data, field)
+    assert evenement.commune_particulier == "Lille"
 
 
 PARCEL_WFS_URL = "https://data.geopf.fr/wfs/ows"
@@ -604,10 +604,10 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     creation_page.date_levee.fill(input_data.date_levee.strftime("%Y-%m-%d"))
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.date_apms == input_data.date_apms
-    assert evenement_produit.date_apdi == input_data.date_apdi
-    assert evenement_produit.date_levee == input_data.date_levee
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.date_apms == input_data.date_apms
+    assert evenement.date_apdi == input_data.date_apdi
+    assert evenement.date_levee == input_data.date_levee
 
 
 def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):
@@ -623,10 +623,10 @@ def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_
     creation_page.date_nd2.fill(input_data.date_nd2.strftime("%Y-%m-%d"))
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.get()
-    assert evenement_produit.date_d_zero == input_data.date_d_zero
-    assert evenement_produit.date_nd1 == input_data.date_nd1
-    assert evenement_produit.date_nd2 == input_data.date_nd2
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.date_d_zero == input_data.date_d_zero
+    assert evenement.date_nd1 == input_data.date_nd1
+    assert evenement.date_nd2 == input_data.date_nd2
 
 
 def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order(live_server, page: Page):
@@ -729,10 +729,10 @@ def test_can_reuse_address_from_detenteur_etablissement_block(live_server, page:
 
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
-    assert evenement_produit.adresse_lieu_dit == input_data.adresse_lieu_dit_etablissement
-    assert evenement_produit.commune == "Lille"
-    assert evenement_produit.code_insee == input_data.code_insee_etablissement
+    evenement = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement.adresse_lieu_dit == input_data.adresse_lieu_dit_etablissement
+    assert evenement.commune == "Lille"
+    assert evenement.code_insee == input_data.code_insee_etablissement
 
 
 def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: Page):
@@ -754,10 +754,10 @@ def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: P
 
     creation_page.submit_as_draft()
 
-    evenement_produit = EvenementAnimal.objects.exclude(id=input_data.pk).get()
-    assert evenement_produit.adresse_lieu_dit == input_data.adresse_particulier
-    assert evenement_produit.commune == "Lille"
-    assert evenement_produit.code_insee == input_data.code_insee_particulier
+    evenement = EvenementAnimal.objects.exclude(id=input_data.pk).get()
+    assert evenement.adresse_lieu_dit == input_data.adresse_particulier
+    assert evenement.commune == "Lille"
+    assert evenement.code_insee == input_data.code_insee_particulier
 
 
 def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_server, page: Page):
