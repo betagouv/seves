@@ -30,9 +30,10 @@
                             </h2>
 
                             <form method="get" action="{% url 'sa:evenement-animal-creation' %}">
-                                <div data-controller="maladie-description-message">
-                                    {% dsfr_form_field pre_creation_form.maladie|set_data:"action:change->maladie-description-message#onMaladieSelected"|set_data:"maladie-description-message-target:maladieInput" %}
+                                <div data-controller="maladie-description-message espece-grouping">
+                                    {% dsfr_form_field pre_creation_form.maladie|set_data:"action:change->maladie-description-message#onMaladieSelected change->espece-grouping#onMaladieSelected"|set_data:"maladie-description-message-target:maladieInput"|set_data:"espece-grouping-target:maladieInput" %}
                                     {{ pre_creation_form.maladie_descriptions|json_script:"maladie-descriptions" }}
+                                    {{ pre_creation_form.espece_options_by_maladie|json_script:"espece-options-by-maladie" }}
                                     <div class="fr-my-2v fr-hidden" data-maladie-description-message-target="notice">
                                         <div class="fr-notice fr-notice--info">
                                             <div class="fr-container">
@@ -46,8 +47,15 @@
                                     </div>
                                 </div>
 
-
-                                {% dsfr_form_field pre_creation_form.espece  %}
+                                {% dsfr_form_field pre_creation_form.espece %}
+                                <template id="espece-option-template">
+                                    <div class="fr-treeselect__element" data-controller="treeselect-element">
+                                        <div class="fr-radio-group">
+                                            <input type="radio" id="__id__" name="espece" value="__value__" data-action="change->treeselect#onChange">
+                                            <label class="fr-label" for="__id__">__label__</label>
+                                        </div>
+                                    </div>
+                                </template>
                                 {% dsfr_inline_radio_field pre_creation_form.statut_animal tooltips=pre_creation_form.STATUT_ANIMAL_TOOLTIPS %}
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
                                     <button class="fr-btn fr-btn--secondary" aria-controls="modal-pre-creation" type="button">Annuler</button>

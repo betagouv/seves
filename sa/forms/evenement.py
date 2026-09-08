@@ -41,7 +41,14 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         ),
         label="Maladie suspectée",
     )
-    espece = forms.ModelChoiceField(queryset=Espece.objects.all(), label="Espèce")
+    espece = forms.ModelChoiceField(
+        queryset=Espece.objects.all(),
+        required=True,
+        widget=TreeselectRadio(
+            choices=Espece.treeselect_choices_for_maladie(None), attrs={"placeholder": "Rechercher", "required": True}
+        ),
+        label="Espèce",
+    )
     statut_animal = forms.ChoiceField(
         required=True,
         choices=StatutAnimal,
@@ -51,11 +58,37 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
 
     @property
     def media(self):
-        return super().media + Media(js=(js_module("sa/maladie_description_message.mjs"),))
+        return super().media + Media(
+            js=(js_module("sa/maladie_description_message.mjs"), js_module("sa/espece_grouping.mjs"))
+        )
 
     @property
     def maladie_descriptions(self):
         return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
+
+    @property
+    def espece_options_by_maladie(self):
+        default_frequent = [
+            {"id": pk, "name": name}
+            for pk, name in Espece.objects.filter(is_highlighted=True).order_by("name").values_list("pk", "name")
+        ]
+
+        maladie_queryset = self.fields["maladie"].queryset
+        by_maladie = {}
+        rows = (
+            Espece.objects.filter(maladies_concernees__in=maladie_queryset)
+            .values("pk", "name", "is_highlighted", "maladies_concernees")
+            .order_by("name")
+        )
+        for row in rows:
+            entry = by_maladie.setdefault(row["maladies_concernees"], {"frequent": [], "other": []})
+            item = {"id": row["pk"], "name": row["name"]}
+            (entry["frequent"] if row["is_highlighted"] else entry["other"]).append(item)
+
+        return {
+            str(maladie.pk): by_maladie.get(maladie.pk, {"frequent": default_frequent, "other": []})
+            for maladie in maladie_queryset
+        }
 
 
 class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
