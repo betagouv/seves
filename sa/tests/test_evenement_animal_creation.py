@@ -76,6 +76,9 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     assert evenement.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.", exact=True)).to_be_visible()
+    contact_agent = mocked_authentification_user.agent.contact_set.get()
+    contact_structure = mocked_authentification_user.agent.structure.contact_set.get()
+    assert sorted(evenement.contacts.all()) == sorted([contact_agent, contact_structure])
 
 
 def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):

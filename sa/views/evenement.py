@@ -8,7 +8,13 @@ from django.http import Http404, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
-from core.mixins import MediaDefiningMixin, WithBlocCommunMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
+from core.mixins import (
+    MediaDefiningMixin,
+    WithAddUserContactsMixin,
+    WithBlocCommunMixin,
+    WithFormErrorsAsMessagesMixin,
+    WithFormsetInvalidMixin,
+)
 from sa.forms.evenement import EvenementAnimalForm
 from sa.formsets import AnalyseFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
@@ -41,6 +47,7 @@ class EvenementAnimalBaseView(
     WithFormErrorsAsMessagesMixin,
     MediaDefiningMixin,
     WithFormsetInvalidMixin,
+    WithAddUserContactsMixin,
     ModelFormMixin,
     ProcessFormView,
 ):
@@ -93,6 +100,7 @@ class EvenementAnimalBaseView(
         self.object = form.save()
         self.analyse_formset.instance = self.object
         self.analyse_formset.save()
+        self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
