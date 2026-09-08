@@ -47,7 +47,7 @@ class RepasFormController extends BaseFormInModal {
     }
 
     getDeleteConfirmationSentence(repas) {
-        return `Confimez-vous vouloir supprimer le repas ${repas.denomination} ?`
+        return `Confirmez-vous vouloir supprimer le repas ${repas.denomination} ?`
     }
 
     getDeleteConfirmationTitle(_repas) {

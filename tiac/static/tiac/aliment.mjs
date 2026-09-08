@@ -67,7 +67,7 @@ class AlimentFormController extends BaseFormInModal {
     }
 
     getDeleteConfirmationSentence(aliment) {
-        return `Confimez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
+        return `Confirmez-vous vouloir supprimer l'aliment ${aliment.denomination} ?`
     }
 
     getDeleteConfirmationTitle(_aliment) {

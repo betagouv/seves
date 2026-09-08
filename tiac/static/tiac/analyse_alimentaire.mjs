@@ -54,7 +54,7 @@ class AlimentFormController extends BaseFormInModal {
 
     /** @param {AnalyseAlimentaireData} analyse */
     getDeleteConfirmationSentence(analyse) {
-        return `Confimez-vous vouloir supprimer l'analyse alimentaire ${analyse.reference_prelevement}?`
+        return `Confirmez-vous vouloir supprimer l'analyse alimentaire ${analyse.reference_prelevement}?`
     }
 
     getDeleteConfirmationTitle() {
