@@ -7,7 +7,7 @@ from playwright.sync_api import Locator, Page
 
 from core.pages import WithActionsPage
 from core.tests.pages import ChoiceJSPage, TreeselectPage
-from sa.models import Analyse, EvenementAnimal
+from sa.models import Analyse, EvenementAnimal, Veterinaire
 from seves import settings
 
 
@@ -211,6 +211,91 @@ class WithAnalyseMixin:
         return self.page.locator(".analyse-card").locator("visible=true").count()
 
 
+class WithVeterinaireMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def get_veterinaire_card(self, index=0):
+        return self.page.locator(".veterinaire-card").nth(index)
+
+    @property
+    def add_veterinaire_button(self):
+        return self.page.locator(".veterinaires-fieldset").get_by_role("button", name="Ajouter")
+
+    def open_veterinaire_modal(self):
+        self.add_veterinaire_button.click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def force_address_veterinaire(self, modal: Locator, address: str):
+        with self.mock_ban():
+            ChoiceJSPage(self.page, modal.get_by_test_id("ban-search-veterinaire")).try_select_option(
+                f"{address} (Forcer la valeur)", search=address
+            )
+
+    def force_commune_veterinaire(self, modal: Locator, config=None):
+        config = config or _default_lille_commune_config()
+
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+
+        self.page.route(
+            url,
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=config["response_body"],
+            ),
+        )
+
+        ChoiceJSPage(self.page, modal.get_by_test_id("communes-search-veterinaire")).try_select_option(
+            config["option_name"], search=config["search_text"]
+        )
+        self.page.unroute(url)
+
+    def fill_veterinaire(self, modal: Locator, veterinaire: Veterinaire):
+        modal.locator(f'input[type="radio"][value="{veterinaire.type_veterinaire}"]').check(force=True)
+        modal.locator('[id$="-nom_structure"]').fill(veterinaire.nom_structure)
+        modal.locator('[id$="-numero_dpe"]').fill(veterinaire.numero_dpe)
+        self.force_address_veterinaire(modal, veterinaire.adresse_lieu_dit)
+        self.force_commune_veterinaire(modal)
+        if veterinaire.departement_id:
+            modal.locator('[id$="-departement"]').select_option(str(veterinaire.departement))
+        modal.locator('[id$="-telephone_structure"]').fill(veterinaire.telephone_structure)
+        modal.locator('[id$="-courriel_structure"]').fill(veterinaire.courriel_structure)
+        modal.locator('[id$="-nom"]').fill(veterinaire.nom)
+        modal.locator('[id$="-prenom"]').fill(veterinaire.prenom)
+        modal.locator('[id$="-telephone"]').fill(veterinaire.telephone)
+        modal.locator('[id$="-courriel"]').fill(veterinaire.courriel)
+
+    def close_veterinaire_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_veterinaire(self, veterinaire: Veterinaire):
+        modal = self.open_veterinaire_modal()
+        self.fill_veterinaire(modal, veterinaire)
+        self.close_veterinaire_modal()
+
+    def delete_veterinaire(self, index=0):
+        self.get_veterinaire_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_veterinaire(self, index=0, **kwargs):
+        card = self.get_veterinaire_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".veterinaire-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    @property
+    def nb_veterinaire(self):
+        return self.page.locator(".veterinaire-card").locator("visible=true").count()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -291,6 +376,7 @@ class EvenementAnimalFormPage(
     WithEtablissementDetenteurUtils,
     WithParticulierDetenteurUtils,
     WithAnalyseMixin,
+    WithVeterinaireMixin,
 ):
     fields = [
         "statut_evenement",
@@ -508,6 +594,19 @@ class EvenementAnimalDetailsPage(WithActionsPage):
 
     def open_analyse_detail(self, index=0):
         self.get_analyse_card(index).get_by_role("button", name="Voir le détail").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+        modal.wait_for(state="visible")
+        return modal
+
+    def get_veterinaire_card(self, index=0):
+        return self.page.locator(".veterinaire-card").nth(index)
+
+    @property
+    def nb_veterinaire(self):
+        return self.page.locator(".veterinaire-card").count()
+
+    def open_veterinaire_detail(self, index=0):
+        self.get_veterinaire_card(index).get_by_role("button", name="Voir le détail").click()
         modal = self.page.locator(".fr-modal__body").locator("visible=true")
         modal.wait_for(state="visible")
         return modal

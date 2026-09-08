@@ -8,8 +8,9 @@ from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
+from core.factories import DepartementFactory
 from core.models import Structure
-from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse, Veterinaire
 from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import (
     ContexteSuspicion,
@@ -23,11 +24,12 @@ from sa.models.evenement import (
 )
 from sa.models.laboratoire import LaboratoireType
 from sa.models.maladie import DescriptionType
+from sa.models.veterinaire import TypeVeterinaire
 
 fake = Faker()
 
 
-REALISTIC_MALADIES = [
+MALADIES = [
     ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True),
     ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True),
     ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True),
@@ -44,7 +46,7 @@ class MaladieFactory(DjangoModelFactory):
         django_get_or_create = ("name",)
 
     class Params:
-        maladie_ref = factory.Iterator(REALISTIC_MALADIES)
+        maladie_ref = factory.Iterator(MALADIES)
 
     name = factory.LazyAttribute(lambda o: o.maladie_ref[0])
     acronym = factory.LazyAttribute(lambda o: o.maladie_ref[1])
@@ -56,17 +58,17 @@ class MaladieFactory(DjangoModelFactory):
 
 class TuberculoseFactory(MaladieFactory):
     class Params:
-        maladie_ref = REALISTIC_MALADIES[3]
+        maladie_ref = MALADIES[3]
 
 
 class AcarapioseFactory(MaladieFactory):
     class Params:
-        maladie_ref = REALISTIC_MALADIES[5]
+        maladie_ref = MALADIES[5]
 
 
 class AdenomatoseFactory(MaladieFactory):
     class Params:
-        maladie_ref = REALISTIC_MALADIES[6]
+        maladie_ref = MALADIES[6]
 
 
 class EspeceFactory(DjangoModelFactory):
@@ -245,3 +247,29 @@ class AnalyseFactory(DjangoModelFactory):
     def link_methode_to_laboratoire(self, create, extracted, **kwargs):
         if create:
             self.methode.laboratoires.add(self.laboratoire)
+
+
+class VeterinaireFactory(DjangoModelFactory):
+    class Meta:
+        model = Veterinaire
+        skip_postgeneration_save = True
+
+    evenement = factory.SubFactory(EvenementAnimalFactory)
+    type_veterinaire = FuzzyChoice(TypeVeterinaire.values)
+    nom_structure = factory.Faker("company")
+    numero_dpe = factory.Faker("bothify", text="DPE-####")
+    adresse_lieu_dit = factory.Faker("street_address")
+    commune = factory.Faker("city")
+    departement = factory.SubFactory(DepartementFactory)
+    code_insee = factory.Faker("numerify", text="#####")
+    telephone_structure = factory.Faker("phone_number", locale="fr_FR")
+    courriel_structure = factory.Faker("email")
+    nom = factory.Faker("last_name")
+    prenom = factory.Faker("first_name")
+    telephone = factory.Faker("phone_number", locale="fr_FR")
+    courriel = factory.Faker("email")
+
+    @factory.post_generation
+    def especes(self, create, extracted, **kwargs):
+        if create:
+            self.especes.set(extracted if extracted is not None else [self.evenement.espece])
