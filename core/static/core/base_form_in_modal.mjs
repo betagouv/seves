@@ -139,8 +139,11 @@ export class BaseFormInModal extends Controller {
 
     renderBadges(items) {
         return items
-            .filter(it => !!it?.length)
-            .map(it => `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v">${it}</p>`)
+            .filter(item => !!item?.length)
+            .map(
+                (it, index) =>
+                    `<p class="fr-badge fr-badge--sm fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v${index > 0 ? " fr-ml-1v" : ""}">${it}</p>`,
+            )
             .join("")
     }
 
