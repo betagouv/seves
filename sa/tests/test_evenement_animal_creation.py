@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.urls import reverse
 from playwright.sync_api import Page, expect
@@ -889,3 +890,97 @@ def test_can_create_evenement_animal_with_enquete_block(live_server, choice_js_f
     assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
     expected = sorted([other_evenement_1.numero, other_evenement_2.numero])
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+def _group_option_labels(treeselect, group_name):
+    treeselect.open_treeselect()
+    _, _, collapse = treeselect._locate_group(group_name)
+    return collapse.locator("input").evaluate_all(
+        "inputs => inputs.map(input => input.labels?.[0]?.textContent.trim())"
+    )
+
+
+def test_espece_treeselect_is_disabled_and_empty_until_maladie_is_selected(live_server, page: Page):
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_disabled()
+    assert espece_widget.locator(".fr-treeselect__element").count() == 0
+
+
+def test_espece_treeselect_is_cleared_and_disabled_again_when_maladie_is_unselected(live_server, page: Page):
+    espece_bovin = EspeceFactory(name="Bovin de test", is_highlighted=True)
+    maladie = MaladieFactory(
+        name="Maladie de test à effacer",
+        especes_concernees=[espece_bovin],
+    )
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie.name_with_acronym)
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
+    assert espece_widget.locator(".fr-treeselect__element").count() == 1
+
+    list_page._maladie_treeselect.uncheck_by_tag(maladie.name_with_acronym)
+
+    expect(espece_widget).to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_disabled()
+    assert espece_widget.locator(".fr-treeselect__element").count() == 0
+
+
+def test_espece_treeselect_populates_and_updates_from_maladie_especes_concernees(live_server, page: Page):
+    espece_bovin = EspeceFactory(name="Bovin de test", is_highlighted=True)
+    espece_porc = EspeceFactory(name="Porc de test", is_highlighted=False)
+    maladie_1 = MaladieFactory(
+        name="Maladie de test 1 avec espèces concernées",
+        especes_concernees=[espece_bovin, espece_porc],
+    )
+    espece_chien = EspeceFactory(name="Chien de test", is_highlighted=True)
+    maladie_2 = MaladieFactory(
+        name="Maladie de test 2 avec espèces concernées",
+        especes_concernees=[espece_chien],
+    )
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_1_group = "Les plus fréquentes" if maladie_1.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_1_group, maladie_1.name_with_acronym)
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_enabled()
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_bovin.name]
+    assert _group_option_labels(list_page._espece_treeselect, "Autres") == [espece_porc.name]
+
+    # Switching maladie fully replaces the options with the new maladie's related especes.
+    maladie_2_group = "Les plus fréquentes" if maladie_2.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_2_group, maladie_2.name_with_acronym)
+
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_chien.name]
+    assert _group_option_labels(list_page._espece_treeselect, "Autres") == []
+    assert espece_bovin.name not in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+
+
+def test_espece_treeselect_falls_back_to_default_list_when_maladie_has_no_especes_concernees(live_server, page: Page):
+    espece_courante = EspeceFactory(name="Espèce de test courante", is_highlighted=True)
+    maladie_sans_especes = MaladieFactory(name="Maladie de test sans espèce concernée")
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie_sans_especes.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie_sans_especes.name_with_acronym)
+
+    assert espece_courante.name in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+    assert _group_option_labels(list_page._espece_treeselect, "Autres") == []
