@@ -272,7 +272,10 @@
                 </div>
                 <div class="fr-grid-row fr-grid-row--gutters fr-col">
                     <div class="fr-col-12 fr-col-lg-6">
-                        {% dsfr_form_field form.context_suspicion %}
+                        {{ form.context_suspicion.label_tag }}
+                        <div class="fr-flex-only radio-inline-container--wrap fr-mb-4v">
+                            {{ form.context_suspicion }}
+                        </div>
                         {% dsfr_form_field form.date_first_symptoms %}
                         {{ form.human_involved.label_tag }}
                         <div class="fr-flex-only radio-inline-container--wrap">

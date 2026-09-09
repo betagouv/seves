@@ -207,6 +207,26 @@
                     </div>
                 </div>
             </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Éléments de contexte de la suspicion</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Contexte de la suspicion</div>
+                        <div>{{ object.get_context_suspicion_display|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Date d'apparition des éventuels 1ers symptômes</div>
+                        <div>{{ object.date_first_symptoms|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Humains exposés pour lesquels des actions sont engagées ?</div>
+                        <div>{{ object.get_human_involved_display|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-8">
+                        <div class="bold">Description de la situation</div>
+                        <div>{{ object.description|or_empty_value_tag }}</div>
+                    </div>
+
+                </div>
+            </div>
+
             {% if object.show_mesures_block %}
                 <div class="white-container fr-mb-4v">
                     <h2 class="fr-h6">Mesures de gestion</h2>

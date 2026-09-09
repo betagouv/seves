@@ -214,8 +214,8 @@ class TypeLieu(models.TextChoices):
 
 
 class ContexteSuspicion(models.TextChoices):
-    INVESTIGATION_CAS_HUMAIN = auto(), "Investigation cas humain"
-    PROPHYLAXIE = auto(), "Prophylaxie"
+    ANALYTIQUE = auto(), "Analytique"
+    CLINIQUE = auto(), "Clinique"
 
 
 class HumanInvolved(models.TextChoices):

@@ -162,3 +162,16 @@ def test_evenement_animal_details_page_adis_block(live_server, page: Page):
     expect(block.get_by_text(str(evenement.effectif_retenu))).to_be_visible()
     expect(block.get_by_text(evenement.get_origine_infection_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.mesures_controle_labels, exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_contexte_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Éléments de contexte de la suspicion")
+    expect(block.get_by_text(evenement.get_context_suspicion_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_first_symptoms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.get_human_involved_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.description, exact=True)).to_be_visible()
