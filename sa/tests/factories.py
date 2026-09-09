@@ -133,6 +133,8 @@ class EvenementAnimalFactory(DjangoModelFactory):
     human_involved = FuzzyChoice(HumanInvolved.values)
     description = factory.Faker("paragraph")
 
+    commentaire = factory.Faker("paragraph")
+
     foyer = FuzzyChoice(Foyer.values)
     numero_adis = factory.Faker("numerify", text="#####")
     effectif_retenu = factory.Faker("pyint", min_value=0, max_value=100)

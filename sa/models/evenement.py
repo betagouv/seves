@@ -12,7 +12,7 @@ from django_countries.fields import CountryField
 import reversion
 from reversion.models import Version
 
-from core.mixins import AllowModificationMixin, WithNumeroMixin, normalize
+from core.mixins import AllowModificationMixin, WithFreeLinkIdsMixin, WithNumeroMixin, normalize
 from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithFicheDocumentPermissionMixin
 from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -237,6 +237,7 @@ class EvenementAnimal(
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
     WithBlocCommunFieldsMixin,
+    WithFreeLinkIdsMixin,
     models.Model,
 ):
     objects = EvenementAnimalManager()
@@ -382,6 +383,9 @@ class EvenementAnimal(
         blank=True,
     )
     description = models.TextField(verbose_name="Description de la situation", blank=True)
+
+    # Enquête épidémiologique
+    commentaire = models.TextField(verbose_name="Commentaire", blank=True)
 
     # Mesures
     date_apms = models.DateField(verbose_name="Date APMS", null=True, blank=True)

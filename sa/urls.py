@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import EvenementAnimalCreationView, EvenementAnimalDetailsView, EvenementListView
+from .views.api import FindFreeLinksView
 
 app_name = "sa"
 urlpatterns = [
@@ -18,5 +19,10 @@ urlpatterns = [
         "evenement-animal/<int:pk>/",
         EvenementAnimalDetailsView.as_view(),
         name="evenement-animal-details",
+    ),
+    path(
+        "api/freelinks/recherche/",
+        FindFreeLinksView.as_view(),
+        name="find-free-link",
     ),
 ]

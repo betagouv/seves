@@ -7,7 +7,7 @@ from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
-from core.form_mixins import js_module
+from core.form_mixins import WithFreeLinksMixin, js_module
 from core.mixins import WithEtatMixin
 from core.models import Departement
 from core.widgets import TreeselectRadio
@@ -58,7 +58,7 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         return {str(maladie.pk): maladie.get_description_type_display() for maladie in self.fields["maladie"].queryset}
 
 
-class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
+class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     type_detenteur = forms.ChoiceField(
         choices=TypeDetenteur.choices,
         initial=TypeDetenteur.ETABLISSEMENT,
@@ -140,6 +140,18 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             }
         ),
         label="Description de la situation",
+    )
+    # Enquête épidémiologique
+    commentaire = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "cols": 30,
+                "rows": 5,
+                "placeholder": "Informations sur les déplacements de l'animal, les animaux ou personnes en contact.",
+            }
+        ),
+        label="Commentaire",
     )
 
     # Mesures de gestion
@@ -229,6 +241,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
                 js_module("sa/detenteur.mjs"),
                 js_module("sa/localisation_from_detenteur.mjs"),
                 js_module("sa/adis.mjs"),
+                js_module("ssa/free_links.mjs"),
             ),
         )
 
@@ -281,6 +294,8 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "date_first_symptoms",
             "human_involved",
             "description",
+            # Enquete epidémiologique
+            "commentaire",
             # Mesures de gestion
             "date_apms",
             "date_apdi",
@@ -311,6 +326,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         self.statut_animal = kwargs.pop("statut_animal")
         self.structure = kwargs.pop("structure")
         super().__init__(*args, **kwargs)
+        self._add_free_links(model=EvenementAnimal)
         self.fields["maladie"].initial = self.maladie_id
         self.maladie = Maladie.objects.get(id=self.maladie_id)
         self.fields["espece"].initial = self.espece
@@ -369,6 +385,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         if not self.instance.pk:
             self.instance.createur = self.user.agent.structure
         instance = super().save(commit)
+        self.save_free_links(instance)
         return instance
 
     def clean(self):
@@ -404,3 +421,12 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
                 self.cleaned_data.pop(field, None)
 
         return cleaned_data
+
+    def get_queryset(self, model, user, instance):
+        return (
+            EvenementAnimal.objects.all()
+            .order_by_numero()
+            .get_user_can_view(user)
+            .exclude(id=instance.id)
+            .exclude(etat=EvenementAnimal.Etat.BROUILLON)
+        )
