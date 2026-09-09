@@ -1,0 +1,85 @@
+{% load dsfr_tags widget_tweaks %}
+
+{% partialdef row %}
+    <tr class="especes-concernees-row" data-controller="especes-concernees-row">
+        {{ form.id }}
+        {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
+        <td>
+            {% dsfr_form_field  form.espece %}
+        </td>
+        <td>{% dsfr_form_field form.identifiant %}</td>
+        <td>{% dsfr_form_field form.presents %}</td>
+        <td>{% dsfr_form_field form.morts %}</td>
+        <td>{% dsfr_form_field form.cas %}</td>
+        <td>{% dsfr_form_field form.abattus %}</td>
+        <td>{% dsfr_form_field form.depeuples %}</td>
+        <td>{% dsfr_form_field form.vaccines %}</td>
+        <td>
+            {% if not is_first %}
+                <button
+                    type="button"
+                    class="fr-btn fr-btn--tertiary fr-icon-delete-bin-line"
+                    data-action="especes-concernees-row#onDelete"
+                    data-testid="delete-espece-concernee"
+                >Supprimer</button>
+            {% endif %}
+        </td>
+    </tr>
+{% endpartialdef %}
+
+<fieldset
+    class="fr-fieldset form-fieldset fr-mt-4v"
+    id="especes-concernees"
+    data-controller="especes-concernees-formset"
+>
+    <div class="fieldset-header">
+        <legend class="fr-fieldset__legend fr-h3">Espèces concernées et exposées</legend>
+        <button
+            type="button"
+            class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+            data-action="especes-concernees-formset#onAddForm:prevent:stop"
+            data-testid="add-espece-concernee"
+        >Ajouter</button>
+    </div>
+    {{ formset.non_form_errors }}
+    {% for field in formset.management_form %}
+        {% with data_target=field.name|strfmt:"especes-concernees-formset-target:{0}" %}
+            {{ field|set_data:data_target }}
+        {% endwith %}
+    {% endfor %}
+    <div class="fr-table" id="especes-concernees-table">
+        <div class="fr-table__wrapper">
+            <div class="fr-table__container">
+                <div class="fr-table__content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Espèce</th>
+                                <th scope="col">Identifiant</th>
+                                <th scope="col">Présents</th>
+                                <th scope="col">Morts</th>
+                                <th scope="col">Cas</th>
+                                <th scope="col">Abattus</th>
+                                <th scope="col">Dépeuplés/euthanasiés</th>
+                                <th scope="col">Vaccinés</th>
+                                <th scope="col"><span class="fr-sr-only">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody data-especes-concernees-formset-target="formsetContainer">
+                            {% for form in formset %}
+                                {% with is_first=forloop.first %}
+                                    {% partial row %}
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template data-especes-concernees-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form is_first=False %}
+            {% partial row %}
+        {% endwith %}
+    </template>
+</fieldset>

@@ -207,6 +207,48 @@
                     </div>
                 </div>
             </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Espèces concernées et exposées</h2>
+                <div class="fr-table">
+                    <div class="fr-table__wrapper">
+                        <div class="fr-table__container">
+                            <div class="fr-table__content">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Espèce</th>
+                                            <th scope="col">Identifiant</th>
+                                            <th scope="col">Présents</th>
+                                            <th scope="col">Morts</th>
+                                            <th scope="col">Cas</th>
+                                            <th scope="col">Abattus</th>
+                                            <th scope="col">Dépeuplés/euthanisiés</th>
+                                            <th scope="col">Vaccinés</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in object.especes_exposees.all %}
+                                            <tr>
+                                                <td>{{ row.espece }}</td>
+                                                <td>{{ row.identifiant }}</td>
+                                                <td>{{ row.presents }}</td>
+                                                <td>{{ row.morts }}</td>
+                                                <td>{{ row.cas }}</td>
+                                                <td>{{ row.abattus }}</td>
+                                                <td>{{ row.depeuples }}</td>
+                                                <td>{{ row.vaccines }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
             {% if object.show_mesures_block %}
                 <div class="white-container fr-mb-4v">
                     <h2 class="fr-h6">Mesures de gestion</h2>

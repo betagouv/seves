@@ -296,6 +296,36 @@ class WithVeterinaireMixin:
         return self.page.locator(".veterinaire-card").locator("visible=true").count()
 
 
+class WithEspecesConcerneesMixin:
+    @property
+    def especes_concernees_rows(self):
+        return self.page.locator("#especes-concernees-table tbody tr")
+
+    def get_espece_concernee_row(self, index=0):
+        return self.especes_concernees_rows.nth(index)
+
+    @property
+    def add_espece_concernee_button(self):
+        return self.page.locator("#especes-concernees").get_by_role("button", name="Ajouter")
+
+    def add_espece_concernee(self):
+        self.add_espece_concernee_button.click()
+
+    def fill_espece_concernee(self, index, espece=None, **fields):
+        row = self.get_espece_concernee_row(index)
+        if espece is not None:
+            row.locator('select[id$="-espece"]').select_option(str(espece.pk))
+        for field_name, value in fields.items():
+            row.locator(f'[id$="-{field_name}"]').fill(str(value))
+
+    def delete_espece_concernee(self, index):
+        self.get_espece_concernee_row(index).get_by_role("button", name="Supprimer").click()
+
+    @property
+    def nb_especes_concernees(self):
+        return self.especes_concernees_rows.locator("visible=true").count()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -377,6 +407,7 @@ class EvenementAnimalFormPage(
     WithParticulierDetenteurUtils,
     WithAnalyseMixin,
     WithVeterinaireMixin,
+    WithEspecesConcerneesMixin,
 ):
     fields = [
         "statut_evenement",
@@ -610,3 +641,11 @@ class EvenementAnimalDetailsPage(WithActionsPage):
         modal = self.page.locator(".fr-modal__body").locator("visible=true")
         modal.wait_for(state="visible")
         return modal
+
+    def get_especes_concernees_values(self):
+        block = self.block("Espèces concernées et exposées")
+        texts = []
+        for row in block.locator("tbody tr").all():
+            texts.append([t.strip() for t in row.locator("td").all_text_contents()])
+
+        return texts
