@@ -213,3 +213,16 @@ def test_evenement_animal_details_page_especes_concernees_block(live_server, pag
             str(espece_2.vaccines),
         ],
     ]
+
+
+def test_evenement_animal_details_page_contexte_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Éléments de contexte de la suspicion")
+    expect(block.get_by_text(evenement.get_context_suspicion_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_first_symptoms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.get_human_involved_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.description, exact=True)).to_be_visible()
