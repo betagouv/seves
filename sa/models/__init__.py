@@ -1,4 +1,5 @@
 from .analyse import Analyse
+from .especes_concernees import EspeceConcernee
 from .evenement import Espece, EvenementAnimal
 from .laboratoire import Laboratoire
 from .maladie import Maladie
@@ -14,4 +15,5 @@ __all__ = (
     "Analyse",
     "Veterinaire",
     "TypeVeterinaire",
+    "EspeceConcernee",
 )

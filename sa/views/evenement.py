@@ -10,7 +10,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from core.mixins import MediaDefiningMixin, WithBlocCommunMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
 from sa.forms.evenement import EvenementAnimalForm
-from sa.formsets import AnalyseFormSet, VeterinaireFormSet
+from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
 
@@ -72,18 +72,38 @@ class EvenementAnimalBaseView(
             kwargs["data"] = self.request.POST
         return kwargs
 
+    def get_especes_concernees_formset_kwargs(self):
+        kwargs = {"prefix": "especes_concernees"}
+        if self.object:
+            kwargs["instance"] = self.object
+        else:
+            kwargs["initial"] = [{"espece": self.request.GET.get("espece")}]
+        if self.request.method == "POST":
+            kwargs["data"] = self.request.POST
+        return kwargs
+
+    @cached_property
+    def especes_concernees_formset(self):
+        return EspeceConcerneeFormSet(**self.get_especes_concernees_formset_kwargs())
+
     def get_object(self, queryset=None):
         if not self.kwargs.get(self.pk_url_kwarg):
             return None
         return super().get_object(queryset)
 
     def get_media(self, **context_data) -> Media:
-        return context_data["form"].media + self.analyse_formset.media + self.veterinaire_formset.media
+        return (
+            context_data["form"].media
+            + self.analyse_formset.media
+            + self.veterinaire_formset.media
+            + self.especes_concernees_formset.media
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["analyse_formset"] = self.analyse_formset
         context["veterinaire_formset"] = self.veterinaire_formset
+        context["especes_concernees_formset"] = self.especes_concernees_formset
         return context
 
     def post(self, request, *args, **kwargs):
@@ -104,6 +124,13 @@ class EvenementAnimalBaseView(
                 "Erreur dans le formulaire vétérinaire",
             )
 
+        if not self.especes_concernees_formset.is_valid():
+            return self.formset_invalid(
+                self.veterinaire_formset,
+                "Erreurs dans le(s) formulaire(s) espèces concernées et exposées",
+                "Erreur dans le formulaire espèces concernées et exposées",
+            )
+
         form = self.get_form()
         if not form.is_valid():
             return self.form_invalid(form)
@@ -115,6 +142,8 @@ class EvenementAnimalBaseView(
         self.analyse_formset.save()
         self.veterinaire_formset.instance = self.object
         self.veterinaire_formset.save()
+        self.especes_concernees_formset.instance = self.object
+        self.especes_concernees_formset.save()
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
