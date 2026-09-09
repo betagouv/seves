@@ -109,9 +109,10 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         label="",
     )
 
-    context_suspicion = SEVESChoiceField(
+    context_suspicion = forms.ChoiceField(
         choices=ContexteSuspicion.choices,
         required=False,
+        widget=forms.RadioSelect(attrs={"class": "fr-fieldset__element--inline"}),
         label="Contexte de la suspicion",
         help_text="Contexte d'identification de la suspicion",
     )

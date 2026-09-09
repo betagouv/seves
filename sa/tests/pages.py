@@ -511,7 +511,9 @@ class EvenementAnimalFormPage(
         self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):
-        self.context_suspicion.select_option(evenement.context_suspicion)
+        self.page.locator(f"#context input[type='radio'][value='{str(evenement.context_suspicion).lower()}' i]").check(
+            force=True
+        )
         self.date_first_symptoms.fill(evenement.date_first_symptoms.strftime("%Y-%m-%d"))
         self.description.fill(evenement.description)
         self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()
