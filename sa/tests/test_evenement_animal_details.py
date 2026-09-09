@@ -3,6 +3,8 @@ import datetime
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
+from core.models import LienLibre
+from sa.models import EvenementAnimal
 from sa.tests.factories import EvenementAnimalFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
 from sv.models import Evenement
@@ -162,3 +164,20 @@ def test_evenement_animal_details_page_adis_block(live_server, page: Page):
     expect(block.get_by_text(str(evenement.effectif_retenu))).to_be_visible()
     expect(block.get_by_text(evenement.get_origine_infection_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.mesures_controle_labels, exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_enquete_block(live_server, page: Page):
+    for_free_link = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    for_other_free_link = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    evenement = EvenementAnimalFactory(maladie__needs_arrete=True)
+    LienLibre.objects.create(related_object_1=evenement, related_object_2=for_free_link)
+    LienLibre.objects.create(related_object_1=evenement, related_object_2=for_other_free_link)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Enquête épidémiologique")
+
+    expect(block.get_by_text(evenement.commentaire, exact=True)).to_be_visible()
+    expect(block.get_by_text(str(for_free_link), exact=True)).to_be_visible()
+    expect(block.get_by_text(str(for_other_free_link), exact=True)).to_be_visible()

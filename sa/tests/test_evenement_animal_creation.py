@@ -3,6 +3,7 @@ import json
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.models import LienLibre
 from sa.models import EvenementAnimal
 from sa.models.evenement import StatutAnimal, TypeLieu
 from sa.tests.factories import (
@@ -837,3 +838,33 @@ def test_cant_see_adis_block_if_not_ac(live_server, choice_js_fill, page: Page):
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     expect(creation_page.adis_block).not_to_be_visible()
+
+
+def test_can_create_evenement_animal_with_enquete_block(live_server, choice_js_fill, page: Page):
+    other_evenement_1 = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    other_evenement_2 = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.commentaire.fill(input_data.commentaire)
+    full_name = (
+        f"Événement animal : {other_evenement_1} / {other_evenement_1.espece.name} · {other_evenement_1.maladie.name}"
+    )
+    choice_js_fill(creation_page.page, "#enquete .choices", other_evenement_1.numero, full_name)
+    full_name = (
+        f"Événement animal : {other_evenement_2} / {other_evenement_2.espece.name} · {other_evenement_2.maladie.name}"
+    )
+    choice_js_fill(creation_page.page, "#enquete .choices", other_evenement_2.numero, full_name)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.exclude(id__in=[other_evenement_1.id, other_evenement_2.id]).get()
+    assert LienLibre.objects.count() == 2
+
+    assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
+    expected = sorted([other_evenement_1.numero, other_evenement_2.numero])
+    assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected

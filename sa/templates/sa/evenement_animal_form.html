@@ -284,6 +284,33 @@
                     </div>
                 </div>
             </fieldset>
+
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="enquete">
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Enquête épidémiologique
+                        <div class="helptext fr-hint-text">Vous pourrez ajouter le formulaire épidémiologique dans les documents de la fiche.</div>
+                    </legend>
+                </div>
+                <div class="fr-w-100">
+                    <div class="fr-grid-row fr-grid-row--gutters">
+                        <div class="fr-col-12 fr-col-lg-6">
+                            <div data-controller="free-link-via-api" data-free-link-via-api-api-url-value="{% url 'sa:find-free-link'  %}" class="free-links">
+                                <span class="fr-hint-text fr-mb-1w">Saisissez au moins 3 caractères du numéro d'événement pour afficher des suggestions</span>
+                                <div>
+                                    <select class="fr-hidden" id="id_free_link" data-free-link-via-api-target="input"  name="free_link" multiple></select>
+                                    <select data-free-link-via-api-target="select" multiple="true">
+                                        {% for existing_link in form.instance.free_links_values_and_labels %}
+                                            <option value="{{ existing_link.value }}" selected>{{ existing_link.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fr-col-12 fr-col-lg-6">{% dsfr_form_field form.commentaire %}</div>
+                    </div>
+                </div>
+            </fieldset>
+
             {% if form.show_mesures_block %}
                 <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="mesures">
                     <div class="fieldset-header">

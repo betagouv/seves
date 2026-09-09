@@ -411,6 +411,8 @@ class EvenementAnimalFormPage(
         "context_suspicion",
         "date_first_symptoms",
         "description",
+        # Enquete epidémiologique
+        "commentaire",
         # Mesures de gestions
         "date_apms",
         "date_apdi",
