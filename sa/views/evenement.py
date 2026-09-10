@@ -12,6 +12,7 @@ from core.mixins import (
     MediaDefiningMixin,
     WithBlocCommunMixin,
     WithClotureContextMixin,
+    WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
@@ -181,7 +182,12 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
 
 
 class EvenementAnimalDetailsView(
-    UserPassesTestMixin, WithBlocCommunMixin, WithFreeLinksListInContextMixin, WithClotureContextMixin, DetailView
+    UserPassesTestMixin,
+    WithBlocCommunMixin,
+    WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
+    WithFinDeSuiviMixin,
+    DetailView,
 ):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
