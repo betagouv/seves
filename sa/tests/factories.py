@@ -10,7 +10,16 @@ from faker import Faker
 
 from core.factories import DepartementFactory
 from core.models import Structure
-from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse, Veterinaire
+from sa.models import (
+    Analyse,
+    Espece,
+    EspeceConcernee,
+    EvenementAnimal,
+    Laboratoire,
+    Maladie,
+    MethodeAnalyse,
+    Veterinaire,
+)
 from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import (
     ContexteSuspicion,
@@ -273,3 +282,18 @@ class VeterinaireFactory(DjangoModelFactory):
     def especes(self, create, extracted, **kwargs):
         if create:
             self.especes.set(extracted if extracted is not None else [self.evenement.espece])
+
+
+class EspeceConcerneeFactory(DjangoModelFactory):
+    class Meta:
+        model = EspeceConcernee
+
+    evenement = factory.SubFactory(EvenementAnimalFactory)
+    espece = factory.SubFactory(EspeceFactory)
+    identifiant = factory.Faker("bothify", text="ID-####")
+    presents = factory.Faker("pyint", min_value=0, max_value=100)
+    morts = factory.Faker("pyint", min_value=0, max_value=100)
+    cas = factory.Faker("pyint", min_value=0, max_value=100)
+    abattus = factory.Faker("pyint", min_value=0, max_value=100)
+    depeuples = factory.Faker("pyint", min_value=0, max_value=100)
+    vaccines = factory.Faker("pyint", min_value=0, max_value=100)
