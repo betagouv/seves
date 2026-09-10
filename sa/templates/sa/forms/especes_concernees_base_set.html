@@ -27,13 +27,59 @@
     </tr>
 {% endpartialdef %}
 
+
+<dialog id="modal-aide" class="fr-modal" aria-labelledby="modal-aide-title">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button aria-controls="modal-aide" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h2 id="modal-aide-title" class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                            Aide au remplissage
+                        </h2>
+                        <h6 class="fr-h6 fr-mb-1v">Présents</h6>
+                        <p class="fr-ml-4v">Nombre d'animaux sensibles présents dans l'unité au moment de la suspicion</p>
+                        <h6 class="fr-h6 fr-mb-1v">Morts</h6>
+                        <p class="fr-ml-4v">Nombre d'animaux morts, hors abattage ou euthanasie</p>
+                        <h6 class="fr-h6 fr-mb-1v">Cas</h6>
+                        <p class="fr-ml-4v">Nombre d'animaux cliniquement atteints ou confirmés positifs</p>
+                        <h6 class="fr-h6 fr-mb-1v">Abattus</h6>
+                        <p class="fr-ml-4v">Animaux mis à mort à l'abattoir</p>
+                        <h6 class="fr-h6 fr-mb-1v">Dépeuplés/euthanisiés</h6>
+                        <p class="fr-ml-4v">Animaux mis à mort sur place</p>
+                        <h6 class="fr-h6 fr-mb-1v">Vaccinés</h6>
+                        <p class="fr-ml-4v">Nombre d'animaux vaccinés dans l'unité</p>
+                    </div>
+                    <div class="fr-modal__footer">
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
+                            <button class="fr-btn" aria-controls="modal-aide">
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
+
 <fieldset
     class="fr-fieldset form-fieldset fr-mt-4v"
     id="especes-concernees"
     data-controller="especes-concernees-formset"
 >
     <div class="fieldset-header">
-        <legend class="fr-fieldset__legend fr-h3">Espèces concernées et exposées</legend>
+        <legend class="fr-fieldset__legend fr-h3">Espèces concernées et exposées
+
+            <button class="fr-btn--tooltip fr-btn" type="button"  data-fr-opened="false" aria-controls="modal-aide">
+                Information contextuelle
+            </button>
+        </legend>
+
         <button
             type="button"
             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
