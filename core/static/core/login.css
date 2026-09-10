@@ -37,3 +37,12 @@
     font-weight: bold;
     color: #000091;
 }
+
+.footer-links {
+    color: var(--grey-425-625) !important;
+    text-align: center;
+}
+
+.footer-links .fr-link {
+    color: var(--grey-425-625) !important;
+}
