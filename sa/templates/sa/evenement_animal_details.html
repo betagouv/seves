@@ -170,6 +170,7 @@
                 <div class="fr-grid-row fr-grid-row--gutters">
                     <div class="fr-col-12 fr-col-lg-7">
                         <div data-controller="map-viewer" class="map"
+                             data-map-viewer-default-style-value="satellite"
                              data-map-viewer-lat-value="{{ object.coordinates.y|unlocalize }}"
                              data-map-viewer-long-value="{{ object.coordinates.x|unlocalize }}"
                              data-map-viewer-json-file-value="{% static 'core/style_ign.json' %}"
