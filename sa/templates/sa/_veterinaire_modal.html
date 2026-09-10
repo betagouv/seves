@@ -1,0 +1,55 @@
+{% load or_empty_value_tag %}
+<dialog aria-labelledby="fr-modal-title-modal-veterinaire-{{ veterinaire.pk }}" role="dialog"
+        id="fr-modal-veterinaire-{{ veterinaire.pk }}" class="fr-modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale"
+                                aria-controls="fr-modal-veterinaire-{{ veterinaire.pk }}">Fermer
+                        </button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="fr-modal-title-modal-veterinaire-{{ veterinaire.pk }}"
+                            class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg">{{ veterinaire.prenom }} {{ veterinaire.nom }}</h1>
+                        <div class="fr-container--fluid">
+                            <div class="fr-grid-row fr-grid-row--gutters">
+                                <div class="fr-col-3 bold">Type de vétérinaire</div>
+                                <div class="fr-col-3">{{ veterinaire.get_type_veterinaire_display|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Nom de la structure</div>
+                                <div class="fr-col-3">{{ veterinaire.nom_structure|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">N° DPE</div>
+                                <div class="fr-col-3">{{ veterinaire.numero_dpe|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Adresse ou lieu-dit</div>
+                                <div class="fr-col-3">{{ veterinaire.adresse_lieu_dit|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Commune</div>
+                                <div class="fr-col-3">{{ veterinaire.commune|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Département</div>
+                                <div class="fr-col-3">{{ veterinaire.departement|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Code INSEE</div>
+                                <div class="fr-col-3">{{ veterinaire.code_insee|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Numéro de téléphone (structure)</div>
+                                <div class="fr-col-3">{{ veterinaire.telephone_structure|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Courriel (structure)</div>
+                                <div class="fr-col-3">{{ veterinaire.courriel_structure|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Nom</div>
+                                <div class="fr-col-3">{{ veterinaire.nom|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Prénom</div>
+                                <div class="fr-col-3">{{ veterinaire.prenom|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Numéro de téléphone</div>
+                                <div class="fr-col-3">{{ veterinaire.telephone|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Courriel</div>
+                                <div class="fr-col-3">{{ veterinaire.courriel|or_empty_value_tag }}</div>
+                                <div class="fr-col-3 bold">Espèces</div>
+                                <div class="fr-col-3">
+                                    {% for espece in veterinaire.especes.all %}{{ espece.name }}{% if not forloop.last %}, {% endif %}{% empty %}{{ ""|or_empty_value_tag }}{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

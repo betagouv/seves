@@ -18,7 +18,7 @@ fileignoreconfig:
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
 - filename: seves/settings.py
-  checksum: 9f2521452a12d8c7d56b55e8ca737d8d3a51139ddf0a67d92ee9dbbc2af020c7
+  checksum: 9ea179b696328b2c014a50238d8c2562cd76ac0587da6b9476e105feb07d9311
 - filename: core/metabase.py
   checksum: 8a6a0752928f53a563c87baa9c7132c124da822dedd424e37c653484dfed99a2
   ignore_detectors: [filename]
@@ -142,5 +142,7 @@ fileignoreconfig:
   checksum: ba4564b7f9f62ca759e7e9a4951331717d458569c9f3dbd5c19ad32c9fa24e03
 - filename: sa/migrations/0010_analyse.py
   checksum: ae08f5940a3e3513cc524d8e395a89621ef822ff5ec852a5d4cb46745a9a2b6f
+- filename: sa/migrations/0018_veterinaire.py
+  checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 
 version: "1.0"

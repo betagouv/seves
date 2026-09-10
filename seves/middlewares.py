@@ -15,6 +15,9 @@ class LoginAndGroupRequiredMiddleware:
         "oidc_authentication_callback",
         "oidc_authentication_init",
         "custom_oidc_authentication_callback",
+        "mentions-legales",
+        "politique-de-confidentialite",
+        "accessibilite",
     ]
 
     def __init__(self, get_response):

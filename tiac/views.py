@@ -24,19 +24,14 @@ from core.diffs import create_manual_version
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
-    WithBlocCommunPermission,
+    WithBlocCommunMixin,
     WithClotureContextMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
     WithDocumentExportContextMixin,
-    WithDocumentListInContextMixin,
     WithExportHeterogeneousQuerysetMixin,
-    WithFicheObjectDocumentUploadFormMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
-    WithMessageMixin,
 )
 from core.models import Contact, CustomRevisionMetaData, LienLibre
 from ssa.constants import CategorieDanger
@@ -177,12 +172,7 @@ class EvenementSimpleDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
-    WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
-    WithMessageMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
+    WithBlocCommunMixin,
     WithFinDeSuiviMixin,
     DetailView,
 ):
@@ -534,12 +524,7 @@ class InvestigationTiacDetailView(
     UserPassesTestMixin,
     WithFreeLinksListInContextMixin,
     WithClotureContextMixin,
-    WithBlocCommunPermission,
-    WithDocumentListInContextMixin,
-    WithFicheObjectDocumentUploadFormMixin,
-    WithMessageMixin,
-    WithContactFormsInContextMixin,
-    WithContactListInContextMixin,
+    WithBlocCommunMixin,
     WithFinDeSuiviMixin,
     DetailView,
 ):

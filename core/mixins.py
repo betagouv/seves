@@ -999,3 +999,14 @@ class GroupedChoicesMixin:
         ]
 
         return cls.__treeselect_groups__
+
+
+class WithBlocCommunMixin(
+    WithBlocCommunPermission,
+    WithDocumentListInContextMixin,
+    WithMessageMixin,
+    WithContactFormsInContextMixin,
+    WithContactListInContextMixin,
+    WithFicheObjectDocumentUploadFormMixin,
+):
+    pass

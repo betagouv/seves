@@ -1,0 +1,62 @@
+{% load dsfr_tags widget_tweaks %}
+
+<fieldset class="fr-fieldset">
+    <legend class="fr-fieldset__legend">Type de vétérinaire</legend>
+    {{ form.type_veterinaire }}
+</fieldset>
+
+<fieldset class="fr-fieldset" data-controller="address-search-autocomplete">
+    <legend class="fr-fieldset__legend">Structure</legend>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.nom_structure %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.numero_dpe %}
+    </div>
+    <div class="fr-fieldset__element">
+        <div class="fr-select-group" data-testid="ban-search-veterinaire">
+            <label for="{{ form.adresse_lieu_dit.id_for_label }}" class="fr-label">{{ form.adresse_lieu_dit.label }}</label>
+            {{ form.adresse_lieu_dit|set_data:"address-search-autocomplete-target:address" }}
+        </div>
+    </div>
+    <div class="fr-fieldset__element">
+        <div class="fr-select-group" data-testid="communes-search-veterinaire">
+            <label for="{{ form.commune.id_for_label }}" class="fr-label">{{ form.commune.label }}</label>
+            {{ form.commune|set_data:"address-search-autocomplete-target:commune" }}
+        </div>
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.departement|set_data:"address-search-autocomplete-target:departement" %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.code_insee|set_data:"address-search-autocomplete-target:codeInsee" %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.telephone_structure %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.courriel_structure %}
+    </div>
+</fieldset>
+
+<fieldset class="fr-fieldset">
+    <legend class="fr-fieldset__legend">Vétérinaire</legend>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.nom %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.prenom %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.telephone %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.courriel %}
+    </div>
+    <div class="fr-fieldset__element">
+        {% dsfr_form_field form.especes %}
+    </div>
+</fieldset>
+
+{{ form.DELETE|set_data:"veterinaire-form-target:deleteInput" }}
+{{ form.id }}

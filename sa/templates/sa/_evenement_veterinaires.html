@@ -1,0 +1,35 @@
+{% load or_empty_value_tag dsfr_tags %}
+<h2 class="fr-h6">Vétérinaires</h2>
+<div class="fr-container--fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+        {% for veterinaire in object.veterinaires.all %}
+            <div class="fr-col-3">
+                {% include "sa/_veterinaire_modal.html" %}
+                <div class="veterinaire-card fr-card">
+                    <div class="fr-card__body">
+                        <div class="fr-card__content">
+                            <div>
+                                <h3 class="fr-card__title">
+                                    <a href="#veterinaire-{{ veterinaire.pk }}" id="veterinaire-{{ veterinaire.pk }}" data-fr-opened="false"
+                                       aria-controls="fr-modal-veterinaire-{{ veterinaire.pk }}">{% if veterinaire.prenom or veterinaire.nom %}{{ veterinaire.prenom }} {{ veterinaire.nom }}{% else %}{{ veterinaire.nom_structure }}{% endif %}</a>
+                                </h3>
+                                <p class="fr-text--sm card-subtitle">{{ veterinaire.nom_structure }}</p>
+                            </div>
+                            <div class="fr-card__desc">
+                                {% dsfr_badge label=veterinaire.get_type_veterinaire_display|upper extra_classes="fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v" %}
+                                {% for espece in veterinaire.especes.all %}
+                                    {% dsfr_badge label=espece.name extra_classes="fr-badge--no-icon fr-m-0 fr-mt-2v fr-ml-1v" %}
+                                {% endfor %}
+                                <div class="fr-btns-group--right">
+                                    <button data-fr-opened="false" aria-controls="fr-modal-veterinaire-{{ veterinaire.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="fr-mt-2v fr-ml-4v">Aucun vétérinaire enregistré</p>
+        {% endfor %}
+    </div>
+</div>

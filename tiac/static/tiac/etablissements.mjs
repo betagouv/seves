@@ -217,7 +217,7 @@ class EtablissementFormController extends BaseFormInModal {
     }
 
     getDeleteConfirmationSentence(etablissement) {
-        return `Confimez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
+        return `Confirmez-vous vouloir supprimer l'établissement ${etablissement.raison_sociale} ?`
     }
 
     getDeleteConfirmationTitle(_etablissement) {

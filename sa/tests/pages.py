@@ -5,8 +5,9 @@ import json
 from django.urls import reverse
 from playwright.sync_api import Locator, Page
 
+from core.pages import WithActionsPage
 from core.tests.pages import ChoiceJSPage, TreeselectPage
-from sa.models import Analyse, EvenementAnimal
+from sa.models import Analyse, EvenementAnimal, Veterinaire
 from seves import settings
 
 
@@ -210,6 +211,91 @@ class WithAnalyseMixin:
         return self.page.locator(".analyse-card").locator("visible=true").count()
 
 
+class WithVeterinaireMixin:
+    @property
+    def current_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def get_veterinaire_card(self, index=0):
+        return self.page.locator(".veterinaire-card").nth(index)
+
+    @property
+    def add_veterinaire_button(self):
+        return self.page.locator(".veterinaires-fieldset").get_by_role("button", name="Ajouter")
+
+    def open_veterinaire_modal(self):
+        self.add_veterinaire_button.click()
+        self.current_modal.wait_for(state="visible")
+        return self.current_modal
+
+    def force_address_veterinaire(self, modal: Locator, address: str):
+        with self.mock_ban():
+            ChoiceJSPage(self.page, modal.get_by_test_id("ban-search-veterinaire")).try_select_option(
+                f"{address} (Forcer la valeur)", search=address
+            )
+
+    def force_commune_veterinaire(self, modal: Locator, config=None):
+        config = config or _default_lille_commune_config()
+
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+
+        self.page.route(
+            url,
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=config["response_body"],
+            ),
+        )
+
+        ChoiceJSPage(self.page, modal.get_by_test_id("communes-search-veterinaire")).try_select_option(
+            config["option_name"], search=config["search_text"]
+        )
+        self.page.unroute(url)
+
+    def fill_veterinaire(self, modal: Locator, veterinaire: Veterinaire):
+        modal.locator(f'input[type="radio"][value="{veterinaire.type_veterinaire}"]').check(force=True)
+        modal.locator('[id$="-nom_structure"]').fill(veterinaire.nom_structure)
+        modal.locator('[id$="-numero_dpe"]').fill(veterinaire.numero_dpe)
+        self.force_address_veterinaire(modal, veterinaire.adresse_lieu_dit)
+        self.force_commune_veterinaire(modal)
+        if veterinaire.departement_id:
+            modal.locator('[id$="-departement"]').select_option(str(veterinaire.departement))
+        modal.locator('[id$="-telephone_structure"]').fill(veterinaire.telephone_structure)
+        modal.locator('[id$="-courriel_structure"]').fill(veterinaire.courriel_structure)
+        modal.locator('[id$="-nom"]').fill(veterinaire.nom)
+        modal.locator('[id$="-prenom"]').fill(veterinaire.prenom)
+        modal.locator('[id$="-telephone"]').fill(veterinaire.telephone)
+        modal.locator('[id$="-courriel"]').fill(veterinaire.courriel)
+
+    def close_veterinaire_modal(self):
+        self.current_modal.locator(".save-btn").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_veterinaire(self, veterinaire: Veterinaire):
+        modal = self.open_veterinaire_modal()
+        self.fill_veterinaire(modal, veterinaire)
+        self.close_veterinaire_modal()
+
+    def delete_veterinaire(self, index=0):
+        self.get_veterinaire_card(index).get_by_role("button", name="Supprimer").click()
+        self.current_modal.get_by_role("button", name="Supprimer").click()
+
+    def edit_veterinaire(self, index=0, **kwargs):
+        card = self.get_veterinaire_card(index)
+        card.locator(".modify-button").click()
+
+        for k, v in kwargs.items():
+            self.page.locator(".veterinaire-modal").locator("visible=true").locator(f'[id$="{k}"]').fill(v)
+
+        self.current_modal.get_by_role("button", name="Enregistrer").click()
+        self.current_modal.wait_for(state="hidden", timeout=2_000)
+
+    @property
+    def nb_veterinaire(self):
+        return self.page.locator(".veterinaire-card").locator("visible=true").count()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -290,6 +376,7 @@ class EvenementAnimalFormPage(
     WithEtablissementDetenteurUtils,
     WithParticulierDetenteurUtils,
     WithAnalyseMixin,
+    WithVeterinaireMixin,
 ):
     fields = [
         "statut_evenement",
@@ -331,6 +418,12 @@ class EvenementAnimalFormPage(
         "date_d_zero",
         "date_nd1",
         "date_nd2",
+        # Adis
+        "numero_adis",
+        "date_notification_adis",
+        "date_cloture_adis",
+        "effectif_retenu",
+        "origine_infection",
     ]
 
     def __init__(self, page: Page, base_url):
@@ -344,6 +437,15 @@ class EvenementAnimalFormPage(
         self.page.goto(
             f"{self.base_url}{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
         )
+
+    @property
+    def cancel_link(self):
+        return self.page.get_by_role("link", name="Annuler", exact=True)
+
+    def cancel(self, wait_for=None):
+        self.cancel_link.click()
+        if wait_for:
+            self.page.wait_for_url(wait_for)
 
     def fill_coordinates(self, point):
         self.coordinates_1.fill(str(point.x))
@@ -414,6 +516,22 @@ class EvenementAnimalFormPage(
         self.description.fill(evenement.description)
         self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()
 
+    @property
+    def adis_block(self):
+        return self.page.locator("#adis")
+
+    def fill_adis_block(self, evenement, choice_js_fill):
+        self.adis_block.locator(f"input[type='radio'][value='{str(evenement.foyer).lower()}' i]").check(force=True)
+
+        self.numero_adis.fill(evenement.numero_adis)
+        self.date_notification_adis.fill(evenement.date_notification_adis.strftime("%Y-%m-%d"))
+        self.date_cloture_adis.fill(evenement.date_cloture_adis.strftime("%Y-%m-%d"))
+        self.effectif_retenu.fill(str(evenement.effectif_retenu))
+        self.origine_infection.select_option(evenement.origine_infection)
+
+        for value in evenement.mesures_controle_labels.split(", "):
+            choice_js_fill(self.page, "#adis .choices__list", value, value)
+
     def fill_detenteur_etablissement_block(self, evenement):
         self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
         self.raison_sociale_etablissement.fill(evenement.raison_sociale_etablissement)
@@ -440,7 +558,7 @@ class EvenementAnimalFormPage(
         self.telephone_particulier.fill(evenement.telephone_particulier)
 
 
-class EvenementAnimalDetailsPage:
+class EvenementAnimalDetailsPage(WithActionsPage):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -450,7 +568,7 @@ class EvenementAnimalDetailsPage:
 
     @property
     def title(self):
-        return self.page.locator(".details-top-row h1")
+        return self.page.locator(".details-top-row h1").nth(0)
 
     @property
     def etat_badge(self):
@@ -476,6 +594,19 @@ class EvenementAnimalDetailsPage:
 
     def open_analyse_detail(self, index=0):
         self.get_analyse_card(index).get_by_role("button", name="Voir le détail").click()
+        modal = self.page.locator(".fr-modal__body").locator("visible=true")
+        modal.wait_for(state="visible")
+        return modal
+
+    def get_veterinaire_card(self, index=0):
+        return self.page.locator(".veterinaire-card").nth(index)
+
+    @property
+    def nb_veterinaire(self):
+        return self.page.locator(".veterinaire-card").count()
+
+    def open_veterinaire_detail(self, index=0):
+        self.get_veterinaire_card(index).get_by_role("button", name="Voir le détail").click()
         modal = self.page.locator(".fr-modal__body").locator("visible=true")
         modal.wait_for(state="visible")
         return modal
