@@ -5,6 +5,7 @@ from playwright.sync_api import Page, expect
 from core.factories import StructureFactory
 from core.models import LienLibre
 from sa.models import EvenementAnimal
+from sa.models.evenement import StatutAnimal
 from sa.tests.factories import DNCFactory, EspeceConcerneeFactory, EvenementAnimalFactory, TuberculoseFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
 from sv.models import Evenement
@@ -46,7 +47,7 @@ def test_evenement_animal_details_page_informations_block(live_server, page: Pag
 
 
 def test_evenement_animal_details_page_detenteur_etablissement_block(live_server, page: Page):
-    evenement = EvenementAnimalFactory()
+    evenement = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -64,7 +65,7 @@ def test_evenement_animal_details_page_detenteur_etablissement_block(live_server
 
 
 def test_evenement_animal_details_page_detenteur_particulier_block(live_server, page: Page):
-    evenement = EvenementAnimalFactory(particulier=True)
+    evenement = EvenementAnimalFactory(particulier=True, statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

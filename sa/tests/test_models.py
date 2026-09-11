@@ -10,11 +10,13 @@ from sa.tests.factories import AcarapioseFactory, AdenomatoseFactory, EvenementA
 
 @pytest.mark.django_db
 def test_evenement_animal_detenteur_constraint():
-    EvenementAnimalFactory()
-    EvenementAnimalFactory(particulier=True)
+    EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
+    EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, particulier=True)
 
     with pytest.raises(IntegrityError):
-        EvenementAnimalFactory(numero_identifiant_etablissement="Test", nom_particulier="Testeur")
+        EvenementAnimalFactory(
+            statut_animal=StatutAnimal.DETENU, numero_identifiant_etablissement="Test", nom_particulier="Testeur"
+        )
 
 
 @pytest.mark.django_db

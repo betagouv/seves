@@ -525,22 +525,29 @@ class EvenementAnimal(
     def get_cloture_confirm_message(self):
         return f"L'événement n°{self.numero} a bien été clôturé."
 
+    @property
+    def show_detenteur_block(self):
+        return self.statut_animal == StatutAnimal.DETENU
+
     class Meta:
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    (
-                        ~models.Q(numero_identifiant_etablissement="")
-                        & models.Q(numero_identifiant_etablissement__isnull=False)
-                        & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
-                    )
+                    ~models.Q(statut_animal=StatutAnimal.DETENU)
                     | (
                         (
-                            models.Q(numero_identifiant_etablissement="")
-                            | models.Q(numero_identifiant_etablissement__isnull=True)
+                            ~models.Q(numero_identifiant_etablissement="")
+                            & models.Q(numero_identifiant_etablissement__isnull=False)
+                            & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
                         )
-                        & ~models.Q(nom_particulier="")
-                        & models.Q(nom_particulier__isnull=False)
+                        | (
+                            (
+                                models.Q(numero_identifiant_etablissement="")
+                                | models.Q(numero_identifiant_etablissement__isnull=True)
+                            )
+                            & ~models.Q(nom_particulier="")
+                            & models.Q(nom_particulier__isnull=False)
+                        )
                     )
                 ),
                 name="evenementanimal_detenteur_etablissement_or_particulier",
