@@ -1,0 +1,22 @@
+{
+	admin off
+	auto_https off
+	order coraza_waf first
+}
+
+:{$PORT} {
+	coraza_waf {
+		load_owasp_crs
+		directives `
+		Include @coraza.conf-recommended
+		Include @crs-setup.conf.example
+		Include @owasp_crs/*.conf
+		SecRuleEngine On
+		SecRuleEngine DetectionOnly
+		SecRequestBodyLimit 78643200
+		SecResponseBodyAccess Off
+		`
+	}
+
+	reverse_proxy 127.0.0.1:8000
+}
