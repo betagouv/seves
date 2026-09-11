@@ -207,6 +207,31 @@
                     </div>
                 </div>
             </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Enquête épidémiologique</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Événements liés</div>
+                        {% for link in free_links_list %}
+                            {% if link.related_object_1 == object and not link.related_object_2.is_deleted %}
+                                <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}" target="_blank">{{ link.related_object_2 }}</a>
+                            {% endif %}
+                            {% if link.related_object_2 == object and not link.related_object_1.is_deleted %}
+                                <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}" target="_blank">{{ link.related_object_1 }}</a>
+                            {% endif %}
+                        {% empty %}
+                            <span class="empty-value">Vide</span>
+                        {% endfor %}
+
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-8">
+                        <div class="bold">Commentaire</div>
+                        <div>{{ object.commentaire|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
             {% if object.show_mesures_block %}
                 <div class="white-container fr-mb-4v">
                     <h2 class="fr-h6">Mesures de gestion</h2>
