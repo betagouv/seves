@@ -173,6 +173,7 @@
         {% if media %}{% for tag in media.render_js %}{{ tag }}{% endfor %}{% endif %}
         {# Kept for compatibility for now #}
         <script src="https://cdn.jsdelivr.net/npm/choices.js@11.0.4/public/assets/scripts/choices.min.js"></script>
+        {% block scripts_override %}{% endblock %}
         {% block scripts %}{% endblock %}
     </body>
 
