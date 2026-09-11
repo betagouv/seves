@@ -41,7 +41,7 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         ),
         label="Maladie suspectée",
     )
-    espece = forms.ModelChoiceField(queryset=Espece.objects.all())
+    espece = forms.ModelChoiceField(queryset=Espece.objects.all(), label="Espèce")
     statut_animal = forms.ChoiceField(
         required=True,
         choices=StatutAnimal,
