@@ -440,7 +440,7 @@ class EvenementAnimalFormPage(
 
     @property
     def cancel_link(self):
-        return self.page.get_by_role("link", name="Annuler", exact=True)
+        return self.page.get_by_test_id("top-action-btns").get_by_role("link", name="Annuler", exact=True)
 
     def cancel(self, wait_for=None):
         self.cancel_link.click()
@@ -502,12 +502,14 @@ class EvenementAnimalFormPage(
             )
 
     def submit_as_draft(self, wait_for="**/sa/evenement-animal/**/"):
-        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+        self.page.get_by_test_id("top-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         if wait_for:
             self.page.wait_for_url(wait_for)
 
     def publish(self):
-        self.page.get_by_role("button", name="Publier", exact=True).click()
+        self.page.get_by_test_id("top-action-btns").get_by_role("button", name="Publier", exact=True).click()
         self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):

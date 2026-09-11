@@ -349,6 +349,14 @@
             {% endif %}
 
             {{ veterinaire_formset }}
+
+            <section
+                class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
+                data-testid="bottom-action-btns"
+            >
+                {% partial buttons %}
+            </section>
+
         </main>
     </form>
 {% endblock content %}
