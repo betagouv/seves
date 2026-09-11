@@ -491,15 +491,16 @@ class EvenementAnimalFormPage(
         self.fill_coordinates(evenement.coordinates)
         self.type_lieu.select_option(evenement.get_type_lieu_display())
 
-        if evenement.numero_identifiant_etablissement:
-            self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
-        elif evenement.nom_particulier:
-            self.particulier_label.click()
-            self.nom_particulier.fill(evenement.nom_particulier)
-        else:
-            raise ValueError(
-                "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
-            )
+        if evenement.show_detenteur_block:
+            if evenement.numero_identifiant_etablissement:
+                self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
+            elif evenement.nom_particulier:
+                self.particulier_label.click()
+                self.nom_particulier.fill(evenement.nom_particulier)
+            else:
+                raise ValueError(
+                    "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
+                )
 
     def submit_as_draft(self, wait_for="**/sa/evenement-animal/**/"):
         self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()

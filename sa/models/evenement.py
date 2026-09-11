@@ -517,22 +517,29 @@ class EvenementAnimal(
     def get_soft_delete_success_message(self):
         return f"L’événement {self.numero} a bien été supprimé."
 
+    @property
+    def show_detenteur_block(self):
+        return self.statut_animal == StatutAnimal.DETENU
+
     class Meta:
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    (
-                        ~models.Q(numero_identifiant_etablissement="")
-                        & models.Q(numero_identifiant_etablissement__isnull=False)
-                        & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
-                    )
+                    ~models.Q(statut_animal=StatutAnimal.DETENU)
                     | (
                         (
-                            models.Q(numero_identifiant_etablissement="")
-                            | models.Q(numero_identifiant_etablissement__isnull=True)
+                            ~models.Q(numero_identifiant_etablissement="")
+                            & models.Q(numero_identifiant_etablissement__isnull=False)
+                            & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
                         )
-                        & ~models.Q(nom_particulier="")
-                        & models.Q(nom_particulier__isnull=False)
+                        | (
+                            (
+                                models.Q(numero_identifiant_etablissement="")
+                                | models.Q(numero_identifiant_etablissement__isnull=True)
+                            )
+                            & ~models.Q(nom_particulier="")
+                            & models.Q(nom_particulier__isnull=False)
+                        )
                     )
                 ),
                 name="evenementanimal_detenteur_etablissement_or_particulier",
