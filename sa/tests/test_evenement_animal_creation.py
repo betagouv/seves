@@ -228,7 +228,7 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
 
 
 def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -256,7 +256,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
 def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocomplete(
     live_server, page: Page, ensure_departements
 ):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     ensure_departements("Paris")
@@ -312,7 +312,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
 
 
 def test_can_create_evenement_animal_with_detenteur_particulier_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory(particulier=True)
+    input_data = EvenementAnimalFactory(particulier=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -362,7 +362,7 @@ def _parcel_response(properties=None):
 
 
 def test_no_confirmation_modal_when_switching_detenteur_type_without_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -377,7 +377,7 @@ def test_no_confirmation_modal_when_switching_detenteur_type_without_data(live_s
 
 
 def test_confirmation_modal_when_switching_from_etablissement_to_particulier_with_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -393,7 +393,7 @@ def test_confirmation_modal_when_switching_from_etablissement_to_particulier_wit
 
 
 def test_cancelling_detenteur_type_change_keeps_current_type_and_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -412,7 +412,7 @@ def test_cancelling_detenteur_type_change_keeps_current_type_and_data(live_serve
 
 
 def test_confirming_detenteur_type_change_clears_previous_block_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -445,7 +445,7 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
 
 
 def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(particulier=True)
+    input_data = EvenementAnimalFactory.build(particulier=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 

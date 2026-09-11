@@ -245,12 +245,7 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "mesures_controle",
         ]
 
-        fields = [
-            "maladie",
-            "espece",
-            "statut_animal",
-            "statut_evenement",
-            "date_statut_changed",
+        detenteur_fields = [
             # Détenteur etablissement
             "numero_identifiant_etablissement",
             "raison_sociale_etablissement",
@@ -270,6 +265,15 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
             "code_insee_particulier",
             "email_particulier",
             "telephone_particulier",
+        ]
+
+        fields = [
+            "maladie",
+            "espece",
+            "statut_animal",
+            "statut_evenement",
+            "date_statut_changed",
+            *detenteur_fields,
             # Localisation
             "adresse_lieu_dit",
             "commune",
@@ -329,12 +333,6 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         type_detenteur = self.fields["type_detenteur"].initial
         if self.is_bound:
             type_detenteur = self.data.get("type_detenteur")
-        if type_detenteur == TypeDetenteur.PARTICULIER:
-            self.fields["numero_identifiant_etablissement"].required = False
-            self.fields["nom_particulier"].required = True
-        else:
-            self.fields["numero_identifiant_etablissement"].required = True
-            self.fields["nom_particulier"].required = False
 
         if not self.maladie.needs_arrete:
             self.fields.pop("date_apms")
@@ -349,6 +347,22 @@ class EvenementAnimalForm(DsfrBaseForm, forms.ModelForm):
         if self.user.agent.structure.is_ac is False:
             for field in self.Meta.adis_fields:
                 self.fields.pop(field)
+
+        if self.show_detenteur_block is True:
+            if type_detenteur == TypeDetenteur.PARTICULIER:
+                self.fields["numero_identifiant_etablissement"].required = False
+                self.fields["nom_particulier"].required = True
+            else:
+                self.fields["numero_identifiant_etablissement"].required = True
+                self.fields["nom_particulier"].required = False
+        else:
+            self.fields.pop("type_detenteur")
+            for field in self.Meta.detenteur_fields:
+                self.fields.pop(field)
+
+    @property
+    def show_detenteur_block(self):
+        return self.statut_animal == StatutAnimal.DETENU
 
     @property
     def show_mesures_first_row(self):
