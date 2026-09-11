@@ -352,7 +352,7 @@ class WithPreCreationFormPage:
 
     def fill_pre_creation_form(self, evenement: EvenementAnimal):
         self.fill_maladie(evenement)
-        self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
+        self.pre_creation_modal.get_by_label("Espèce").select_option(evenement.espece.name)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 
