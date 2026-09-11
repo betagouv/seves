@@ -517,6 +517,9 @@ class EvenementAnimal(
     def get_soft_delete_success_message(self):
         return f"L’événement {self.numero} a bien été supprimé."
 
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
     class Meta:
         constraints = [
             models.CheckConstraint(
