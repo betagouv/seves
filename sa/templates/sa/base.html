@@ -62,6 +62,6 @@
     </dialog>
 {% endblock %}
 
-{% block scripts %}
+{% block scripts_override %}
     {% for tag in pre_creation_form.media.render_js %}{{ tag }}{% endfor %}
-{% endblock scripts %}
+{% endblock scripts_override %}
