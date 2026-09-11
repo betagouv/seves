@@ -11,6 +11,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from core.mixins import (
     MediaDefiningMixin,
     WithBlocCommunMixin,
+    WithClotureContextMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
@@ -150,7 +151,9 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
         )
 
 
-class EvenementAnimalDetailsView(UserPassesTestMixin, WithBlocCommunMixin, WithFreeLinksListInContextMixin, DetailView):
+class EvenementAnimalDetailsView(
+    UserPassesTestMixin, WithBlocCommunMixin, WithFreeLinksListInContextMixin, WithClotureContextMixin, DetailView
+):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
 
