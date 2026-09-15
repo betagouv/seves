@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.gis import forms
 
-from .models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from .models import Analyse, Espece, EspeceConcernee, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
 
 
 class EvenementAnimalAdminForm(forms.ModelForm):
@@ -58,6 +58,11 @@ class AnalyseAdmin(admin.ModelAdmin):
         "get_resultat_display",
         "date_prelevement",
     )
+
+
+@admin.register(EspeceConcernee)
+class EspeceConcerneeAdmin(admin.ModelAdmin):
+    pass
 
 
 admin.site.register(Espece)

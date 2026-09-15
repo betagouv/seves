@@ -247,3 +247,15 @@ class TreeselectCheckbox(TreeselectMixin):
 class TreeselectRadio(TreeselectMixin):
     allow_multiple_selected = False
     input_type = "radio"
+
+
+class NumericTextInput(widgets.TextInput):
+    """
+    Text input for whole, non-negative numbers
+    """
+
+    def __init__(self, attrs=None):
+        default_attrs = {"inputmode": "numeric", "pattern": "[0-9]*"}
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(default_attrs)
