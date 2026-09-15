@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 from core.factories import StructureFactory
 from core.models import LienLibre
 from sa.models import EvenementAnimal
-from sa.tests.factories import EvenementAnimalFactory
+from sa.tests.factories import EspeceConcerneeFactory, EvenementAnimalFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
 from sv.models import Evenement
 
@@ -161,7 +161,7 @@ def test_evenement_animal_details_page_adis_block(live_server, page: Page):
     expect(block.get_by_text(evenement.numero_adis, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_notification_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_cloture_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
-    expect(block.get_by_text(str(evenement.effectif_retenu))).to_be_visible()
+    expect(block.get_by_text(str(evenement.effectif_retenu), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_origine_infection_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.mesures_controle_labels, exact=True)).to_be_visible()
 
@@ -181,3 +181,35 @@ def test_evenement_animal_details_page_enquete_block(live_server, page: Page):
     expect(block.get_by_text(evenement.commentaire, exact=True)).to_be_visible()
     expect(block.get_by_text(str(for_free_link), exact=True)).to_be_visible()
     expect(block.get_by_text(str(for_other_free_link), exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_especes_concernees_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    espece_1 = EspeceConcerneeFactory(evenement=evenement)
+    espece_2 = EspeceConcerneeFactory(evenement=evenement)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    assert details_page.get_especes_concernees_values() == [
+        [
+            espece_1.espece.name,
+            str(espece_1.identifiant),
+            str(espece_1.presents),
+            str(espece_1.morts),
+            str(espece_1.cas),
+            str(espece_1.abattus),
+            str(espece_1.depeuples),
+            str(espece_1.vaccines),
+        ],
+        [
+            espece_2.espece.name,
+            str(espece_2.identifiant),
+            str(espece_2.presents),
+            str(espece_2.morts),
+            str(espece_2.cas),
+            str(espece_2.abattus),
+            str(espece_2.depeuples),
+            str(espece_2.vaccines),
+        ],
+    ]
