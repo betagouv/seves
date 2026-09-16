@@ -1,118 +1,110 @@
+{% load dsfr_tags widget_tweaks %}
+
 <!-- bouton relié à la modal en display none -> https://github.com/GouvernementFR/dsfr/issues/728 -->
-<button type="button" class="fr-hidden" data-fr-opened="false"
-        aria-controls="modal-add-edit-prelevement-{{ id }}"></button>
-<dialog aria-labelledby="title-modal-add-edit-prelevement-{{ id }}" id="modal-add-edit-prelevement-{{ id }}"
-        data-id={{ id }} data-already-existing="{{ existing }}" class="fr-modal" role="dialog"
-        data-fr-concealing-backdrop="false">
+<button
+    type="button"
+    class="fr-hidden"
+    data-fr-opened="false"
+    aria-controls="modal-add-edit-prelevement-{{ form.prefix }}"
+></button>
+<dialog
+    id="modal-add-edit-prelevement-{{ form.prefix }}"
+    class="fr-modal"
+    aria-labelledby="title-modal-add-edit-prelevement-{{ form.prefix }}"
+    data-prelevement-form-target="dialog"
+    data-testid="form-dialog"
+>
     <div class="fr-container fr-container--fluid fr-container-md">
         <div class="fr-grid-row fr-grid-row--center">
-            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+            <div id="prelevement-form" class="fr-col-12 fr-col-md-10 fr-col-lg-8">
                 <div class="fr-modal__body">
                     <div class="fr-modal__header">
-                        <button class="fr-btn--close fr-btn" type="button"
-                                aria-controls="modal-add-edit-prelevement-{{ id }}">Fermer
+                        <button
+                            class="fr-btn--close fr-btn"
+                            type="button"
+                            aria-controls="modal-add-edit-prelevement-{{ form.prefix }}"
+                        >
+                            Fermer
                         </button>
                     </div>
                     <div class="fr-modal__content">
-                        <h1
-                            id="title-modal-add-edit-prelevement-{{ id }}"
-                            class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg"
-                        >
-                            Ajouter un prélèvement
-                        </h1>
-
-                        <div class="fr-container--fluid">
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-4 required-field">Type</div>
-                                <div class="fr-col-8">
-                                    <fieldset class="fr-fieldset fr-mb-0" id="radio-inline"
-                                              aria-labelledby="radio-inline-legend radio-inline-messages">
-                                        {{ form.type_analyse }}
-                                    </fieldset>
-                                </div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-12">
-                                    <div class="fr-checkbox-group fr-checkbox-group--sm">
-                                        {{ form.is_officiel }}
-                                        <label class="fr-label" for="id_prelevements-{{ id }}-is_officiel">Prélèvement
-                                            officiel</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="numero-rapport-inspection">
-                                <div class="fr-col-4"><label class="fr-label">N° RI</label></div>
-                                <div class="fr-col-8">{{ form.numero_rapport_inspection }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="laboratoire">
-                                <div class="fr-col-4"><label class="fr-label">Laboratoire</label></div>
-                                <div class="fr-col-8">{{ form.laboratoire }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="numero-echantillon">
-                                <div class="fr-col-4">{{ form.numero_echantillon.label_tag }}</div>
-                                <div class="fr-col-8">{{ form.numero_echantillon }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="lieu">
-                                <div class="fr-col-4"><label class="fr-label">Lieu</label></div>
-                                <div class="fr-col-8"> {{ form.lieu }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters">
-                                <div class="fr-col-4 required-field">{{ form.structure_preleveuse.label_tag }}</div>
-                                <div class="fr-col-8">{{ form.structure_preleveuse }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
-                                <div class="fr-col-4 {% if not existing %}required-field{% endif %}">{{ form.date_prelevement.label_tag }}</div>
-                                <div class="fr-col-8">{{ form.date_prelevement }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="matrice-prelevee" >
-                                <div class="fr-col-4">{{ form.matrice_prelevee.label_tag }}</div>
-                                <div class="fr-col-8">{{ form.matrice_prelevee }}</div>
-                            </div>
-                            <div
-                                class="fr-grid-row fr-grid-row--gutters"
-                                id="espece-echantillon"
-                                data-controller="espece-search"
-                                data-espece-search-position-value="top"
+                        <fieldset data-prelevement-form-target="fieldset" data-testid="fieldset">
+                            <h1
+                                id="title-modal-add-edit-prelevement-{{ form.prefix }}"
+                                class="fr-modal__title fr-icon-arrow-right-line fr-icon--lg"
                             >
-                                <div class="fr-col-4">
-                                    <label
-                                        class="fr-label"
-                                        for="id_prelevements-{{ id }}-espece-echantillon"
-                                    >
-                                        Espèce échantillon
-                                    </label>
+                                {% if form.instance.pk %}Modifier le prélèvement{% else %}Ajouter un prélèvement{% endif %}
+                            </h1>
+
+                            {% if form.instance.pk %}{{ form.id }}{% endif %}
+
+                            {% with field=form.lieu %}
+                                {{ field.as_hidden }}
+                            {% endwith %}
+
+                            <fieldset class="fr-fieldset fr-fieldset--block-inline">
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.type_analyse|set_data:"action:onTypeAnalyseChange" %}
                                 </div>
-                                <div class="fr-col-8">
-                                    <select
-                                        id="id_prelevements-{{ id }}-espece-echantillon"
-                                        class="fr-input"
-                                        name="prelevements-{{ id }}-espece_echantillon"
-                                        data-espece-search-target="select"
-                                    >
-                                        {% if form.instance.espece_echantillon %}
-                                            <option value="{{ form.instance.espece_echantillon.pk }}" selected>
-                                                {{ form.instance.espece_echantillon.libelle }}
-                                            </option>
-                                        {% endif %}
-                                    </select>
+                                <div class="fr-fieldset__element fr-mb-n1v">
+                                    {% dsfr_form_field form.is_officiel %}
                                 </div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="date-prelevement">
-                                <div class="fr-col-4">{{ form.date_rapport_analyse.label_tag }}</div>
-                                <div class="fr-col-8">{{ form.date_rapport_analyse }}</div>
-                            </div>
-                            <div class="fr-grid-row fr-grid-row--gutters" id="resultat">
-                                <div class="fr-col-4"><label class="fr-label required-field">Conclusion</label></div>
-                                <div class="fr-col-8"><fieldset class="fr-fieldset" id="radio-inline"
-                                                                aria-labelledby="radio-inline-legend radio-inline-messages">
-                                    {{ form.resultat }}
-                                </fieldset></div>
-                            </div>
-                        </div>
-                        <div class="fr-btns-group fr-btns-group--center fr-btns-group--inline-lg fr-mt-4w">
-                            <a href="#" class="fr-btn fr-btn--secondary prelevement-cancel-btn"
-                               aria-controls="modal-add-edit-prelevement-{{ id }}">Annuler</a>
-                            <a class="fr-btn prelevement-save-btn" data-id="{{ id }}" href="#">Enregistrer</a>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.numero_rapport_inspection %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.laboratoire|set_data:"prelevement-form-target:laboratoireInput" %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.numero_echantillon %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.lieu %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.structure_preleveuse %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.date_prelevement %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.matrice_prelevee %}
+                                </div>
+                                <div
+                                    id="espece-echantillon"
+                                    class="fr-fieldset__element"
+                                    data-controller="espece-search"
+                                    data-espece-search-position-value="top"
+                                >
+                                    {% dsfr_form_field form.espece_echantillon|set_data:"espece-search-target:select" %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.date_rapport_analyse %}
+                                </div>
+                                <div class="fr-fieldset__element">
+                                    {% dsfr_form_field form.resultat %}
+                                </div>
+                                {{ form.DELETE|set_data:"prelevement-form-target:deleteInput" }}
+                            </fieldset>
+                        </fieldset>
+                        <div
+                            class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4v"
+                            data-testid="action-btns"
+                        >
+                            <button
+                                type="button"
+                                class="fr-btn fr-btn--secondary prelevement-cancel-btn"
+                                aria-controls="modal-add-edit-prelevement-{{ form.prefix }}"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="button"
+                                class="fr-btn prelevement-save-btn"
+                                data-action="prelevement-form#onValidateForm:prevent:stop"
+                            >
+                                Enregistrer
+                            </button>
                         </div>
                     </div>
                 </div>

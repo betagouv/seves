@@ -6,15 +6,10 @@
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'sv/common.css' %}">
     <link rel="stylesheet" href="{% static 'sv/fichedetection_form.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/map-gl-style-switcher@0.10.0/dist/map-gl-style-switcher.min.css">
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static 'core/forms.js' %}"></script>
     <script type="module" src="{% static 'sv/fichedetection_form.js' %}"></script>
-    <script type="module" src="{% static 'sv/fichedetection_prelevement_form.js' %}"></script>
-    <script type="module" src="{% static 'sv/espece_search.mjs' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -133,46 +128,10 @@
                 </div>
             </div>
 
-            <div class="fr-mb-6v block with-empty-placeholder" data-controller="prelevement-form" data-testid="prelevements-list">
-                <div id="prelevements-header" class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
-                    <h2 class="fr-h6 fr-m-0">Prélèvements</h2>
-                    <button
-                        id="btn-add-prelevment"
-                        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-                        type="button"
-                        data-prelevement-form-target="addButton"
-                        disabled
-                    >
-                        Ajouter
-                    </button>
+            <div class="fr-mb-6v">
+                <div class="block block--full" data-testid="prelevement-list">
+                    {{ prelevement_formset }}
                 </div>
-
-                {% for form in existing_prelevements %}
-                    {{ form.id }}
-                    {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=form.instance.pk existing="true" %}
-                {% endfor %}
-
-                {% for form in prelevement_forms %}
-                    {% include 'sv/_fichedetection_form__prelevements_modal.html' with id=forloop.counter0 %}
-                {% endfor %}
-
-                <div id="prelevements-list" class="fr-grid-row fr-grid-row--gutters"></div>
-
-                <div class="with-empty-placeholder--placeholder">
-                    <p class="fr-py-3v fr-m-0">Aucun prélèvement.</p>
-
-                    <div class="fr-notice fr-notice--info fr-px-4v" data-prelevement-form-target="prelevementNotice">
-                        <div class="fr-container--fluid">
-                            <div class="fr-notice__body">
-                                <p>
-                                    <span class="fr-notice__title">Pour ajouter un prélèvement, vous devez avoir renseigné au moins un lieu.</span>
-                                </p>
-                                <button title="Masquer le message" id="button-1290" class="fr-btn--close fr-btn btn--close-notice-js" >Masquer le message</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
             <div class="block">
@@ -201,8 +160,6 @@
             </section>
         </form>
 
-        {% include "sv/_fichedetection_form__prelevement_card.html" %}
-        {% include "sv/_fichedetection_form__prelevement_delete_modal.html" %}
         {% include "sv/_fichedetection_form__lieu_cant_delete_modal.html" %}
         {% include "sv/_fichedetection_form_prelevement_en_attente_modal.html" %}
     </main>

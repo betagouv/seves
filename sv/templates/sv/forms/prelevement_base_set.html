@@ -1,0 +1,74 @@
+{% load dsfr_tags set_context_var widget_tweaks %}
+
+{% partialdef form-dialog %}
+    <fieldset
+        class="fr-col-12 fr-col-md-6 fr-col-xl-3 with-empty-placeholder--item"
+        data-controller="prelevement-form"
+        data-prelevement-form-form-prefix-value="{{ form.prefix }}"
+        data-prelevement-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-prelevement-form-confirmation-officielle-value="{{ form.confirmation_officielle }}"
+        {# form.is_bound is important: we don't want to accidentally trigger on empty form #}
+        {% if form.is_bound and form.errors %}data-prelevement-form-is-valid-value="false"{% endif %}
+    >
+        {% include 'sv/_fichedetection_form__prelevements_modal.html' %}
+    </fieldset>
+{% endpartialdef %}
+
+<div data-controller="prelevement-formset">
+    <div class="fr-flex fr-flex--row fr-flex--space-between fr-mb-6v">
+        <h2 class="fr-h6 fr-m-0">Prélèvements</h2>
+        <div class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-mb-n4v fr-ml-4v">
+            <button
+                type="button"
+                class="fr-btn fr-btn--secondary fr-icon-add-line"
+                title="Ajouter un prélèvement"
+                data-prelevement-formset-target="addButton"
+                data-action="prelevement-formset#onAddForm:prevent:stop"
+                data-testid="add-prelevement"
+                disabled
+            >
+                Ajouter
+            </button>
+        </div>
+    </div>
+
+    {{ formset.non_form_errors }}
+
+    <div
+        class="fr-grid-row fr-grid-row--gutters with-empty-placeholder"
+        data-prelevement-formset-target="formsetContainer"
+    >
+        {% for field in formset.management_form %}
+            {% with data_target=field.name|strfmt:"prelevement-formset-target:{0}" %}
+                {{ field|set_data:data_target }}
+            {% endwith %}
+        {% endfor %}
+
+        <div class="fr-col-12">
+            <p class="fr-m-0 with-empty-placeholder--placeholder">
+                Aucun prélèvement.
+            </p>
+
+            <div class="fr-notice fr-notice--info fr-px-4v fr-mt-4v" data-prelevement-formset-target="prelevementNotice">
+                <div class="fr-container--fluid">
+                    <div class="fr-notice__body">
+                        <p>
+                            <span class="fr-notice__title">Pour ajouter un prélèvement, vous devez avoir renseigné au moins un lieu.</span>
+                        </p>
+                        <button title="Masquer le message" class="fr-btn--close fr-btn btn--close-notice-js">Masquer le message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for form in formset %}
+            {% partial form-dialog %}
+        {% endfor %}
+    </div>
+
+    <template data-prelevement-formset-target="emptyFormTpl">
+        {% with form=formset.empty_form should_immediately_show=True %}
+            {% partial form-dialog %}
+        {% endwith %}
+    </template>
+</div>
