@@ -145,6 +145,6 @@ fileignoreconfig:
 - filename: sa/migrations/0018_veterinaire.py
   checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 - filename: go.sum
-  checksum: b83c8731d7ce6505590b5f1b118fda2e249e9fcea4e132a053ae7e1a0a1187f8
+  checksum: 5222f2c63af029ba14e2f241f9e2e234dcef6aec7b36970a6596174e24d5f3a7
 
 version: "1.0"
