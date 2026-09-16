@@ -119,7 +119,8 @@ export class VirtualOptionList {
 
     #render() {
         const scrollTop = this.#viewport.scrollTop
-        const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
+        const maxStart = Math.max(0, this.#items.length - this.#pool.length)
+        const start = Math.min(maxStart, Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN))
         this.#rows.style.transform = `translateY(${start * ROW_HEIGHT}px)`
 
         this.#pool.forEach(({row, input, label}, i) => {

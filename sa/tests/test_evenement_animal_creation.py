@@ -959,15 +959,27 @@ def test_espece_treeselect_populates_and_updates_from_maladie_especes_concernees
     espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
     expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
     expect(espece_widget.locator(".fr-treeselect__button")).to_be_enabled()
-    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_bovin.name]
-    assert _group_option_labels(list_page._espece_treeselect, "Autres") == [espece_porc.name]
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [
+        espece_bovin.name,
+        espece_porc.name,
+    ]
+    espece_treeselect = list_page._espece_treeselect
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_chien.name)
+        expect(espece_treeselect.container.get_by_text(espece_chien.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
 
-    # Switching maladie fully replaces the options with the new maladie's related especes.
+    # species no longer in frequent (bovin, porc) should move to "Autres""
     maladie_2_group = "Les plus fréquentes" if maladie_2.is_highlighted else "Autre"
     list_page._maladie_treeselect.check_option(maladie_2_group, maladie_2.name_with_acronym)
 
     assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_chien.name]
-    assert _group_option_labels(list_page._espece_treeselect, "Autres") == []
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_bovin.name)
+        expect(espece_treeselect.container.get_by_text(espece_bovin.name, exact=True)).to_be_visible()
+        espece_treeselect.search(espece_porc.name)
+        expect(espece_treeselect.container.get_by_text(espece_porc.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
     assert espece_bovin.name not in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
 
 
