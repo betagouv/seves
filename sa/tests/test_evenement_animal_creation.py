@@ -987,6 +987,7 @@ def test_espece_treeselect_autres_group_supports_keyboard_navigation_past_the_vi
     live_server, page: Page
 ):
     maladie = MaladieFactory(name="Maladie de test clavier sans espèce concernée")
+    EspeceFactory.create_batch(210)
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
