@@ -983,6 +983,47 @@ def test_espece_treeselect_populates_and_updates_from_maladie_especes_concernees
     assert espece_bovin.name not in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
 
 
+def test_espece_treeselect_autres_group_supports_keyboard_navigation_past_the_virtualized_window(
+    live_server, page: Page
+):
+    maladie = MaladieFactory(name="Maladie de test clavier sans espèce concernée")
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie.name_with_acronym)
+
+    espece_treeselect = list_page._espece_treeselect
+    espece_treeselect.open_treeselect()
+    expect(espece_treeselect.search_bar).to_be_focused()
+    group, button, collapse = espece_treeselect._locate_group("Autres")
+    button.click()
+    expect(collapse).to_be_visible()
+    first_input = group.locator("input").first
+    first_input.focus()
+    expect(first_input).to_be_focused()
+    assert first_input.get_attribute("aria-posinset") == "1"
+    setsize = int(first_input.get_attribute("aria-setsize"))
+    assert setsize > 200
+
+    # Arrow-key navigation must reach an item that was never part of the initial DOM window to
+    # prove it isn't limited to what is actually mounted.
+    for _ in range(25):
+        page.keyboard.press("ArrowDown")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "26"
+    assert page.evaluate("document.activeElement.checked") is True
+
+    page.keyboard.press("End")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == str(setsize)
+
+    page.keyboard.press("Home")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "1"
+
+    espece_treeselect.close_treeselect()
+
+
 def test_espece_treeselect_falls_back_to_default_list_when_maladie_has_no_especes_concernees(live_server, page: Page):
     espece_courante = EspeceFactory(name="Espèce de test courante", is_highlighted=True)
     maladie_sans_especes = MaladieFactory(name="Maladie de test sans espèce concernée")
