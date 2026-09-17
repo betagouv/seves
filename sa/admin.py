@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.contrib.gis import forms
 
-from .models import Analyse, Espece, EspeceConcernee, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from .models import (
+    Analyse,
+    Espece,
+    EspeceConcernee,
+    EvenementAnimal,
+    Laboratoire,
+    Maladie,
+    MethodeAnalyse,
+    Typage,
+)
 
 
 class EvenementAnimalAdminForm(forms.ModelForm):
@@ -71,3 +80,14 @@ class EspeceAdmin(admin.ModelAdmin):
     list_display = ("name", "is_highlighted")
     list_editable = ("is_highlighted",)
     search_fields = ("name",)
+
+
+@admin.register(Typage)
+class TypageAdmin(admin.ModelAdmin):
+    list_display = (
+        "maladie",
+        "valeur_niveau_2",
+        "valeur_niveau_3",
+    )
+    list_filter = ("maladie",)
+    search_fields = ("maladie__name", "valeur_niveau_2", "valeur_niveau_3")

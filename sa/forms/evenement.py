@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.conf import settings
 from django.forms import Media, MultipleChoiceField
@@ -273,6 +275,9 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         choices=MesureDeControle.choices, label="Mesures de contrôle mises en œuvre", required=False
     )
 
+    typage_niveau_2 = forms.ChoiceField(required=False, choices=())
+    typage_niveau_3 = forms.ChoiceField(required=False, choices=())
+
     @property
     def media(self):
         return super().media + Media(
@@ -283,6 +288,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
                 js_module("sa/detenteur.mjs"),
                 js_module("sa/localisation_from_detenteur.mjs"),
                 js_module("sa/adis.mjs"),
+                js_module("sa/typage.mjs"),
                 js_module("ssa/free_links.mjs"),
             ),
         )
@@ -342,6 +348,8 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "description",
             # Enquete epidémiologique
             "commentaire",
+            # Typage
+            "typage_champ_libre",
             # Mesures de gestion
             "date_apms",
             "date_apdi",
@@ -376,6 +384,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self._add_free_links(model=EvenementAnimal)
         self.fields["maladie"].initial = self.maladie_id
         self.maladie = Maladie.objects.get(id=self.maladie_id)
+        self._init_typage_fields()
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
         self.fields["type_lieu"].choices = (
@@ -421,6 +430,56 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("type_detenteur")
             for field in self.Meta.detenteur_fields:
                 self.fields.pop(field)
+
+    def _init_typage_fields(self):
+        self.niveaux3_par_niveau2 = {}
+        self["typage_champ_libre"].label = self.maladie.intitule_typage_champ_libre
+
+        if not self.is_bound and self.instance.typage_id:
+            self.initial["typage_niveau_2"] = self.instance.typage.valeur_niveau_2
+            self.initial["typage_niveau_3"] = self.instance.typage.valeur_niveau_3
+
+        typage_queryset = self.maladie.typages.all()
+        niveau_2_values = list(
+            dict.fromkeys(typage_queryset.exclude(valeur_niveau_2="").values_list("valeur_niveau_2", flat=True))
+        )
+        if not niveau_2_values:
+            self.fields.pop("typage_niveau_2")
+            self.fields.pop("typage_niveau_3")
+            return
+
+        self.fields["typage_niveau_2"].choices = (
+            ("", settings.SELECT_EMPTY_CHOICE),
+            *((value, value) for value in niveau_2_values),
+        )
+        self["typage_niveau_2"].label = self.maladie.intitule_typage_niveau_2
+
+        queryset = (
+            typage_queryset.exclude(valeur_niveau_2="")
+            .exclude(valeur_niveau_3="")
+            .values_list("valeur_niveau_2", "valeur_niveau_3")
+        )
+        for valeur_niveau_2, valeur_niveau_3 in queryset:
+            self.niveaux3_par_niveau2.setdefault(valeur_niveau_2, [])
+            if valeur_niveau_3 not in self.niveaux3_par_niveau2[valeur_niveau_2]:
+                self.niveaux3_par_niveau2[valeur_niveau_2].append(valeur_niveau_3)
+
+        if not self.niveaux3_par_niveau2:
+            self.fields.pop("typage_niveau_3")
+            return
+
+        niveau_3_submitted = self.initial.get("typage_niveau_3")
+        if self.is_bound:
+            niveau_3_submitted = self.data.get(self.add_prefix("typage_niveau_3")) or niveau_3_submitted
+        niveau_3_choices = [("", settings.SELECT_EMPTY_CHOICE)]
+        if niveau_3_submitted and (niveau_3_submitted, niveau_3_submitted) not in niveau_3_choices:
+            niveau_3_choices.append((niveau_3_submitted, niveau_3_submitted))
+        self.fields["typage_niveau_3"].choices = niveau_3_choices
+        self["typage_niveau_3"].label = self.maladie.intitule_typage_niveau_3
+
+    @property
+    def typage_niveaux3_par_niveau2_json(self):
+        return json.dumps(self.niveaux3_par_niveau2)
 
     @property
     def show_detenteur_block(self):
@@ -483,6 +542,26 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             )
             for field in etablissement_fields:
                 self.cleaned_data.pop(field, None)
+
+        if "typage_niveau_2" in self.fields:
+            valeur_niveau_2 = cleaned_data.get("typage_niveau_2") or ""
+            valeur_niveau_3 = cleaned_data.get("typage_niveau_3") or ""
+            sous_types = self.niveaux3_par_niveau2.get(valeur_niveau_2, [])
+            if valeur_niveau_3 and valeur_niveau_3 not in sous_types:
+                cleaned_data["typage_niveau_3"] = ""
+                valeur_niveau_3 = ""
+            if sous_types and not valeur_niveau_3:
+                self.add_error("typage_niveau_3", "Sélection obligatoire pour ce typage.")
+            elif valeur_niveau_2:
+                typage = self.maladie.typages.filter(
+                    valeur_niveau_2=valeur_niveau_2, valeur_niveau_3=valeur_niveau_3
+                ).first()
+                if typage is None:
+                    self.add_error("typage_niveau_2", "Sélection invalide pour cette maladie.")
+                else:
+                    self.instance.typage = typage
+            else:
+                self.instance.typage = None
 
         return cleaned_data
 

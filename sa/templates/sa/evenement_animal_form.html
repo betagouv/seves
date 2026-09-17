@@ -357,6 +357,36 @@
             {% endif %}
             {{ analyse_formset }}
 
+
+            <fieldset
+                class="fr-fieldset form-fieldset fr-mt-4v"
+                id="typage"
+                data-controller="typage-form"
+                data-typage-form-niveaux3-par-niveau2-value="{{ form.typage_niveaux3_par_niveau2_json }}"
+            >
+                <div class="fieldset-header">
+                    <legend class="fr-fieldset__legend fr-h3">Typage</legend>
+                </div>
+                <div class="fr-grid-row fr-grid-row--gutters fr-col">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if form.typage_niveau_2 %}
+                            {% dsfr_form_field form.typage_niveau_2|set_data:"typage-form-target:niveau2Select"|set_data:"action:change->typage-form#onNiveau2Change" %}
+                        {% endif %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if form.typage_niveau_3 %}
+                            {% dsfr_form_field form.typage_niveau_3|set_data:"typage-form-target:niveau3Select" %}
+                        {% endif %}
+
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% dsfr_form_field form.typage_champ_libre %}
+                    </div>
+                </div>
+            </fieldset>
+
+
+
             {% if form.numero_adis %}
                 <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="adis" data-controller="adis">
                     <div class="fieldset-header">

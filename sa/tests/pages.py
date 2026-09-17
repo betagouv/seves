@@ -450,6 +450,10 @@ class EvenementAnimalFormPage(
         "description",
         # Enquete epidémiologique
         "commentaire",
+        # Typage,
+        "typage_champ_libre",
+        "typage_niveau_2",
+        "typage_niveau_3",
         # Mesures de gestions
         "date_apms",
         "date_apdi",

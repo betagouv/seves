@@ -336,6 +336,28 @@
             </div>
 
             <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Typage</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if object.typage_niveau_2 %}
+                            <div class="bold">{{ object.typage_niveau_2_intitule }}</div>
+                            <div>{{ object.typage_niveau_2 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if object.typage_niveau_3 %}
+                            <div class="bold">{{ object.typage_niveau_3_intitule }}</div>
+                            <div>{{ object.typage_niveau_3 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold fr-mt-2w">{{ object.maladie.intitule_typage_champ_libre }}</div>
+                        <div>{{ object.typage_champ_libre|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container fr-mb-4v">
                 <h2 class="fr-h6">ADIS</h2>
                 <div class="fr-grid-row fr-grid-row--gutters">
                     <div class="fr-col-12 fr-col-lg-6">
