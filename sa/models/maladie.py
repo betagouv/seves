@@ -52,6 +52,10 @@ class Maladie(models.Model):
         verbose_name="Espèces concernées",
     )
 
+    intitule_typage_niveau_2 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 2)")
+    intitule_typage_niveau_3 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 3)")
+    intitule_typage_champ_libre = models.CharField(max_length=255, verbose_name="Intitulé champ libre")
+
     def __str__(self):
         return self.name
 
