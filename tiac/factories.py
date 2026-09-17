@@ -186,7 +186,9 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     )
     analyses_sur_les_malades = FuzzyChoice(Analyses.values)
 
-    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+    agents_confirmes_ars = factory.LazyFunction(
+        lambda: sorted(random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+    )
 
     # Conclusion
     suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)
