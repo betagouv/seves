@@ -329,6 +329,47 @@ class WithEspecesConcerneesMixin:
     def nb_especes_concernees(self):
         return self.especes_concernees_rows.locator("visible=true").count()
 
+    def situation_unite_button(self, index=0):
+        return self.get_espece_concernee_row(index).get_by_test_id("preciser-situation-unite")
+
+    @property
+    def current_situation_unite_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def open_situation_unite_modal(self, index=0):
+        self.situation_unite_button(index).click()
+        self.current_situation_unite_modal.wait_for(state="visible")
+        return self.current_situation_unite_modal
+
+    def fill_situation_unite(self, index=0, **fields):
+        modal = self.current_situation_unite_modal
+        for field_name, value in fields.items():
+            modal.locator(f'select[id$="-{field_name}"]').select_option(value)
+
+    def save_situation_unite(self, index=0):
+        modal = self.current_situation_unite_modal
+        modal.get_by_test_id("save-situation-unite").click()
+        modal.wait_for(state="hidden", timeout=2_000)
+
+    def cancel_situation_unite(self, index=0):
+        modal = self.current_situation_unite_modal
+        modal.get_by_role("button", name="Annuler").click()
+        modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_situation_unite(self, index=0, **fields):
+        self.open_situation_unite_modal(index)
+        self.fill_situation_unite(index, **fields)
+        self.save_situation_unite(index)
+
+    def edit_situation_unite(self, index=0, **fields):
+        self.get_espece_concernee_row(index).get_by_test_id("modify-situation-unite").click()
+        self.current_situation_unite_modal.wait_for(state="visible")
+        self.fill_situation_unite(index, **fields)
+        self.save_situation_unite(index)
+
+    def get_situation_unite_summary(self, index=0):
+        return self.get_espece_concernee_row(index).locator("td.situation-unite-cell").inner_text()
+
 
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):

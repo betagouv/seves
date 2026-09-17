@@ -219,6 +219,7 @@ def test_evenement_animal_details_page_especes_concernees_block(live_server, pag
         [
             espece_1.espece.name,
             str(espece_1.identifiant),
+            "",
             str(espece_1.presents),
             str(espece_1.morts),
             str(espece_1.cas),
@@ -229,6 +230,7 @@ def test_evenement_animal_details_page_especes_concernees_block(live_server, pag
         [
             espece_2.espece.name,
             str(espece_2.identifiant),
+            "",
             str(espece_2.presents),
             str(espece_2.morts),
             str(espece_2.cas),

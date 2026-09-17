@@ -148,5 +148,7 @@ fileignoreconfig:
   checksum: 45e06d28203d5aa0a8307580e8796940deebd02dd100efaa80a57011b6f92790
 - filename: core/static/core/form/widgets/virtual_option_list.mjs
   checksum: 03bc4ccd5b41047072104f5f4601f48738709336905d7b252e86745d48f28f80
+- filename: sa/migrations/0028_situationuniteregle.py
+  checksum: 7e65aade4584877501b40e98898e1c9734178c8b8e33039a6f732e8f678dd7f8
 
 version: "1.0"
