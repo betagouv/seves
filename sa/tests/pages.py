@@ -314,7 +314,11 @@ class WithEspecesConcerneesMixin:
     def fill_espece_concernee(self, index, espece=None, **fields):
         row = self.get_espece_concernee_row(index)
         if espece is not None:
-            row.locator('select[id$="-espece"]').select_option(str(espece.pk))
+            treeselect_for_row = TreeselectPage(
+                self.page, row.locator(f"#fr-treeselect-id_especes_concernees-{index}-espece")
+            )
+            group = "Les plus fréquentes" if espece.is_highlighted else "Autres"
+            treeselect_for_row.check_option(group, espece.name)
         for field_name, value in fields.items():
             row.locator(f'[id$="-{field_name}"]').fill(str(value))
 

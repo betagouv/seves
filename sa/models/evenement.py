@@ -66,6 +66,32 @@ class Espece(models.Model):
     def treeselect_choices_for_maladie(cls, maladie=None):
         return lazy(functools.partial(cls._build_treeselect_choices, maladie), tuple)()
 
+    @classmethod
+    def _build_all_treeselect_choices(cls):
+        source_queryset = Espece.objects.all()
+        frequent_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=True).order_by("name")
+        ]
+        other_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=False).order_by("name")
+        ]
+
+        frequent_group = TreeselectGroup(
+            label="Les plus fréquentes",
+            choices=frequent_choices,
+            categorised_label=None,
+        )
+        other_group = TreeselectGroup(
+            label="Autres",
+            choices=other_choices,
+            categorised_label=None,
+        )
+        return frequent_group, other_group
+
+    @classproperty
+    def all_treeselect_choices(cls):
+        return lazy(cls._build_all_treeselect_choices, tuple)()
+
 
 class StatutAnimal(models.TextChoices):
     SAUVAGE = auto(), "Sauvage"
