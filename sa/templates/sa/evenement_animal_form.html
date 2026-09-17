@@ -295,6 +295,9 @@
                 </div>
             </fieldset>
 
+            {{ analyse_formset }}
+            {{ veterinaire_formset }}
+
             <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="enquete">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Enquête épidémiologique
@@ -355,7 +358,6 @@
                     {% endif %}
                 </fieldset>
             {% endif %}
-            {{ analyse_formset }}
 
             {% if form.numero_adis %}
                 <fieldset class="fr-fieldset form-fieldset fr-mt-4v" id="adis" data-controller="adis">
@@ -389,10 +391,9 @@
                                 </div>
                             </div>
                         </div>
-                    </fieldset>
+                    </div>
+                </fieldset>
             {% endif %}
-
-            {{ veterinaire_formset }}
 
             <section
                 class="fr-btns-group fr-btns-group--right fr-btns-group--inline fr-mt-4v"
