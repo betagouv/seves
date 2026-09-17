@@ -4,7 +4,7 @@ from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
 from core.models import LienLibre
-from sa.models import EvenementAnimal
+from sa.models import EvenementAnimal, Typage
 from sa.models.evenement import StatutAnimal
 from sa.tests.factories import DNCFactory, EspeceConcerneeFactory, EvenementAnimalFactory, TuberculoseFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
@@ -250,3 +250,26 @@ def test_evenement_animal_details_page_contexte_block(live_server, page: Page):
     expect(block.get_by_text(evenement.date_first_symptoms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_human_involved_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.description, exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_typage_block(live_server, page: Page):
+    maladie = TuberculoseFactory()
+    typage, _ = Typage.objects.get_or_create(
+        maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="SB1095"
+    )
+    evenement = EvenementAnimalFactory(
+        maladie=maladie,
+        typage=typage,
+        typage_champ_libre="Test champ libre",
+    )
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Typage")
+    expect(block.get_by_text(evenement.typage.valeur_niveau_2, exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.typage.valeur_niveau_3, exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.typage_champ_libre, exact=True)).to_be_visible()
+    expect(block.get_by_text("Espèce", exact=True)).to_be_visible()
+    expect(block.get_by_text("Spoligotype", exact=True)).to_be_visible()
+    expect(block.get_by_text("Autre spoligotype", exact=True)).to_be_visible()
