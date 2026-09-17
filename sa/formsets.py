@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django import forms
 from django.forms import Media
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
@@ -9,6 +11,7 @@ from sa.forms.veterinaire import VeterinaireForm
 from sa.models import Analyse, EvenementAnimal
 from sa.models.especes_concernees import EspeceConcernee
 from sa.models.veterinaire import Veterinaire
+from sa.referentiels import situation_unite
 
 MAX_ANALYSES = 5
 
@@ -68,7 +71,10 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
     @property
     def media(self):
         return super().media + Media(
-            js=(js_module("sa/especes_concernees.mjs"),),
+            js=(
+                js_module("sa/especes_concernees.mjs"),
+                js_module("sa/situation_unite.mjs"),
+            ),
         )
 
     def __init__(self, *args, **kwargs):
@@ -77,6 +83,19 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
             first_form = self.forms[0]
             first_form.fields["espece"].disabled = True
             first_form.fields["DELETE"].disabled = True
+
+    @cached_property
+    def _situation_unite_rows(self):
+        return situation_unite.fetch_rows()
+
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        kwargs["situation_unite_rows"] = self._situation_unite_rows
+        return kwargs
+
+    @property
+    def situation_unite_tree_json(self):
+        return situation_unite.build_tree_json_for_especes(self._situation_unite_rows)
 
 
 EspeceConcerneeFormSet = inlineformset_factory(

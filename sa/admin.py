@@ -9,6 +9,7 @@ from .models import (
     Laboratoire,
     Maladie,
     MethodeAnalyse,
+    SituationUniteRegle,
     Typage,
 )
 
@@ -91,3 +92,10 @@ class TypageAdmin(admin.ModelAdmin):
     )
     list_filter = ("maladie",)
     search_fields = ("maladie__name", "valeur_niveau_2", "valeur_niveau_3")
+
+
+@admin.register(SituationUniteRegle)
+class SituationUniteRegleAdmin(admin.ModelAdmin):
+    list_display = ("espece", "type_lieu", "mode_elevage", "type_production", "type_elevage")
+    list_filter = ("espece", "type_lieu")
+    search_fields = ("espece__name",)

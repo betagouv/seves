@@ -18,6 +18,7 @@ from sa.models import (
     Laboratoire,
     Maladie,
     MethodeAnalyse,
+    SituationUniteRegle,
     Typage,
     Veterinaire,
 )
@@ -169,6 +170,18 @@ class TypageFactory(DjangoModelFactory):
     maladie = factory.SubFactory(MaladieFactory)
     valeur_niveau_2 = ""
     valeur_niveau_3 = ""
+
+
+class SituationUniteRegleFactory(DjangoModelFactory):
+    class Meta:
+        model = SituationUniteRegle
+        django_get_or_create = ("espece", "type_lieu", "mode_elevage", "type_production", "type_elevage")
+
+    espece = factory.SubFactory(EspeceFactory)
+    type_lieu = "Élevage"
+    mode_elevage = ""
+    type_production = ""
+    type_elevage = ""
 
 
 class LaboratoireFactory(DjangoModelFactory):
