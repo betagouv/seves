@@ -34,6 +34,7 @@
                                     {% dsfr_form_field pre_creation_form.maladie|set_data:"action:change->maladie-description-message#onMaladieSelected change->espece-grouping#onMaladieSelected"|set_data:"maladie-description-message-target:maladieInput"|set_data:"espece-grouping-target:maladieInput" %}
                                     {{ pre_creation_form.maladie_descriptions|json_script:"maladie-descriptions" }}
                                     {{ pre_creation_form.espece_options_by_maladie|json_script:"espece-options-by-maladie" }}
+                                    {{ pre_creation_form.all_especes|json_script:"all-especes" }}
                                     <div class="fr-my-2v fr-hidden" data-maladie-description-message-target="notice">
                                         <div class="fr-notice fr-notice--info">
                                             <div class="fr-container">

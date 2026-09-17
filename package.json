@@ -15,6 +15,7 @@
     "DocumentUploads": "file:./core/static/core/form/document_uploads.mjs",
     "FicheBlocCommun": "file:./core/static/core/fiche_bloc_commun.mjs",
     "ObjectLazyLoad": "file:./core/static/core/object_lazy_load.mjs",
-    "SvLieux": "file:./sv/static/sv/lieux.mjs"
+    "SvLieux": "file:./sv/static/sv/lieux.mjs",
+    "VirtualOptionList": "file:./core/static/core/form/widgets/virtual_option_list.mjs"
   }
 }

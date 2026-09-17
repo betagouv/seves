@@ -1,10 +1,12 @@
 import {applicationReady, escapeHTML} from "Application"
 import {Controller} from "Stimulus"
+import {VirtualOptionList} from "VirtualOptionList"
 
 const FREQUENT_GROUP_LABEL = "Les plus fréquentes"
 const OTHER_GROUP_LABEL = "Autres"
 const ESPECE_WIDGET_ID = "fr-treeselect-id_pre_creation_espece"
 const OPTION_TEMPLATE_ID = "espece-option-template"
+const VIRTUALIZE_THRESHOLD = 200
 
 let uid = 0
 
@@ -12,9 +14,12 @@ class EspeceGrouping extends Controller {
     static targets = ["maladieInput"]
 
     #byMaladie = {}
+    #allSpecies = []
+    #virtualOther = null
 
     initialize() {
         this.#byMaladie = JSON.parse(this.element.querySelector("#espece-options-by-maladie")?.innerText ?? "{}")
+        this.#allSpecies = JSON.parse(this.element.querySelector("#all-especes")?.innerText ?? "[]")
     }
 
     connect() {
@@ -36,12 +41,14 @@ class EspeceGrouping extends Controller {
             this.#clear()
             return
         }
-        const options = this.#byMaladie[target.value]
-        if (!options) {
+        const entry = this.#byMaladie[target.value]
+        if (!entry) {
             this.#clear()
             return
         }
-        this.#populate(options)
+        const frequentIds = new Set(entry.frequent.map(it => String(it.id)))
+        const other = this.#allSpecies.filter(it => !frequentIds.has(String(it.id)))
+        this.#populate({frequent: entry.frequent, other})
         this.#setDisabled(false)
     }
 
@@ -50,7 +57,11 @@ class EspeceGrouping extends Controller {
         const groups = this.#groupContainers()
         if (groups) {
             groups.frequent.replaceChildren()
-            groups.other.replaceChildren()
+            if (this.#virtualOther) {
+                this.#virtualOther.clear()
+            } else {
+                groups.other.replaceChildren()
+            }
         }
         this.#setDisabled(true)
     }
@@ -65,7 +76,31 @@ class EspeceGrouping extends Controller {
         const groups = this.#groupContainers()
         if (!groups) return
         groups.frequent.replaceChildren(...frequent.map(it => this.#buildOption(it)))
-        groups.other.replaceChildren(...other.map(it => this.#buildOption(it)))
+
+        if (other.length > VIRTUALIZE_THRESHOLD) {
+            if (!this.#virtualOther) {
+                this.#virtualOther = new VirtualOptionList({
+                    container: groups.other,
+                    name: "espece",
+                    onChange: input => this.#getTreeselectController()?.onChange({target: input}),
+                })
+                this.#getOtherGroupController()?.registerChild("virtual-other", this.#virtualOther)
+            }
+            this.#virtualOther.setItems(other)
+        } else {
+            if (this.#virtualOther) {
+                this.#getOtherGroupController()?.unregisterChild("virtual-other")
+            }
+            this.#virtualOther = null
+            groups.other.replaceChildren(...other.map(it => this.#buildOption(it)))
+        }
+    }
+
+    #getOtherGroupController() {
+        const groups = this.#groupContainers()
+        const otherGroupEl = groups?.other.closest(".fr-treeselect__group")
+        if (!otherGroupEl) return null
+        return this.application.getControllerForElementAndIdentifier(otherGroupEl, "treeselect-group")
     }
 
     #buildOption({id, name}) {
