@@ -1,13 +1,88 @@
 {% load dsfr_tags widget_tweaks %}
 
 {% partialdef row %}
-    <tr class="especes-concernees-row" data-controller="especes-concernees-row">
+    <tr
+        class="especes-concernees-row"
+        data-controller="especes-concernees-row situation-unite"
+        data-situation-unite-form-prefix-value="{{ form.prefix }}"
+    >
         {{ form.id }}
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
         <td>
-            {% dsfr_form_field  form.espece %}
+            {% dsfr_form_field form.espece|set_data:"situation-unite-target:especeSelect"|set_data:"action:change->situation-unite#onEspeceChange" %}
         </td>
         <td>{% dsfr_form_field form.identifiant %}</td>
+        <td class="situation-unite-cell">
+            <button
+                type="button"
+                class="fr-btn fr-btn--secondary fr-btn--sm"
+                data-situation-unite-target="preciserButton"
+                data-action="situation-unite#onModify:prevent:default"
+                data-testid="preciser-situation-unite"
+            >Préciser</button>
+            <div data-situation-unite-target="cardContainer"></div>
+
+            <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-situation-unite-{{ form.prefix }}"></button>
+            <dialog
+                id="fr-modal-situation-unite-{{ form.prefix }}"
+                class="fr-modal"
+                aria-labelledby="fr-modal-situation-unite-title-{{ form.prefix }}"
+                data-situation-unite-target="dialog"
+            >
+                <div class="fr-container fr-container--fluid fr-container-md">
+                    <div class="fr-grid-row fr-grid-row--center">
+                        <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                            <div class="fr-modal__body">
+                                <div class="fr-modal__header">
+                                    <button
+                                        class="fr-btn--close fr-btn"
+                                        title="Fermer"
+                                        aria-controls="fr-modal-situation-unite-{{ form.prefix }}"
+                                        type="button"
+                                    >Fermer</button>
+                                </div>
+                                <div class="fr-modal__content">
+                                    <h1 id="fr-modal-situation-unite-title-{{ form.prefix }}" class="fr-modal__title">
+                                        <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                                        Situation de l'unité
+                                    </h1>
+                                    <fieldset data-situation-unite-target="fieldset">
+                                        {% dsfr_form_field form.type_lieu|set_data:"situation-unite-target:typeLieuSelect"|set_data:"action:change->situation-unite#onLevelChange" %}
+                                        <div data-situation-unite-target="modeElevageWrapper" class="fr-mb-2w fr-hidden">
+                                            {% dsfr_form_field form.mode_elevage|set_data:"situation-unite-target:modeElevageSelect"|set_data:"action:change->situation-unite#onLevelChange" %}
+                                        </div>
+                                        <div data-situation-unite-target="typeProductionWrapper" class="fr-mb-2w fr-hidden">
+                                            {% dsfr_form_field form.type_production|set_data:"situation-unite-target:typeProductionSelect"|set_data:"action:change->situation-unite#onLevelChange" %}
+                                        </div>
+                                        <div data-situation-unite-target="typeElevageWrapper" class="fr-mb-2w fr-hidden">
+                                            {% dsfr_form_field form.type_elevage|set_data:"situation-unite-target:typeElevageSelect" %}
+                                        </div>
+                                    </fieldset>
+                                    <p
+                                        class="fr-error-text fr-hidden"
+                                        data-situation-unite-target="errorMessage"
+                                    >Merci de renseigner l'ensemble des niveaux proposés pour cette espèce.</p>
+                                    <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
+                                        <button
+                                            class="fr-btn fr-btn--secondary"
+                                            aria-controls="fr-modal-situation-unite-{{ form.prefix }}"
+                                            type="button"
+                                            data-action="situation-unite#closeDialog:prevent:stop"
+                                        >Annuler</button>
+                                        <button
+                                            type="submit"
+                                            class="fr-btn save-btn"
+                                            data-action="situation-unite#onValidateForm:prevent:stop"
+                                            data-testid="save-situation-unite"
+                                        >Enregistrer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </dialog>
+        </td>
         <td>{% dsfr_form_field form.presents %}</td>
         <td>{% dsfr_form_field form.morts %}</td>
         <td>{% dsfr_form_field form.cas %}</td>
@@ -88,6 +163,7 @@
         >Ajouter</button>
     </div>
     {{ formset.non_form_errors }}
+    {{ formset.situation_unite_tree_json|json_script:"situation-unite-tree" }}
     {% for field in formset.management_form %}
         {% with data_target=field.name|strfmt:"especes-concernees-formset-target:{0}" %}
             {{ field|set_data:data_target }}
@@ -102,6 +178,7 @@
                             <tr>
                                 <th scope="col" class="fr-col--lg">Espèce</th>
                                 <th scope="col">Identifiant</th>
+                                <th scope="col">Description du site de détention</th>
                                 <th scope="col">Présents</th>
                                 <th scope="col">Morts</th>
                                 <th scope="col">Cas</th>

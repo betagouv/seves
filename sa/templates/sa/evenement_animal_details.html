@@ -249,6 +249,7 @@
                                         <tr>
                                             <th scope="col">Espèce</th>
                                             <th scope="col">Identifiant</th>
+                                            <th scope="col">Description du site de détention</th>
                                             <th scope="col">Présents</th>
                                             <th scope="col">Morts</th>
                                             <th scope="col">Cas</th>
@@ -262,6 +263,11 @@
                                             <tr>
                                                 <td>{{ row.espece }}</td>
                                                 <td>{{ row.identifiant }}</td>
+                                                <td>
+                                                    {% for line in row.get_situation_unite_lines %}
+                                                        <div>{{ line }}</div>
+                                                    {% endfor %}
+                                                </td>
                                                 <td>{{ row.presents }}</td>
                                                 <td>{{ row.morts }}</td>
                                                 <td>{{ row.cas }}</td>

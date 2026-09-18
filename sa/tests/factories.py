@@ -18,6 +18,7 @@ from sa.models import (
     Laboratoire,
     Maladie,
     MethodeAnalyse,
+    SituationUniteRegle,
     Veterinaire,
 )
 from sa.models.analyse import ResultatAnalyse
@@ -101,6 +102,18 @@ class EspeceFactory(DjangoModelFactory):
 
     name = factory.Faker("sentence", nb_words=3)
     is_highlighted = False
+
+
+class SituationUniteRegleFactory(DjangoModelFactory):
+    class Meta:
+        model = SituationUniteRegle
+        django_get_or_create = ("espece", "type_lieu", "mode_elevage", "type_production", "type_elevage")
+
+    espece = factory.SubFactory(EspeceFactory)
+    type_lieu = "Élevage"
+    mode_elevage = ""
+    type_production = ""
+    type_elevage = ""
 
 
 class LaboratoireFactory(DjangoModelFactory):
