@@ -1,10 +1,14 @@
 from functools import cached_property
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
 from django.http import Http404, HttpResponseRedirect
+from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
@@ -18,11 +22,13 @@ from core.mixins import (
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
 )
+from core.models import Export
 from sa.forms.evenement import EvenementAnimalForm
 from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
 
+from ..tasks import export_sa_task
 from .mixins import WithFilteredListMixin
 
 
@@ -37,6 +43,7 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.filter
         context["total_object_count"] = self.get_raw_queryset().count()
+        context["voluminous_extract_threshold"] = settings.VOLUMINOUS_EXTRACT_THRESHOLD
 
         for evenement in context["evenementanimal_list"]:
             etat_data = evenement.get_etat_data_from_fin_de_suivi(evenement.has_fin_de_suivi)
@@ -222,3 +229,24 @@ class EvenementAnimalDetailsView(
         context["latest_version"] = self.object.latest_version
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
+
+
+class CSVExportView(WithFilteredListMixin, View):
+    http_method_names = ["post"]
+
+    def get_export_task(self):
+        return export_sa_task
+
+    def get_success_url(self):
+        return reverse("sa:evenement-liste")
+
+    def post(self, request):
+        queryset = self.get_queryset()
+        task = Export.objects.create(object_ids=list(queryset.values_list("id", flat=True)), user=request.user)
+        self.get_export_task().delay_on_commit(task.id)
+        messages.success(
+            request, "Votre demande d'export a bien été enregistrée, vous recevrez un mail quand le fichier sera prêt."
+        )
+        allowed_keys = list(self.filter.get_filters().keys()) + ["order_by", "order_dir"]
+        allowed_params = {k: v for k, v in request.GET.items() if k in allowed_keys}
+        return HttpResponseRedirect(f"{self.get_success_url()}?{urlencode(allowed_params)}")

@@ -409,6 +409,10 @@ class EvenementListPage(WithPreCreationFormPage):
     def row(self, numero):
         return self.page.locator(".evenements__list-row").filter(has_text=numero)
 
+    def submit_export(self, nb_evenements=None):
+        name = "Extraire" if nb_evenements is None else f"Extraire ({nb_evenements})"
+        return self.page.get_by_role("button", name=name, exact=nb_evenements is not None).click()
+
 
 class EvenementAnimalFormPage(
     WithPreCreationFormPage,

@@ -40,6 +40,7 @@
     <div class="main-container">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
+            {% include "core/_extraire_evenements_bouton.html" with export_url_name="sa:export-csv" %}
         </div>
 
         {% if paginator.count > 0 %}

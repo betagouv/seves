@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import EvenementAnimalCreationView, EvenementAnimalDetailsView, EvenementListView
 from .views.api import FindFreeLinksView
+from .views.evenement import CSVExportView
 
 app_name = "sa"
 urlpatterns = [
@@ -24,5 +25,10 @@ urlpatterns = [
         "api/freelinks/recherche/",
         FindFreeLinksView.as_view(),
         name="find-free-link",
+    ),
+    path(
+        "export/csv/",
+        CSVExportView.as_view(),
+        name="export-csv",
     ),
 ]
