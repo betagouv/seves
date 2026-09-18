@@ -348,7 +348,7 @@
                         <div class="bold">N° ADIS</div>
                         <div>{{ object.numero_adis|or_empty_value_tag }}</div>
                         <div class="bold fr-mt-2w">Effectif retenu notification ADIS</div>
-                        <div>{{ object.effectif_retenu|or_empty_value_tag }}</div>
+                        <div data-testid="effectif_retenu">{{ object.effectif_retenu|or_empty_value_tag }}</div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="bold">Date notification ADIS</div>
