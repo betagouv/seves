@@ -65,6 +65,7 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
+    expect(creation_page.statut_evenement).to_have_value("SUSPECT")
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
