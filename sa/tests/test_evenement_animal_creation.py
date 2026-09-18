@@ -892,6 +892,31 @@ def test_can_create_evenement_animal_with_enquete_block(live_server, choice_js_f
     assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
 
 
+def test_create_evenement_number_of_queries_scalies_with_free_links(
+    live_server, page, client, django_assert_num_queries
+):
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    # Cache anything if possible
+    client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+    with django_assert_num_queries(22):
+        client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    with django_assert_num_queries(22):
+        client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+
 def _group_option_labels(treeselect, group_name):
     treeselect.open_treeselect()
     _, _, collapse = treeselect._locate_group(group_name)

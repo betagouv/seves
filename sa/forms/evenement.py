@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
-from core.fields import SEVESChoiceField
+from core.fields import MultiModelChoiceField, SEVESChoiceField
 from core.form_mixins import WithFreeLinksMixin, js_module
 from core.mixins import WithEtatMixin
 from core.models import Departement
@@ -493,4 +493,20 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             .get_user_can_view(user)
             .exclude(id=instance.id)
             .exclude(etat=EvenementAnimal.Etat.BROUILLON)
+        )
+
+    def _add_free_links(self, model):
+        instance = getattr(self, "instance", None)
+        if self.is_bound:
+            choices = (
+                [
+                    (self.model_label, self.get_queryset(model, self.user, instance)),
+                ],
+            )
+        else:
+            choices = []
+        self.fields["free_link"] = MultiModelChoiceField(
+            required=False,
+            label="Sélectionner un objet",
+            model_choices=choices,
         )
