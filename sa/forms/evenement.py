@@ -23,6 +23,7 @@ from sa.models.evenement import (
     MesureDeControle,
     OrigineInfection,
     StatutAnimal,
+    StatutEvenement,
     TypeDetenteur,
     TypeLieu,
 )
@@ -105,6 +106,12 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         widget=forms.RadioSelect,
     )
 
+    statut_evenement = forms.ChoiceField(
+        choices=StatutEvenement.choices,
+        label=" Statut de l'événement",
+        required=True,
+        widget=forms.Select(attrs={"required": True}),
+    )
     date_statut_changed = forms.DateField(
         required=True,
         label=mark_safe("<span class='label-marked'>Date à prendre en compte pour le changement de statut</span>"),
