@@ -127,7 +127,7 @@ class DetenteurFormController extends Controller {
     }
 
     siretEtablissementTargetConnected(el) {
-        this.#sireneWidget = setUpSiretChoices(el, "top")
+        this.#sireneWidget = setUpSiretChoices(el, "bottom")
     }
 
     siretEtablissementTargetDisconnected() {
