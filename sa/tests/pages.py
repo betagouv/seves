@@ -477,10 +477,13 @@ class EvenementAnimalFormPage(
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
 
-    def navigate(self, maladie, espece, statut):
-        self.page.goto(
-            f"{self.base_url}{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
+    def url(self, maladie, espece, statut):
+        return (
+            f"{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
         )
+
+    def navigate(self, maladie, espece, statut):
+        self.page.goto(f"{self.base_url}{self.url(maladie, espece, statut)}")
 
     @property
     def cancel_link(self):
