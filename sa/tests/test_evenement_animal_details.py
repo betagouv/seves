@@ -184,7 +184,8 @@ def test_evenement_animal_details_page_adis_block(live_server, page: Page):
     expect(block.get_by_text(evenement.numero_adis, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_notification_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_cloture_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
-    expect(block.get_by_text(str(evenement.effectif_retenu), exact=True)).to_be_visible()
+    expect(block.get_by_test_id("effectif_retenu")).to_be_visible()
+    expect(block.get_by_test_id("effectif_retenu")).to_have_text(str(evenement.effectif_retenu))
     expect(block.get_by_text(evenement.get_origine_infection_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.mesures_controle_labels, exact=True)).to_be_visible()
 
