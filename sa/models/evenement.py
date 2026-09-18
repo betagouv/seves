@@ -498,6 +498,17 @@ class EvenementAnimal(
         blank=True,
     )
 
+    # Typage
+    typage = models.ForeignKey(
+        "sa.Typage",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="evenements",
+        verbose_name="Typage",
+    )
+    typage_champ_libre = models.CharField(max_length=255, blank=True, verbose_name="Typage complémentaire")
+
     @classmethod
     def _get_annee_and_numero(cls, acronym):
         annee_courante = datetime.datetime.now().year
@@ -594,6 +605,30 @@ class EvenementAnimal(
     @property
     def show_detenteur_block(self):
         return self.statut_animal == StatutAnimal.DETENU
+
+    @property
+    def typage_niveau_2(self):
+        return self.typage.valeur_niveau_2 if self.typage_id else ""
+
+    @property
+    def typage_niveau_3(self):
+        return self.typage.valeur_niveau_3 if self.typage_id else ""
+
+    @property
+    def show_typage_niveau_2(self):
+        return bool(self.typage_niveau_2)
+
+    @property
+    def show_typage_niveau_3(self):
+        return bool(self.typage_niveau_3)
+
+    @property
+    def typage_niveau_2_intitule(self):
+        return self.maladie.intitule_typage_niveau_2
+
+    @property
+    def typage_niveau_3_intitule(self):
+        return self.maladie.intitule_typage_niveau_3
 
     class Meta:
         constraints = [

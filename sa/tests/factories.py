@@ -18,6 +18,7 @@ from sa.models import (
     Laboratoire,
     Maladie,
     MethodeAnalyse,
+    Typage,
     Veterinaire,
 )
 from sa.models.analyse import ResultatAnalyse
@@ -39,14 +40,64 @@ fake = Faker()
 
 
 MALADIES = [
-    ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True),
-    ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True),
-    ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True),
-    ("Tuberculose", "TUB", DescriptionType.TUBERCULOSE, True, False, True),
-    ("Fièvre catarrhale ovine", "FCO", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
-    ("Acarapiose des abeilles (Acarapis woodi)", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
-    ("Adénomatose pulmonaire ovine", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
-    ("Dermatose nodulaire contagieuse", "DNC", DescriptionType.CARTOGIP, True, True, False),
+    ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True, "Sérotype", None, "Émergent"),
+    ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True, "Sous-type", None, "Émergent"),
+    ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True, "Espèce", None, "Autre spoligotype"),
+    (
+        "Tuberculose",
+        "TUB",
+        DescriptionType.TUBERCULOSE,
+        True,
+        False,
+        True,
+        "Espèce",
+        "Spoligotype",
+        "Autre spoligotype",
+    ),
+    (
+        "Fièvre catarrhale ovine",
+        "FCO",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        "Sérotype",
+        None,
+        "Émergent",
+    ),
+    (
+        "Acarapiose des abeilles (Acarapis woodi)",
+        "DIV",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
+    (
+        "Adénomatose pulmonaire ovine",
+        "DIV",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
+    (
+        "Dermatose nodulaire contagieuse",
+        "DNC",
+        DescriptionType.CARTOGIP,
+        True,
+        True,
+        False,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
 ]
 
 
@@ -65,6 +116,9 @@ class MaladieFactory(DjangoModelFactory):
     needs_arrete = factory.LazyAttribute(lambda o: o.maladie_ref[3])
     needs_dates_desinfection = factory.LazyAttribute(lambda o: o.maladie_ref[4])
     needs_date_nd = factory.LazyAttribute(lambda o: o.maladie_ref[5])
+    intitule_typage_niveau_2 = factory.LazyAttribute(lambda o: o.maladie_ref[6])
+    intitule_typage_niveau_3 = factory.LazyAttribute(lambda o: o.maladie_ref[7])
+    intitule_typage_champ_libre = factory.LazyAttribute(lambda o: o.maladie_ref[8])
 
     @factory.post_generation
     def especes_concernees(self, create, extracted, **kwargs):
@@ -101,6 +155,20 @@ class EspeceFactory(DjangoModelFactory):
 
     name = factory.Faker("sentence", nb_words=3)
     is_highlighted = False
+
+
+class TypageFactory(DjangoModelFactory):
+    class Meta:
+        model = Typage
+        django_get_or_create = (
+            "maladie",
+            "valeur_niveau_2",
+            "valeur_niveau_3",
+        )
+
+    maladie = factory.SubFactory(MaladieFactory)
+    valeur_niveau_2 = ""
+    valeur_niveau_3 = ""
 
 
 class LaboratoireFactory(DjangoModelFactory):
