@@ -65,7 +65,6 @@
 >
     <div class="fieldset-header">
         <legend class="fr-fieldset__legend fr-h3">Vétérinaires</legend>
-        <p class="fr-hint-text">Vétérinaires qui interviennent dans la gestion du cas (visites sanitaires, prélèvements...)</p>
         <button
             type="button"
             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
@@ -75,6 +74,8 @@
             {% if formset.forms|length >= formset.max_num %}disabled{% endif %}
         >Ajouter</button>
     </div>
+    <p class="fr-hint-text">Vétérinaires qui interviennent dans la gestion du cas (visites sanitaires, prélèvements...)</p>
+
     {{ formset.non_form_errors }}
     <div class="fr-col-12 fr-grid-row fr-grid-row--gutters fr-m-0" data-veterinaire-formset-target="formsetContainer">
         {% for field in formset.management_form %}
