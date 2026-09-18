@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "sa",
     "core",
     "account",
+    "rate_limit",
     "importmap",
     "django_filters",
     "post_office",
@@ -98,6 +99,7 @@ MIDDLEWARE = [
     "waffle.middleware.WaffleMiddleware",
     "seves.middlewares.LoginAndGroupRequiredMiddleware",
     "seves.middlewares.HomeRedirectMiddleware",
+    "rate_limit.middleware.PageViewRateLimitMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "seves.middlewares.SevesCSPMiddleware",
 ]
@@ -418,3 +420,9 @@ MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
 MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)
 
 VOLUMINOUS_EXTRACT_THRESHOLD = 1000
+
+
+RATELIMIT = {
+    "MAX_REQUESTS_PER_HOUR": env("RATELIMIT_MAX_REQUESTS_PER_HOUR", int, default=100),
+    "ENABLED": env("RATELIMIT_MAX_REQUESTS_PER_HOUR", bool, default=True),
+}

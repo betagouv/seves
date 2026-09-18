@@ -17,8 +17,6 @@ fileignoreconfig:
   checksum: b91a4ffcf71fd7dc350f23e402fbdfd46de3a3d41ce4b79102edaadd4d7ce56d
 - filename: ssa/views/produit.py
   checksum: 6285735c55645ba93cbe89e8aaff358ed6b0a57943e9bc01148a62f7133627fc
-- filename: seves/settings.py
-  checksum: 9ea179b696328b2c014a50238d8c2562cd76ac0587da6b9476e105feb07d9311
 - filename: core/metabase.py
   checksum: 8a6a0752928f53a563c87baa9c7132c124da822dedd424e37c653484dfed99a2
   ignore_detectors: [filename]
@@ -146,5 +144,15 @@ fileignoreconfig:
   checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 - filename: go.sum
   checksum: 45e06d28203d5aa0a8307580e8796940deebd02dd100efaa80a57011b6f92790
+- filename: seves/settings.py
+  checksum: 8d0c9b4a6020dc473acac17dad7d971561a4090e321dfd0e26f3e8c5c76a9088
+- filename: rate_limit/middleware.py
+  checksum: 0544b94154b477c69ae0da350a94ac5207470bb630ba3640bdbab833aefd6ab0
+- filename: rate_limit/utils.py
+  checksum: ccf9b521121d95c8d3f3e6fe93e4b641829c2fe59eab52ba14a1d8a277e3b7a0
+- filename: rate_limit/conf.py
+  checksum: 8b1a29beae5ca857d383e3bfaf6714da1f3aa23ee6c194244289eae8f56b615c
+- filename: rate_limit/README.md
+  checksum: 46c5f99e9cc92ed852d38fb6be65cdcfe2580e779bada5bb01d9d2ff5411ccd0
 
 version: "1.0"
