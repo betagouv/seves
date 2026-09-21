@@ -118,7 +118,7 @@ def fin_suivi_removed(sender, instance, **kwargs):
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
-    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_FORWARDED_FOR"), action="Login success")
+    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_REAL_IP"), action="Login success")
 
 
 @receiver(post_revision_commit)
