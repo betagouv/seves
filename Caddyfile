@@ -2,6 +2,9 @@
 	admin off
 	auto_https off
 	order coraza_waf first
+	servers {
+        trusted_proxies static private_ranges
+    }
 }
 
 :{$PORT} {
