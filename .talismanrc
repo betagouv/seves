@@ -146,5 +146,7 @@ fileignoreconfig:
   checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 - filename: go.sum
   checksum: 45e06d28203d5aa0a8307580e8796940deebd02dd100efaa80a57011b6f92790
+- filename: core/static/core/form/widgets/virtual_option_list.mjs
+  checksum: 03bc4ccd5b41047072104f5f4601f48738709336905d7b252e86745d48f28f80
 
 version: "1.0"

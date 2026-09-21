@@ -959,16 +959,70 @@ def test_espece_treeselect_populates_and_updates_from_maladie_especes_concernees
     espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
     expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
     expect(espece_widget.locator(".fr-treeselect__button")).to_be_enabled()
-    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_bovin.name]
-    assert _group_option_labels(list_page._espece_treeselect, "Autres") == [espece_porc.name]
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [
+        espece_bovin.name,
+        espece_porc.name,
+    ]
+    espece_treeselect = list_page._espece_treeselect
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_chien.name)
+        expect(espece_treeselect.container.get_by_text(espece_chien.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
 
-    # Switching maladie fully replaces the options with the new maladie's related especes.
+    # species no longer in frequent (bovin, porc) should move to "Autres""
     maladie_2_group = "Les plus fréquentes" if maladie_2.is_highlighted else "Autre"
     list_page._maladie_treeselect.check_option(maladie_2_group, maladie_2.name_with_acronym)
 
     assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_chien.name]
-    assert _group_option_labels(list_page._espece_treeselect, "Autres") == []
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_bovin.name)
+        expect(espece_treeselect.container.get_by_text(espece_bovin.name, exact=True)).to_be_visible()
+        espece_treeselect.search(espece_porc.name)
+        expect(espece_treeselect.container.get_by_text(espece_porc.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
     assert espece_bovin.name not in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+
+
+def test_espece_treeselect_autres_group_supports_keyboard_navigation_past_the_virtualized_window(
+    live_server, page: Page
+):
+    maladie = MaladieFactory(name="Maladie de test clavier sans espèce concernée")
+    EspeceFactory.create_batch(210)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie.name_with_acronym)
+
+    espece_treeselect = list_page._espece_treeselect
+    espece_treeselect.open_treeselect()
+    expect(espece_treeselect.search_bar).to_be_focused()
+    group, button, collapse = espece_treeselect._locate_group("Autres")
+    button.click()
+    expect(collapse).to_be_visible()
+    first_input = group.locator("input").first
+    first_input.focus()
+    expect(first_input).to_be_focused()
+    assert first_input.get_attribute("aria-posinset") == "1"
+    setsize = int(first_input.get_attribute("aria-setsize"))
+    assert setsize > 200
+
+    # Arrow-key navigation must reach an item that was never part of the initial DOM window to
+    # prove it isn't limited to what is actually mounted.
+    for _ in range(25):
+        page.keyboard.press("ArrowDown")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "26"
+    assert page.evaluate("document.activeElement.checked") is True
+
+    page.keyboard.press("End")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == str(setsize)
+
+    page.keyboard.press("Home")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "1"
+
+    espece_treeselect.close_treeselect()
 
 
 def test_espece_treeselect_falls_back_to_default_list_when_maladie_has_no_especes_concernees(live_server, page: Page):

@@ -24,4 +24,5 @@ importmaps = {
     "FicheBlocCommun": static("core/fiche_bloc_commun.mjs"),
     "ObjectLazyLoad": static("core/object_lazy_load.mjs"),
     "SvLieux": static("sv/lieux.mjs"),
+    "VirtualOptionList": static("core/form/widgets/virtual_option_list.mjs"),
 }
