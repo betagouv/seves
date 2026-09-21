@@ -74,21 +74,25 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         ]
 
         maladie_queryset = self.fields["maladie"].queryset
-        by_maladie = {}
+        frequent_by_maladie = {}
         rows = (
             Espece.objects.filter(maladies_concernees__in=maladie_queryset)
-            .values("pk", "name", "is_highlighted", "maladies_concernees")
+            .values("pk", "name", "maladies_concernees")
             .order_by("name")
         )
         for row in rows:
-            entry = by_maladie.setdefault(row["maladies_concernees"], {"frequent": [], "other": []})
-            item = {"id": row["pk"], "name": row["name"]}
-            (entry["frequent"] if row["is_highlighted"] else entry["other"]).append(item)
+            frequent_by_maladie.setdefault(row["maladies_concernees"], []).append(
+                {"id": row["pk"], "name": row["name"]}
+            )
 
         return {
-            str(maladie.pk): by_maladie.get(maladie.pk, {"frequent": default_frequent, "other": []})
+            str(maladie.pk): {"frequent": frequent_by_maladie.get(maladie.pk, default_frequent)}
             for maladie in maladie_queryset
         }
+
+    @property
+    def all_especes(self):
+        return [{"id": pk, "name": name} for pk, name in Espece.objects.order_by("name").values_list("pk", "name")]
 
 
 class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
