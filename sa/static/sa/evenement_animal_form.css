@@ -42,3 +42,7 @@
 #especes-concernees-table .fr-table__container {
     overflow: unset; /* Allows treeselect to open the dropdown with all the options */
 }
+
+.veterinaire-fields {
+    background-color: var(--background-alt-grey);
+}
