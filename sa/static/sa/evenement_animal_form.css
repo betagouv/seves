@@ -34,7 +34,8 @@
     white-space: nowrap;
 }
 
-#context .fr-radio-group {
+#context .fr-radio-group,
+#adis .fr-radio-group {
     margin-top: 0.5rem;
     margin-right: 2rem;
 }
