@@ -1,6 +1,6 @@
 line-length = 120
 lint.extend-select = ["I"]
-ignore = ["DTZ005", "RUF012", "C401", "C403", "RUF010", "UP034", "DTZ011", "C400", "LOG015", "DTZ007", "SIM117", "RUF100","B020", "C419", "PIE808", "UP006", "UP045", "UP035", "UP007", "DTZ001", "SIM201", "TRY002", "RUF059", "INT001", "PERF102", "BLE001", "E722", "PIE810", "SIM115", "SIM102", "SIM103", "RUF015","UP028", "N999", "RUF022", "UP032", "B026", "RET501", "UP037", "B010", "TRY401", "PLR1704", "SIM118", "PLC0414"]
+ignore = ["DTZ005", "RUF012", "C401", "C403", "RUF010", "UP034", "DTZ011", "C400", "LOG015", "DTZ007", "SIM117", "RUF100","B020", "C419", "PIE808", "UP006", "UP045", "UP035", "UP007", "DTZ001", "SIM201", "TRY002", "RUF059", "INT001", "PERF102", "BLE001", "E722", "PIE810", "SIM115", "SIM102", "SIM103", "RUF015","UP028", "N999",  "B026","TRY401",]
 
 [lint.isort]
 force-sort-within-sections = true

@@ -22,6 +22,6 @@ def send_maestro_webhook(evenement_produit: EvenementProduit):
         response = requests.put(settings.MAESTRO_WEBHOOK_URL, json=payload, headers=headers, timeout=15)
     except ConnectTimeout as e:
         logger.info(f"Cannot contact MAESTRO, timeout with {e}")
-        return None
+        return
     if response.status_code != 200:
         logger.error(f"Unknown status code from MAESTRO, got {response.status_code}: {response}")

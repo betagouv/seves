@@ -11,7 +11,7 @@ __all__ = (
     "EvenementProduitCreateView",
     "EvenementProduitDetailView",
     "EvenementUpdateView",
-    "InvestigationCasHumainCreateView",
-    "FindNumeroAgrementView",
     "EvenementsListView",
+    "FindNumeroAgrementView",
+    "InvestigationCasHumainCreateView",
 )

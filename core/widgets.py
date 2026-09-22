@@ -69,7 +69,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def option_template_name(self):
         return self.parent.option_template_name
 
-    def __init__(self, parent: "TreeselectMixin", item: TreeselectGroup | TreeselectItem):
+    def __init__(self, parent: TreeselectMixin, item: TreeselectGroup | TreeselectItem):
         self.parent = parent
         self.item = item
         self.group_label = item.label
