@@ -252,7 +252,7 @@ six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
-soupsieve==2.9
+soupsieve==2.8.4
     # via beautifulsoup4
 sqlparse==0.6.0
     # via
