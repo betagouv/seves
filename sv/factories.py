@@ -300,7 +300,7 @@ class ZoneInfesteeFactory(DjangoModelFactory):
     class Meta:
         model = ZoneInfestee
 
-    nom = factory.Sequence(lambda n: "Ma zone infestée {}".format(n))
+    nom = factory.Sequence(lambda n: f"Ma zone infestée {n}")
     fiche_zone_delimitee = factory.SubFactory("sv.factories.FicheZoneFactory")
 
     surface_infestee_totale = factory.fuzzy.FuzzyFloat(1, 100, precision=2)

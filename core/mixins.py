@@ -972,8 +972,8 @@ class GroupedChoicesMixin:
                 treeselect_kwargs["categorised_label"] = group_item.categorised_label
             treeselect_kwargs["label"] = label
             treeselect_kwargs["choices"] = []
-            for label, item in item.items():
-                treeselect_kwargs["choices"].append(get_treeselect_group(label=label, item=item))
+            for sub_label, sub_item in item.items():
+                treeselect_kwargs["choices"].append(get_treeselect_group(label=sub_label, item=sub_item))
 
             return TreeselectGroup(**treeselect_kwargs)
 

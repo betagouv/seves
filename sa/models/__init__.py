@@ -9,15 +9,15 @@ from .typage import Typage
 from .veterinaire import TypeVeterinaire, Veterinaire
 
 __all__ = (
-    "EvenementAnimal",
-    "Espece",
-    "Maladie",
-    "Laboratoire",
-    "MethodeAnalyse",
     "Analyse",
-    "Veterinaire",
-    "TypeVeterinaire",
+    "Espece",
     "EspeceConcernee",
+    "EvenementAnimal",
+    "Laboratoire",
+    "Maladie",
+    "MethodeAnalyse",
     "SituationUniteRegle",
     "Typage",
+    "TypeVeterinaire",
+    "Veterinaire",
 )
