@@ -12,6 +12,7 @@ from reversion.signals import post_revision_commit
 
 from core.models import AuditLog, CustomRevisionMetaData, Document, FinSuiviContact, LienLibre, Message
 
+from .audit import get_client_ip
 from .diffs import create_manual_version
 from .notifications import notify_message_deleted
 from .tasks import scan_for_viruses
@@ -118,7 +119,7 @@ def fin_suivi_removed(sender, instance, **kwargs):
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
-    AuditLog.objects.create(user=user, ip=request.META.get("HTTP_X_REAL_IP"), action="Login success")
+    AuditLog.objects.create(user=user, ip=get_client_ip(request), action="Login success")
 
 
 @receiver(post_revision_commit)
