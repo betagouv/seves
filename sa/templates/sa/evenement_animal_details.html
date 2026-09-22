@@ -262,18 +262,20 @@
                                         {% for row in object.especes_exposees.all %}
                                             <tr>
                                                 <td>{{ row.espece }}</td>
-                                                <td>{{ row.identifiant }}</td>
+                                                <td>{{ row.identifiant|or_empty_value_tag }}</td>
                                                 <td>
                                                     {% for line in row.get_situation_unite_lines %}
                                                         <div>{{ line }}</div>
+                                                    {% empty %}
+                                                        <span class="empty-value">Vide</span>
                                                     {% endfor %}
                                                 </td>
-                                                <td>{{ row.presents }}</td>
-                                                <td>{{ row.morts }}</td>
-                                                <td>{{ row.cas }}</td>
-                                                <td>{{ row.abattus }}</td>
-                                                <td>{{ row.depeuples }}</td>
-                                                <td>{{ row.vaccines }}</td>
+                                                <td>{{ row.presents|or_empty_value_tag }}</td>
+                                                <td>{{ row.morts|or_empty_value_tag }}</td>
+                                                <td>{{ row.cas|or_empty_value_tag }}</td>
+                                                <td>{{ row.abattus|or_empty_value_tag }}</td>
+                                                <td>{{ row.depeuples|or_empty_value_tag }}</td>
+                                                <td>{{ row.vaccines|or_empty_value_tag }}</td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
