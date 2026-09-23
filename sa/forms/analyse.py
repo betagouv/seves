@@ -29,13 +29,16 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
     laboratoire = forms.ModelChoiceField(label="Laboratoire", queryset=Laboratoire.objects.none())
     methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none())
     resultat = SEVESChoiceField(label="Résultat", choices=ResultatAnalyse.choices)
+    resultat_confirmation = forms.BooleanField(
+        label="Résultat valant confirmation",
+        required=False,
+        widget=forms.CheckboxInput,
+        help_text="En cochant cette case, le résultat sera considéré comme confirmant le foyer, le statut de l’événement passera alors à « Confirmé » s’il ne l’est pas déjà et la date d’effet du statut sera renseignée avec la date du résultat.",
+    )
 
     class Meta:
         model = Analyse
         exclude = ("evenement",)
-        widgets = {
-            "resultat_confirmation": forms.CheckboxInput,
-        }
 
     def get_laboratoire_queryset(self):
         return Laboratoire.objects.order_by(

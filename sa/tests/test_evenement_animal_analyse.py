@@ -1,6 +1,10 @@
+import datetime
+
+from django.utils import timezone
 from playwright.sync_api import Page
 
 from sa.models import Analyse, EvenementAnimal
+from sa.models.evenement import StatutEvenement
 from sa.models.laboratoire import LaboratoireType
 from sa.tests.factories import (
     AnalyseFactory,
@@ -207,3 +211,32 @@ def test_deleting_evenement_deletes_its_analyses(live_server, page: Page, db):
     EvenementAnimal.objects.get(pk=evenement_id).delete()
 
     assert Analyse.objects.filter(evenement_id=evenement_id).count() == 0
+
+
+def test_can_add_analyse_confirmed_will_change_statut_and_date(live_server, page: Page, assert_models_are_equal):
+    today = timezone.localtime(timezone.now()).date()
+    input_data = EvenementAnimalFactory.build(
+        statut_evenement=StatutEvenement.SUSPECT, date_statut_changed=today - datetime.timedelta(days=3)
+    )
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire = LaboratoireFactory()
+    methode = MethodeAnalyseFactory(laboratoires=[laboratoire])
+    analyse = AnalyseFactory.build(
+        maladie=maladie, laboratoire=laboratoire, methode=methode, resultat_confirmation=True
+    )
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.add_analyse(analyse)
+
+    assert creation_page.nb_analyse == 1
+
+    creation_page.submit_as_draft()
+
+    saved_analyse = EvenementAnimal.objects.get().analyses.get()
+    assert_models_are_equal(analyse, saved_analyse, to_exclude=FIELDS_TO_EXCLUDE_ANALYSE)
+    evenemment = EvenementAnimal.objects.get()
+    assert evenemment.statut_evenement == StatutEvenement.CONFIRME
+    assert evenemment.date_statut_changed == today
