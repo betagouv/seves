@@ -76,7 +76,7 @@ class Maladie(models.Model):
         return TreeselectItem(
             value=self.pk,
             label=self.name_with_acronym,
-            categorised_label=self.name,
+            categorised_label=self.name_with_acronym,
             html_name_prefix=None,
         )
 
@@ -88,6 +88,7 @@ class Maladie(models.Model):
             label="Les plus fréquentes",
             choices=most_frequent_choices,
             categorised_label=None,
+            can_expand=False,
         )
         other_queryset = Maladie.objects.filter(is_highlighted=False).order_by("name")
         other_choices = [maladie._treeselect_item for maladie in other_queryset]
