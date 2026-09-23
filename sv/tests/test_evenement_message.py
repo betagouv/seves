@@ -126,7 +126,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     message_page = CreateMessagePage(page)
     message_page.new_compte_rendu()
 
-    expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
+    expect(page.get_by_text("Nouveau compte rendu sur demande d'intervention")).to_be_visible()
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     message_page.add_basic_message_content()

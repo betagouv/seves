@@ -261,7 +261,7 @@ class FicheDetectionCreateView(
                 convert_required_to_data_required=True,
                 prefix=f"prelevements-{i}",
             )
-            for i in range(0, 10)
+            for i in range(10)
         ]
         context["prelevement_forms"] = forms
         context["evenement"] = self.evenement

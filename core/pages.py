@@ -298,7 +298,7 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
-        expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
+        expect(self.page.get_by_text("Nouveau message")).to_be_visible()
 
         self.add_basic_message_content()
 

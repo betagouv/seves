@@ -804,7 +804,7 @@ def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
 
     prelevements = {}
     lieux = {}
-    for i in range(0, 20):
+    for i in range(20):
         prelevements.update(
             {
                 f"prelevements-{i}-numero_rapport_inspection": [""],
@@ -815,7 +815,7 @@ def test_cant_forge_add_fiche_detection_for_evenement_i_cant_see(client):
                 f"prelevements-{i}-matrice_prelevee": [""],
             }
         )
-    for i in range(0, 10):
+    for i in range(10):
         lieux.update(
             {
                 f"lieux-{i}-nom": [""],
