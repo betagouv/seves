@@ -2,6 +2,7 @@ import json
 import re
 
 from django.urls import reverse
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
 from core.models import LienLibre
@@ -66,6 +67,9 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     expect(creation_page.statut_evenement).to_have_value("SUSPECT")
+    expect(creation_page.date_statut_changed).to_have_value(
+        timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d")
+    )
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
