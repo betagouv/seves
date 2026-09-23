@@ -114,7 +114,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     )
     date_statut_changed = forms.DateField(
         required=True,
-        label=mark_safe("<span class='label-marked'>Date à prendre en compte pour le changement de statut</span>"),
+        label=mark_safe("<span class='label-marked'>Date d’effet du statut </span>"),
         help_text="À mettre à jour lors de la modification manuelle du statut",
         widget=forms.DateInput(
             format="%Y-%m-%d",
@@ -405,6 +405,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_statut_changed"].widget.attrs["max"] = today
+        self.fields["date_statut_changed"].initial = today
         self.fields["date_first_symptoms"].widget.attrs["max"] = today
         self.fields["date_notification_adis"].widget.attrs["max"] = today
         self.fields["date_cloture_adis"].widget.attrs["max"] = today

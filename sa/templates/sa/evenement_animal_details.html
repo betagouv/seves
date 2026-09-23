@@ -82,7 +82,7 @@
                     <div class="fr-col-12 fr-col-lg-6">
                         <div class="bold">Statut de l'événement</div>
                         <div>{{ object.get_statut_evenement_display|or_empty_value_tag }}</div>
-                        <div class="bold fr-mt-2w">Date à prendre en compte pour le changement de statut</div>
+                        <div class="bold fr-mt-2w">Date d’effet du statut</div>
                         <div>{{ object.date_statut_changed|date:"d/m/Y"|or_empty_value_tag }}</div>
                     </div>
                 </div>
