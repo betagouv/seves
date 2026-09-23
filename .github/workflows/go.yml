@@ -1,0 +1,29 @@
+name: Go build
+on: [push]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      # Reproduit bin/compile du Scalingo go-buildpack
+      # (https://github.com/Scalingo/go-buildpack) :
+      #   - le flag -tags scalingo vient de `FLAGS=(-tags scalingo)` (bin/compile);
+      #   - la détection des packages main vient de `mainPackagesInModule()`,
+      #     qui exécute `go list -find -tags scalingo -f '{{ if eq .Name "main" }} {{.ImportPath}} {{ end }}' ./...`;
+      #   - l'installation via GOBIN=bin reflète `go install -v -tags scalingo <pkgs>`.
+      - name: Build Go comme Scalingo (go install -tags scalingo)
+        run: |
+          pkgs=$(go list -find -tags scalingo -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./...)
+          echo "Packages main détectés : ${pkgs}"
+          if [ -z "${pkgs// }" ]; then
+            echo "Aucun package main détecté" >&2
+            exit 1
+          fi
+          GOBIN="${PWD}/bin" go install -v -tags scalingo ${pkgs}
+          ls -l bin
