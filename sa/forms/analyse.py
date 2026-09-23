@@ -27,7 +27,7 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     laboratoire = forms.ModelChoiceField(label="Laboratoire", queryset=Laboratoire.objects.none())
-    methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none())
+    methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none(), required=False)
     resultat = SEVESChoiceField(label="Résultat", choices=ResultatAnalyse.choices)
     resultat_confirmation = forms.BooleanField(
         label="Résultat valant confirmation",
@@ -91,3 +91,9 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_prelevement"].widget.attrs["max"] = today
         self.fields["date_resultat"].widget.attrs["max"] = today
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("resultat") != ResultatAnalyse.EN_ATTENTE and not cleaned_data.get("methode"):
+            self.add_error("methode", "La méthode est obligatoire lorsque le résultat n'est pas « En attente ».")
+        return cleaned_data

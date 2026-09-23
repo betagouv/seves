@@ -4,21 +4,24 @@ import {BaseFormSetController} from "BaseFormset"
 import {collectFormValues} from "Forms"
 
 const VOWEL_SOUND = /^[aeiouyàâäéèêëïîôöùûü]/i
+const RESULTAT_EN_ATTENTE = "en_attente"
 
 /**
  * @property {HTMLSelectElement} laboratoireSelectTarget
  * @property {HTMLSelectElement} methodeSelectTarget
+ * @property {HTMLSelectElement} resultatSelectTarget
  * @property {Object} methodesParLaboratoireValue
  * @property {Object} laboratoiresTypesValue
  */
 class AnalyseFormController extends BaseFormInModal {
-    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect", "confirmationInput"]
+    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
     }
 
     connect() {
+        this.updateMethodeRequired()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -34,6 +37,15 @@ class AnalyseFormController extends BaseFormInModal {
 
     onLaboratoireChange() {
         this.refreshMethodeOptions({keepSelection: true})
+        this.updateMethodeRequired()
+    }
+
+    onResultatChange() {
+        this.updateMethodeRequired()
+    }
+
+    updateMethodeRequired() {
+        this.methodeSelectTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
     }
 
     refreshMethodeOptions({keepSelection}) {

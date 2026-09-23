@@ -4,6 +4,7 @@ from django.utils import timezone
 from playwright.sync_api import Page
 
 from sa.models import Analyse, EvenementAnimal
+from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import StatutEvenement
 from sa.models.laboratoire import LaboratoireType
 from sa.tests.factories import (
@@ -181,6 +182,63 @@ def test_changing_laboratoire_when_editing_saved_analyse_clears_incompatible_met
     modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
     assert methode_select.input_value() == ""
     assert methode_select.locator("option").count() == 2  # placeholder + methode_2
+
+
+def test_methode_is_optional_when_resultat_is_en_attente(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire = LaboratoireFactory()
+    MethodeAnalyseFactory(laboratoires=[laboratoire])
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    modal.locator('[id$="-maladie"]').select_option(str(maladie.pk))
+    modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
+    creation_page.close_analyse_modal()
+
+    assert creation_page.nb_analyse == 1
+
+    creation_page.submit_as_draft()
+    saved_analyse = EvenementAnimal.objects.get().analyses.get()
+    assert saved_analyse.methode is None
+    assert saved_analyse.resultat == ResultatAnalyse.EN_ATTENTE
+
+
+def test_methode_becomes_required_when_resultat_is_not_en_attente(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire = LaboratoireFactory()
+    methode = MethodeAnalyseFactory(laboratoires=[laboratoire])
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    modal.locator('[id$="-maladie"]').select_option(str(maladie.pk))
+    modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.DETECTE)
+    modal.locator(".save-btn").click()
+
+    # Missing methode blocks the save: the modal stays open and no card is created.
+    modal.wait_for(state="visible", timeout=2_000)
+    assert creation_page.nb_analyse == 0
+
+    modal.locator('[id$="-methode"]').select_option(str(methode.pk))
+    creation_page.close_analyse_modal()
+
+    assert creation_page.nb_analyse == 1
+    creation_page.submit_as_draft()
+    saved_analyse = EvenementAnimal.objects.get().analyses.get()
+    assert saved_analyse.methode_id == methode.pk
 
 
 def test_analyse_is_displayed_readonly_on_details_page(live_server, page: Page):
