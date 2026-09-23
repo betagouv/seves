@@ -127,7 +127,7 @@ class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):
     follow_up = FuzzyChoice(EvenementFollowUp.values)
 
     @factory.post_generation
-    def with_etablissements(self, create, extracted, **kwargs):  # noqa: F811
+    def with_etablissements(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
         EtablissementFactory.create_batch(int(extracted), evenement_simple=self)

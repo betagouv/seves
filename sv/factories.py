@@ -344,7 +344,7 @@ class EvenementFactory(DjangoModelFactory):
         self.save()
 
     @factory.post_generation
-    def date_publication(self, create, extracted, **kwargs):  # noqa: F811
+    def date_publication(self, create, extracted, **kwargs):
         if extracted and create:
             if isinstance(extracted, str):
                 self.date_publication = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))
