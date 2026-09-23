@@ -12,7 +12,7 @@ const VOWEL_SOUND = /^[aeiouyàâäéèêëïîôöùûü]/i
  * @property {Object} laboratoiresTypesValue
  */
 class AnalyseFormController extends BaseFormInModal {
-    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect"]
+    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect", "confirmationInput"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
@@ -71,6 +71,9 @@ class AnalyseFormController extends BaseFormInModal {
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(analyse))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(analyse))
+        if (this.confirmationInputTarget.checked === true) {
+            this.element.dispatchEvent(new CustomEvent("resultConfirmed", {bubbles: true}))
+        }
         dsfr(this.dialogTarget).modal.conceal()
     }
 

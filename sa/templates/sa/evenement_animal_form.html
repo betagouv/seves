@@ -67,7 +67,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="fr-fieldset form-fieldset fr-mt-4v ">
+            <fieldset class="fr-fieldset form-fieldset fr-mt-4v" data-controller="informations-form">
                 <div class="fieldset-header">
                     <legend class="fr-fieldset__legend fr-h3">Informations</legend>
                 </div>
@@ -83,8 +83,8 @@
                         </div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-6">
-                        {% dsfr_form_field form.statut_evenement %}
-                        {% dsfr_form_field form.date_statut_changed %}
+                        {% dsfr_form_field form.statut_evenement|set_data:"informations-form-target:statutInput" %}
+                        {% dsfr_form_field form.date_statut_changed|set_data:"informations-form-target:dateInput"  %}
                     </div>
                 </div>
             </fieldset>
