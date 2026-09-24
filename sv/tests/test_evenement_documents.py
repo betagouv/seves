@@ -510,7 +510,7 @@ def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_s
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text(
-            "L'extension de fichier « txt » n’est pas autorisée pour le type de document « Cartographie ». "
+            "L'extension de fichier « txt » n’est pas autorisée pour le type de document « Cartographie / plans / localisation ». "
             "Les extensions autorisées sont : png, jpg, jpeg."
         )
 

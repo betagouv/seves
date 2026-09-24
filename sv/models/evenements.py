@@ -229,20 +229,22 @@ class Evenement(
     def get_allowed_document_types(self):
         return [
             Document.TypeDocument.ARRETE,
-            Document.TypeDocument.AUTRE,
             Document.TypeDocument.CARTOGRAPHIE,
             Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.COMPTE_RENDU_REUNION,
             Document.TypeDocument.COURRIER_OFFICIEL,
+            Document.TypeDocument.TRANSPORT,
             Document.TypeDocument.DSCE,
             Document.TypeDocument.FACTURE,
             Document.TypeDocument.IMAGE,
+            Document.TypeDocument.NOTE_TECHNIQUE,
+            Document.TypeDocument.NOTIFICATION_UE,
             Document.TypeDocument.PASSEPORT_PHYTOSANITAIRE,
             Document.TypeDocument.RAPPORT_ANALYSE,
             Document.TypeDocument.RAPPORT_INSPECTION,
-            Document.TypeDocument.REGLEMENTATION,
-            Document.TypeDocument.TRANSPORT,
             Document.TypeDocument.TRACABILITE,
+            Document.TypeDocument.AUTRE,
         ]
 
     def get_prefetch_for_revision_list_view(self):
