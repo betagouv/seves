@@ -1,0 +1,37 @@
+{% load or_empty_value_tag %}
+
+<div class="white-container fr-mb-4v">
+    <h2 class="fr-h6">Informations générales</h2>
+    <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-12 fr-col-lg-4">
+            <div class="bold">Maladie suspectée</div>
+            <div>{{ object.maladie.name|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-col-12 fr-col-lg-4">
+            <div class="bold">Espèce concernée</div>
+            <div>{{ object.espece.name|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-col-12 fr-col-lg-4">
+            <div class="bold">Statut de l'animal</div>
+            <div>{{ object.get_statut_animal_display|or_empty_value_tag }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="white-container fr-mb-4v">
+    <h2 class="fr-h6">Informations</h2>
+    <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-12 fr-col-lg-6">
+            <div class="bold">Date de création</div>
+            <div>{{ object.date_creation|date:"d/m/Y"|or_empty_value_tag }}</div>
+            <div class="bold fr-mt-2w">Date de publication</div>
+            <div>{{ object.date_publication|date:"d/m/Y"|or_empty_value_tag }}</div>
+        </div>
+        <div class="fr-col-12 fr-col-lg-6">
+            <div class="bold">Statut de l'événement</div>
+            <div>{{ object.get_statut_evenement_display|or_empty_value_tag }}</div>
+            <div class="bold fr-mt-2w">Date d’effet du statut</div>
+            <div>{{ object.date_statut_changed|date:"d/m/Y"|or_empty_value_tag }}</div>
+        </div>
+    </div>
+</div>

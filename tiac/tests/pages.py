@@ -7,7 +7,7 @@ from django.template.defaultfilters import striptags
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
-from core.pages import WithActionsPage
+from core.pages import WithActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import TreeselectPage
 from ssa.constants import CategorieDanger, CategorieProduit
 from tiac.constants import DangersSyndromiques, SuspicionConclusion, TypeRepas
@@ -163,17 +163,6 @@ class WithAnalyseAlimentaireMixin:
     @property
     def nb_analyse(self):
         return self.page.locator(".analyse-card").locator("visible=true").count()
-
-
-class WithSyntheseBlockMixin:
-    @property
-    def synthese_block(self):
-        return self.page.get_by_test_id("synthese-content")
-
-    def open_synthese(self):
-        self.page.locator('label[for="synthese-btn"]').click()
-        expect(self.page.locator("#synthese-btn")).to_be_checked()
-        expect(self.page.get_by_test_id("synthese-content")).to_be_visible()
 
 
 class EvenementSimpleFormPage(WithEtablissementMixin):
