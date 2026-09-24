@@ -4,7 +4,7 @@ import pytest
 
 from core.constants import MUS_STRUCTURE
 from core.models import Contact, LienLibre
-from ssa.constants import CategorieDanger
+from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
 from tiac.factories import (
@@ -479,3 +479,70 @@ def test_editing_investigation_does_not_wipe_existing_conclusion(
     assert investigation.conclusion_aliment == original_conclusion_aliment
     assert investigation.suspicion_conclusion == SuspicionConclusion.CONFIRMED.value
     assert investigation.conclusion_comment == "Mon commentaire"
+
+
+def test_cancel_edit_on_aliment_reset_values(live_server, page: Page):
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        with_aliment_suspect=1,
+        with_aliment_suspect__simple=True,
+    )
+    initial_aliment = investigation.aliments.get()
+    other_categorie_produit = next(c for c in CategorieProduit if c.value != initial_aliment.categorie_produit)
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_aliment_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator("visible=true").locator('[id$="denomination"]').fill("New value")
+    edit_page.aliments_suspectes_categorie_produit_treeselect.check_option(*other_categorie_produit.splitted_label)
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.get_aliment_card(0).locator(".modify-button").click()
+
+    modal = edit_page.current_modal
+    expect(modal.locator('[id$="denomination"]')).to_have_value(initial_aliment.denomination)
+    expect(edit_page.aliments_suspectes_categorie_produit_treeselect.selected_tags).to_have_text(
+        CategorieProduit(initial_aliment.categorie_produit).uncategorized_label
+    )
+
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.aliments.count() == 1
+    aliment = investigation.aliments.get()
+    assert aliment.denomination == initial_aliment.denomination
+    assert aliment.categorie_produit == initial_aliment.categorie_produit
+
+
+def test_cancel_edit_on_analyse_alimentaire_reset_values(live_server, page: Page):
+    investigation: InvestigationTiac = InvestigationTiacFactory(with_analyse_alimentaires=1)
+    initial_analyse = investigation.analyses_alimentaires.get()
+    other_categorie_danger = next(c for c in CategorieDanger if c.value not in initial_analyse.categorie_danger)
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    card = edit_page.get_analyse_alimentaire_card(0)
+    card.locator(".modify-button").click()
+    edit_page.current_modal.locator("visible=true").locator('[id$="reference_prelevement"]').fill("New value")
+    edit_page.analyses_alimentaires_categorie_danger_treeselect.check_option(*other_categorie_danger.splitted_label)
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.get_analyse_alimentaire_card(0).locator(".modify-button").click()
+
+    modal = edit_page.current_modal
+    expect(modal.locator('[id$="reference_prelevement"]')).to_have_value(initial_analyse.reference_prelevement)
+    expect(edit_page.analyses_alimentaires_categorie_danger_treeselect.selected_tags).to_have_count(
+        len(initial_analyse.categorie_danger)
+    )
+
+    edit_page.current_modal.get_by_role("button", name="Annuler").click()
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.analyses_alimentaires.count() == 1
+    analyse = investigation.analyses_alimentaires.get()
+    assert analyse.reference_prelevement == initial_analyse.reference_prelevement
+    assert analyse.categorie_danger == initial_analyse.categorie_danger

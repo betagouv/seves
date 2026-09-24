@@ -144,16 +144,25 @@ export function resetForm(element) {
 export function restoreFormValues(fieldset, initialValues) {
     for (const [name, value] of Object.entries(initialValues)) {
         const elements = fieldset.querySelectorAll(`[name="${name}"]`)
-
         for (const el of elements) {
             if (el.type === "checkbox") {
+                const wasChecked = el.checked
                 if (Array.isArray(value)) {
                     el.checked = value.includes(el.labels?.[0]?.textContent?.trim())
                 } else {
                     el.checked = false
                 }
+                // Manually send the event for treeselects
+                if (el.checked !== wasChecked) {
+                    el.dispatchEvent(new Event("change", {bubbles: true}))
+                }
             } else if (el.type === "radio") {
-                el.checked = el.labels?.[0]?.textContent?.trim() === value
+                const wasChecked = el.checked
+                el.checked = el.labels?.[0]?.textContent?.replace("\n", "").trim() === value
+                // Manually send the event for treeselects
+                if (el.checked !== wasChecked) {
+                    el.dispatchEvent(new Event("change", {bubbles: true}))
+                }
             } else if (el instanceof HTMLSelectElement) {
                 for (const option of el.options) {
                     if (Array.isArray(value)) {
