@@ -3,6 +3,7 @@ import datetime
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
+from core.mixins import WithEtatMixin
 from core.models import LienLibre
 from sa.models import EvenementAnimal, Typage
 from sa.models.evenement import StatutAnimal
@@ -28,7 +29,11 @@ def test_evenement_animal_details_page_informations_generales_block(live_server,
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
 
-    block = details_page.block("Informations générales")
+    block = (
+        details_page.page.locator(".detail-content")
+        .get_by_role("heading", name="Informations générales", exact=True)
+        .locator("..")
+    )
     expect(block.get_by_text(evenement.maladie.name, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.espece.name, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_statut_animal_display(), exact=True)).to_be_visible()
@@ -40,7 +45,11 @@ def test_evenement_animal_details_page_informations_block(live_server, page: Pag
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
 
-    block = details_page.block("Informations")
+    block = (
+        details_page.page.locator(".detail-content")
+        .get_by_role("heading", name="Informations", exact=True)
+        .locator("..")
+    )
     expect(block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_statut_evenement_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_statut_changed.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
@@ -305,3 +314,30 @@ def test_evenement_animal_details_page_typage_block(live_server, page: Page):
     expect(block.get_by_text("Espèce", exact=True)).to_be_visible()
     expect(block.get_by_text("Spoligotype", exact=True)).to_be_visible()
     expect(block.get_by_text("Autre spoligotype", exact=True)).to_be_visible()
+
+
+def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).to_be_visible()
+    expect(details_page.block("Mesures de gestion")).to_be_visible()
+    expect(details_page.block("Flux analytique")).to_be_visible()
+    expect(details_page.block("Typage")).to_be_visible()
+    expect(details_page.block("Vétérinaires")).to_be_visible()
+
+    details_page.open_synthese()
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).not_to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).not_to_be_visible()
+    expect(details_page.block("Mesures de gestion")).not_to_be_visible()
+    expect(details_page.block("Flux analytique")).not_to_be_visible()
+    expect(details_page.block("Typage")).not_to_be_visible()
+    expect(details_page.block("Vétérinaires")).not_to_be_visible()
