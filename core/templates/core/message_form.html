@@ -32,7 +32,9 @@
                             {% endwith %}
                         </h1>
                         {% if form.help_text %}
-                            <div class="fr-hint-text fr-mb-2v fr-ml-2v">{{ form.help_text }}</div>
+                            <div class="fr-my-4v">
+                                {% dsfr_notice title=form.help_text %}
+                            </div>
                         {% endif %}
                     </div>
                     <a href="{{ go_back_url }}" class="fr-link fr-mr-3w fr-my-auto">Annuler</a>
