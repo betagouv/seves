@@ -168,13 +168,13 @@ def test_update_evenement_as_ac_can_access_rasff_europhyt(live_server, page: Pag
     structure.save()
 
     page.goto(f"{live_server.url}{evenement.get_update_url()}")
-    page.get_by_label("Numéro Europhyt").fill("1" * 8)
+    page.get_by_label("Numéro Europhyt").fill("1" * 25)
     page.get_by_label("Numéro Rasff").fill("2" * 9)
     page.get_by_role("button", name="Enregistrer").click()
     page.wait_for_timeout(600)
 
     evenement.refresh_from_db()
-    assert evenement.numero_europhyt == "1" * 8
+    assert evenement.numero_europhyt == "1" * 25
     assert evenement.numero_rasff == "2" * 9
 
 
