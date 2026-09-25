@@ -61,6 +61,14 @@ class AlimentFormController extends BaseFormInModal {
         return "Suppression d'une analyse alimentaire"
     }
 
+    onCloseForm() {
+        if (!this.keepChangesValue) {
+            this.restoreForm()
+        }
+        this.keepChangesValue = false
+        super.onCloseForm()
+    }
+
     /**
      * @param {AnalyseAlimentaireData} analyse
      * @return {string} HTML
