@@ -399,6 +399,40 @@ def test_conclusion_form_dont_show_notice_when_one_aliment(live_server, page: Pa
     ).not_to_be_visible()
 
 
+def test_conclusion_form_hides_notices_when_tiac_discarded(live_server, page: Page):
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS,
+        no_conclusion=True,
+        with_repas=2,
+        with_aliment_suspect=2,
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.add_conclusion_button.click()
+    repas_notice = detail_page.page.get_by_text(
+        "Si le repas à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+        exact=True,
+    )
+    aliment_notice = detail_page.page.get_by_text(
+        "Si l’aliment à l'origine de la TIAC est identifié, il doit être enregistré dans la fiche et sélectionné dans la conclusion",
+        exact=True,
+    )
+    expect(repas_notice).to_be_visible()
+    expect(aliment_notice).to_be_visible()
+
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.DISCARDED)
+    expect(detail_page.repas_field).to_be_disabled()
+    expect(detail_page.aliment_field).to_be_disabled()
+    expect(repas_notice).not_to_be_visible()
+    expect(aliment_notice).not_to_be_visible()
+
+    detail_page.suspicion_conclusion_field.select_option(SuspicionConclusion.CONFIRMED)
+    expect(detail_page.repas_field).to_be_enabled()
+    expect(detail_page.aliment_field).to_be_enabled()
+    expect(repas_notice).to_be_visible()
+    expect(aliment_notice).to_be_visible()
+
+
 def test_conclusion_form_required_fields(live_server, page: Page):
     evenement = InvestigationTiacFactory(
         etat=InvestigationTiac.Etat.EN_COURS,
