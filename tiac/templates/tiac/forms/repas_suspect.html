@@ -1,9 +1,6 @@
 {% load dsfr_tags widget_tweaks %}
 
-<div class="fr-input-group">
-    {{ form.denomination.label_tag }}
-    {{ form.denomination|set_data:"repas-form-target:denominationInput" }}
-</div>
+{% dsfr_form_field form.denomination|set_data:"repas-form-target:denominationInput" %}
 <div class="fr-input-group">
     {{ form.menu.label_tag }}
     {{ form.menu }}
