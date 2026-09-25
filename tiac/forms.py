@@ -435,7 +435,10 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/repas_suspect.html"
 
     denomination = forms.CharField(
-        label="Dénomination", required=True, widget=forms.TextInput(attrs={"required": "required"})
+        label="Dénomination",
+        required=True,
+        help_text="Nom court permettant d'identifier le repas",
+        widget=forms.TextInput(attrs={"required": "required", "placeholder": "Par ex. : dîner du 18 chez Lisette"}),
     )
     menu = forms.CharField(widget=forms.Textarea(attrs={"cols": 30, "rows": 3}), label="Menu", required=False)
     type_repas = SEVESChoiceField(
