@@ -67,7 +67,7 @@ class Lieu(WithLocalisableMixin, models.Model):
         verbose_name="Code INSEE de la commune",
         validators=[
             RegexValidator(
-                regex="^[0-9]{5}$",
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
                 message="Le code INSEE doit contenir exactement 5 chiffres",
                 code="invalid_code_insee",
             ),

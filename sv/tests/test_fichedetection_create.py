@@ -339,6 +339,73 @@ def test_create_fiche_detection_with_lieu_in_corsica(
 
 
 @pytest.mark.django_db
+def test_create_fiche_detection_with_lieu_is_etablissement_in_corsica(
+    live_server,
+    page: Page,
+    form_elements: FicheDetectionFormDomElements,
+    lieu_form_elements: LieuFormDomElements,
+    ensure_departements,
+):
+    ensure_departements("Corse-du-Sud")
+    organisme_nuisible = OrganismeNuisibleFactory()
+
+    evenement_page = EvenementCreationPage(page, live_server)
+    evenement_page.navigate()
+    evenement_page.fill_required(FicheDetectionFactory.build(evenement__organisme_nuisible=organisme_nuisible))
+
+    expect(form_elements.add_prelevement_btn).to_be_disabled()
+    lieu_form_elements.open_new_form()
+    lieu_form_elements.nom_input.fill("Test")
+    lieu_form_elements.lieu_site_inspection_input.select_option("INCONNU")
+    lieu_form_elements.is_etablissement_checkbox.click()
+
+    call_count = {"count": 0}
+    siret = "90373093500011"
+
+    def handle(route):
+        data = {
+            "etablissements": [
+                {
+                    "siret": siret,
+                    "uniteLegale": {
+                        "denominationUniteLegale": "TEST",
+                        "prenom1UniteLegale": None,
+                        "nomUniteLegale": None,
+                    },
+                    "adresseEtablissement": {
+                        "numeroVoieEtablissement": "1",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DU TEST",
+                        "codePostalEtablissement": "20117",
+                        "libelleCommuneEtablissement": "CAURO",
+                        "codeCommuneEtablissement": "2A085",
+                    },
+                }
+            ]
+        }
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    settings.SIRENE_CONSUMER_KEY = "FOO"
+    settings.SIRENE_CONSUMER_SECRET = "BAR"
+
+    page.route(f"**{reverse('siret-api', kwargs={'siret': '*'})}**/", handle)
+    lieu_form_elements.fill_siret_etablissement(
+        "TEST TEST 90373093500011 - 1 RUE DU TEST - 20117 CAURO",
+        search="90373093",
+    )
+    lieu_form_elements.close_with(action="save")
+    evenement_page.save()
+
+    fiche_detection = FicheDetection.objects.get()
+    lieu_from_db = fiche_detection.lieux.get()
+    assert lieu_from_db.nom == "Test"
+    assert lieu_from_db.commune_etablissement == "CAURO"
+    assert lieu_from_db.code_insee_etablissement == "2A085"
+    assert lieu_from_db.departement_etablissement.nom == "Corse-du-Sud"
+
+
+@pytest.mark.django_db
 def test_create_fiche_detection_with_lieu_not_etablissement(
     live_server,
     page: Page,
