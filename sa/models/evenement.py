@@ -208,27 +208,20 @@ class MesureDeControle(models.TextChoices):
 class TypeLieu(models.TextChoices):
     APIARY = "Apiary", "Ruche"
     BACKYARD = "Backyard", "Basse-cour"
-    CAGE_AQUATIC_ENVIRONMENT = "Cage (aquatic environment)", "Cage (milieu aquatique)"
-    COASTAL_AREA_MARINE_AREA = "Coastal area - marine area", "Zone côtière - zone maritime"
-    ESTUARY = "Estuary", "Estuaire"
     FARM = (
         "Farm (terrestrial or aquatic, including educational farm, excluding backyard)",
         "Élevage (terrestre ou aquatique, y compris ferme pédagogique, hors basse-cour)",
     )
-    FOREST = "Forest (excluding farming)", "Forêt (hors élevage)"
-    LAKE = "Lake", "Lac"
     LIVESTOCK_MARKET_FAIR_EXHIBITION_TRANSPORT = (
         "Livestock market - fair - exhibition - transport",
         "Marché aux bestiaux - foire - exposition - transport",
     )
     NATURAL_PARK_NATURE_RESERVE_GAME_PARK = (
         "Natural park - nature reserve - game park",
-        "Parc naturel - réserve - parc de chasse",
+        "Forêt - parc naturel - réserve - parc de chasse",
     )
     NOT_APPLICABLE = "Not applicable", "Non applicable"
     OTHER = "Other", "Autre"
-    POND_SMALL_POND = "Pond - small pond", "Étang - mare"
-    RESERVOIR_DAM = "Reservoir - dam", "Réservoir - barrage"
     RIVER_SYSTEM_RUNNING_WATERS = "River system - running waters", "Réseau hydrographique - eaux courantes"
     SHELLFISH_BED = "Shellfish bed", "Banc de coquillage"
     SLAUGHTERHOUSE = "Slaughterhouse", "Abattoir"
@@ -239,17 +232,11 @@ class TypeLieu(models.TextChoices):
         members = (
             cls.APIARY,
             cls.BACKYARD,
-            cls.CAGE_AQUATIC_ENVIRONMENT,
-            cls.COASTAL_AREA_MARINE_AREA,
-            cls.ESTUARY,
             cls.FARM,
-            cls.LAKE,
             cls.LIVESTOCK_MARKET_FAIR_EXHIBITION_TRANSPORT,
             cls.NATURAL_PARK_NATURE_RESERVE_GAME_PARK,
             cls.NOT_APPLICABLE,
             cls.OTHER,
-            cls.POND_SMALL_POND,
-            cls.SHELLFISH_BED,
             cls.SLAUGHTERHOUSE,
             cls.ZOO,
         )
@@ -258,15 +245,9 @@ class TypeLieu(models.TextChoices):
     @classproperty
     def choices_sauvage(cls):
         members = (
-            cls.COASTAL_AREA_MARINE_AREA,
-            cls.ESTUARY,
-            cls.FOREST,
-            cls.LAKE,
             cls.NATURAL_PARK_NATURE_RESERVE_GAME_PARK,
             cls.NOT_APPLICABLE,
             cls.OTHER,
-            cls.POND_SMALL_POND,
-            cls.RESERVOIR_DAM,
             cls.RIVER_SYSTEM_RUNNING_WATERS,
             cls.SHELLFISH_BED,
         )

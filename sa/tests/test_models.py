@@ -36,13 +36,13 @@ def test_evenement_animal_numero():
 @pytest.mark.django_db
 def test_evenement_animal_type_lieu_consistent_with_statut_animal_constraint():
     EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, type_lieu=TypeLieu.SLAUGHTERHOUSE)
-    EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE, type_lieu=TypeLieu.FOREST)
+    EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE, type_lieu=TypeLieu.SHELLFISH_BED)
 
     with transaction.atomic(), pytest.raises(IntegrityError):
         EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE, type_lieu=TypeLieu.SLAUGHTERHOUSE)
 
     with transaction.atomic(), pytest.raises(IntegrityError):
-        EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, type_lieu=TypeLieu.FOREST)
+        EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, type_lieu=TypeLieu.SHELLFISH_BED)
 
 
 @pytest.mark.django_db
