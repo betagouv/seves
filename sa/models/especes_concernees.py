@@ -52,6 +52,10 @@ class EspeceConcernee(models.Model):
             value for value in (self.type_lieu, self.mode_elevage, self.type_production, self.type_elevage) if value
         ]
 
+    @property
+    def str_with_identifiant(self):
+        return f"{self.espece.name} ({self.identifiant})" if self.identifiant else self.espece.name
+
     def clean(self):
         super().clean()
         if self.situation_unite_regle_id and self.espece_id:

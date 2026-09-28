@@ -21,7 +21,7 @@ def test_order_by_numero_evenement(
         "evenement_3": EvenementAnimalFactory(numero_annee=2026, numero_evenement=2),
     }
     page.goto(url_builder_for_list_ordering("numero_evenement", direction, "sa:evenement-liste"))
-    page.get_by_role("link", name="Événement", exact=True).click()
+    page.get_by_role("link", name="N°", exact=True).click()
     assert_events_order(page, evenements, expected_order, column=1)
 
 
