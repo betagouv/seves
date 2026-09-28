@@ -1,18 +1,25 @@
+import datetime
 from functools import cached_property
+import io
+import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from docxtpl import DocxTemplate
 
 from core.mixins import (
     MediaDefiningMixin,
     WithAddUserContactsMixin,
     WithBlocCommunMixin,
     WithClotureContextMixin,
+    WithDocumentExportContextMixin,
     WithFinDeSuiviMixin,
     WithFormErrorsAsMessagesMixin,
     WithFormsetInvalidMixin,
@@ -222,3 +229,39 @@ class EvenementAnimalDetailsView(
         context["latest_version"] = self.object.latest_version
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
+
+
+class EvenementAnimalDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, pk=None, *args, **kwargs):
+        self.object = get_object_or_404(EvenementAnimal, pk=pk)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("sa/doc_templates/evenement_animal.docx")
+        sub_doc_file = self.create_document_bloc_commun()
+        sub_doc = doc.new_subdoc(sub_doc_file)
+
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_animal_{self.object.numero}.docx"
+        os.remove(sub_doc_file)
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)
