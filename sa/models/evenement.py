@@ -618,6 +618,16 @@ class EvenementAnimal(
     def typage_niveau_3_intitule(self):
         return self.maladie.intitule_typage_niveau_3
 
+    @property
+    def displayed_commune(self):
+        if not self.commune:
+            return None
+        return f"{self.commune} ({self.code_insee})" if self.code_insee else self.commune
+
+    @property
+    def displayed_especes(self):
+        return ", ".join([espece.str_with_identifiant for espece in self.especes_exposees.all()])
+
     class Meta:
         constraints = [
             models.CheckConstraint(

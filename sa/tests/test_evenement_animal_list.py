@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 import pytest
@@ -10,6 +11,7 @@ from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import ContexteSuspicion, StatutAnimal, StatutEvenement, TypeLieu
 from sa.tests.factories import (
     AnalyseFactory,
+    EspeceConcerneeFactory,
     EspeceFactory,
     EvenementAnimalFactory,
     MaladieFactory,
@@ -68,17 +70,21 @@ def test_reset_button_clears_form_and_search(live_server, page: Page):
 
 def test_evenement_animal_list_displays_events_and_links_to_details(live_server, page: Page):
     evenement = EvenementAnimalFactory()
+    EspeceConcerneeFactory(evenement=evenement, espece=evenement.espece)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
 
     row = search_page.row(evenement.numero)
     expect(row).to_be_visible()
+    expect(row).to_contain_text(evenement.date_creation.strftime("%d/%m/%Y"))
     expect(row).to_contain_text(evenement.maladie.name)
-    expect(row).to_contain_text(evenement.espece.name)
+    expect(row).to_contain_text(evenement.get_statut_evenement_display())
+    expect(row).to_contain_text(evenement.date_statut_changed.strftime("%d/%m/%Y"))
     expect(row).to_contain_text(evenement.departement.numero)
     expect(row).to_contain_text(f"{evenement.commune} ({evenement.code_insee})")
-    expect(row).to_contain_text(evenement.get_statut_evenement_display())
+    expect(row).to_contain_text(evenement.numero_identifiant_etablissement)
+    expect(row).to_contain_text(evenement.espece.name)
     expect(row).to_contain_text(evenement.get_etat_display())
 
     row.get_by_role("link", name=evenement.numero, exact=True).click()
@@ -583,3 +589,17 @@ def test_reset_button_clears_advanced_filters(live_server, page: Page):
     expect(search_page.advanced_filters_button).to_have_text("Filtres avancés")
     search_page.open_advanced_filters()
     expect(search_page.advanced_field("Contexte de la suspicion")).to_have_value("")
+
+
+def test_evenement_animal_list_performances(live_server, client, django_assert_num_queries):
+    EvenementAnimalFactory.create_batch(3)
+
+    client.get(reverse("sa:evenement-liste"))
+    with django_assert_num_queries(17):
+        client.get(reverse("sa:evenement-liste"))
+
+    evenement, *others = EvenementAnimalFactory.create_batch(3)
+    EspeceConcerneeFactory.create_batch(3, evenement=evenement)
+
+    with django_assert_num_queries(18):
+        client.get(reverse("sa:evenement-liste"))
