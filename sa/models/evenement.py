@@ -66,14 +66,18 @@ class Espece(models.Model):
     def treeselect_choices_for_maladie(cls, maladie=None):
         return lazy(functools.partial(cls._build_treeselect_choices, maladie), tuple)()
 
-    @classmethod
-    def _build_all_treeselect_choices(cls):
-        source_queryset = Espece.objects.all()
+    @staticmethod
+    def treeselect_choices_for_selection(selected_ids):
+        """
+        Selected frequent species (as "Autres" group is quite large, it is filled client-side rather than server-side generated).
+        """
+        selected_ids = [it for it in selected_ids if str(it).isdigit()]
         frequent_choices = [
-            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=True).order_by("name")
+            espece._treeselect_item for espece in Espece.objects.filter(is_highlighted=True).order_by("name")
         ]
         other_choices = [
-            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=False).order_by("name")
+            espece._treeselect_item
+            for espece in Espece.objects.filter(is_highlighted=False, pk__in=selected_ids).order_by("name")
         ]
 
         frequent_group = TreeselectGroup(
@@ -87,10 +91,6 @@ class Espece(models.Model):
             categorised_label=None,
         )
         return frequent_group, other_group
-
-    @classproperty
-    def all_treeselect_choices(cls):
-        return lazy(cls._build_all_treeselect_choices, tuple)()
 
 
 class StatutAnimal(models.TextChoices):

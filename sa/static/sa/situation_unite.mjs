@@ -23,7 +23,7 @@ function isValidPath(tree, especeId, values) {
 }
 
 /**
- * @property {HTMLInputElement[]} especeSelectTargets
+ * @property {HTMLElement} especeFieldTarget
  * @property {HTMLButtonElement} preciserButtonTarget
  * @property {HTMLElement} cardContainerTarget
  * @property {HTMLElement} errorMessageTarget
@@ -37,7 +37,7 @@ function isValidPath(tree, especeId, values) {
  */
 class SituationUniteController extends BaseFormInModal {
     static targets = [
-        "especeSelect",
+        "especeField",
         "preciserButton",
         "errorMessage",
         "typeLieuSelect",
@@ -59,7 +59,7 @@ class SituationUniteController extends BaseFormInModal {
     }
 
     get especeId() {
-        const checked = this.especeSelectTargets.find(el => el.checked)
+        const checked = this.especeFieldTarget.querySelector("input[type=radio]:checked")
         return checked ? checked.value : ""
     }
 

@@ -8,13 +8,17 @@ from sa.models.especes_concernees import EspeceConcernee
 from sa.referentiels import situation_unite
 
 
+class EspeceTreeselectRadio(TreeselectRadio):
+    def optgroups(self, name, values, attrs=None):
+        self._choices = Espece.treeselect_choices_for_selection(values)
+        return super().optgroups(name, values, attrs)
+
+
 class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
     espece = forms.ModelChoiceField(
         queryset=Espece.objects.all(),
         required=True,
-        widget=TreeselectRadio(
-            choices=Espece.all_treeselect_choices, attrs={"placeholder": "Rechercher", "required": True}
-        ),
+        widget=EspeceTreeselectRadio(attrs={"placeholder": "Rechercher", "required": True}),
         label="Espèce",
     )
 

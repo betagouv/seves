@@ -318,7 +318,9 @@ class WithEspecesConcerneesMixin:
                 self.page, row.locator(f"#fr-treeselect-id_especes_concernees-{index}-espece")
             )
             group = "Les plus fréquentes" if espece.is_highlighted else "Autres"
-            treeselect_for_row.check_option(group, espece.name)
+            with treeselect_for_row.opened_treeselect():
+                treeselect_for_row.search(espece.name)
+                treeselect_for_row.check_option(group, espece.name)
         for field_name, value in fields.items():
             row.locator(f'[id$="-{field_name}"]').fill(str(value))
 
