@@ -76,7 +76,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         if isinstance(item, TreeselectGroup):
             super().__init__(self.parent.attrs, self.item.choices)
         else:
-            super().__init__(self.parent.attrs, ((item.label, item.value),))
+            super().__init__(self.parent.attrs, (item,))
 
     def get_selected(self, option_value, value):
         selected = (not self.parent.has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
@@ -206,7 +206,7 @@ class TreeselectMixin(widgets.ChoiceWidget):
                 case TreeselectGroup() | TreeselectItem():
                     yield TreeselectGroupWidget(self, choice).get_context(name, values, attrs)
                 case _:
-                    label, value = choice
+                    value, label = choice
                     yield TreeselectGroupWidget(
                         self, TreeselectItem(label=label, value=value, categorised_label="")
                     ).get_context(name, values, attrs)
