@@ -337,12 +337,16 @@ class EvenementAnimalFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def date_nd1(self):
         if self.maladie.needs_dates_desinfection:
-            return fake.date_between(start_date=self.date_d_zero, end_date=self.date_d_zero + timedelta(days=30))
+            return fake.date_between(
+                start_date=self.date_d_zero + timedelta(days=1), end_date=self.date_d_zero + timedelta(days=30)
+            )
 
     @factory.lazy_attribute
     def date_nd2(self):
         if self.maladie.needs_dates_desinfection:
-            return fake.date_between(start_date=self.date_nd1, end_date=self.date_nd1 + timedelta(days=30))
+            return fake.date_between(
+                start_date=self.date_nd1 + timedelta(days=1), end_date=self.date_nd1 + timedelta(days=30)
+            )
 
     @factory.lazy_attribute
     def mesures_controle(self):
