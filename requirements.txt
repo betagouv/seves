@@ -161,7 +161,7 @@ packaging==24.0
     #   pikepdf
     #   pytest
     #   pytest-rerunfailures
-pikepdf==10.12.0
+pikepdf==10.13.0.post1
     # via -r requirements.in
 pillow==12.3.0
     # via
