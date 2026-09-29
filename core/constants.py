@@ -176,7 +176,7 @@ class Domains(StrEnum, ExtendedChoices):
         "label": "Santé Animale",
         "icon": "fr-icon-pig-line fr-icon--sm",
         "url": reverse_lazy("sa:evenement-liste"),
-        "help_url": "",
+        "help_url": "https://doc-sa.seves.beta.gouv.fr",
     }
 
     @enum_property
