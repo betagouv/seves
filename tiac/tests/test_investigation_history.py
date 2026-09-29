@@ -1,9 +1,12 @@
+import random
+
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import expect
 
 from core.factories import DepartementFactory, MessageFactory
 from core.models import LienLibre
+from ssa.constants import CategorieDanger
 from tiac.factories import (
     AlimentSuspectFactory,
     AnalyseAlimentaireFactory,
@@ -18,7 +21,9 @@ from tiac.tests.pages import (
 
 
 def test_can_view_investigation_tiac_history(live_server, page, mus_contact):
-    evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.EN_COURS, agents_confirmes_ars=[random.choice(CategorieDanger.values)]
+    )
 
     message = MessageFactory(content_object=evenement)
     message.is_deleted = True
