@@ -2,7 +2,6 @@ import datetime
 from functools import cached_property
 import io
 import json
-import os
 
 from django.conf import settings
 from django.contrib import messages
@@ -588,8 +587,7 @@ class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPass
 
     def post(self, request):
         doc = DocxTemplate("tiac/doc_templates/evenement_simple.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
 
         context = {
             "object": self.object,
@@ -608,7 +606,6 @@ class EvenementSimpleDocumentExportView(WithDocumentExportContextMixin, UserPass
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=enregistrement_simple_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response
 
     def test_func(self):
@@ -625,9 +622,7 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
 
     def post(self, request):
         doc = DocxTemplate("tiac/doc_templates/investigation_tiac.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
-
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
         context = {
             "object": self.object,
             "free_links": self.get_free_links_numbers(),
@@ -645,7 +640,6 @@ class InvestigationTiacExportView(WithDocumentExportContextMixin, UserPassesTest
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=investigation_tiac_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response
 
     def test_func(self):

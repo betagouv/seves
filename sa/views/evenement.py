@@ -1,7 +1,6 @@
 import datetime
 from functools import cached_property
 import io
-import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -240,9 +239,7 @@ class EvenementAnimalDocumentExportView(WithDocumentExportContextMixin, UserPass
 
     def post(self, request):
         doc = DocxTemplate("sa/doc_templates/evenement_animal.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
-
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
         context = {
             "object": self.object,
             "free_links": self.get_free_links_numbers(),
@@ -260,7 +257,6 @@ class EvenementAnimalDocumentExportView(WithDocumentExportContextMixin, UserPass
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=evenement_animal_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response
 
     def test_func(self):
