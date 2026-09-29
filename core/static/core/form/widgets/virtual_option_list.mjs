@@ -16,6 +16,7 @@ export class VirtualOptionList {
     #inputType
     #onChange
     #allItems = [] // full unfiltered list
+    #itemsById = new Map() // value -> item, for the full unfiltered list
     #items = [] // currently displayed (post-search) list
     #checked = new Set()
     #pool = [] // fixed-size recycled DOM rows, reused regardless of item count
@@ -28,17 +29,31 @@ export class VirtualOptionList {
     #currentStart = 0 // index of the first item currently rendered in the #pool
     #focusedIndex = null // logical focused item index (independent of DOM recycling)
 
-    constructor({container, name, inputType = "radio", onChange}) {
+    /**
+     * @param {Object} options
+     * @param {HTMLElement | null} [options.treeselectElement]
+     */
+    constructor({container, name, inputType = "radio", onChange, treeselectElement = null}) {
         this.#container = container
         this.#name = name
         this.#inputType = inputType
         this.#onChange = onChange
         this.#buildScaffold()
+        treeselectElement?.addEventListener("treeselect:choices", ({detail: {choices}}) =>
+            this.setChecked(choices.keys()),
+        )
     }
 
     setItems(items) {
         this.#allItems = items
+        this.#itemsById = new Map(items.map(it => [String(it.id), it]))
         this.#show(items)
+    }
+
+    /** @param {Iterable<string>} values */
+    setChecked(values) {
+        this.#checked = new Set([...values].map(String).filter(it => this.#itemsById.has(it)))
+        this.#render()
     }
 
     clear() {
@@ -244,7 +259,7 @@ export class VirtualOptionList {
             input.addEventListener("change", e => this.#onRowChange(e))
             const label = document.createElement("label")
             label.htmlFor = id
-            label.textContent = this.#allItems.find(it => String(it.id) === value)?.name ?? ""
+            label.textContent = this.#itemsById.get(value)?.name ?? ""
 
             this.#pinnedContainer.append(input, label)
             this.#pinned.set(value, {input, label})

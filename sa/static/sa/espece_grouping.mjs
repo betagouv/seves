@@ -83,6 +83,7 @@ class EspeceGrouping extends Controller {
                     container: groups.other,
                     name: "espece",
                     onChange: input => this.#getTreeselectController()?.onChange({target: input}),
+                    treeselectElement: this.especeWidget,
                 })
                 this.#getOtherGroupController()?.registerChild("virtual-other", this.#virtualOther)
             }

@@ -9,7 +9,14 @@
         {{ form.id }}
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
         <td>
-            {% dsfr_form_field form.espece|set_data:"situation-unite-target:especeSelect"|set_data:"action:change->situation-unite#onEspeceChange" %}
+            <div
+                data-controller="especes-concernees-espece"
+                data-especes-concernees-espece-name-value="{{ form.espece.html_name }}"
+                data-situation-unite-target="especeField"
+                data-action="click->especes-concernees-espece#loadAutres change->situation-unite#onEspeceChange"
+            >
+                {% dsfr_form_field form.espece %}
+            </div>
         </td>
         <td>{% dsfr_form_field form.identifiant %}</td>
         <td class="situation-unite-cell">
@@ -164,6 +171,7 @@
     </div>
     {{ formset.non_form_errors }}
     {{ formset.situation_unite_tree_json|json_script:"situation-unite-tree" }}
+    {{ formset.autres_especes|json_script:"especes-concernees-autres" }}
     {% for field in formset.management_form %}
         {% with data_target=field.name|strfmt:"especes-concernees-formset-target:{0}" %}
             {{ field|set_data:data_target }}
