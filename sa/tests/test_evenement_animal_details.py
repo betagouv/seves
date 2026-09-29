@@ -317,7 +317,7 @@ def test_evenement_animal_details_page_typage_block(live_server, page: Page):
 
 
 def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
-    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS, maladie=TuberculoseFactory())
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
