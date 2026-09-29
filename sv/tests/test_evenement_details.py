@@ -456,10 +456,11 @@ def test_date_last_updated_after_evenement_update(live_server, page: Page, choic
 @pytest.mark.django_db
 def test_date_last_updated_after_fiche_detection_creation(live_server, page: Page):
     evenement = EvenementFactory()
-    fiche_detection = FicheDetectionFactory(evenement=evenement)
+    FicheDetectionFactory(evenement=evenement)
+    evenement.refresh_from_db()
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
 
-    last_update_text = f"Dernière mise à jour le {get_date_formated(fiche_detection.evenement.last_updated)}"
+    last_update_text = f"Dernière mise à jour le {get_date_formated(evenement.last_updated)}"
     expect(page.get_by_test_id("evenement-header").get_by_text(last_update_text)).to_be_visible()
 
 
