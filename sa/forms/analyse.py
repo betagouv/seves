@@ -6,6 +6,7 @@ from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
+from core.widgets import TreeselectRadio
 from sa.models import Maladie
 from sa.models.analyse import Analyse, ResultatAnalyse
 from sa.models.laboratoire import Laboratoire, LaboratoireType
@@ -15,7 +16,13 @@ from sa.models.methode_analyse import MethodeAnalyse
 class AnalyseForm(DsfrBaseForm, forms.ModelForm):
     template_name = "sa/forms/analyse.html"
 
-    maladie = forms.ModelChoiceField(label="Maladie", queryset=Maladie.objects.all())
+    maladie = forms.ModelChoiceField(
+        label="Maladie",
+        queryset=Maladie.objects.all(),
+        widget=TreeselectRadio(
+            choices=Maladie.all_treeselect_choices, attrs={"placeholder": "Rechercher", "required": True}
+        ),
+    )
     date_prelevement = forms.DateField(
         required=True,
         label="Date du prélèvement",

@@ -1,9 +1,10 @@
 import datetime
 
 from django.utils import timezone
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
-from sa.models import Analyse, EvenementAnimal
+from core.tests.pages import TreeselectPage
+from sa.models import Analyse, EvenementAnimal, Maladie
 from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import StatutEvenement
 from sa.models.laboratoire import LaboratoireType
@@ -196,7 +197,7 @@ def test_methode_is_optional_when_resultat_is_en_attente(live_server, page: Page
     creation_page.fill_required_fields(input_data)
 
     modal = creation_page.open_analyse_modal()
-    modal.locator('[id$="-maladie"]').select_option(str(maladie.pk))
+    creation_page.fill_analyse_maladie(modal, maladie)
     modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
     modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
     modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
@@ -222,7 +223,7 @@ def test_methode_becomes_required_when_resultat_is_not_en_attente(live_server, p
     creation_page.fill_required_fields(input_data)
 
     modal = creation_page.open_analyse_modal()
-    modal.locator('[id$="-maladie"]').select_option(str(maladie.pk))
+    creation_page.fill_analyse_maladie(modal, maladie)
     modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
     modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
     modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.DETECTE)
@@ -298,3 +299,55 @@ def test_can_add_analyse_confirmed_will_change_statut_and_date(live_server, page
     evenemment = EvenementAnimal.objects.get()
     assert evenemment.statut_evenement == StatutEvenement.CONFIRME
     assert evenemment.date_statut_changed == today
+
+
+def test_analyse_maladie_treeselect_lists_all_maladies_without_groups_and_is_searchable(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    other_maladie = MaladieFactory()
+    Maladie.objects.filter(pk=maladie.pk).update(is_highlighted=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    treeselect = TreeselectPage(page, modal.locator('[id^="fr-treeselect-"][id$="-maladie"]'))
+    treeselect.open_treeselect()
+    assert treeselect.options_container.locator(".fr-treeselect__group").count() == 0
+    assert treeselect.options_labels == [m.name_with_acronym for m in Maladie.objects.order_by("name")]
+
+    treeselect.search(other_maladie.acronym)
+    expect(treeselect.options_container.get_by_text(other_maladie.name_with_acronym, exact=True)).to_be_visible()
+    expect(treeselect.options_container.get_by_text(maladie.name_with_acronym, exact=True)).not_to_be_visible()
+
+
+def test_analyse_maladie_is_required(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire = LaboratoireFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    TreeselectPage(page, modal.locator('[id^="fr-treeselect-"][id$="-maladie"]')).uncheck_by_tag(
+        maladie.name_with_acronym
+    )
+    modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
+    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
+    modal.locator(".save-btn").click()
+
+    modal.wait_for(state="visible", timeout=2_000)
+    assert creation_page.nb_analyse == 0
+
+    creation_page.fill_analyse_maladie(modal, maladie)
+    creation_page.close_analyse_modal()
+
+    assert creation_page.nb_analyse == 1
+    creation_page.submit_as_draft()
+    assert EvenementAnimal.objects.get().analyses.get().maladie == maladie

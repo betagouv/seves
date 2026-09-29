@@ -14,7 +14,7 @@ const RESULTAT_EN_ATTENTE = "en_attente"
  * @property {Object} laboratoiresTypesValue
  */
 class AnalyseFormController extends BaseFormInModal {
-    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect"]
+    static targets = ["laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
@@ -33,6 +33,16 @@ class AnalyseFormController extends BaseFormInModal {
                 }),
             )
         }
+    }
+
+    clean() {
+        const maladieTreeselect = this.application.getControllerForElementAndIdentifier(
+            this.fieldsetTarget.querySelector('[data-controller~="treeselect"]'),
+            "treeselect",
+        )
+        const event = new Event("submit", {cancelable: true})
+        maladieTreeselect.onValidate(event)
+        return !event.defaultPrevented
     }
 
     onLaboratoireChange() {

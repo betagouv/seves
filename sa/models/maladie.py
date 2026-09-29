@@ -103,3 +103,11 @@ class Maladie(models.Model):
     @classproperty
     def treeselect_choices(cls):
         return lazy(cls._build_treeselect_choices, tuple)()
+
+    @staticmethod
+    def _build_all_treeselect_choices():
+        return tuple(maladie._treeselect_item for maladie in Maladie.objects.order_by("name"))
+
+    @classproperty
+    def all_treeselect_choices(cls):
+        return lazy(cls._build_all_treeselect_choices, tuple)()

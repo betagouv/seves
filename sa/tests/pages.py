@@ -172,8 +172,13 @@ class WithAnalyseMixin:
         self.current_modal.wait_for(state="visible")
         return self.current_modal
 
+    def fill_analyse_maladie(self, modal: Locator, maladie):
+        TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-maladie"]')).check_option(
+            maladie.name_with_acronym
+        )
+
     def fill_analyse(self, modal: Locator, analyse: Analyse):
-        modal.locator('[id$="-maladie"]').select_option(str(analyse.maladie_id))
+        self.fill_analyse_maladie(modal, analyse.maladie)
         modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
         if analyse.date_resultat:
             modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
