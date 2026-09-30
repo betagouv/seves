@@ -221,3 +221,25 @@ def test_users_cant_forge_other_group_permissions(
     agent.refresh_from_db()
     assert agent.user.groups.count() == 0
     assert agent.user.is_active is False
+
+
+@pytest.mark.django_db
+def test_agents_not_in_agricoll_are_not_listed(live_server, page, mocked_authentification_user):
+    sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.add(access_admin_group, sv_group)
+    contact_agent_in_agricoll = ContactAgentFactory(agent__structure=structure)
+    contact_agent_not_in_agricoll = ContactAgentFactory(agent__structure=structure, agent__is_in_agricoll=False)
+    contact_agent_not_in_agricoll.agent.user.groups.add(sv_group)
+
+    page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
+
+    expect(page.get_by_text(str(contact_agent_in_agricoll))).to_be_visible()
+    expect(page.get_by_text(str(contact_agent_not_in_agricoll))).not_to_be_visible()
+
+    page.locator(f"input[id='sv_{contact_agent_in_agricoll.agent.user.pk}']").click(force=True)
+    page.get_by_role("button", name="Enregistrer les modifications").click()
+    expect(page.get_by_role("heading", name="Modification de droits")).to_be_visible()
+
+    assert set(contact_agent_not_in_agricoll.agent.user.groups.all()) == {sv_group}

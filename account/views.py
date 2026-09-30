@@ -45,7 +45,7 @@ class HandlePermissionsView(FormView):
         structure = self.request.user.agent.structure
         self.users_in_structure = (
             User.objects.exclude(pk=self.request.user.pk)
-            .filter(agent__structure=structure)
+            .filter(agent__structure=structure, agent__is_in_agricoll=True)
             .select_related("agent")
             .prefetch_related("groups")
             .order_by("agent__nom")
@@ -168,6 +168,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         existing_admin_with_all_groups = existing_admin_with_all_groups.values_list("pk", flat=True)
         self.users_for_add_admin_form = (
             User.objects.exclude(pk__in=existing_admin_with_all_groups)
+            .filter(agent__is_in_agricoll=True)
             .select_related("agent", "agent__structure")
             .prefetch_related("groups")
         )

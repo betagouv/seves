@@ -70,6 +70,7 @@ class Agent(models.Model):
     complement_fonction = models.TextField(blank=True)
     telephone = models.CharField(max_length=20, blank=True)
     mobile = models.CharField(max_length=20, blank=True)
+    is_in_agricoll = models.BooleanField(default=True, help_text="Présent dans le dernier export Agricoll")
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"

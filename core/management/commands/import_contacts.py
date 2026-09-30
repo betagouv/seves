@@ -73,6 +73,7 @@ class Command(BaseCommand):
                     "complement_fonction": row.get("Complément_fonction", ""),
                     "telephone": row.get("Téléphone", ""),
                     "mobile": row.get("Mobile", ""),
+                    "is_in_agricoll": True,
                 },
             )
 
@@ -100,6 +101,9 @@ class Command(BaseCommand):
 
         User.objects.exclude(email__in=self.found_emails).exclude(agent__structure__niveau1=SEVES_STRUCTURE).update(
             is_active=False
+        )
+        Agent.objects.exclude(user__email__in=self.found_emails).exclude(structure__niveau1=SEVES_STRUCTURE).update(
+            is_in_agricoll=False
         )
         end_time = time.time()
         self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(end_time - start_time)} secondes"))

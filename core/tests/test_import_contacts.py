@@ -146,3 +146,22 @@ def test_import_contacts_twice_with_user_activation(mock_csv_data):
     user.is_active = True
     user.save()
     call_command("import_contacts", mock_csv_data)
+
+
+@pytest.mark.django_db
+def test_import_contacts_marks_agents_not_in_agricoll(mock_csv_data):
+    _reset_contacts()
+    agent_not_in_agricoll = AgentFactory(user__email="not_in_agricoll@test.com")
+    seves_team_agent = AgentFactory(structure__niveau1=SEVES_STRUCTURE)
+    back_in_agricoll_agent = AgentFactory(user__email="test@example.com", user__username="test@example.com")
+    Agent.objects.filter(pk=back_in_agricoll_agent.pk).update(is_in_agricoll=False)
+
+    call_command("import_contacts", mock_csv_data)
+
+    agent_not_in_agricoll.refresh_from_db()
+    seves_team_agent.refresh_from_db()
+    back_in_agricoll_agent.refresh_from_db()
+    assert agent_not_in_agricoll.is_in_agricoll is False
+    assert seves_team_agent.is_in_agricoll is True
+    assert back_in_agricoll_agent.is_in_agricoll is True
+    assert Agent.objects.get(user__email="sophie.martin@example.com").is_in_agricoll is True
