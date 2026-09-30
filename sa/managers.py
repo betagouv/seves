@@ -14,7 +14,7 @@ class EvenementAnimalQuerySet(EvenementManagerMixin, models.QuerySet):
         return self.order_by("-numero_annee", "-numero_evenement")
 
     def optimized_for_list(self):
-        return self.select_related("maladie", "espece", "createur")
+        return self.select_related("maladie", "espece", "createur", "departement")
 
     def get_user_can_view(self, user):
         from sa.models import EvenementAnimal

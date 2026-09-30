@@ -227,6 +227,7 @@
                      data-map-geo-api-root-value="{{ GEO_API_ROOT }}"
                      data-map-region-value="{{ form.structure.region.nom }}"
                      data-map-departement-value="{{ form.structure.departement.nom }}"
+                     data-map-commune-from-coordinates-value="true"
                 >
                     <div class="fr-col-12 fr-col-lg-7">
                         <div class="map-wrapper">
@@ -263,6 +264,7 @@
                         </div>
 
                         {% dsfr_form_field form.code_insee|set_data:"map-target:codeInseeInput"|set_data:"address-search-autocomplete-target:codeInsee"%}
+                        {% dsfr_form_field form.departement|set_data:"map-target:departementInput"|set_data:"address-search-autocomplete-target:departement" %}
                         {% dsfr_form_field form.numero_identifiant|set_data:"map-target:numeroIdentifiantInput"|append_attr:"data-action:input->map#handleNumeroIdentifiantInput" %}
                         {% dsfr_form_field form.type_lieu %}
                         {% dsfr_form_field form.coordinates %}

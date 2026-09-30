@@ -50,6 +50,8 @@
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Événement' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='espece' display_name='Espèce' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='departement' display_name='Dpt' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='commune' display_name='Commune' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut de l’événement' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Date de création' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
@@ -64,6 +66,8 @@
                                 </td>
                                 <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
                                 <td>{{ evenement.espece|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.departement.numero|or_empty_value_tag:"table" }}</td>
+                                <td>{% if evenement.commune %}{{ evenement.commune }}{% if evenement.code_insee %} ({{ evenement.code_insee }}){% endif %}{% else %}{{ ""|or_empty_value_tag:"table" }}{% endif %}</td>
                                 <td>{{ evenement.get_statut_evenement_display|or_empty_value_tag:"table" }}</td>
                                 <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
                                 <td>{{ evenement.createur|truncatechars:30 }}</td>

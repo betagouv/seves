@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
+from core.factories import DepartementFactory
 from core.models import LienLibre
 from sa.models import EvenementAnimal
 from sa.models.evenement import StatutAnimal, TypeLieu
@@ -1084,3 +1085,25 @@ def test_espece_treeselect_falls_back_to_default_list_when_maladie_has_no_espece
 
     assert espece_courante.name in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
     assert _group_option_labels(list_page._espece_treeselect, "Autres") == []
+
+
+def test_commune_and_departement_are_saved_from_coordinates(live_server, page: Page):
+    DepartementFactory(numero="59", nom="Nord")
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.communes_from_coordinates = [
+        {"nom": "Lille", "code": "59350", "departement": {"code": "59", "nom": "Nord"}}
+    ]
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    expect(creation_page.code_insee).to_have_value("59350")
+    expect(creation_page.departement).to_have_value("59")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.commune == "Lille"
+    assert evenement.code_insee == "59350"
+    assert evenement.departement.numero == "59"
