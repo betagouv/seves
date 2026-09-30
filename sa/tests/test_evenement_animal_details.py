@@ -100,6 +100,7 @@ def test_evenement_animal_details_page_localisation_block(live_server, page: Pag
     expect(block.get_by_text(evenement.adresse_lieu_dit, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.commune, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.code_insee, exact=True)).to_be_visible()
+    expect(block.get_by_text(str(evenement.departement), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.numero_identifiant, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_type_lieu_display(), exact=True)).to_be_visible()
     expect(block.get_by_text("Latitude", exact=True)).to_be_visible()

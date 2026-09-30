@@ -231,6 +231,7 @@ class EvenementAnimalFactory(DjangoModelFactory):
     adresse_lieu_dit = factory.Faker("street_address")
     commune = factory.Faker("city")
     code_insee = factory.Faker("numerify", text="#####")
+    departement = factory.SubFactory("core.factories.DepartementFactory")
     numero_identifiant = factory.Faker("numerify", text="##### #####")
 
     context_suspicion = FuzzyChoice(ContexteSuspicion.values)
