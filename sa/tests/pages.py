@@ -662,8 +662,9 @@ class EvenementAnimalFormPage(
         self.telephone_particulier.fill(evenement.telephone_particulier)
 
 
-class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin):
+class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin, WithPreCreationFormPage):
     def __init__(self, page: Page, base_url):
+        super().__init__(page, base_url)
         self.page = page
         self.base_url = base_url
 
