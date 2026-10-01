@@ -5,9 +5,9 @@ class InformationsController extends Controller {
     static targets = ["statutInput", "dateInput"]
 
     connect() {
-        document.addEventListener("resultConfirmed", () => {
+        document.addEventListener("resultConfirmed", event => {
             this.statutInputTarget.value = "CONFIRME"
-            this.dateInputTarget.value = new Date().toLocaleDateString("sv-SE", {timeZone: "Europe/Paris"})
+            this.dateInputTarget.value = event.detail.date
         })
     }
 }

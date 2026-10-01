@@ -363,6 +363,7 @@ class AnalyseFactory(DjangoModelFactory):
     evenement = factory.SubFactory(EvenementAnimalFactory)
     maladie = factory.SelfAttribute("evenement.maladie")
     date_prelevement = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
+    date_resultat = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
     laboratoire = factory.SubFactory(LaboratoireFactory)
     methode = factory.SubFactory(MethodeAnalyseFactory)
     resultat = FuzzyChoice(ResultatAnalyse.values)
