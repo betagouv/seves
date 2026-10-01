@@ -71,6 +71,6 @@
     </dialog>
 {% endblock %}
 
-{% block scripts %}
+{% block base_scripts %}
     {% for tag in pre_creation_form.media.render_js %}{{ tag }}{% endfor %}
-{% endblock scripts %}
+{% endblock base_scripts %}

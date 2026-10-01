@@ -15,7 +15,7 @@ from sa.tests.factories import (
     MaladieFactory,
     TuberculoseFactory,
 )
-from sa.tests.pages import EvenementAnimalFormPage, EvenementListPage
+from sa.tests.pages import EvenementAnimalDetailsPage, EvenementAnimalFormPage, EvenementListPage
 from seves import settings
 from sv.models import Evenement
 
@@ -43,6 +43,22 @@ def test_can_create_evenement_animal_with_required_fields_only_from_list_page(
     assert evenement.date_statut_changed == input_data.date_statut_changed
     assert evenement.type_lieu == input_data.type_lieu
     assert evenement.coordinates == input_data.coordinates
+
+
+def test_can_create_evenement_animal_with_required_fields_only_from_detail_page(live_server, page: Page):
+    existing_object = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory()
+    detail_page = EvenementAnimalDetailsPage(page, live_server.url)
+    detail_page.navigate(existing_object)
+    detail_page.open_pre_creation_form()
+    detail_page.fill_pre_creation_form(input_data)
+
+    detail_page.page.wait_for_url("**/sa/evenement-animal/creation**")
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.fill_required_fields(input_data)
+    creation_page.submit_as_draft()
+
+    assert EvenementAnimal.objects.count() == 3
 
 
 def test_pre_creation_form_shows_description_message(live_server, page: Page):
