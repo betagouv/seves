@@ -91,7 +91,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         context["group_index"] = self.parent.get_next_id()
         context["can_expand"] = False
         context["auto_select_children"] = self.parent.auto_select_children
-        context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
+        context["aria_controls_prefix"] = self._aria_controls_prefix(name, attrs)
         if isinstance(self.item, TreeselectGroup):
             context["can_expand"] = self.item.can_expand
             if self.item.categorised_label:
@@ -140,10 +140,14 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         context = super().create_option(name, value, label, selected, index, subindex, attrs)
         # We don't want individual options to check requirement as this is the responsability of the parent widget
         context["attrs"]["required"] = False
-        context["aria_controls_prefix"] = f"{name}-fr-treeselect-subgroup"
+        context["aria_controls_prefix"] = self._aria_controls_prefix(name, attrs)
         if group_option:
             context["group_index"] = self.parent.get_next_id()
         return context
+
+    @staticmethod
+    def _aria_controls_prefix(name, attrs):
+        return f"{(attrs or {}).get('id') or name}-fr-treeselect-subgroup"
 
 
 class TreeselectMixin(widgets.ChoiceWidget):

@@ -10,10 +10,11 @@
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
         <td>
             <div
-                data-controller="especes-concernees-espece"
-                data-especes-concernees-espece-name-value="{{ form.espece.html_name }}"
+                data-controller="espece-autres"
+                data-espece-autres-name-value="{{ form.espece.html_name }}"
+                data-espece-autres-source-value="especes-concernees-autres"
                 data-situation-unite-target="especeField"
-                data-action="click->especes-concernees-espece#loadAutres change->situation-unite#onEspeceChange"
+                data-action="click->espece-autres#loadAutres change->situation-unite#onEspeceChange"
             >
                 {% dsfr_form_field form.espece %}
             </div>
