@@ -37,7 +37,7 @@ from sa.models.laboratoire import LaboratoireType
 from sa.models.maladie import DescriptionType
 from sa.models.veterinaire import TypeVeterinaire
 
-fake = Faker()
+fake = Faker("fr_FR")
 
 
 MALADIES = [
@@ -259,7 +259,9 @@ class EvenementAnimalFactory(DjangoModelFactory):
             commune_etablissement="",
             pays_etablissement="",
             nom_particulier=factory.Faker("last_name", locale="fr_FR"),
-            prenom_particulier=factory.Faker("first_name", locale="fr_FR"),
+            prenom_particulier=factory.LazyAttribute(
+                lambda o: next(name for name in iter(fake.first_name, None) if name != o.nom_particulier)
+            ),
             adresse_particulier=factory.Faker("street_address", locale="fr_FR"),
             commune_particulier=factory.Faker("city", locale="fr_FR"),
             departement_particulier=factory.SubFactory("core.factories.DepartementFactory"),
