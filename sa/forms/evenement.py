@@ -142,6 +142,13 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     )
 
     # Localisation
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        label="Département",
+    )
     adresse_lieu_dit = forms.CharField(
         label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
     )
@@ -351,6 +358,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "adresse_lieu_dit",
             "commune",
             "code_insee",
+            "departement",
             "numero_identifiant",
             "type_lieu",
             "coordinates",

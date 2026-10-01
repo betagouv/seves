@@ -400,6 +400,14 @@ class EvenementAnimal(
             ),
         ],
     )
+    departement = models.ForeignKey(
+        "core.Departement",
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+        related_name="sa_evenements_localisation",
+    )
     numero_identifiant = models.CharField(
         max_length=255,
         verbose_name="Identifiant parcelle, culture",

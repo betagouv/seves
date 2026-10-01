@@ -1,6 +1,7 @@
 import contextlib
 from functools import cached_property
 import json
+import re
 
 from django.urls import reverse
 from playwright.sync_api import Locator, Page
@@ -493,6 +494,7 @@ class EvenementAnimalFormPage(
         "adresse_lieu_dit",
         "commune",
         "code_insee",
+        "departement",
         "type_lieu",
         "numero_identifiant",
         "coordinates_0",  # Lat
@@ -528,6 +530,13 @@ class EvenementAnimalFormPage(
         self.base_url = base_url
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
+        self.communes_from_coordinates = []
+        self.page.route(
+            re.compile(r"/communes\?lat="),
+            lambda route: route.fulfill(
+                status=200, content_type="application/json", body=json.dumps(self.communes_from_coordinates)
+            ),
+        )
 
     def url(self, maladie, espece, statut):
         return (

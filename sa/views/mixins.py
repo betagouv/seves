@@ -9,6 +9,8 @@ class WithFilteredListMixin(WithOrderingMixin):
             "numero_evenement": ("numero_annee", "numero_evenement"),
             "maladie": "maladie__name",
             "espece": "espece__name",
+            "departement": "departement__numero",
+            "commune": "commune",
             "statut_evenement": "statut_evenement",
             "creation": "date_creation",
             "createur": "createur__libelle",
