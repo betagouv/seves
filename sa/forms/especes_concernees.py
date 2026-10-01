@@ -27,6 +27,8 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
     type_production = SEVESChoiceField(required=False, label="Type de production")
     type_elevage = SEVESChoiceField(required=False, label="Type d'élevage")
 
+    always_save = False
+
     def __init__(self, *args, situation_unite_rows=None, **kwargs):
         super().__init__(*args, **kwargs)
         choices = situation_unite.choices_by_level(situation_unite_rows)
@@ -40,6 +42,9 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
             self.initial.setdefault("mode_elevage", self.instance.mode_elevage)
             self.initial.setdefault("type_production", self.instance.type_production)
             self.initial.setdefault("type_elevage", self.instance.type_elevage)
+
+    def has_changed(self):
+        return self.always_save or super().has_changed()
 
     def clean(self):
         cleaned_data = super().clean()
