@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import Media, MultipleChoiceField
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, MultiModelChoiceField, SEVESChoiceField
@@ -435,7 +436,7 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/repas_suspect.html"
 
     denomination = forms.CharField(
-        label="Dénomination",
+        label=mark_safe("<span class='label-marked'>Dénomination</span>"),
         required=True,
         help_text="Nom court permettant d'identifier le repas",
         widget=forms.TextInput(attrs={"required": "required", "placeholder": "Par ex. : dîner du 18 chez Lisette"}),
