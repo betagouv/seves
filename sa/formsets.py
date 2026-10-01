@@ -72,6 +72,7 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
     def media(self):
         return super().media + Media(
             js=(
+                js_module("sa/espece_autres.mjs"),
                 js_module("sa/especes_concernees.mjs"),
                 js_module("sa/situation_unite.mjs"),
             ),
@@ -101,10 +102,7 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
 
     @property
     def autres_especes(self):
-        return [
-            {"id": pk, "name": name}
-            for pk, name in Espece.objects.filter(is_highlighted=False).order_by("name").values_list("pk", "name")
-        ]
+        return Espece.autres_for_virtual_list()
 
 
 EspeceConcerneeFormSet = inlineformset_factory(

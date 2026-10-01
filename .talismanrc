@@ -152,5 +152,7 @@ fileignoreconfig:
   checksum: 03bc4ccd5b41047072104f5f4601f48738709336905d7b252e86745d48f28f80
 - filename: sa/migrations/0028_situationuniteregle.py
   checksum: 7e65aade4584877501b40e98898e1c9734178c8b8e33039a6f732e8f678dd7f8
+- filename: sa/filters.py
+  checksum: 4965a2a8f96ae9dee318661d052dd3fc3f0ec9700f267f23610923689519cffc
 
 version: "1.0"
