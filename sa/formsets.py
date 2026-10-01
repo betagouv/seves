@@ -83,6 +83,8 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
             first_form = self.forms[0]
             first_form.fields["espece"].disabled = True
             first_form.fields["DELETE"].disabled = True
+            first_form.empty_permitted = False
+            first_form.always_save = True
 
     @cached_property
     def _situation_unite_rows(self):

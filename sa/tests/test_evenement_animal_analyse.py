@@ -318,7 +318,7 @@ def test_analyse_maladie_treeselect_lists_all_maladies_without_groups_and_is_sea
     assert treeselect.options_container.locator(".fr-treeselect__group").count() == 0
     assert treeselect.options_labels == [m.name_with_acronym for m in Maladie.objects.order_by("name")]
 
-    treeselect.search(other_maladie.acronym)
+    treeselect.search(other_maladie.name)
     expect(treeselect.options_container.get_by_text(other_maladie.name_with_acronym, exact=True)).to_be_visible()
     expect(treeselect.options_container.get_by_text(maladie.name_with_acronym, exact=True)).not_to_be_visible()
 
