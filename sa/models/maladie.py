@@ -29,6 +29,10 @@ class DescriptionType(models.TextChoices):
         "tuberculose",
         "Les événements concernant une tuberculose peu commune ou dont on suspecte un impact zoonotique doivent être notifiés dans Sèves. Tous les autres événements restent traités dans SIGAL et CartoGIP.",
     )
+    AUTRE = (
+        "autre",
+        "Sélectionnez cette valeur si vous souhaitez échanger au sujet d’un événement lié à une maladie exotique, notamment zoonotique, qui ne figure pas dans la liste proposée.",
+    )
 
 
 class Maladie(models.Model):
