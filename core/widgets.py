@@ -11,7 +11,8 @@ from django.utils.functional import Promise
 from core.form_mixins import js_module
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Iterable, Literal, TypeAlias
+    from collections.abc import Iterable
+    from typing import Any, Literal, TypeAlias
 
     from django.db.models import Choices
 

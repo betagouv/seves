@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
 from django.conf import settings
 from playwright.sync_api import Locator, Page, expect

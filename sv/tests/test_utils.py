@@ -1,6 +1,6 @@
 import contextlib
 import json
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from django.conf import settings
 from django.urls import reverse
@@ -465,7 +465,7 @@ class PrelevementFormDomElements:
     def espece_echantillon_input(self) -> Locator:
         return self.page.locator(".fr-modal__content").locator("visible=true").locator('[name$="espece_echantillon"]')
 
-    def resultat_input(self, resultat_value: Union[str, Prelevement.Resultat]) -> Locator | None:
+    def resultat_input(self, resultat_value: str | Prelevement.Resultat) -> Locator | None:
         modal = self.page.locator(".fr-modal__content").locator("visible=true")
         if isinstance(resultat_value, str):
             resultat_value = Prelevement.Resultat(resultat_value)
@@ -592,7 +592,7 @@ class FicheZoneDelimiteeFormPage:
                 self.page.locator(self.zone_infestee_rayon_unite_base_locator.format(index, "km")).click(force=True)
 
     def _select_detections_in_hors_zone_infestee(
-        self, detections_hors_zone_infestee: Optional[tuple[FicheDetection, ...]] = None
+        self, detections_hors_zone_infestee: tuple[FicheDetection, ...] | None = None
     ):
         detections_hors_zone_infestee = detections_hors_zone_infestee or ()
         for detection in detections_hors_zone_infestee:
@@ -684,7 +684,7 @@ class FicheZoneDelimiteeFormPage:
         self.page.goto(f"{live_server.url}{reverse('sv:fiche-zone-delimitee-creation')}?evenement={evenement.pk}")
 
     def fill_zone_infestee_form(
-        self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: Optional[tuple[FicheDetection, ...]] = None
+        self, index, zoneinfestee: ZoneInfestee, detections_zone_infestee: tuple[FicheDetection, ...] | None = None
     ):
         detections_zone_infestee = detections_zone_infestee or ()
         field_actions = [
@@ -734,9 +734,9 @@ class FicheZoneDelimiteeFormPage:
     def fill_form(
         self,
         fiche_zone_delimitee: FicheZoneDelimitee,
-        zone_infestee: Optional[ZoneInfestee] = None,
-        detections_hors_zone_infestee: Optional[tuple[FicheDetection, ...]] = None,
-        detections_zone_infestee: Optional[tuple[FicheDetection, ...]] = None,
+        zone_infestee: ZoneInfestee | None = None,
+        detections_hors_zone_infestee: tuple[FicheDetection, ...] | None = None,
+        detections_zone_infestee: tuple[FicheDetection, ...] | None = None,
     ):
         detections_zone_infestee = detections_zone_infestee or ()
         field_actions = [
@@ -776,7 +776,7 @@ class FicheZoneDelimiteeFormPage:
                 field["action"]()
 
     def add_new_zone_infestee(
-        self, zoneinfestee: ZoneInfestee, detections: Optional[tuple[FicheDetection, ...]] = None, bypass_front=False
+        self, zoneinfestee: ZoneInfestee, detections: tuple[FicheDetection, ...] | None = None, bypass_front=False
     ):
         detections = detections or ()
         self.add_zone_infestee_btn.click()
@@ -829,7 +829,7 @@ class FicheZoneDelimiteeFormPage:
         expect(self.statut_reglementaire).to_have_attribute("readonly", "")
 
     def select_detections_in_zone_infestee(
-        self, index, detections_zone_infestee: Optional[tuple[FicheDetection, ...]] = None
+        self, index, detections_zone_infestee: tuple[FicheDetection, ...] | None = None
     ):
         detections_zone_infestee = detections_zone_infestee or ()
         for detection in detections_zone_infestee:
