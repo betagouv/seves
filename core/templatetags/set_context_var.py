@@ -1,5 +1,5 @@
+from collections.abc import Mapping, MutableMapping
 import re
-from typing import Mapping, MutableMapping
 
 from django import template
 

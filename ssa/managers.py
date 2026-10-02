@@ -1,5 +1,5 @@
 import abc
-from typing import Iterable
+from collections.abc import Iterable
 
 from django.db import models
 from django.db.models import Q
