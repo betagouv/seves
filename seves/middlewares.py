@@ -18,6 +18,7 @@ class LoginAndGroupRequiredMiddleware:
         "mentions-legales",
         "politique-de-confidentialite",
         "accessibilite",
+        "landing",
     ]
 
     def __init__(self, get_response):
