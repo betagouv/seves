@@ -1,5 +1,6 @@
 import abc
 from collections import defaultdict
+from collections.abc import Mapping
 import datetime
 from enum import property as enum_property
 from functools import cached_property, wraps
@@ -7,7 +8,6 @@ import io
 import json
 import logging
 import re
-from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
 
