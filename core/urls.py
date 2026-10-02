@@ -130,6 +130,7 @@ urlpatterns = [
         MessageDetailsView.as_view(),
         name="message-view",
     ),
+    path("accueil/", TemplateView.as_view(template_name="core/landing.html"), name="landing"),
     path(
         "mentions-legales/",
         TemplateView.as_view(template_name="mentions-legales.html"),
