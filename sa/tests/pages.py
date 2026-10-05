@@ -450,7 +450,7 @@ class EvenementListPage(WithPreCreationFormPage):
 
     @property
     def end_date_field(self):
-        return self.search_form.get_by_label("et le", exact=True)
+        return self.search_form.locator(".evenement-animal-search-form").get_by_label("et le", exact=True)
 
     @property
     def full_text_search_field(self):
@@ -465,8 +465,47 @@ class EvenementListPage(WithPreCreationFormPage):
         return self.search_form.get_by_label("Commune du foyer")
 
     @property
+    def advanced_filters_button(self):
+        return self.page.get_by_role("button", name="Filtres avancés")
+
+    @property
+    def advanced_filters(self):
+        return self.page.locator("#advanced-filters")
+
+    @property
     def etat_field(self):
-        return self.search_form.get_by_label("État de l'événement")
+        return self.advanced_filters.get_by_label("État", exact=True)
+
+    def advanced_field(self, label):
+        return self.advanced_filters.get_by_label(label, exact=True)
+
+    def fill_advanced_date_range(self, label, start, end):
+        date_range = self.advanced_filters.locator(".advanced-filters__date-range").filter(
+            has=self.page.get_by_label(label, exact=True)
+        )
+        date_range.get_by_label(label, exact=True).fill(start)
+        date_range.get_by_label("et le", exact=True).fill(end)
+
+    def open_advanced_filters(self):
+        self.advanced_filters_button.click()
+        expect(self.advanced_filters).to_be_visible()
+
+    def apply_advanced_filters(self):
+        self.advanced_filters.get_by_role("button", name="Appliquer").click()
+
+    def cancel_advanced_filters(self):
+        self.advanced_filters.get_by_role("button", name="Annuler").click()
+        expect(self.advanced_filters).to_be_hidden()
+
+    def search_with_advanced_filters(self, fields_by_label):
+        self.open_advanced_filters()
+        for label, value in fields_by_label.items():
+            field = self.advanced_field(label)
+            if field.evaluate("it => it.tagName") == "SELECT":
+                field.select_option(label=value)
+            else:
+                field.fill(value)
+        self.apply_advanced_filters()
 
     def select_maladie(self, maladie):
         group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"

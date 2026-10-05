@@ -3,6 +3,7 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
+    <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'sa/evenement_list.css' %}">
 {% endblock %}
 
@@ -10,9 +11,21 @@
 
 {% block content %}
     <form id="search-form" method="get" data-controller="evenement-animal-search-form">
+        {% include "sa/_evenement_animal_advanced_filters.html" %}
         <div class="fr-p-4v evenements_liste__header">
             <div class="evenements_liste__header--title">
                 <h2 class="fr-h3">Rechercher un événement</h2>
+                <button
+                    type="button"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-filter-line"
+                    aria-controls="advanced-filters"
+                    aria-expanded="false"
+                    data-evenement-animal-search-form-target="advancedFiltersButton"
+                    data-action="evenement-animal-search-form#openAdvancedFilters"
+                >
+                    Filtres avancés
+                    <span class="fr-tag fr-tag--sm fr-hidden fr-ml-2v" data-evenement-animal-search-form-target="counter"></span>
+                </button>
             </div>
             <div class="evenement-animal-search-form">
                 <div>{% dsfr_form_field filter.form.annee %}</div>
@@ -33,7 +46,6 @@
                 <div>{% dsfr_form_field filter.form.departement %}</div>
                 <div>{% dsfr_form_field filter.form.numero_adis %}</div>
                 <div>{% dsfr_form_field filter.form.commune %}</div>
-                <div>{% dsfr_form_field filter.form.etat %}</div>
                 <div class="evenement-animal-search-form__actions">
                     <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="evenement-animal-search-form#onReset:stop:prevent">Effacer</button>
                     <button type="submit" class="fr-btn" data-testid="submit-search">Rechercher</button>
