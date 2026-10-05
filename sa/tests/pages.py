@@ -5,7 +5,7 @@ import json
 from django.urls import reverse
 from playwright.sync_api import Locator, Page
 
-from core.pages import WithActionsPage
+from core.pages import WithActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import Analyse, EvenementAnimal, Veterinaire
 from seves import settings
@@ -172,8 +172,13 @@ class WithAnalyseMixin:
         self.current_modal.wait_for(state="visible")
         return self.current_modal
 
+    def fill_analyse_maladie(self, modal: Locator, maladie):
+        TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-maladie"]')).check_option(
+            maladie.name_with_acronym
+        )
+
     def fill_analyse(self, modal: Locator, analyse: Analyse):
-        modal.locator('[id$="-maladie"]').select_option(str(analyse.maladie_id))
+        self.fill_analyse_maladie(modal, analyse.maladie)
         modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
         if analyse.date_resultat:
             modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
@@ -296,6 +301,83 @@ class WithVeterinaireMixin:
         return self.page.locator(".veterinaire-card").locator("visible=true").count()
 
 
+class WithEspecesConcerneesMixin:
+    @property
+    def especes_concernees_rows(self):
+        return self.page.locator("#especes-concernees-table tbody tr")
+
+    def get_espece_concernee_row(self, index=0):
+        return self.especes_concernees_rows.nth(index)
+
+    @property
+    def add_espece_concernee_button(self):
+        return self.page.locator("#especes-concernees").get_by_role("button", name="Ajouter")
+
+    def add_espece_concernee(self):
+        self.add_espece_concernee_button.click()
+
+    def fill_espece_concernee(self, index, espece=None, **fields):
+        row = self.get_espece_concernee_row(index)
+        if espece is not None:
+            treeselect_for_row = TreeselectPage(
+                self.page, row.locator(f"#fr-treeselect-id_especes_concernees-{index}-espece")
+            )
+            group = "Les plus fréquentes" if espece.is_highlighted else "Autres"
+            with treeselect_for_row.opened_treeselect():
+                treeselect_for_row.search(espece.name)
+                treeselect_for_row.check_option(group, espece.name)
+        for field_name, value in fields.items():
+            row.locator(f'[id$="-{field_name}"]').fill(str(value))
+
+    def delete_espece_concernee(self, index):
+        self.get_espece_concernee_row(index).get_by_role("button", name="Supprimer").click()
+
+    @property
+    def nb_especes_concernees(self):
+        return self.especes_concernees_rows.locator("visible=true").count()
+
+    def situation_unite_button(self, index=0):
+        return self.get_espece_concernee_row(index).get_by_test_id("preciser-situation-unite")
+
+    @property
+    def current_situation_unite_modal(self):
+        return self.page.locator(".fr-modal__body").locator("visible=true")
+
+    def open_situation_unite_modal(self, index=0):
+        self.situation_unite_button(index).click()
+        self.current_situation_unite_modal.wait_for(state="visible")
+        return self.current_situation_unite_modal
+
+    def fill_situation_unite(self, index=0, **fields):
+        modal = self.current_situation_unite_modal
+        for field_name, value in fields.items():
+            modal.locator(f'select[id$="-{field_name}"]').select_option(value)
+
+    def save_situation_unite(self, index=0):
+        modal = self.current_situation_unite_modal
+        modal.get_by_test_id("save-situation-unite").click()
+        modal.wait_for(state="hidden", timeout=2_000)
+
+    def cancel_situation_unite(self, index=0):
+        modal = self.current_situation_unite_modal
+        modal.get_by_role("button", name="Annuler").click()
+        modal.wait_for(state="hidden", timeout=2_000)
+
+    def add_situation_unite(self, index=0, **fields):
+        self.open_situation_unite_modal(index)
+        self.fill_situation_unite(index, **fields)
+        self.save_situation_unite(index)
+
+    def edit_situation_unite(self, index=0, **fields):
+        self.get_espece_concernee_row(index).get_by_test_id("modify-situation-unite").click()
+        self.current_situation_unite_modal.wait_for(state="visible")
+        self.fill_situation_unite(index, **fields)
+        self.save_situation_unite(index)
+
+    def get_situation_unite_summary(self, index=0):
+        return self.get_espece_concernee_row(index).locator("td.situation-unite-cell").inner_text()
+
+
 class WithPreCreationFormPage:
     def __init__(self, page: Page, base_url):
         self.page = page
@@ -303,6 +385,7 @@ class WithPreCreationFormPage:
         self._maladie_treeselect = TreeselectPage(
             self.page, self.page.locator("#fr-treeselect-id_pre_creation_maladie")
         )
+        self._espece_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_pre_creation_espece"))
 
     @property
     def pre_creation_modal(self):
@@ -320,9 +403,14 @@ class WithPreCreationFormPage:
         group = "Les plus fréquentes" if evenement.maladie.is_highlighted else "Autre"
         self._maladie_treeselect.check_option(group, evenement.maladie.name_with_acronym)
 
-    def fill_pre_creation_form(self, evenement: EvenementAnimal):
+    def fill_espece(self, evenement, group=None):
+        if group is None:
+            group = "Les plus fréquentes" if evenement.espece.is_highlighted else "Autres"
+        self._espece_treeselect.check_option(group, evenement.espece.name)
+
+    def fill_pre_creation_form(self, evenement: EvenementAnimal, *, espece_group=None):
         self.fill_maladie(evenement)
-        self.pre_creation_modal.get_by_label("Espece").select_option(evenement.espece.name)
+        self.fill_espece(evenement, group=espece_group)
         self.set_statut_animal(evenement.statut_animal)
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 
@@ -377,6 +465,7 @@ class EvenementAnimalFormPage(
     WithParticulierDetenteurUtils,
     WithAnalyseMixin,
     WithVeterinaireMixin,
+    WithEspecesConcerneesMixin,
 ):
     fields = [
         "statut_evenement",
@@ -411,6 +500,12 @@ class EvenementAnimalFormPage(
         "context_suspicion",
         "date_first_symptoms",
         "description",
+        # Enquete epidémiologique
+        "commentaire",
+        # Typage,
+        "typage_champ_libre",
+        "typage_niveau_2",
+        "typage_niveau_3",
         # Mesures de gestions
         "date_apms",
         "date_apdi",
@@ -418,6 +513,7 @@ class EvenementAnimalFormPage(
         "date_d_zero",
         "date_nd1",
         "date_nd2",
+        "date_nd",
         # Adis
         "numero_adis",
         "date_notification_adis",
@@ -433,14 +529,17 @@ class EvenementAnimalFormPage(
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
 
-    def navigate(self, maladie, espece, statut):
-        self.page.goto(
-            f"{self.base_url}{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
+    def url(self, maladie, espece, statut):
+        return (
+            f"{reverse('sa:evenement-animal-creation')}?maladie={maladie.pk}&espece={espece.pk}&statut_animal={statut}"
         )
+
+    def navigate(self, maladie, espece, statut):
+        self.page.goto(f"{self.base_url}{self.url(maladie, espece, statut)}")
 
     @property
     def cancel_link(self):
-        return self.page.get_by_role("link", name="Annuler", exact=True)
+        return self.page.get_by_test_id("top-action-btns").get_by_role("link", name="Annuler", exact=True)
 
     def cancel(self, wait_for=None):
         self.cancel_link.click()
@@ -491,27 +590,32 @@ class EvenementAnimalFormPage(
         self.fill_coordinates(evenement.coordinates)
         self.type_lieu.select_option(evenement.get_type_lieu_display())
 
-        if evenement.numero_identifiant_etablissement:
-            self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
-        elif evenement.nom_particulier:
-            self.particulier_label.click()
-            self.nom_particulier.fill(evenement.nom_particulier)
-        else:
-            raise ValueError(
-                "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
-            )
+        if evenement.show_detenteur_block:
+            if evenement.numero_identifiant_etablissement:
+                self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)
+            elif evenement.nom_particulier:
+                self.particulier_label.click()
+                self.nom_particulier.fill(evenement.nom_particulier)
+            else:
+                raise ValueError(
+                    "You need either a numero_identifiant_etablissement or a nom_particulier to fill required fields"
+                )
 
     def submit_as_draft(self, wait_for="**/sa/evenement-animal/**/"):
-        self.page.get_by_role("button", name="Enregistrer le brouillon", exact=True).click()
+        self.page.get_by_test_id("top-action-btns").get_by_role(
+            "button", name="Enregistrer le brouillon", exact=True
+        ).click()
         if wait_for:
             self.page.wait_for_url(wait_for)
 
     def publish(self):
-        self.page.get_by_role("button", name="Publier", exact=True).click()
+        self.page.get_by_test_id("top-action-btns").get_by_role("button", name="Publier", exact=True).click()
         self.page.wait_for_url("**/sa/evenement-animal/**/")
 
     def fill_context_block(self, evenement):
-        self.context_suspicion.select_option(evenement.context_suspicion)
+        self.page.locator(f"#context input[type='radio'][value='{str(evenement.context_suspicion).lower()}' i]").check(
+            force=True
+        )
         self.date_first_symptoms.fill(evenement.date_first_symptoms.strftime("%Y-%m-%d"))
         self.description.fill(evenement.description)
         self.page.locator("#context label", has_text=evenement.get_human_involved_display()).click()
@@ -558,7 +662,7 @@ class EvenementAnimalFormPage(
         self.telephone_particulier.fill(evenement.telephone_particulier)
 
 
-class EvenementAnimalDetailsPage(WithActionsPage):
+class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin):
     def __init__(self, page: Page, base_url):
         self.page = page
         self.base_url = base_url
@@ -610,3 +714,11 @@ class EvenementAnimalDetailsPage(WithActionsPage):
         modal = self.page.locator(".fr-modal__body").locator("visible=true")
         modal.wait_for(state="visible")
         return modal
+
+    def get_especes_concernees_values(self):
+        block = self.block("Espèces concernées et exposées")
+        texts = []
+        for row in block.locator("tbody tr").all():
+            texts.append([t.strip() for t in row.locator("td").all_text_contents()])
+
+        return texts

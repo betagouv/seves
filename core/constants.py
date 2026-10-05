@@ -14,7 +14,7 @@ BSV_STRUCTURE = "SAS/SDSPV/BSV"
 SEVES_STRUCTURE = "Seves"
 SERVICE_ACCOUNT_NAME = "service_account"
 SV_DOMAIN = "Santé des végétaux"
-SSA_DOMAIN = "SSA (Produit & cas + TIAC & plaintes)"
+SSA_DOMAIN = "Alim (Produit & cas + TIAC & plaintes)"
 SA_DOMAIN = "Santé animale"
 SSA_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 TIAC_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
@@ -176,7 +176,7 @@ class Domains(StrEnum, ExtendedChoices):
         "label": "Santé Animale",
         "icon": "fr-icon-pig-line fr-icon--sm",
         "url": reverse_lazy("sa:evenement-liste"),
-        "help_url": "",
+        "help_url": "https://doc-sa.seves.beta.gouv.fr",
     }
 
     @enum_property

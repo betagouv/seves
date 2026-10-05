@@ -1,16 +1,31 @@
+import datetime
 from functools import cached_property
+import io
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from docxtpl import DocxTemplate
 
-from core.mixins import MediaDefiningMixin, WithBlocCommunMixin, WithFormErrorsAsMessagesMixin, WithFormsetInvalidMixin
+from core.mixins import (
+    MediaDefiningMixin,
+    WithAddUserContactsMixin,
+    WithBlocCommunMixin,
+    WithClotureContextMixin,
+    WithDocumentExportContextMixin,
+    WithFinDeSuiviMixin,
+    WithFormErrorsAsMessagesMixin,
+    WithFormsetInvalidMixin,
+    WithFreeLinksListInContextMixin,
+)
 from sa.forms.evenement import EvenementAnimalForm
-from sa.formsets import AnalyseFormSet, VeterinaireFormSet
+from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal
 
@@ -41,6 +56,7 @@ class EvenementAnimalBaseView(
     WithFormErrorsAsMessagesMixin,
     MediaDefiningMixin,
     WithFormsetInvalidMixin,
+    WithAddUserContactsMixin,
     ModelFormMixin,
     ProcessFormView,
 ):
@@ -72,18 +88,38 @@ class EvenementAnimalBaseView(
             kwargs["data"] = self.request.POST
         return kwargs
 
+    def get_especes_concernees_formset_kwargs(self):
+        kwargs = {"prefix": "especes_concernees"}
+        if self.object:
+            kwargs["instance"] = self.object
+        else:
+            kwargs["initial"] = [{"espece": self.request.GET.get("espece")}]
+        if self.request.method == "POST":
+            kwargs["data"] = self.request.POST
+        return kwargs
+
+    @cached_property
+    def especes_concernees_formset(self):
+        return EspeceConcerneeFormSet(**self.get_especes_concernees_formset_kwargs())
+
     def get_object(self, queryset=None):
         if not self.kwargs.get(self.pk_url_kwarg):
             return None
         return super().get_object(queryset)
 
     def get_media(self, **context_data) -> Media:
-        return context_data["form"].media + self.analyse_formset.media + self.veterinaire_formset.media
+        return (
+            context_data["form"].media
+            + self.analyse_formset.media
+            + self.veterinaire_formset.media
+            + self.especes_concernees_formset.media
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["analyse_formset"] = self.analyse_formset
         context["veterinaire_formset"] = self.veterinaire_formset
+        context["especes_concernees_formset"] = self.especes_concernees_formset
         return context
 
     def post(self, request, *args, **kwargs):
@@ -104,6 +140,13 @@ class EvenementAnimalBaseView(
                 "Erreur dans le formulaire vétérinaire",
             )
 
+        if not self.especes_concernees_formset.is_valid():
+            return self.formset_invalid(
+                self.especes_concernees_formset,
+                "Erreurs dans le(s) formulaire(s) espèces concernées et exposées",
+                "Erreur dans le formulaire espèces concernées et exposées",
+            )
+
         form = self.get_form()
         if not form.is_valid():
             return self.form_invalid(form)
@@ -115,6 +158,9 @@ class EvenementAnimalBaseView(
         self.analyse_formset.save()
         self.veterinaire_formset.instance = self.object
         self.veterinaire_formset.save()
+        self.especes_concernees_formset.instance = self.object
+        self.especes_concernees_formset.save()
+        self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
 
@@ -144,7 +190,14 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
         )
 
 
-class EvenementAnimalDetailsView(UserPassesTestMixin, WithBlocCommunMixin, DetailView):
+class EvenementAnimalDetailsView(
+    UserPassesTestMixin,
+    WithBlocCommunMixin,
+    WithFreeLinksListInContextMixin,
+    WithClotureContextMixin,
+    WithFinDeSuiviMixin,
+    DetailView,
+):
     model = EvenementAnimal
     template_name = "sa/evenement_animal_details.html"
 
@@ -175,3 +228,36 @@ class EvenementAnimalDetailsView(UserPassesTestMixin, WithBlocCommunMixin, Detai
         context["latest_version"] = self.object.latest_version
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
         return context
+
+
+class EvenementAnimalDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):
+    http_method_names = ["post"]
+
+    def dispatch(self, request, pk=None, *args, **kwargs):
+        self.object = get_object_or_404(EvenementAnimal, pk=pk)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        doc = DocxTemplate("sa/doc_templates/evenement_animal.docx")
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
+        context = {
+            "object": self.object,
+            "free_links": self.get_free_links_numbers(),
+            "bloc_commun": sub_doc,
+            "now": datetime.datetime.now(),
+        }
+        doc.render(context)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        response = HttpResponse(
+            file_stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f"attachment; filename=evenement_animal_{self.object.numero}.docx"
+        return response
+
+    def test_func(self):
+        return self.object.can_user_access(self.request.user)

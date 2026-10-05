@@ -514,7 +514,7 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_note()
-    expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
 
     expect(
         message_page.page.locator(
@@ -543,7 +543,7 @@ def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server,
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_note()
-    expect((message_page.page.get_by_text("Nouvelle note"))).to_be_visible()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
     message_page.message_date.fill("2026-02-02T11:33")
@@ -592,7 +592,7 @@ def generic_test_can_add_and_see_demande_intervention_in_new_tab_without_documen
     message_page.pick_recipient_copy(contact_cc_agent.agent, choice_js_fill)
     message_page.save_as_draft_message()
 
-    expect((message_page.page.get_by_text("Nouvelle demande d'intervention"))).to_be_visible()
+    expect(message_page.page.get_by_text("Nouvelle demande d'intervention")).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
     message_page.message_content.type("My content \n with a line return")
@@ -633,7 +633,7 @@ def generic_test_can_add_and_see_point_de_situation_in_new_tab_without_document(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_point_de_situation()
-    expect((message_page.page.get_by_text("Nouveau point de situation"))).to_be_visible()
+    expect(message_page.page.get_by_text("Nouveau point de situation")).to_be_visible()
 
     message_page.message_title.fill("Title of the message")
     message_page.message_content.type("My content \n with a line return")

@@ -15,7 +15,7 @@ class VeterinaireForm(DsfrBaseForm, forms.ModelForm):
         label="Type de vétérinaire",
         choices=TypeVeterinaire.choices,
         initial=TypeVeterinaire.SANITAIRE,
-        widget=DSFRRadioButton(attrs={"required": "true"}),
+        widget=DSFRRadioButton(attrs={"required": "true", "class": "fr-fieldset__element--inline"}),
     )
     nom_structure = forms.CharField(
         label="Nom de la structure",

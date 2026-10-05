@@ -298,7 +298,7 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     def add_basic_message(self, contact, choice_js_fill):
         self.pick_recipient(contact, choice_js_fill)
-        expect((self.page.get_by_text("Nouveau message"))).to_be_visible()
+        expect(self.page.get_by_text("Nouveau message")).to_be_visible()
 
         self.add_basic_message_content()
 
@@ -442,3 +442,14 @@ class WithActionsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.action_dropdown.get_by_text("Supprimer l'événement", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
+
+
+class WithSyntheseBlockMixin:
+    @property
+    def synthese_block(self):
+        return self.page.get_by_test_id("synthese-content")
+
+    def open_synthese(self):
+        self.page.locator('label[for="synthese-btn"]').click()
+        expect(self.page.locator("#synthese-btn")).to_be_checked()
+        expect(self.page.get_by_test_id("synthese-content")).to_be_visible()

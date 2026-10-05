@@ -12,7 +12,7 @@ def test_list_detection_performance(client, django_assert_num_queries, mocked_au
     with django_assert_num_queries(13):
         client.get(reverse("sv:evenement-liste"))
 
-    for _ in range(0, 5):
+    for _ in range(5):
         FicheDetectionFactory()
 
     with django_assert_num_queries(13):
@@ -28,7 +28,7 @@ def test_list_zone_performance(client, django_assert_num_queries, mocked_authent
     with django_assert_num_queries(12):
         client.get(url)
 
-    for _ in range(0, 5):
+    for _ in range(5):
         EvenementFactory(fiche_zone_delimitee=FicheZoneFactory())
 
     with django_assert_num_queries(12):

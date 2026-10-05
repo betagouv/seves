@@ -20,7 +20,12 @@ class Analyse(models.Model):
         "sa.Laboratoire", on_delete=models.PROTECT, verbose_name="Laboratoire", related_name="analyses"
     )
     methode = models.ForeignKey(
-        "sa.MethodeAnalyse", on_delete=models.PROTECT, verbose_name="Méthode", related_name="analyses"
+        "sa.MethodeAnalyse",
+        on_delete=models.PROTECT,
+        verbose_name="Méthode",
+        related_name="analyses",
+        null=True,
+        blank=True,
     )
     resultat = models.CharField(max_length=50, choices=ResultatAnalyse.choices, verbose_name="Résultat", null=False)
     resultat_confirmation = models.BooleanField(default=False, verbose_name="Résultat valant confirmation")
@@ -28,6 +33,13 @@ class Analyse(models.Model):
     class Meta:
         verbose_name = "Analyse"
         verbose_name_plural = "Analyses"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(methode__isnull=False) | models.Q(resultat=ResultatAnalyse.EN_ATTENTE),
+                name="analyse_methode_required_unless_en_attente",
+                violation_error_message="La méthode est obligatoire lorsque le résultat n'est pas « En attente ».",
+            )
+        ]
 
     def __str__(self):
         return f"{self.maladie.name} - {self.laboratoire.name}"

@@ -1,5 +1,6 @@
 import datetime
 from enum import auto
+import functools
 
 from django.contrib.gis.db.models import PointField
 from django.contrib.postgres.fields import ArrayField
@@ -7,24 +8,89 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import F, Q
 from django.urls import reverse
-from django.utils.functional import classproperty
+from django.utils.functional import classproperty, lazy
 from django_countries.fields import CountryField
 import reversion
 from reversion.models import Version
 
-from core.mixins import AllowModificationMixin, WithNumeroMixin, normalize
+from core.mixins import AllowModificationMixin, WithFreeLinkIdsMixin, WithNumeroMixin, normalize
 from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithFicheDocumentPermissionMixin
 from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
+from core.widgets import TreeselectGroup, TreeselectItem
 from sa.managers import EvenementAnimalManager
 from sa.models.maladie import Maladie
 
 
 class Espece(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nom", unique=True)
+    is_highlighted = models.BooleanField(default=False, verbose_name="Espèce courante")
 
     def __str__(self):
         return self.name
+
+    @property
+    def _treeselect_item(self):
+        return TreeselectItem(value=self.pk, label=self.name, categorised_label=self.name, html_name_prefix=None)
+
+    @staticmethod
+    def _build_treeselect_choices(maladie=None):
+        if maladie is None:
+            source_queryset = Espece.objects.none()
+        elif maladie.especes_concernees.exists():
+            source_queryset = maladie.especes_concernees.all()
+        else:
+            source_queryset = Espece.objects.filter(is_highlighted=True)
+
+        frequent_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=True).order_by("name")
+        ]
+        other_choices = [
+            espece._treeselect_item for espece in source_queryset.filter(is_highlighted=False).order_by("name")
+        ]
+
+        frequent_group = TreeselectGroup(
+            label="Les plus fréquentes",
+            choices=frequent_choices,
+            categorised_label=None,
+        )
+        other_group = TreeselectGroup(
+            label="Autres",
+            choices=other_choices,
+            categorised_label=None,
+        )
+
+        return (frequent_group, other_group)
+
+    @classmethod
+    def treeselect_choices_for_maladie(cls, maladie=None):
+        return lazy(functools.partial(cls._build_treeselect_choices, maladie), tuple)()
+
+    @staticmethod
+    def treeselect_choices_for_selection(selected_ids):
+        """
+        Selected frequent species (as "Autres" group is quite large, it is filled client-side rather than server-side generated).
+        """
+        selected_ids = [it for it in selected_ids if str(it).isdigit()]
+        frequent_choices = [
+            espece._treeselect_item for espece in Espece.objects.filter(is_highlighted=True).order_by("name")
+        ]
+        other_choices = [
+            espece._treeselect_item
+            for espece in Espece.objects.filter(is_highlighted=False, pk__in=selected_ids).order_by("name")
+        ]
+
+        frequent_group = TreeselectGroup(
+            label="Les plus fréquentes",
+            choices=frequent_choices,
+            categorised_label=None,
+        )
+        other_group = TreeselectGroup(
+            label="Autres",
+            choices=other_choices,
+            categorised_label=None,
+        )
+        return frequent_group, other_group
 
 
 class StatutAnimal(models.TextChoices):
@@ -142,27 +208,20 @@ class MesureDeControle(models.TextChoices):
 class TypeLieu(models.TextChoices):
     APIARY = "Apiary", "Ruche"
     BACKYARD = "Backyard", "Basse-cour"
-    CAGE_AQUATIC_ENVIRONMENT = "Cage (aquatic environment)", "Cage (milieu aquatique)"
-    COASTAL_AREA_MARINE_AREA = "Coastal area - marine area", "Zone côtière - zone maritime"
-    ESTUARY = "Estuary", "Estuaire"
     FARM = (
         "Farm (terrestrial or aquatic, including educational farm, excluding backyard)",
         "Élevage (terrestre ou aquatique, y compris ferme pédagogique, hors basse-cour)",
     )
-    FOREST = "Forest (excluding farming)", "Forêt (hors élevage)"
-    LAKE = "Lake", "Lac"
     LIVESTOCK_MARKET_FAIR_EXHIBITION_TRANSPORT = (
         "Livestock market - fair - exhibition - transport",
         "Marché aux bestiaux - foire - exposition - transport",
     )
     NATURAL_PARK_NATURE_RESERVE_GAME_PARK = (
         "Natural park - nature reserve - game park",
-        "Parc naturel - réserve - parc de chasse",
+        "Forêt - parc naturel - réserve - parc de chasse",
     )
     NOT_APPLICABLE = "Not applicable", "Non applicable"
     OTHER = "Other", "Autre"
-    POND_SMALL_POND = "Pond - small pond", "Étang - mare"
-    RESERVOIR_DAM = "Reservoir - dam", "Réservoir - barrage"
     RIVER_SYSTEM_RUNNING_WATERS = "River system - running waters", "Réseau hydrographique - eaux courantes"
     SHELLFISH_BED = "Shellfish bed", "Banc de coquillage"
     SLAUGHTERHOUSE = "Slaughterhouse", "Abattoir"
@@ -173,17 +232,11 @@ class TypeLieu(models.TextChoices):
         members = (
             cls.APIARY,
             cls.BACKYARD,
-            cls.CAGE_AQUATIC_ENVIRONMENT,
-            cls.COASTAL_AREA_MARINE_AREA,
-            cls.ESTUARY,
             cls.FARM,
-            cls.LAKE,
             cls.LIVESTOCK_MARKET_FAIR_EXHIBITION_TRANSPORT,
             cls.NATURAL_PARK_NATURE_RESERVE_GAME_PARK,
             cls.NOT_APPLICABLE,
             cls.OTHER,
-            cls.POND_SMALL_POND,
-            cls.SHELLFISH_BED,
             cls.SLAUGHTERHOUSE,
             cls.ZOO,
         )
@@ -192,15 +245,9 @@ class TypeLieu(models.TextChoices):
     @classproperty
     def choices_sauvage(cls):
         members = (
-            cls.COASTAL_AREA_MARINE_AREA,
-            cls.ESTUARY,
-            cls.FOREST,
-            cls.LAKE,
             cls.NATURAL_PARK_NATURE_RESERVE_GAME_PARK,
             cls.NOT_APPLICABLE,
             cls.OTHER,
-            cls.POND_SMALL_POND,
-            cls.RESERVOIR_DAM,
             cls.RIVER_SYSTEM_RUNNING_WATERS,
             cls.SHELLFISH_BED,
         )
@@ -214,8 +261,8 @@ class TypeLieu(models.TextChoices):
 
 
 class ContexteSuspicion(models.TextChoices):
-    INVESTIGATION_CAS_HUMAIN = auto(), "Investigation cas humain"
-    PROPHYLAXIE = auto(), "Prophylaxie"
+    ANALYTIQUE = auto(), "Analytique"
+    CLINIQUE = auto(), "Clinique"
 
 
 class HumanInvolved(models.TextChoices):
@@ -237,6 +284,7 @@ class EvenementAnimal(
     WithContactPermissionMixin,
     WithFicheDocumentPermissionMixin,
     WithBlocCommunFieldsMixin,
+    WithFreeLinkIdsMixin,
     models.Model,
 ):
     objects = EvenementAnimalManager()
@@ -289,7 +337,7 @@ class EvenementAnimal(
         verbose_name="Code INSEE",
         validators=[
             RegexValidator(
-                regex="^[0-9]{5}$",
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
                 message="Le code INSEE doit contenir exactement 5 chiffres",
                 code="invalid_code_insee",
             ),
@@ -328,7 +376,7 @@ class EvenementAnimal(
         verbose_name="Code INSEE",
         validators=[
             RegexValidator(
-                regex="^[0-9]{5}$",
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
                 message="Le code INSEE doit contenir exactement 5 chiffres",
                 code="invalid_code_insee",
             ),
@@ -346,7 +394,7 @@ class EvenementAnimal(
         verbose_name="Code INSEE de la commune",
         validators=[
             RegexValidator(
-                regex="^[0-9]{5}$",
+                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
                 message="Le code INSEE doit contenir exactement 5 chiffres",
                 code="invalid_code_insee",
             ),
@@ -383,6 +431,9 @@ class EvenementAnimal(
     )
     description = models.TextField(verbose_name="Description de la situation", blank=True)
 
+    # Enquête épidémiologique
+    commentaire = models.TextField(verbose_name="Commentaire", blank=True)
+
     # Mesures
     date_apms = models.DateField(verbose_name="Date APMS", null=True, blank=True)
     date_apdi = models.DateField(verbose_name="Date APDI", null=True, blank=True)
@@ -391,6 +442,7 @@ class EvenementAnimal(
     date_d_zero = models.DateField(verbose_name="Date D zéro", null=True, blank=True)
     date_nd1 = models.DateField(verbose_name="Date ND1", null=True, blank=True)
     date_nd2 = models.DateField(verbose_name="Date ND2", null=True, blank=True)
+    date_nd = models.DateField(verbose_name="Date ND", null=True, blank=True)
 
     # Adis
     foyer = models.CharField(
@@ -426,6 +478,17 @@ class EvenementAnimal(
         default=list,
         blank=True,
     )
+
+    # Typage
+    typage = models.ForeignKey(
+        "sa.Typage",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="evenements",
+        verbose_name="Typage",
+    )
+    typage_champ_libre = models.CharField(max_length=255, blank=True, verbose_name="Typage complémentaire")
 
     @classmethod
     def _get_annee_and_numero(cls, acronym):
@@ -517,22 +580,48 @@ class EvenementAnimal(
     def get_soft_delete_success_message(self):
         return f"L’événement {self.numero} a bien été supprimé."
 
+    def get_cloture_confirm_message(self):
+        return f"L'événement n°{self.numero} a bien été clôturé."
+
+    @property
+    def show_detenteur_block(self):
+        return self.statut_animal == StatutAnimal.DETENU
+
+    @property
+    def typage_niveau_2(self):
+        return self.typage.valeur_niveau_2 if self.typage_id else ""
+
+    @property
+    def typage_niveau_3(self):
+        return self.typage.valeur_niveau_3 if self.typage_id else ""
+
+    @property
+    def typage_niveau_2_intitule(self):
+        return self.maladie.intitule_typage_niveau_2
+
+    @property
+    def typage_niveau_3_intitule(self):
+        return self.maladie.intitule_typage_niveau_3
+
     class Meta:
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    (
-                        ~models.Q(numero_identifiant_etablissement="")
-                        & models.Q(numero_identifiant_etablissement__isnull=False)
-                        & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
-                    )
+                    ~models.Q(statut_animal=StatutAnimal.DETENU)
                     | (
                         (
-                            models.Q(numero_identifiant_etablissement="")
-                            | models.Q(numero_identifiant_etablissement__isnull=True)
+                            ~models.Q(numero_identifiant_etablissement="")
+                            & models.Q(numero_identifiant_etablissement__isnull=False)
+                            & (models.Q(nom_particulier="") | models.Q(nom_particulier__isnull=True))
                         )
-                        & ~models.Q(nom_particulier="")
-                        & models.Q(nom_particulier__isnull=False)
+                        | (
+                            (
+                                models.Q(numero_identifiant_etablissement="")
+                                | models.Q(numero_identifiant_etablissement__isnull=True)
+                            )
+                            & ~models.Q(nom_particulier="")
+                            & models.Q(nom_particulier__isnull=False)
+                        )
                     )
                 ),
                 name="evenementanimal_detenteur_etablissement_or_particulier",

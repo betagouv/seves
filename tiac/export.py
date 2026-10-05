@@ -153,16 +153,16 @@ class TiacExport(BaseExport):
     def get_lines_from_instance(self, instance):
         etablissements = instance.etablissements.all()
         if isinstance(instance, EvenementSimple):
-            repas, aliments, analyses = [], [], []
+            repas_list, aliments, analyses = [], [], []
         else:
-            repas = instance.repas.all()
+            repas_list = instance.repas.all()
             aliments = instance.aliments.all()
             analyses = instance.analyses_alimentaires.all()
 
-        if not any([etablissements, repas, aliments, analyses]):
+        if not any([etablissements, repas_list, aliments, analyses]):
             yield self.get_evenement_data(instance, None, None, None, None)
         else:
-            for etablissement, repas, aliment, analyse in zip_longest(etablissements, repas, aliments, analyses):
+            for etablissement, repas, aliment, analyse in zip_longest(etablissements, repas_list, aliments, analyses):
                 yield self.get_evenement_data(instance, etablissement, repas, aliment, analyse)
                 continue
 

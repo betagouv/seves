@@ -4,21 +4,24 @@ import {BaseFormSetController} from "BaseFormset"
 import {collectFormValues} from "Forms"
 
 const VOWEL_SOUND = /^[aeiouyàâäéèêëïîôöùûü]/i
+const RESULTAT_EN_ATTENTE = "en_attente"
 
 /**
  * @property {HTMLSelectElement} laboratoireSelectTarget
  * @property {HTMLSelectElement} methodeSelectTarget
+ * @property {HTMLSelectElement} resultatSelectTarget
  * @property {Object} methodesParLaboratoireValue
  * @property {Object} laboratoiresTypesValue
  */
 class AnalyseFormController extends BaseFormInModal {
-    static targets = ["maladieSelect", "laboratoireSelect", "methodeSelect"]
+    static targets = ["laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
     }
 
     connect() {
+        this.updateMethodeRequired()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -32,8 +35,27 @@ class AnalyseFormController extends BaseFormInModal {
         }
     }
 
+    clean() {
+        const maladieTreeselect = this.application.getControllerForElementAndIdentifier(
+            this.fieldsetTarget.querySelector('[data-controller~="treeselect"]'),
+            "treeselect",
+        )
+        const event = new Event("submit", {cancelable: true})
+        maladieTreeselect.onValidate(event)
+        return !event.defaultPrevented
+    }
+
     onLaboratoireChange() {
         this.refreshMethodeOptions({keepSelection: true})
+        this.updateMethodeRequired()
+    }
+
+    onResultatChange() {
+        this.updateMethodeRequired()
+    }
+
+    updateMethodeRequired() {
+        this.methodeSelectTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
     }
 
     refreshMethodeOptions({keepSelection}) {
@@ -71,6 +93,9 @@ class AnalyseFormController extends BaseFormInModal {
         this.cardContainerTargets.forEach(it => it.remove())
         this.element.insertAdjacentHTML("beforeend", this.renderCard(analyse))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(analyse))
+        if (this.confirmationInputTarget.checked === true) {
+            this.element.dispatchEvent(new CustomEvent("resultConfirmed", {bubbles: true}))
+        }
         dsfr(this.dialogTarget).modal.conceal()
     }
 

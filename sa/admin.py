@@ -1,7 +1,17 @@
 from django.contrib import admin
 from django.contrib.gis import forms
 
-from .models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse
+from .models import (
+    Analyse,
+    Espece,
+    EspeceConcernee,
+    EvenementAnimal,
+    Laboratoire,
+    Maladie,
+    MethodeAnalyse,
+    SituationUniteRegle,
+    Typage,
+)
 
 
 class EvenementAnimalAdminForm(forms.ModelForm):
@@ -30,6 +40,7 @@ class MaladieAdmin(admin.ModelAdmin):
         "needs_date_nd",
         "needs_dates_desinfection",
     )
+    filter_horizontal = ("especes_concernees",)
 
 
 @admin.register(Laboratoire)
@@ -60,4 +71,31 @@ class AnalyseAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Espece)
+@admin.register(EspeceConcernee)
+class EspeceConcerneeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Espece)
+class EspeceAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_highlighted")
+    list_editable = ("is_highlighted",)
+    search_fields = ("name",)
+
+
+@admin.register(Typage)
+class TypageAdmin(admin.ModelAdmin):
+    list_display = (
+        "maladie",
+        "valeur_niveau_2",
+        "valeur_niveau_3",
+    )
+    list_filter = ("maladie",)
+    search_fields = ("maladie__name", "valeur_niveau_2", "valeur_niveau_3")
+
+
+@admin.register(SituationUniteRegle)
+class SituationUniteRegleAdmin(admin.ModelAdmin):
+    list_display = ("espece", "type_lieu", "mode_elevage", "type_production", "type_elevage")
+    list_filter = ("espece", "type_lieu")
+    search_fields = ("espece__name",)

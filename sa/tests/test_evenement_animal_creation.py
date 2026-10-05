@@ -1,8 +1,11 @@
 import json
+import re
 
 from django.urls import reverse
+from django.utils import timezone
 from playwright.sync_api import Page, expect
 
+from core.models import LienLibre
 from sa.models import EvenementAnimal
 from sa.models.evenement import StatutAnimal, TypeLieu
 from sa.tests.factories import (
@@ -63,6 +66,10 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
+    expect(creation_page.statut_evenement).to_have_value("SUSPECT")
+    expect(creation_page.date_statut_changed).to_have_value(
+        timezone.localtime(timezone.now()).date().strftime("%Y-%m-%d")
+    )
     creation_page.fill_required_fields(input_data)
     creation_page.submit_as_draft()
 
@@ -76,6 +83,11 @@ def test_can_create_evenement_animal_with_required_fields_only(live_server, mock
     assert evenement.is_draft is True
 
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.", exact=True)).to_be_visible()
+    contact_agent = mocked_authentification_user.agent.contact_set.get()
+    contact_structure = mocked_authentification_user.agent.structure.contact_set.get()
+    assert evenement.contacts.count() == 2
+    assert contact_agent in evenement.contacts.all()
+    assert contact_structure in evenement.contacts.all()
 
 
 def test_can_publish_evenement_animal_with_required_fields_only(live_server, mocked_authentification_user, page: Page):
@@ -228,7 +240,7 @@ def test_can_create_evenement_animal_with_context_block(live_server, mocked_auth
 
 
 def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -256,7 +268,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_block(live_ser
 def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocomplete(
     live_server, page: Page, ensure_departements
 ):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     ensure_departements("Paris")
@@ -312,7 +324,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_sirene_autocom
 
 
 def test_can_create_evenement_animal_with_detenteur_particulier_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory(particulier=True)
+    input_data = EvenementAnimalFactory(particulier=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -362,7 +374,7 @@ def _parcel_response(properties=None):
 
 
 def test_no_confirmation_modal_when_switching_detenteur_type_without_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -377,7 +389,7 @@ def test_no_confirmation_modal_when_switching_detenteur_type_without_data(live_s
 
 
 def test_confirmation_modal_when_switching_from_etablissement_to_particulier_with_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -393,7 +405,7 @@ def test_confirmation_modal_when_switching_from_etablissement_to_particulier_wit
 
 
 def test_cancelling_detenteur_type_change_keeps_current_type_and_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -412,7 +424,7 @@ def test_cancelling_detenteur_type_change_keeps_current_type_and_data(live_serve
 
 
 def test_confirming_detenteur_type_change_clears_previous_block_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -445,7 +457,7 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
 
 
 def test_confirmation_modal_when_switching_from_particulier_to_etablissement_with_data(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(particulier=True)
+    input_data = EvenementAnimalFactory.build(particulier=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -687,6 +699,22 @@ def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page:
     expect(creation_page.date_d_zero).not_to_be_visible()
     expect(creation_page.date_nd1).not_to_be_visible()
     expect(creation_page.date_nd2).not_to_be_visible()
+    expect(creation_page.date_nd).to_be_visible()
+
+
+def test_can_create_evenement_animal_when_maladie_needs_date_nd(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True)
+    maladie = AcarapioseFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_nd.fill(input_data.date_nd.strftime("%Y-%m-%d"))
+    creation_page.submit_as_draft()
+
+    evenement_produit = EvenementAnimal.objects.get()
+    assert evenement_produit.date_nd == input_data.date_nd
 
 
 def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
@@ -713,7 +741,7 @@ def _mock_geocode_search(page, *, lat=48.840234, lon=2.304014):
 
 
 def test_reuse_address_button_is_disabled_when_detenteur_is_empty(live_server, page: Page):
-    input_data = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -735,7 +763,7 @@ def test_reuse_address_button_is_disabled_when_detenteur_is_empty(live_server, p
 
 
 def test_can_reuse_address_from_detenteur_etablissement_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -762,7 +790,7 @@ def test_can_reuse_address_from_detenteur_etablissement_block(live_server, page:
 
 
 def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: Page):
-    input_data = EvenementAnimalFactory(particulier=True)
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, particulier=True)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -787,7 +815,7 @@ def test_can_reuse_address_from_detenteur_particulier_block(live_server, page: P
 
 
 def test_reuse_address_does_not_auto_sync_on_further_detenteur_changes(live_server, page: Page):
-    input_data = EvenementAnimalFactory()
+    input_data = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -837,3 +865,206 @@ def test_cant_see_adis_block_if_not_ac(live_server, choice_js_fill, page: Page):
     creation_page = EvenementAnimalFormPage(page, live_server.url)
     creation_page.navigate(maladie, espece, input_data.statut_animal)
     expect(creation_page.adis_block).not_to_be_visible()
+
+
+def test_can_create_evenement_animal_with_enquete_block(live_server, choice_js_fill, page: Page):
+    other_evenement_1 = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    other_evenement_2 = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.commentaire.fill(input_data.commentaire)
+    full_name = (
+        f"Événement animal : {other_evenement_1} / {other_evenement_1.espece.name} · {other_evenement_1.maladie.name}"
+    )
+    choice_js_fill(creation_page.page, "#enquete .choices", other_evenement_1.numero, full_name)
+    full_name = (
+        f"Événement animal : {other_evenement_2} / {other_evenement_2.espece.name} · {other_evenement_2.maladie.name}"
+    )
+    choice_js_fill(creation_page.page, "#enquete .choices", other_evenement_2.numero, full_name)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.exclude(id__in=[other_evenement_1.id, other_evenement_2.id]).get()
+    assert LienLibre.objects.count() == 2
+
+    assert [lien.related_object_1 for lien in LienLibre.objects.all()] == [evenement, evenement]
+    expected = sorted([other_evenement_1.numero, other_evenement_2.numero])
+    assert sorted([lien.related_object_2.numero for lien in LienLibre.objects.all()]) == expected
+
+
+def test_create_evenement_number_of_queries_scalies_with_free_links(
+    live_server, page, client, django_assert_max_num_queries
+):
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    # Cache anything if possible
+    client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+    with django_assert_max_num_queries(25):
+        client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+
+    with django_assert_max_num_queries(25):
+        client.get(creation_page.url(maladie, espece, input_data.statut_animal))
+
+
+def _group_option_labels(treeselect, group_name):
+    treeselect.open_treeselect()
+    _, _, collapse = treeselect._locate_group(group_name)
+    return collapse.locator("input").evaluate_all(
+        "inputs => inputs.map(input => input.labels?.[0]?.textContent.trim())"
+    )
+
+
+def test_espece_treeselect_is_disabled_and_empty_until_maladie_is_selected(live_server, page: Page):
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_disabled()
+    assert espece_widget.locator(".fr-treeselect__element").count() == 0
+
+
+def test_espece_treeselect_is_cleared_and_disabled_again_when_maladie_is_unselected(live_server, page: Page):
+    espece_bovin = EspeceFactory(name="Bovin de test", is_highlighted=True)
+    maladie = MaladieFactory(
+        name="Maladie de test à effacer",
+        especes_concernees=[espece_bovin],
+    )
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie.name_with_acronym)
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
+    assert espece_widget.locator(".fr-treeselect__element").count() == 1
+
+    list_page._maladie_treeselect.uncheck_by_tag(maladie.name_with_acronym)
+
+    expect(espece_widget).to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_disabled()
+    assert espece_widget.locator(".fr-treeselect__element").count() == 0
+
+
+def test_espece_treeselect_populates_and_updates_from_maladie_especes_concernees(live_server, page: Page):
+    espece_bovin = EspeceFactory(name="Bovin de test", is_highlighted=True)
+    espece_porc = EspeceFactory(name="Porc de test", is_highlighted=False)
+    maladie_1 = MaladieFactory(
+        name="Maladie de test 1 avec espèces concernées",
+        especes_concernees=[espece_bovin, espece_porc],
+    )
+    espece_chien = EspeceFactory(name="Chien de test", is_highlighted=True)
+    maladie_2 = MaladieFactory(
+        name="Maladie de test 2 avec espèces concernées",
+        especes_concernees=[espece_chien],
+    )
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_1_group = "Les plus fréquentes" if maladie_1.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_1_group, maladie_1.name_with_acronym)
+
+    espece_widget = list_page.page.locator("#fr-treeselect-id_pre_creation_espece")
+    expect(espece_widget).not_to_have_class(re.compile("fr-treeselect--disabled"))
+    expect(espece_widget.locator(".fr-treeselect__button")).to_be_enabled()
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [
+        espece_bovin.name,
+        espece_porc.name,
+    ]
+    espece_treeselect = list_page._espece_treeselect
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_chien.name)
+        expect(espece_treeselect.container.get_by_text(espece_chien.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
+
+    # species no longer in frequent (bovin, porc) should move to "Autres""
+    maladie_2_group = "Les plus fréquentes" if maladie_2.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_2_group, maladie_2.name_with_acronym)
+
+    assert _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes") == [espece_chien.name]
+    with espece_treeselect.opened_treeselect():
+        espece_treeselect.search(espece_bovin.name)
+        expect(espece_treeselect.container.get_by_text(espece_bovin.name, exact=True)).to_be_visible()
+        espece_treeselect.search(espece_porc.name)
+        expect(espece_treeselect.container.get_by_text(espece_porc.name, exact=True)).to_be_visible()
+        espece_treeselect.search("")
+    assert espece_bovin.name not in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+
+
+def test_espece_treeselect_autres_group_supports_keyboard_navigation_past_the_virtualized_window(
+    live_server, page: Page
+):
+    maladie = MaladieFactory(name="Maladie de test clavier sans espèce concernée")
+    EspeceFactory.create_batch(210)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie.name_with_acronym)
+
+    espece_treeselect = list_page._espece_treeselect
+    espece_treeselect.open_treeselect()
+    expect(espece_treeselect.search_bar).to_be_focused()
+    group, button, collapse = espece_treeselect._locate_group("Autres")
+    button.click()
+    expect(collapse).to_be_visible()
+    first_input = group.locator("input").first
+    first_input.focus()
+    expect(first_input).to_be_focused()
+    assert first_input.get_attribute("aria-posinset") == "1"
+    setsize = int(first_input.get_attribute("aria-setsize"))
+    assert setsize > 200
+
+    # Arrow-key navigation must reach an item that was never part of the initial DOM window to
+    # prove it isn't limited to what is actually mounted.
+    for _ in range(25):
+        page.keyboard.press("ArrowDown")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "26"
+    assert page.evaluate("document.activeElement.checked") is True
+
+    page.keyboard.press("End")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == str(setsize)
+
+    page.keyboard.press("Home")
+    assert page.evaluate("document.activeElement.getAttribute('aria-posinset')") == "1"
+
+    espece_treeselect.close_treeselect()
+
+
+def test_espece_treeselect_falls_back_to_default_list_when_maladie_has_no_especes_concernees(live_server, page: Page):
+    espece_courante = EspeceFactory(name="Espèce de test courante", is_highlighted=True)
+    maladie_sans_especes = MaladieFactory(name="Maladie de test sans espèce concernée")
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.open_pre_creation_form()
+
+    maladie_group = "Les plus fréquentes" if maladie_sans_especes.is_highlighted else "Autre"
+    list_page._maladie_treeselect.check_option(maladie_group, maladie_sans_especes.name_with_acronym)
+
+    assert espece_courante.name in _group_option_labels(list_page._espece_treeselect, "Les plus fréquentes")
+    assert _group_option_labels(list_page._espece_treeselect, "Autres") == []

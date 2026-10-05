@@ -67,6 +67,9 @@ class ConclusionFormController extends Controller {
             this.conclusionAlimentTarget.value = ""
         }
 
+        this.noticeRepasTarget.classList.toggle("fr-hidden", isDiscarded || !!this.conclusionRepasTarget.value)
+        this.noticeAlimentTarget.classList.toggle("fr-hidden", isDiscarded || !!this.conclusionAlimentTarget.value)
+
         // Still show this fields as a "fake" one for Discarded, Unknwon and no value
         this.selectedHazardConfirmedContainerTarget.classList.toggle("fr-hidden", isSuspected)
         this.selectedHazardConfirmedContainerTarget

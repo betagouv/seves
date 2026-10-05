@@ -69,14 +69,14 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
     def option_template_name(self):
         return self.parent.option_template_name
 
-    def __init__(self, parent: "TreeselectMixin", item: TreeselectGroup | TreeselectItem):
+    def __init__(self, parent: TreeselectMixin, item: TreeselectGroup | TreeselectItem):
         self.parent = parent
         self.item = item
         self.group_label = item.label
         if isinstance(item, TreeselectGroup):
             super().__init__(self.parent.attrs, self.item.choices)
         else:
-            super().__init__(self.parent.attrs, ((item.label, item.value),))
+            super().__init__(self.parent.attrs, (item,))
 
     def get_selected(self, option_value, value):
         selected = (not self.parent.has_selected or self.parent.allow_multiple_selected) and str(option_value) in value
@@ -206,7 +206,7 @@ class TreeselectMixin(widgets.ChoiceWidget):
                 case TreeselectGroup() | TreeselectItem():
                     yield TreeselectGroupWidget(self, choice).get_context(name, values, attrs)
                 case _:
-                    label, value = choice
+                    value, label = choice
                     yield TreeselectGroupWidget(
                         self, TreeselectItem(label=label, value=value, categorised_label="")
                     ).get_context(name, values, attrs)
@@ -247,3 +247,15 @@ class TreeselectCheckbox(TreeselectMixin):
 class TreeselectRadio(TreeselectMixin):
     allow_multiple_selected = False
     input_type = "radio"
+
+
+class NumericTextInput(widgets.TextInput):
+    """
+    Text input for whole, non-negative numbers
+    """
+
+    def __init__(self, attrs=None):
+        default_attrs = {"inputmode": "numeric", "pattern": "[0-9]*"}
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(default_attrs)

@@ -18,7 +18,10 @@ from reversion_compare.compare import (
     CompareObject as InitialCompareObject,
     CompareObjects as InitialCompareObjects,
 )
-from reversion_compare.mixins import CompareMethodsMixin as CompareMethodsMixin, CompareMixin as OriginalCompareMixin
+from reversion_compare.mixins import (
+    CompareMethodsMixin as OriginalCompareMethodsMixin,
+    CompareMixin as OriginalCompareMixin,
+)
 
 from core.models import Agent, Structure
 
@@ -345,7 +348,7 @@ class CompareObjects(InitialCompareObjects):
         return self.compare_obj1 != self.compare_obj2
 
 
-class CompareMixin(CompareMethodsMixin, OriginalCompareMixin):
+class CompareMixin(OriginalCompareMethodsMixin, OriginalCompareMixin):
     def _get_pretty_field(self, field, prefix=""):
         value = str(field)
         if hasattr(field, "verbose_name"):

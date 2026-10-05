@@ -45,6 +45,16 @@ class Maladie(models.Model):
     needs_date_nd = models.BooleanField(default=True, verbose_name="Nécessite une date ND")
     needs_dates_desinfection = models.BooleanField(default=False, verbose_name="Nécessite des dates D0, ND1, ND2")
     is_highlighted = models.BooleanField(default=False, verbose_name="Est ce que c'est une maladie fréquente")
+    especes_concernees = models.ManyToManyField(
+        "sa.Espece",
+        blank=True,
+        related_name="maladies_concernees",
+        verbose_name="Espèces concernées",
+    )
+
+    intitule_typage_niveau_2 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 2)")
+    intitule_typage_niveau_3 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 3)")
+    intitule_typage_champ_libre = models.CharField(max_length=255, verbose_name="Intitulé champ libre")
 
     def __str__(self):
         return self.name
@@ -66,7 +76,7 @@ class Maladie(models.Model):
         return TreeselectItem(
             value=self.pk,
             label=self.name_with_acronym,
-            categorised_label=self.name,
+            categorised_label=self.name_with_acronym,
             html_name_prefix=None,
         )
 
@@ -78,6 +88,7 @@ class Maladie(models.Model):
             label="Les plus fréquentes",
             choices=most_frequent_choices,
             categorised_label=None,
+            can_expand=False,
         )
         other_queryset = Maladie.objects.filter(is_highlighted=False).order_by("name")
         other_choices = [maladie._treeselect_item for maladie in other_queryset]
@@ -92,3 +103,11 @@ class Maladie(models.Model):
     @classproperty
     def treeselect_choices(cls):
         return lazy(cls._build_treeselect_choices, tuple)()
+
+    @staticmethod
+    def _build_all_treeselect_choices():
+        return tuple(maladie._treeselect_item for maladie in Maladie.objects.order_by("name"))
+
+    @classproperty
+    def all_treeselect_choices(cls):
+        return lazy(cls._build_all_treeselect_choices, tuple)()

@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import datetime
 import io
-import os
 
 from django.conf import settings
 from django.contrib import messages
@@ -261,7 +260,7 @@ class FicheDetectionCreateView(
                 convert_required_to_data_required=True,
                 prefix=f"prelevements-{i}",
             )
-            for i in range(0, 10)
+            for i in range(10)
         ]
         context["prelevement_forms"] = forms
         context["evenement"] = self.evenement
@@ -743,8 +742,7 @@ class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         doc = DocxTemplate("sv/doc_templates/evenement.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
 
         sub_doc_detection = doc.new_subdoc(self.create_detections_sub_doc(self.object.detections.all()))
         fiche_zone = self.get_object().fiche_zone_delimitee
@@ -776,7 +774,6 @@ class EvenementExportView(WithDocumentExportContextMixin, EvenementDetailMixin, 
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=evenement_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response
 
     def test_func(self):

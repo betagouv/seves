@@ -147,7 +147,7 @@ def test_sv_user_cant_manage_ssa_permissions(live_server, page, mocked_authentif
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
 
     expect(page.get_by_text("SV")).to_be_visible()
-    expect(page.get_by_text("SSA")).not_to_be_visible()
+    expect(page.get_by_text("Alim")).not_to_be_visible()
     expect(page.locator(f"input[id='sv_{agent.user.pk}']")).to_be_visible()
     expect(page.locator(f"input[id='ssa_{agent.user.pk}']")).not_to_be_visible()
 
@@ -163,7 +163,7 @@ def test_ssa_user_cant_manage_sv_permissions(live_server, page, mocked_authentif
 
     page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
 
-    expect(page.get_by_text("SSA")).to_be_visible()
+    expect(page.get_by_text("Alim")).to_be_visible()
     expect(page.get_by_text("SV")).not_to_be_visible()
     expect(page.locator(f"input[id='ssa_{agent.user.pk}']")).to_be_visible()
     expect(page.locator(f"input[id='sv_{agent.user.pk}']")).not_to_be_visible()
@@ -183,7 +183,7 @@ def test_sa_user_cant_manage_sv_ssa_permissions(live_server, page, mocked_authen
 
     expect(page.get_by_text("SA")).to_be_visible()
     expect(page.get_by_text("SV")).not_to_be_visible()
-    expect(page.get_by_text("SSA")).not_to_be_visible()
+    expect(page.get_by_text("Alim")).not_to_be_visible()
     expect(page.locator(f"input[id='sa_{agent.user.pk}']")).to_be_visible()
     expect(page.locator(f"input[id='sv_{agent.user.pk}']")).not_to_be_visible()
     expect(page.locator(f"input[id='ssa_{agent.user.pk}']")).not_to_be_visible()

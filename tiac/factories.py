@@ -127,7 +127,7 @@ class EvenementSimpleFactory(BaseTiacFactory, DjangoModelFactory):
     follow_up = FuzzyChoice(EvenementFollowUp.values)
 
     @factory.post_generation
-    def with_etablissements(self, create, extracted, **kwargs):  # noqa: F811
+    def with_etablissements(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
         EtablissementFactory.create_batch(int(extracted), evenement_simple=self)
@@ -186,7 +186,9 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
     )
     analyses_sur_les_malades = FuzzyChoice(Analyses.values)
 
-    agents_confirmes_ars = factory.LazyFunction(lambda: random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+    agents_confirmes_ars = factory.LazyFunction(
+        lambda: sorted(random.sample(CategorieDanger.values, k=random.randint(1, 3)))
+    )
 
     # Conclusion
     suspicion_conclusion = FuzzyChoice(SuspicionConclusion.values)

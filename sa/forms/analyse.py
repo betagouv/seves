@@ -6,6 +6,7 @@ from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
+from core.widgets import TreeselectRadio
 from sa.models import Maladie
 from sa.models.analyse import Analyse, ResultatAnalyse
 from sa.models.laboratoire import Laboratoire, LaboratoireType
@@ -15,7 +16,13 @@ from sa.models.methode_analyse import MethodeAnalyse
 class AnalyseForm(DsfrBaseForm, forms.ModelForm):
     template_name = "sa/forms/analyse.html"
 
-    maladie = forms.ModelChoiceField(label="Maladie", queryset=Maladie.objects.all())
+    maladie = forms.ModelChoiceField(
+        label="Maladie",
+        queryset=Maladie.objects.all(),
+        widget=TreeselectRadio(
+            choices=Maladie.all_treeselect_choices, attrs={"placeholder": "Rechercher", "required": True}
+        ),
+    )
     date_prelevement = forms.DateField(
         required=True,
         label="Date du prélèvement",
@@ -27,15 +34,18 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     laboratoire = forms.ModelChoiceField(label="Laboratoire", queryset=Laboratoire.objects.none())
-    methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none())
+    methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none(), required=False)
     resultat = SEVESChoiceField(label="Résultat", choices=ResultatAnalyse.choices)
+    resultat_confirmation = forms.BooleanField(
+        label="Résultat valant confirmation",
+        required=False,
+        widget=forms.CheckboxInput,
+        help_text="En cochant cette case, le résultat sera considéré comme confirmant le foyer, le statut de l’événement passera alors à « Confirmé » s’il ne l’est pas déjà et la date d’effet du statut sera renseignée avec la date du résultat.",
+    )
 
     class Meta:
         model = Analyse
         exclude = ("evenement",)
-        widgets = {
-            "resultat_confirmation": forms.CheckboxInput,
-        }
 
     def get_laboratoire_queryset(self):
         return Laboratoire.objects.order_by(
@@ -88,3 +98,9 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_prelevement"].widget.attrs["max"] = today
         self.fields["date_resultat"].widget.attrs["max"] = today
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("resultat") != ResultatAnalyse.EN_ATTENTE and not cleaned_data.get("methode"):
+            self.add_error("methode", "La méthode est obligatoire lorsque le résultat n'est pas « En attente ».")
+        return cleaned_data

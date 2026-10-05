@@ -11,6 +11,7 @@
 {% block scripts %}
     <script type="module" src="{% static 'core/map_viewer.mjs' %}"></script>
     <script type="module" src="{% static 'core/contact_add_form.js' %}"></script>
+    <script type="module" src="{% static 'sa/evenement_animal_details.js' %}"></script>
 
 {% endblock scripts %}
 
@@ -19,10 +20,16 @@
         <div data-testid="evenement-header">
             <div class="details-top-row">
                 <h1 class="fr-mb-0-5v">Événement {{ object.numero }}</h1>
+                {% if not object.is_draft %}
+                    {% include "core/_details_toogle.html" with pk=object.pk %}
+                {% endif %}
 
                 {% if can_be_deleted %}
                     {% url 'sa:evenement-liste' as next_url %}
                     {% include "core/_delete_modal.html" with object=object content_type=content_type next_url=next_url%}
+                {% endif %}
+                {% if is_evenement_can_be_cloture %}
+                    {% include "core/_cloturer_modal.html" with evenement=object %}
                 {% endif %}
 
                 <div class="details-top-row--actions">
@@ -48,128 +55,99 @@
             {% include "core/_latest_revision.html" with content_type_pk=content_type.pk object_pk=object.pk %}
         </div>
 
+        <div class="synthese-content" data-testid="synthese-content">
+            {% include "sa/_evenement_animal_infos.html" %}
+        </div>
         <div class="detail-content">
-            <div class="white-container fr-mb-4v">
-                <h2 class="fr-h6">Informations générales</h2>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                    <div class="fr-col-12 fr-col-lg-4">
-                        <div class="bold">Maladie suspectée</div>
-                        <div>{{ object.maladie.name|or_empty_value_tag }}</div>
-                    </div>
-                    <div class="fr-col-12 fr-col-lg-4">
-                        <div class="bold">Espèce concernée</div>
-                        <div>{{ object.espece.name|or_empty_value_tag }}</div>
-                    </div>
-                    <div class="fr-col-12 fr-col-lg-4">
-                        <div class="bold">Statut de l'animal</div>
-                        <div>{{ object.get_statut_animal_display|or_empty_value_tag }}</div>
-                    </div>
+            {% include "sa/_evenement_animal_infos.html" %}
+            {% if object.show_detenteur_block %}
+                <div class="white-container fr-mb-4v">
+                    {% if object.numero_identifiant_etablissement %}
+                        <h2 class="fr-h6">Détenteur : Établissement</h2>
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">N° identifiant</div>
+                                <div>{{ object.numero_identifiant_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Autre identifiant / Numagrit</div>
+                                <div>{{ object.autre_identifiant_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">SIRET</div>
+                                <div>{{ object.siret_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Raison sociale</div>
+                                <div>{{ object.raison_sociale_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Adresse</div>
+                                <div>{{ object.adresse_lieu_dit_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Commune</div>
+                                <div>{{ object.commune_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Département</div>
+                                <div>{{ object.departement_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Code INSEE</div>
+                                <div>{{ object.code_insee_etablissement|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Pays</div>
+                                <div>{{ object.get_pays_etablissement_display|or_empty_value_tag }}</div>
+                            </div>
+                        </div>
+                    {% elif object.nom_particulier %}
+                        <h2 class="fr-h6">Détenteur : Particulier</h2>
+                        <div class="fr-grid-row fr-grid-row--gutters">
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Nom</div>
+                                <div>{{ object.nom_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Prénom</div>
+                                <div>{{ object.prenom_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Adresse</div>
+                                <div>{{ object.adresse_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Commune</div>
+                                <div>{{ object.commune_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Département</div>
+                                <div>{{ object.departement_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Code INSEE</div>
+                                <div>{{ object.code_insee_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Courriel</div>
+                                <div>{{ object.email_particulier|or_empty_value_tag }}</div>
+                            </div>
+                            <div class="fr-col-12 fr-col-lg-4">
+                                <div class="bold">Numéro de téléphone</div>
+                                <div>{{ object.telephone_particulier|or_empty_value_tag }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
-
-            <div class="white-container fr-mb-4v">
-                <h2 class="fr-h6">Informations</h2>
-                <div class="fr-grid-row fr-grid-row--gutters">
-                    <div class="fr-col-12 fr-col-lg-6">
-                        <div class="bold">Date de création</div>
-                        <div>{{ object.date_creation|date:"d/m/Y"|or_empty_value_tag }}</div>
-                        <div class="bold fr-mt-2w">Date de publication</div>
-                        <div>{{ object.date_publication|date:"d/m/Y"|or_empty_value_tag }}</div>
-                    </div>
-                    <div class="fr-col-12 fr-col-lg-6">
-                        <div class="bold">Statut de l'événement</div>
-                        <div>{{ object.get_statut_evenement_display|or_empty_value_tag }}</div>
-                        <div class="bold fr-mt-2w">Date à prendre en compte pour le changement de statut</div>
-                        <div>{{ object.date_statut_changed|date:"d/m/Y"|or_empty_value_tag }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="white-container fr-mb-4v">
-                {% if object.numero_identifiant_etablissement %}
-                    <h2 class="fr-h6">Détenteur : Établissement</h2>
-                    <div class="fr-grid-row fr-grid-row--gutters">
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">N° identifiant</div>
-                            <div>{{ object.numero_identifiant_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Autre identifiant / Numagrit</div>
-                            <div>{{ object.autre_identifiant_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">SIRET</div>
-                            <div>{{ object.siret_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Raison sociale</div>
-                            <div>{{ object.raison_sociale_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Adresse</div>
-                            <div>{{ object.adresse_lieu_dit_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Commune</div>
-                            <div>{{ object.commune_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Département</div>
-                            <div>{{ object.departement_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Code INSEE</div>
-                            <div>{{ object.code_insee_etablissement|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Pays</div>
-                            <div>{{ object.get_pays_etablissement_display|or_empty_value_tag }}</div>
-                        </div>
-                    </div>
-                {% elif object.nom_particulier %}
-                    <h2 class="fr-h6">Détenteur : Particulier</h2>
-                    <div class="fr-grid-row fr-grid-row--gutters">
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Nom</div>
-                            <div>{{ object.nom_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Prénom</div>
-                            <div>{{ object.prenom_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Adresse</div>
-                            <div>{{ object.adresse_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Commune</div>
-                            <div>{{ object.commune_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Département</div>
-                            <div>{{ object.departement_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Code INSEE</div>
-                            <div>{{ object.code_insee_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Courriel</div>
-                            <div>{{ object.email_particulier|or_empty_value_tag }}</div>
-                        </div>
-                        <div class="fr-col-12 fr-col-lg-4">
-                            <div class="bold">Numéro de téléphone</div>
-                            <div>{{ object.telephone_particulier|or_empty_value_tag }}</div>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
+            {% endif %}
 
             <div class="white-container fr-mb-4v">
                 <h2 class="fr-h6">Localisation</h2>
                 <div class="fr-grid-row fr-grid-row--gutters">
                     <div class="fr-col-12 fr-col-lg-7">
                         <div data-controller="map-viewer" class="map"
+                             data-map-viewer-default-style-value="satellite"
                              data-map-viewer-lat-value="{{ object.coordinates.y|unlocalize }}"
                              data-map-viewer-long-value="{{ object.coordinates.x|unlocalize }}"
                              data-map-viewer-json-file-value="{% static 'core/style_ign.json' %}"
@@ -207,6 +185,97 @@
                     </div>
                 </div>
             </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Enquête épidémiologique</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Événements liés</div>
+                        {% for link in free_links_list %}
+                            {% if link.related_object_1 == object and not link.related_object_2.is_deleted %}
+                                <a class="fr-link fr-mr-2v" href="{{ link.related_object_2.get_absolute_url }}" target="_blank">{{ link.related_object_2 }}</a>
+                            {% endif %}
+                            {% if link.related_object_2 == object and not link.related_object_1.is_deleted %}
+                                <a class="fr-link fr-mr-2v" href="{{ link.related_object_1.get_absolute_url }}" target="_blank">{{ link.related_object_1 }}</a>
+                            {% endif %}
+                        {% empty %}
+                            <span class="empty-value">Vide</span>
+                        {% endfor %}
+
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-8">
+                        <div class="bold">Commentaire</div>
+                        <div>{{ object.commentaire|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Espèces concernées et exposées</h2>
+                <div class="fr-table">
+                    <div class="fr-table__wrapper">
+                        <div class="fr-table__container">
+                            <div class="fr-table__content">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Espèce</th>
+                                            <th scope="col">Identifiant</th>
+                                            <th scope="col">Description du site de détention</th>
+                                            <th scope="col">Présents</th>
+                                            <th scope="col">Morts</th>
+                                            <th scope="col">Cas</th>
+                                            <th scope="col">Abattus</th>
+                                            <th scope="col">Dépeuplés/euthanasiés</th>
+                                            <th scope="col">Vaccinés</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in object.especes_exposees.all %}
+                                            <tr>
+                                                <td>{{ row.espece }}</td>
+                                                <td>{{ row.identifiant|or_empty_value_tag }}</td>
+                                                <td>
+                                                    {% for line in row.get_situation_unite_lines %}
+                                                        <div>{{ line }}</div>
+                                                    {% empty %}
+                                                        <span class="empty-value">Vide</span>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{ row.presents|or_empty_value_tag }}</td>
+                                                <td>{{ row.morts|or_empty_value_tag }}</td>
+                                                <td>{{ row.cas|or_empty_value_tag }}</td>
+                                                <td>{{ row.abattus|or_empty_value_tag }}</td>
+                                                <td>{{ row.depeuples|or_empty_value_tag }}</td>
+                                                <td>{{ row.vaccines|or_empty_value_tag }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Éléments de contexte de la suspicion</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold">Contexte de la suspicion</div>
+                        <div>{{ object.get_context_suspicion_display|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Date d'apparition des éventuels 1ers symptômes</div>
+                        <div>{{ object.date_first_symptoms|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        <div class="bold fr-mt-2w">Humains exposés pour lesquels des actions sont engagées ?</div>
+                        <div>{{ object.get_human_involved_display|or_empty_value_tag }}</div>
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-8">
+                        <div class="bold">Description de la situation</div>
+                        <div>{{ object.description|or_empty_value_tag }}</div>
+                    </div>
+                </div>
+            </div>
+
             {% if object.show_mesures_block %}
                 <div class="white-container fr-mb-4v">
                     <h2 class="fr-h6">Mesures de gestion</h2>
@@ -235,11 +304,37 @@
                             <div class="bold">Date ND2</div>
                             <div>{{ object.date_nd2|date:"d/m/Y"|or_empty_value_tag }}</div>
                         </div>
+                        <div class="fr-col-12 fr-col-lg-4">
+                            <div class="bold">Date ND</div>
+                            <div>{{ object.date_nd|date:"d/m/Y"|or_empty_value_tag }}</div>
+                        </div>
                     </div>
                 </div>
             {% endif %}
             <div class="white-container fr-mb-4v">
                 {% include "sa/_evenement_analyses.html" %}
+            </div>
+
+            <div class="white-container fr-mb-4v">
+                <h2 class="fr-h6">Typage</h2>
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if object.typage_niveau_2 %}
+                            <div class="bold">{{ object.typage_niveau_2_intitule }}</div>
+                            <div>{{ object.typage_niveau_2 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        {% if object.typage_niveau_3 %}
+                            <div class="bold">{{ object.typage_niveau_3_intitule }}</div>
+                            <div>{{ object.typage_niveau_3 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="fr-col-12 fr-col-lg-4">
+                        <div class="bold fr-mt-2w">{{ object.maladie.intitule_typage_champ_libre }}</div>
+                        <div>{{ object.typage_champ_libre|or_empty_value_tag }}</div>
+                    </div>
+                </div>
             </div>
 
             <div class="white-container fr-mb-4v">
@@ -255,7 +350,7 @@
                         <div class="bold">N° ADIS</div>
                         <div>{{ object.numero_adis|or_empty_value_tag }}</div>
                         <div class="bold fr-mt-2w">Effectif retenu notification ADIS</div>
-                        <div>{{ object.effectif_retenu|or_empty_value_tag }}</div>
+                        <div data-testid="effectif_retenu">{{ object.effectif_retenu|or_empty_value_tag }}</div>
                     </div>
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="bold">Date notification ADIS</div>

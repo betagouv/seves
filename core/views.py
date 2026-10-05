@@ -630,7 +630,7 @@ class RevisionsListView(UserPassesTestMixin, CompareMixin, ListView):
         for i, diff in enumerate(patches):
             if diff.new == WithEtatMixin.Etat.CLOTURE.label:
                 for d in patches[:i]:
-                    setattr(d, "muted_action", True)
+                    d.muted_action = True
                     if d.comment:
                         d.comment += " - Modifié après clôture"
                     else:

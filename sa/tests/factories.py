@@ -10,7 +10,18 @@ from faker import Faker
 
 from core.factories import DepartementFactory
 from core.models import Structure
-from sa.models import Analyse, Espece, EvenementAnimal, Laboratoire, Maladie, MethodeAnalyse, Veterinaire
+from sa.models import (
+    Analyse,
+    Espece,
+    EspeceConcernee,
+    EvenementAnimal,
+    Laboratoire,
+    Maladie,
+    MethodeAnalyse,
+    SituationUniteRegle,
+    Typage,
+    Veterinaire,
+)
 from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import (
     ContexteSuspicion,
@@ -26,17 +37,68 @@ from sa.models.laboratoire import LaboratoireType
 from sa.models.maladie import DescriptionType
 from sa.models.veterinaire import TypeVeterinaire
 
-fake = Faker()
+fake = Faker("fr_FR")
 
 
 MALADIES = [
-    ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True),
-    ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True),
-    ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True),
-    ("Tuberculose", "TUB", DescriptionType.TUBERCULOSE, True, False, True),
-    ("Fièvre catarrhale ovine", "FCO", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
-    ("Acarapiose des abeilles (Acarapis woodi)", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
-    ("Adénomatose pulmonaire ovine", "DIV", DescriptionType.NOTIFY_CONFIRMED, False, False, True),
+    ("Salmonellose (Salmonella)", "SAL", DescriptionType.SALMONELLE, True, False, True, "Sérotype", None, "Émergent"),
+    ("Rage", "RAG", DescriptionType.NOTIFY_ASAP, True, False, True, "Sous-type", None, "Émergent"),
+    ("Brucellose", "BRU", DescriptionType.NOTIFY_ASAP, True, False, True, "Espèce", None, "Autre spoligotype"),
+    (
+        "Tuberculose",
+        "TUB",
+        DescriptionType.TUBERCULOSE,
+        True,
+        False,
+        True,
+        "Espèce",
+        "Spoligotype",
+        "Autre spoligotype",
+    ),
+    (
+        "Fièvre catarrhale ovine",
+        "FCO",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        "Sérotype",
+        None,
+        "Émergent",
+    ),
+    (
+        "Acarapiose des abeilles (Acarapis woodi)",
+        "DIV",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
+    (
+        "Adénomatose pulmonaire ovine",
+        "DIV",
+        DescriptionType.NOTIFY_CONFIRMED,
+        False,
+        False,
+        True,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
+    (
+        "Dermatose nodulaire contagieuse",
+        "DNC",
+        DescriptionType.CARTOGIP,
+        True,
+        True,
+        False,
+        None,
+        None,
+        "Typage complémentaire",
+    ),
 ]
 
 
@@ -44,6 +106,7 @@ class MaladieFactory(DjangoModelFactory):
     class Meta:
         model = Maladie
         django_get_or_create = ("name",)
+        skip_postgeneration_save = True
 
     class Params:
         maladie_ref = factory.Iterator(MALADIES)
@@ -54,6 +117,16 @@ class MaladieFactory(DjangoModelFactory):
     needs_arrete = factory.LazyAttribute(lambda o: o.maladie_ref[3])
     needs_dates_desinfection = factory.LazyAttribute(lambda o: o.maladie_ref[4])
     needs_date_nd = factory.LazyAttribute(lambda o: o.maladie_ref[5])
+    intitule_typage_niveau_2 = factory.LazyAttribute(lambda o: o.maladie_ref[6] or "")
+    intitule_typage_niveau_3 = factory.LazyAttribute(lambda o: o.maladie_ref[7] or "")
+    intitule_typage_champ_libre = factory.LazyAttribute(lambda o: o.maladie_ref[8])
+
+    @factory.post_generation
+    def especes_concernees(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.especes_concernees.set(extracted)
 
 
 class TuberculoseFactory(MaladieFactory):
@@ -71,12 +144,44 @@ class AdenomatoseFactory(MaladieFactory):
         maladie_ref = MALADIES[6]
 
 
+class DNCFactory(MaladieFactory):
+    class Params:
+        maladie_ref = MALADIES[7]
+
+
 class EspeceFactory(DjangoModelFactory):
     class Meta:
         model = Espece
         django_get_or_create = ("name",)
 
     name = factory.Faker("sentence", nb_words=3)
+    is_highlighted = False
+
+
+class TypageFactory(DjangoModelFactory):
+    class Meta:
+        model = Typage
+        django_get_or_create = (
+            "maladie",
+            "valeur_niveau_2",
+            "valeur_niveau_3",
+        )
+
+    maladie = factory.SubFactory(MaladieFactory)
+    valeur_niveau_2 = ""
+    valeur_niveau_3 = ""
+
+
+class SituationUniteRegleFactory(DjangoModelFactory):
+    class Meta:
+        model = SituationUniteRegle
+        django_get_or_create = ("espece", "type_lieu", "mode_elevage", "type_production", "type_elevage")
+
+    espece = factory.SubFactory(EspeceFactory)
+    type_lieu = "Élevage"
+    mode_elevage = ""
+    type_production = ""
+    type_elevage = ""
 
 
 class LaboratoireFactory(DjangoModelFactory):
@@ -109,7 +214,6 @@ class MethodeAnalyseFactory(DjangoModelFactory):
 class EvenementAnimalFactory(DjangoModelFactory):
     date_creation = factory.Faker("date_this_decade")
     maladie = factory.SubFactory("sa.tests.factories.MaladieFactory")
-    espece = factory.SubFactory("sa.tests.factories.EspeceFactory")
     statut_animal = FuzzyChoice([choice[0] for choice in StatutAnimal.choices])
     statut_evenement = FuzzyChoice([choice[0] for choice in StatutEvenement.choices])
     numero_annee = factory.Faker("year")
@@ -133,6 +237,8 @@ class EvenementAnimalFactory(DjangoModelFactory):
     human_involved = FuzzyChoice(HumanInvolved.values)
     description = factory.Faker("paragraph")
 
+    commentaire = factory.Faker("paragraph")
+
     foyer = FuzzyChoice(Foyer.values)
     numero_adis = factory.Faker("numerify", text="#####")
     effectif_retenu = factory.Faker("pyint", min_value=0, max_value=100)
@@ -153,7 +259,9 @@ class EvenementAnimalFactory(DjangoModelFactory):
             commune_etablissement="",
             pays_etablissement="",
             nom_particulier=factory.Faker("last_name", locale="fr_FR"),
-            prenom_particulier=factory.Faker("first_name", locale="fr_FR"),
+            prenom_particulier=factory.LazyAttribute(
+                lambda o: next(name for name in iter(fake.first_name, None) if name != o.nom_particulier)
+            ),
             adresse_particulier=factory.Faker("street_address", locale="fr_FR"),
             commune_particulier=factory.Faker("city", locale="fr_FR"),
             departement_particulier=factory.SubFactory("core.factories.DepartementFactory"),
@@ -161,6 +269,14 @@ class EvenementAnimalFactory(DjangoModelFactory):
             email_particulier=factory.Faker("email"),
             telephone_particulier=factory.Faker("phone_number", locale="fr_FR"),
         )
+
+    @factory.lazy_attribute
+    def espece(self):
+        if self.maladie.pk is not None:
+            concernee = self.maladie.especes_concernees.order_by("name").first()
+            if concernee:
+                return concernee
+        return EspeceFactory(is_highlighted=True)
 
     @factory.lazy_attribute
     def createur(self):
@@ -207,6 +323,11 @@ class EvenementAnimalFactory(DjangoModelFactory):
             return fake.date_this_decade()
 
     @factory.lazy_attribute
+    def date_nd(self):
+        if self.maladie.needs_date_nd:
+            return fake.date_this_decade()
+
+    @factory.lazy_attribute
     def type_lieu(self):
         return FuzzyChoice([value for value, _ in TypeLieu.choices_for_statut_animal(self.statut_animal)]).fuzz()
 
@@ -218,12 +339,16 @@ class EvenementAnimalFactory(DjangoModelFactory):
     @factory.lazy_attribute
     def date_nd1(self):
         if self.maladie.needs_dates_desinfection:
-            return fake.date_between(start_date=self.date_d_zero, end_date=self.date_d_zero + timedelta(days=30))
+            return fake.date_between(
+                start_date=self.date_d_zero + timedelta(days=1), end_date=self.date_d_zero + timedelta(days=30)
+            )
 
     @factory.lazy_attribute
     def date_nd2(self):
         if self.maladie.needs_dates_desinfection:
-            return fake.date_between(start_date=self.date_nd1, end_date=self.date_nd1 + timedelta(days=30))
+            return fake.date_between(
+                start_date=self.date_nd1 + timedelta(days=1), end_date=self.date_nd1 + timedelta(days=30)
+            )
 
     @factory.lazy_attribute
     def mesures_controle(self):
@@ -273,3 +398,18 @@ class VeterinaireFactory(DjangoModelFactory):
     def especes(self, create, extracted, **kwargs):
         if create:
             self.especes.set(extracted if extracted is not None else [self.evenement.espece])
+
+
+class EspeceConcerneeFactory(DjangoModelFactory):
+    class Meta:
+        model = EspeceConcernee
+
+    evenement = factory.SubFactory(EvenementAnimalFactory)
+    espece = factory.SubFactory(EspeceFactory)
+    identifiant = factory.Faker("bothify", text="ID-####")
+    presents = factory.Faker("pyint", min_value=0, max_value=100)
+    morts = factory.Faker("pyint", min_value=0, max_value=100)
+    cas = factory.Faker("pyint", min_value=0, max_value=100)
+    abattus = factory.Faker("pyint", min_value=0, max_value=100)
+    depeuples = factory.Faker("pyint", min_value=0, max_value=100)
+    vaccines = factory.Faker("pyint", min_value=0, max_value=100)

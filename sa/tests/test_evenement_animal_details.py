@@ -3,7 +3,11 @@ import datetime
 from playwright.sync_api import Page, expect
 
 from core.factories import StructureFactory
-from sa.tests.factories import EvenementAnimalFactory
+from core.mixins import WithEtatMixin
+from core.models import LienLibre
+from sa.models import EvenementAnimal, Typage
+from sa.models.evenement import StatutAnimal
+from sa.tests.factories import DNCFactory, EspeceConcerneeFactory, EvenementAnimalFactory, TuberculoseFactory
 from sa.tests.pages import EvenementAnimalDetailsPage
 from sv.models import Evenement
 
@@ -25,7 +29,11 @@ def test_evenement_animal_details_page_informations_generales_block(live_server,
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
 
-    block = details_page.block("Informations générales")
+    block = (
+        details_page.page.locator(".detail-content")
+        .get_by_role("heading", name="Informations générales", exact=True)
+        .locator("..")
+    )
     expect(block.get_by_text(evenement.maladie.name, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.espece.name, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_statut_animal_display(), exact=True)).to_be_visible()
@@ -37,14 +45,18 @@ def test_evenement_animal_details_page_informations_block(live_server, page: Pag
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
 
-    block = details_page.block("Informations")
+    block = (
+        details_page.page.locator(".detail-content")
+        .get_by_role("heading", name="Informations", exact=True)
+        .locator("..")
+    )
     expect(block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.get_statut_evenement_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_statut_changed.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
 
 
 def test_evenement_animal_details_page_detenteur_etablissement_block(live_server, page: Page):
-    evenement = EvenementAnimalFactory()
+    evenement = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -62,7 +74,7 @@ def test_evenement_animal_details_page_detenteur_etablissement_block(live_server
 
 
 def test_evenement_animal_details_page_detenteur_particulier_block(live_server, page: Page):
-    evenement = EvenementAnimalFactory(particulier=True)
+    evenement = EvenementAnimalFactory(particulier=True, statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -105,7 +117,7 @@ def test_evenement_animal_details_page_with_missing_information(live_server, pag
     expect(block.get_by_text("Vide").first).to_be_visible()
 
 
-def test_evenement_animal_details_page_mesures_block(live_server, page: Page):
+def test_evenement_animal_details_page_mesures_block_needs_arrete(live_server, page: Page):
     evenement = EvenementAnimalFactory(maladie__needs_arrete=True)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
@@ -115,6 +127,28 @@ def test_evenement_animal_details_page_mesures_block(live_server, page: Page):
     expect(block.get_by_text(evenement.date_apms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_apdi.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_levee.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_mesures_block_needs_dates_desinfection(live_server, page: Page):
+    evenement = EvenementAnimalFactory(maladie=DNCFactory())
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Mesures de gestion")
+    expect(block.get_by_text(evenement.date_d_zero.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_nd1.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_nd2.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_mesures_block_needs_date_nd(live_server, page: Page):
+    evenement = EvenementAnimalFactory(maladie=TuberculoseFactory())
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Mesures de gestion")
+    expect(block.get_by_text(evenement.date_nd.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
 
 
 def test_can_publish_from_evenement_animal_details_page(live_server, page: Page):
@@ -159,6 +193,151 @@ def test_evenement_animal_details_page_adis_block(live_server, page: Page):
     expect(block.get_by_text(evenement.numero_adis, exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_notification_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.date_cloture_adis.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
-    expect(block.get_by_text(str(evenement.effectif_retenu))).to_be_visible()
+    expect(block.get_by_test_id("effectif_retenu")).to_be_visible()
+    expect(block.get_by_test_id("effectif_retenu")).to_have_text(str(evenement.effectif_retenu))
     expect(block.get_by_text(evenement.get_origine_infection_display(), exact=True)).to_be_visible()
     expect(block.get_by_text(evenement.mesures_controle_labels, exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_enquete_block(live_server, page: Page):
+    for_free_link = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    for_other_free_link = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+    evenement = EvenementAnimalFactory(maladie__needs_arrete=True)
+    LienLibre.objects.create(related_object_1=evenement, related_object_2=for_free_link)
+    LienLibre.objects.create(related_object_1=evenement, related_object_2=for_other_free_link)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Enquête épidémiologique")
+
+    expect(block.get_by_text(evenement.commentaire, exact=True)).to_be_visible()
+    expect(block.get_by_text(str(for_free_link), exact=True)).to_be_visible()
+    expect(block.get_by_text(str(for_other_free_link), exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_especes_concernees_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    espece_1 = EspeceConcerneeFactory(evenement=evenement)
+    espece_2 = EspeceConcerneeFactory(evenement=evenement)
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    assert details_page.get_especes_concernees_values() == [
+        [
+            espece_1.espece.name,
+            str(espece_1.identifiant),
+            "Vide",
+            str(espece_1.presents),
+            str(espece_1.morts),
+            str(espece_1.cas),
+            str(espece_1.abattus),
+            str(espece_1.depeuples),
+            str(espece_1.vaccines),
+        ],
+        [
+            espece_2.espece.name,
+            str(espece_2.identifiant),
+            "Vide",
+            str(espece_2.presents),
+            str(espece_2.morts),
+            str(espece_2.cas),
+            str(espece_2.abattus),
+            str(espece_2.depeuples),
+            str(espece_2.vaccines),
+        ],
+    ]
+
+
+def test_evenement_animal_details_page_especes_concernees_block_when_empty(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+    espece_1 = EspeceConcerneeFactory(
+        evenement=evenement,
+        identifiant="",
+        presents=None,
+        morts=None,
+        cas=None,
+        abattus=None,
+        depeuples=None,
+        vaccines=None,
+    )
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    assert details_page.get_especes_concernees_values() == [
+        [
+            espece_1.espece.name,
+            "Vide",
+            "Vide",
+            "Vide",
+            "Vide",
+            "Vide",
+            "Vide",
+            "Vide",
+            "Vide",
+        ]
+    ]
+
+
+def test_evenement_animal_details_page_contexte_block(live_server, page: Page):
+    evenement = EvenementAnimalFactory()
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Éléments de contexte de la suspicion")
+    expect(block.get_by_text(evenement.get_context_suspicion_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.date_first_symptoms.strftime("%d/%m/%Y"), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.get_human_involved_display(), exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.description, exact=True)).to_be_visible()
+
+
+def test_evenement_animal_details_page_typage_block(live_server, page: Page):
+    maladie = TuberculoseFactory()
+    typage, _ = Typage.objects.get_or_create(
+        maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="SB1095"
+    )
+    evenement = EvenementAnimalFactory(
+        maladie=maladie,
+        typage=typage,
+        typage_champ_libre="Test champ libre",
+    )
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    block = details_page.block("Typage")
+    expect(block.get_by_text(evenement.typage.valeur_niveau_2, exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.typage.valeur_niveau_3, exact=True)).to_be_visible()
+    expect(block.get_by_text(evenement.typage_champ_libre, exact=True)).to_be_visible()
+    expect(block.get_by_text("Espèce", exact=True)).to_be_visible()
+    expect(block.get_by_text("Spoligotype", exact=True)).to_be_visible()
+    expect(block.get_by_text("Autre spoligotype", exact=True)).to_be_visible()
+
+
+def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS, maladie=TuberculoseFactory())
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).to_be_visible()
+    expect(details_page.block("Mesures de gestion")).to_be_visible()
+    expect(details_page.block("Flux analytique")).to_be_visible()
+    expect(details_page.block("Typage")).to_be_visible()
+    expect(details_page.block("Vétérinaires")).to_be_visible()
+
+    details_page.open_synthese()
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).not_to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).not_to_be_visible()
+    expect(details_page.block("Mesures de gestion")).not_to_be_visible()
+    expect(details_page.block("Flux analytique")).not_to_be_visible()
+    expect(details_page.block("Typage")).not_to_be_visible()
+    expect(details_page.block("Vétérinaires")).not_to_be_visible()

@@ -1,3 +1,13 @@
-from .evenement import EvenementAnimalCreationView, EvenementAnimalDetailsView, EvenementListView
+from .evenement import (
+    EvenementAnimalCreationView,
+    EvenementAnimalDetailsView,
+    EvenementAnimalDocumentExportView,
+    EvenementListView,
+)
 
-__all__ = ("EvenementListView", "EvenementAnimalCreationView", "EvenementAnimalDetailsView")
+__all__ = (
+    "EvenementAnimalCreationView",
+    "EvenementAnimalDetailsView",
+    "EvenementAnimalDocumentExportView",
+    "EvenementListView",
+)

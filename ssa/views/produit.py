@@ -1,6 +1,5 @@
 import datetime
 import io
-import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -227,8 +226,7 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
 
     def post(self, request):
         doc = DocxTemplate("ssa/doc_templates/evenement_produit.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
 
         context = {
             "object": self.object,
@@ -247,7 +245,6 @@ class EvenementProduitDocumentExportView(WithDocumentExportContextMixin, UserPas
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=evenement_produit_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response
 
     def test_func(self):

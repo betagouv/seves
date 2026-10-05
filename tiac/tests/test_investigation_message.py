@@ -111,7 +111,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     message_page = CreateMessagePage(page)
     message_page.new_compte_rendu()
-    expect((page.get_by_text("Nouveau compte rendu sur demande d'intervention"))).to_be_visible()
+    expect(page.get_by_text("Nouveau compte rendu sur demande d'intervention")).to_be_visible()
     message_page.add_basic_message_content()
     message_page.pick_recipient(mus_contact.structure, choice_js_fill)
     message_page.pick_recipient_copy(contact_copy_agent.agent, choice_js_fill)

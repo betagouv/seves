@@ -300,7 +300,7 @@ class ZoneInfesteeFactory(DjangoModelFactory):
     class Meta:
         model = ZoneInfestee
 
-    nom = factory.Sequence(lambda n: "Ma zone infestée {}".format(n))
+    nom = factory.Sequence(lambda n: f"Ma zone infestée {n}")
     fiche_zone_delimitee = factory.SubFactory("sv.factories.FicheZoneFactory")
 
     surface_infestee_totale = factory.fuzzy.FuzzyFloat(1, 100, precision=2)
@@ -344,7 +344,7 @@ class EvenementFactory(DjangoModelFactory):
         self.save()
 
     @factory.post_generation
-    def date_publication(self, create, extracted, **kwargs):  # noqa: F811
+    def date_publication(self, create, extracted, **kwargs):
         if extracted and create:
             if isinstance(extracted, str):
                 self.date_publication = timezone.make_aware(datetime.strptime(extracted, "%Y-%m-%d"))

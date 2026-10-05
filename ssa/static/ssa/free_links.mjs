@@ -4,6 +4,7 @@ import {Controller} from "Stimulus"
 
 class FreeLinksViaApiController extends Controller {
     static targets = ["select", "input"]
+    static values = {apiUrl: String}
 
     debounce(func, wait) {
         let timeout
@@ -14,7 +15,7 @@ class FreeLinksViaApiController extends Controller {
     }
 
     fetchFreeLink(query) {
-        return fetch(`/ssa/api/freelinks/recherche/?q=${query}`).then(
+        return fetch(`${this.apiUrlValue}?q=${query}`).then(
             async response => {
                 const data = await response.json()
                 return data.results

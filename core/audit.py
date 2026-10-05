@@ -10,7 +10,7 @@ def audit_log(action, method="dispatch"):
         @wraps(original)
         def wrapped(self, request, *args, **kwargs):
             AuditLog.objects.create(
-                action=action, user=request.user, path=request.path, ip=request.META.get("HTTP_X_FORWARDED_FOR")
+                action=action, user=request.user, path=request.path, ip=request.META.get("HTTP_X_REAL_IP")
             )
             return original(self, request, *args, **kwargs)
 

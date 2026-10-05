@@ -3,6 +3,7 @@ from collections import defaultdict
 import datetime
 from enum import property as enum_property
 from functools import cached_property, wraps
+import io
 import json
 import logging
 import re
@@ -851,9 +852,10 @@ class WithDocumentExportContextMixin(WithContactQuerysetMixin):
             "documents": Document.objects.for_fiche(obj).prefetch_related("created_by_structure"),
         }
         sub_template.render(context)
-        sub_doc_file = f"subdoc_{obj}.docx"
-        sub_template.save(sub_doc_file)
-        return sub_doc_file
+        sub_doc_stream = io.BytesIO()
+        sub_template.save(sub_doc_stream)
+        sub_doc_stream.seek(0)
+        return sub_doc_stream
 
 
 def normalize(s):
@@ -972,8 +974,8 @@ class GroupedChoicesMixin:
                 treeselect_kwargs["categorised_label"] = group_item.categorised_label
             treeselect_kwargs["label"] = label
             treeselect_kwargs["choices"] = []
-            for label, item in item.items():
-                treeselect_kwargs["choices"].append(get_treeselect_group(label=label, item=item))
+            for sub_label, sub_item in item.items():
+                treeselect_kwargs["choices"].append(get_treeselect_group(label=sub_label, item=sub_item))
 
             return TreeselectGroup(**treeselect_kwargs)
 

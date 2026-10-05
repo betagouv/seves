@@ -1,7 +1,6 @@
 import datetime
 from functools import cached_property
 import io
-import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -184,8 +183,7 @@ class InvestigationCasHumainDocumentExportView(WithDocumentExportContextMixin, U
 
     def post(self, request, *args, **kwargs):
         doc = DocxTemplate("ssa/doc_templates/investigation_cas_humain.docx")
-        sub_doc_file = self.create_document_bloc_commun()
-        sub_doc = doc.new_subdoc(sub_doc_file)
+        sub_doc = doc.new_subdoc(self.create_document_bloc_commun())
 
         context = self.get_context_data(
             object=self.object,
@@ -204,5 +202,4 @@ class InvestigationCasHumainDocumentExportView(WithDocumentExportContextMixin, U
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         response["Content-Disposition"] = f"attachment; filename=investigtion_cas_humain_{self.object.numero}.docx"
-        os.remove(sub_doc_file)
         return response

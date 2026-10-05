@@ -34,7 +34,16 @@
     white-space: nowrap;
 }
 
-#context .fr-radio-group {
+#context .fr-radio-group,
+#adis .fr-radio-group {
     margin-top: 0.5rem;
     margin-right: 2rem;
+}
+
+#especes-concernees-table .fr-table__container {
+    overflow: unset; /* Allows treeselect to open the dropdown with all the options */
+}
+
+.veterinaire-fields {
+    background-color: var(--background-alt-grey);
 }
