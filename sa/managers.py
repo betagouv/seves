@@ -20,3 +20,16 @@ class EvenementAnimalQuerySet(EvenementManagerMixin, models.QuerySet):
         from sa.models import EvenementAnimal
 
         return self.filter(Q(createur=user.agent.structure) | ~Q(etat=EvenementAnimal.Etat.BROUILLON))
+
+    def search(self, query):
+        fields = [
+            "raison_sociale_etablissement",
+            "numero_identifiant_etablissement",
+            "siret_etablissement",
+            "description",
+            "commentaire",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+        return self.filter(query_object)

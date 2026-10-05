@@ -3,37 +3,43 @@
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
+    <link rel="stylesheet" href="{% static 'sa/evenement_list.css' %}">
 {% endblock %}
 
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 
 {% block content %}
-    <form id="search-form" method="get">
+    <form id="search-form" method="get" data-controller="evenement-animal-search-form">
         <div class="fr-p-4v evenements_liste__header">
             <div class="evenements_liste__header--title">
                 <h2 class="fr-h3">Rechercher un événement</h2>
             </div>
-            <div class="evenements_liste__search-form">
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.annee %}
-                </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.numero %}
-                </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.maladie %}
-                </div>
-                <div class="fr-fieldset__element">
+            <div class="evenement-animal-search-form">
+                <div>{% dsfr_form_field filter.form.annee %}</div>
+                <div>{% dsfr_form_field filter.form.maladie %}</div>
+                <div>{% dsfr_form_field filter.form.numero %}</div>
+                <div
+                    data-controller="espece-autres"
+                    data-espece-autres-name-value="{{ filter.form.espece.html_name }}"
+                    data-espece-autres-source-value="search-autres-especes"
+                    data-action="click->espece-autres#loadAutres"
+                >
                     {% dsfr_form_field filter.form.espece %}
                 </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.etat %}
-                </div>
-                <div class="fr-fieldset__element evenements_liste__header--actions">
-                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn">Effacer</button>
+                <div>{% dsfr_form_field filter.form.statut %}</div>
+                <div>{% dsfr_form_field filter.form.start_date %}</div>
+                <div>{% dsfr_form_field filter.form.end_date %}</div>
+                <div>{% dsfr_form_field filter.form.full_text_search %}</div>
+                <div>{% dsfr_form_field filter.form.departement %}</div>
+                <div>{% dsfr_form_field filter.form.numero_adis %}</div>
+                <div>{% dsfr_form_field filter.form.commune %}</div>
+                <div>{% dsfr_form_field filter.form.etat %}</div>
+                <div class="evenement-animal-search-form__actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="evenement-animal-search-form#onReset:stop:prevent">Effacer</button>
                     <button type="submit" class="fr-btn" data-testid="submit-search">Rechercher</button>
                 </div>
             </div>
+            {{ filter.form.autres_especes|json_script:"search-autres-especes" }}
         </div>
     </form>
 
