@@ -153,6 +153,8 @@ fileignoreconfig:
 - filename: sa/migrations/0028_situationuniteregle.py
   checksum: 7e65aade4584877501b40e98898e1c9734178c8b8e33039a6f732e8f678dd7f8
 - filename: sa/filters.py
-  checksum: d6793849b75255cf73aeb2bfca4384e1752b71f7d1d6d1713a02685f3463db06
+  checksum: 71de06439bc08cd629fce49252a8544da084ac2a925e76c9f0e2cebe5574585d
+- filename: sa/templates/sa/_evenement_animal_advanced_filters.html
+  checksum: a9a5cb7cbdc171df21144a5520a3c90ea402dd0f6af8141144e63f085d4a6996
 
 version: "1.0"

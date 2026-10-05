@@ -1,11 +1,21 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from django.utils import timezone
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import StructureFactory
-from sa.models.evenement import StatutEvenement
-from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory, TuberculoseFactory
+from core.mixins import WithEtatMixin
+from sa.models.analyse import ResultatAnalyse
+from sa.models.evenement import ContexteSuspicion, StatutAnimal, StatutEvenement, TypeLieu
+from sa.tests.factories import (
+    AnalyseFactory,
+    EspeceFactory,
+    EvenementAnimalFactory,
+    MaladieFactory,
+    TuberculoseFactory,
+    VeterinaireFactory,
+)
 from sa.tests.pages import EvenementListPage
 
 
@@ -28,7 +38,8 @@ def test_search_form_have_all_fields(live_server, page: Page):
     expect(search_page.departement_treeselect.main_button).to_be_visible()
     expect(search_page.numero_adis_field).to_be_visible()
     expect(search_page.commune_field).to_be_visible()
-    expect(search_page.etat_field).to_be_visible()
+    expect(search_page.advanced_filters_button).to_be_visible()
+    expect(search_page.advanced_filters).to_be_hidden()
     expect(page.get_by_role("button", name="Effacer", exact=True)).to_be_visible()
     expect(page.get_by_role("button", name="Rechercher")).to_be_visible()
 
@@ -319,3 +330,256 @@ def test_evenement_animal_list_cant_see_draft_of_other_structure(live_server, pa
     search_page.navigate()
 
     expect(page.get_by_text("0 sur un total de 0")).to_be_visible()
+
+
+def test_evenement_animal_list_filter_by_etat(live_server, page: Page):
+    en_cours = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    cloture = EvenementAnimalFactory(etat=WithEtatMixin.Etat.CLOTURE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"État": "Clôturé"})
+
+    expect(search_page.row(cloture.numero)).to_be_visible()
+    expect(search_page.row(en_cours.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_date_confirmation(live_server, page: Page):
+    matching = EvenementAnimalFactory(statut_evenement=StatutEvenement.CONFIRME, date_statut_changed=date(2026, 3, 15))
+    too_late = EvenementAnimalFactory(statut_evenement=StatutEvenement.CONFIRME, date_statut_changed=date(2026, 4, 1))
+    not_confirmed = EvenementAnimalFactory(
+        statut_evenement=StatutEvenement.SUSPECT, date_statut_changed=date(2026, 3, 15)
+    )
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_advanced_filters()
+    search_page.fill_advanced_date_range("Date de confirmation entre le", "2026-03-01", "2026-03-31")
+    search_page.apply_advanced_filters()
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(too_late.numero)).to_have_count(0)
+    expect(search_page.row(not_confirmed.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_resultat_confirmation(live_server, page: Page):
+    matching = AnalyseFactory(resultat=ResultatAnalyse.DETECTE_FAIBLE).evenement
+    other = AnalyseFactory(resultat=ResultatAnalyse.NON_DETECTE).evenement
+    without_analyse = EvenementAnimalFactory()
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Résultat de confirmation": "Détecté faible"})
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+    expect(search_page.row(without_analyse.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_contexte_suspicion(live_server, page: Page):
+    matching = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.CLINIQUE)
+    other = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.ANALYTIQUE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Contexte de la suspicion": "Clinique"})
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+
+@pytest.mark.parametrize(
+    "label,model_field",
+    [
+        ("Date des premiers symptômes entre le", "date_first_symptoms"),
+        ("Date APDI entre le", "date_apdi"),
+        ("Date APMS entre le", "date_apms"),
+        ("Date de levée APDI / APMS entre le", "date_levee"),
+    ],
+)
+def test_evenement_animal_list_filter_by_date_range(live_server, page: Page, label, model_field):
+    matching = EvenementAnimalFactory(**{model_field: date(2026, 3, 15)})
+    too_early = EvenementAnimalFactory(**{model_field: date(2026, 2, 28)})
+    too_late = EvenementAnimalFactory(**{model_field: date(2026, 4, 1)})
+    without_date = EvenementAnimalFactory(**{model_field: None})
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_advanced_filters()
+    search_page.fill_advanced_date_range(label, "2026-03-01", "2026-03-31")
+    search_page.apply_advanced_filters()
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(too_early.numero)).to_have_count(0)
+    expect(search_page.row(too_late.numero)).to_have_count(0)
+    expect(search_page.row(without_date.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_type_detenteur(live_server, page: Page):
+    etablissement = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
+    particulier = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, particulier=True)
+    sauvage = EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.open_advanced_filters()
+    search_page.advanced_filters.get_by_text("Établissement", exact=True).click()
+    search_page.apply_advanced_filters()
+
+    expect(search_page.row(etablissement.numero)).to_be_visible()
+    expect(search_page.row(particulier.numero)).to_have_count(0)
+    expect(search_page.row(sauvage.numero)).to_have_count(0)
+
+    search_page.open_advanced_filters()
+    search_page.advanced_filters.get_by_text("Particulier", exact=True).click()
+    search_page.apply_advanced_filters()
+
+    expect(search_page.row(particulier.numero)).to_be_visible()
+    expect(search_page.row(etablissement.numero)).to_have_count(0)
+    expect(search_page.row(sauvage.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_numero_identifiant_detenteur(live_server, page: Page):
+    by_identifiant = EvenementAnimalFactory(numero_identifiant_etablissement="FR85123456")
+    by_siret = EvenementAnimalFactory(siret_etablissement="12345678901234")
+    other = EvenementAnimalFactory(numero_identifiant_etablissement="FR44000000", siret_etablissement="98765432109876")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"N° identifiant": "85123"})
+
+    expect(search_page.row(by_identifiant.numero)).to_be_visible()
+    expect(search_page.row(by_siret.numero)).to_have_count(0)
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+    search_page.search_with_advanced_filters({"N° identifiant": "456789012"})
+
+    expect(search_page.row(by_siret.numero)).to_be_visible()
+    expect(search_page.row(by_identifiant.numero)).to_have_count(0)
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_commune_detenteur(live_server, page: Page):
+    etablissement = EvenementAnimalFactory(
+        statut_animal=StatutAnimal.DETENU, commune_etablissement="Les Sables-d'Olonne"
+    )
+    particulier = EvenementAnimalFactory(
+        statut_animal=StatutAnimal.DETENU, particulier=True, commune_particulier="Olonne-sur-Mer"
+    )
+    foyer_only = EvenementAnimalFactory(commune="Olonne-sur-Mer", commune_etablissement="Nantes")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Commune": "olonne"})
+
+    expect(search_page.row(etablissement.numero)).to_be_visible()
+    expect(search_page.row(particulier.numero)).to_be_visible()
+    expect(search_page.row(foyer_only.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_nom_detenteur(live_server, page: Page):
+    etablissement = EvenementAnimalFactory(
+        statut_animal=StatutAnimal.DETENU, raison_sociale_etablissement="GAEC Bérard"
+    )
+    particulier = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, particulier=True, nom_particulier="Bérardi")
+    other = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, raison_sociale_etablissement="EARL Martin")
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Nom / raison sociale": "berard"})
+
+    expect(search_page.row(etablissement.numero)).to_be_visible()
+    expect(search_page.row(particulier.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_type_lieu(live_server, page: Page):
+    matching = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, type_lieu=TypeLieu.ZOO)
+    other = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, type_lieu=TypeLieu.SLAUGHTERHOUSE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Type de lieu": "Parc zoologique"})
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_veterinaire(live_server, page: Page):
+    by_structure = VeterinaireFactory(nom_structure="Clinique vétérinaire du Bocage", nom="Durand").evenement
+    by_nom = VeterinaireFactory(nom_structure="Cabinet Vendée", nom="Bocagé").evenement
+    other = VeterinaireFactory(nom_structure="Clinique des Lacs", nom="Martin").evenement
+    without_veterinaire = EvenementAnimalFactory()
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Structure ou vétérinaire": "bocage"})
+
+    expect(search_page.row(by_structure.numero)).to_be_visible()
+    expect(search_page.row(by_nom.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+    expect(search_page.row(without_veterinaire.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_numero_dpe(live_server, page: Page):
+    matching = VeterinaireFactory(numero_dpe="DPE-123456").evenement
+    other = VeterinaireFactory(numero_dpe="DPE-999999").evenement
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"N° DPE": "3456"})
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_advanced_filters_counter(live_server, page: Page):
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    expect(search_page.advanced_filters_button).to_have_text("Filtres avancés")
+
+    search_page.open_advanced_filters()
+    search_page.advanced_filters.get_by_text("Particulier", exact=True).click()
+    search_page.advanced_field("N° DPE").fill("123")
+    search_page.apply_advanced_filters()
+
+    expect(search_page.advanced_filters_button).to_have_text("Filtres avancés 2")
+
+
+def test_evenement_animal_list_cancel_advanced_filters(live_server, page: Page):
+    clinique = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.CLINIQUE)
+    analytique = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.ANALYTIQUE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Contexte de la suspicion": "Clinique"})
+
+    search_page.open_advanced_filters()
+    search_page.advanced_field("Contexte de la suspicion").select_option(label="Analytique")
+    search_page.advanced_field("N° DPE").fill("123")
+    search_page.cancel_advanced_filters()
+
+    expect(search_page.row(clinique.numero)).to_be_visible()
+    expect(search_page.row(analytique.numero)).to_have_count(0)
+
+    search_page.open_advanced_filters()
+    expect(search_page.advanced_field("Contexte de la suspicion")).to_have_value(ContexteSuspicion.CLINIQUE)
+    expect(search_page.advanced_field("N° DPE")).to_be_empty()
+
+
+def test_reset_button_clears_advanced_filters(live_server, page: Page):
+    clinique = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.CLINIQUE)
+    analytique = EvenementAnimalFactory(context_suspicion=ContexteSuspicion.ANALYTIQUE)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.search_with_advanced_filters({"Contexte de la suspicion": "Clinique"})
+    expect(search_page.row(analytique.numero)).to_have_count(0)
+
+    search_page.reset_search()
+
+    expect(search_page.row(clinique.numero)).to_be_visible()
+    expect(search_page.row(analytique.numero)).to_be_visible()
+    expect(search_page.advanced_filters_button).to_have_text("Filtres avancés")
+    search_page.open_advanced_filters()
+    expect(search_page.advanced_field("Contexte de la suspicion")).to_have_value("")
