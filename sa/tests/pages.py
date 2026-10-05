@@ -3,7 +3,7 @@ from functools import cached_property
 import json
 
 from django.urls import reverse
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Locator, Page, expect
 
 from core.pages import WithActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
@@ -420,6 +420,9 @@ class EvenementListPage(WithPreCreationFormPage):
         super().__init__(page, base_url)
         self.page = page
         self.base_url = base_url
+        self.maladie_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_maladie"))
+        self.espece_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_espece"))
+        self.departement_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_departement"))
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('sa:evenement-liste')}")
@@ -434,19 +437,54 @@ class EvenementListPage(WithPreCreationFormPage):
 
     @property
     def numero_field(self):
-        return self.search_form.get_by_label("N° événement")
+        return self.search_form.get_by_label("N° de fiche")
 
     @property
-    def maladie_field(self):
-        return self.search_form.get_by_label("Maladie")
+    def statut_field(self):
+        return self.search_form.get_by_label("Statut", exact=True)
 
     @property
-    def espece_field(self):
-        return self.search_form.get_by_label("Espèce")
+    def start_date_field(self):
+        return self.search_form.get_by_label("Publication entre le")
+
+    @property
+    def end_date_field(self):
+        return self.search_form.get_by_label("et le", exact=True)
+
+    @property
+    def full_text_search_field(self):
+        return self.search_form.get_by_label("Recherche libre")
+
+    @property
+    def numero_adis_field(self):
+        return self.search_form.get_by_label("N° ADIS")
+
+    @property
+    def commune_field(self):
+        return self.search_form.get_by_label("Commune du foyer")
 
     @property
     def etat_field(self):
         return self.search_form.get_by_label("État de l'événement")
+
+    def select_maladie(self, maladie):
+        group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+        self.maladie_treeselect.check_option(group, maladie.name_with_acronym)
+
+    def select_espece(self, espece):
+        group = "Les plus fréquentes" if espece.is_highlighted else "Autres"
+        with self.espece_treeselect.opened_treeselect():
+            self.espece_treeselect.search(espece.name)
+            self.espece_treeselect.check_option(group, espece.name)
+
+    def select_departement(self, departement):
+        self.departement_treeselect.check_option(departement.region.nom, str(departement))
+
+    def select_region(self, region):
+        with self.departement_treeselect.opened_treeselect():
+            region_input = self.departement_treeselect.options_container.get_by_label(region.nom, exact=True)
+            region_input.evaluate("it => it.click()")
+            expect(region_input).to_be_checked()
 
     def submit_search(self):
         self.page.get_by_role("button", name="Rechercher").click()

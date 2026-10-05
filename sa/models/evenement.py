@@ -92,6 +92,13 @@ class Espece(models.Model):
         )
         return frequent_group, other_group
 
+    @staticmethod
+    def autres_for_virtual_list():
+        return [
+            {"id": pk, "name": name}
+            for pk, name in Espece.objects.filter(is_highlighted=False).order_by("name").values_list("pk", "name")
+        ]
+
 
 class StatutAnimal(models.TextChoices):
     SAUVAGE = auto(), "Sauvage"

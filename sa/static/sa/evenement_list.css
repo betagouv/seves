@@ -1,0 +1,24 @@
+.evenement-animal-search-form {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    align-items: start;
+}
+
+.evenement-animal-search-form__actions {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+}
+
+@media (max-width: 62em) {
+    .evenement-animal-search-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 36em) {
+    .evenement-animal-search-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

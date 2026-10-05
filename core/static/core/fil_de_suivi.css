@@ -25,7 +25,7 @@
 .message-filter .fr-input-group {
     flex-grow: 1;
 }
-#id_full_text_search {
+.message-filter #id_full_text_search {
     margin-top: 0 !important;
 }
 .message-actions .fr-translate__btn {
