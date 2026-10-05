@@ -15,7 +15,8 @@ def fix_errors_in_maladies(apps, schema_editor):
     if espece:
         new_espece = Espece.objects.get(name="Porc (Sus scrofa domesticus)")
         EvenementAnimal.objects.filter(espece_id=espece.id).update(espece_id=new_espece.id)
-        EspeceConcernee.objects.filter(espece=espece)
+        EspeceConcernee.objects.filter(espece=espece).update(espece=new_espece)
+        espece.delete()
 
     Maladie.objects.update_or_create(
         name="Autre maladie zoonotique émergente",
@@ -32,7 +33,7 @@ def fix_errors_in_maladies(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0035_alter_evenementanimal_code_insee_and_more"),
+        ("sa", "0036_evenementanimal_departement"),
     ]
 
     operations = [
