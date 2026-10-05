@@ -132,7 +132,7 @@ class TreeselectPage:
         if self.options_container.is_visible():
             return
         self.main_button.click()
-        expect(self.options_container).to_be_visible()
+        expect(self.search_bar).to_be_focused()
 
     @playwright_repeatable
     def close_treeselect(self):
