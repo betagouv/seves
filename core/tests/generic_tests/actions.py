@@ -1,5 +1,7 @@
 import re
 
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from playwright.sync_api import expect
 
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
@@ -58,6 +60,51 @@ def generic_test_ac_can_update_fiche_even_when_state_is_cloture(
 
     object.refresh_from_db()
     assert object.etat == WithEtatMixin.Etat.CLOTURE
+
+
+def generic_test_ac_can_delete_fiche_even_when_state_is_cloture(
+    live_server, page, object, mocked_authentification_user
+):
+    ac_structure = Structure.objects.create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE, libelle=MUS_STRUCTURE)
+    ContactStructureFactory(structure=ac_structure)
+    object.etat = WithEtatMixin.Etat.CLOTURE
+    object.save()
+
+    mocked_authentification_user.agent.structure = ac_structure
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    page.get_by_role("link", name="Supprimer l'événement").click()
+    page.get_by_test_id("submit-delete-modal").click()
+    expect(page.get_by_text(object.get_soft_delete_success_message())).to_be_visible()
+
+    object.refresh_from_db()
+    assert object.is_deleted is True
+
+
+def generic_test_cant_see_delete_btn_if_fiche_is_cloture_and_user_is_not_ac(live_server, page, object):
+    object.etat = WithEtatMixin.Etat.CLOTURE
+    object.save()
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    page.get_by_role("button", name="Actions").click()
+    expect(page.get_by_role("link", name="Supprimer l'événement")).not_to_be_visible()
+
+
+def generic_test_cant_forge_delete_if_fiche_is_cloture_and_user_is_not_ac(client, object):
+    object.etat = WithEtatMixin.Etat.CLOTURE
+    object.save()
+
+    client.post(
+        reverse("soft-delete"),
+        data={
+            "content_type_id": ContentType.objects.get_for_model(object).id,
+            "content_id": object.pk,
+            "next": object.get_absolute_url(),
+        },
+    )
+
+    object.refresh_from_db()
+    assert object.is_deleted is False
 
 
 def generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(
