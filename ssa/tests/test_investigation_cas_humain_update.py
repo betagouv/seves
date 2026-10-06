@@ -199,6 +199,7 @@ def test_update_reference_souches_will_trigger_email(live_server, page, mailoutb
     assert evenement.numero in mail.subject
     assert "Souche / cluster" in mail.subject
     assert "Référence souche : New value" in mail.body
+    assert "Cette notification est informative et n’appelle aucune action de votre part." in mail.body
 
 
 def test_update_reference_clusters_will_trigger_email(live_server, page, mailoutbox, mocked_authentification_user):
@@ -221,6 +222,7 @@ def test_update_reference_clusters_will_trigger_email(live_server, page, mailout
     assert evenement.numero in mail.subject
     assert "Souche / cluster" in mail.subject
     assert "Référence cluster : New value" in mail.body
+    assert "Cette notification est informative et n’appelle aucune action de votre part." in mail.body
 
 
 def test_investigation_cas_humain_update_has_locking_protection(
