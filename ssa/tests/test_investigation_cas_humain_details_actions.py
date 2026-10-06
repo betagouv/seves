@@ -1,9 +1,12 @@
 from playwright.sync_api import Page, expect
 
 from core.tests.generic_tests.actions import (
+    generic_test_ac_can_delete_fiche_even_when_state_is_cloture,
     generic_test_ac_can_update_fiche_even_when_state_is_cloture,
     generic_test_can_cloturer_evenement,
     generic_test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object,
+    generic_test_cant_forge_delete_if_fiche_is_cloture_and_user_is_not_ac,
+    generic_test_cant_see_delete_btn_if_fiche_is_cloture_and_user_is_not_ac,
     generic_test_soft_delete_object_also_removes_existing_lien_libre,
 )
 from ssa.factories import InvestigationCasHumainFactory
@@ -34,6 +37,23 @@ def test_ac_can_update_fiche_even_when_state_is_cloture(live_server, page: Page,
     generic_test_ac_can_update_fiche_even_when_state_is_cloture(
         live_server, page, evenement, mocked_authentification_user, field_to_edit="#id_description"
     )
+
+
+def test_ac_can_delete_fiche_even_when_state_is_cloture(live_server, page, mocked_authentification_user):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_ac_can_delete_fiche_even_when_state_is_cloture(
+        live_server, page, evenement, mocked_authentification_user
+    )
+
+
+def test_cant_see_delete_btn_if_fiche_is_cloture_and_user_is_not_ac(live_server, page):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_cant_see_delete_btn_if_fiche_is_cloture_and_user_is_not_ac(live_server, page, evenement)
+
+
+def test_cant_forge_delete_if_fiche_is_cloture_and_user_is_not_ac(client):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_cant_forge_delete_if_fiche_is_cloture_and_user_is_not_ac(client, evenement)
 
 
 def test_can_update_fiche_even_when_free_links_exists_to_a_deleted_object(live_server, page):
