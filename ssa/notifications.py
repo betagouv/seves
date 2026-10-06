@@ -34,6 +34,8 @@ def notify_souches_clusters(evenement: EvenementProduit, user):
     Les champs “souche” et / ou “cluster” ont été modifiés pour l’évènement : {evenement.get_long_email_display_name()}
     - Référence souche : {evenement.reference_souches or "Vide"}
     - Référence cluster : {evenement.reference_clusters or "Vide"}
+
+    Cette notification est informative et n’appelle aucune action de votre part. Si une action est requise, elle vous sera indiquée par e-mail par la MUS. Pour toute information complémentaire sur les souches et les clusters, veuillez consulter l’instruction technique.
             """,
         html_message=f"""
         <p>Bonjour,<br>
@@ -43,6 +45,7 @@ def notify_souches_clusters(evenement: EvenementProduit, user):
         <li>- Référence cluster : {evenement.reference_clusters or "Vide"}</li>
         </ul>
         </p>
+        <p>Cette notification est informative et n’appelle aucune action de votre part. Si une action est requise, elle vous sera indiquée par e-mail par la MUS. Pour toute information complémentaire sur les souches et les clusters, veuillez consulter l’instruction technique.</p>
             """,
     )
 
