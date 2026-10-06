@@ -299,6 +299,7 @@ class TreeselectSelectedBadge extends TreeselectChoicesListener {
  * *** Targets ***
  * @property {HTMLElement} bodyTarget
  * @property {HTMLButtonElement} buttonTarget
+ * @property {HTMLElement} emptyTarget
  * @property {HTMLInputElement} searchbarTarget
  * @property {HTMLButtonElement[]} unselectAllBtnTargets
  * @property {HTMLElement} selectedGroupTarget
@@ -307,7 +308,16 @@ class TreeselectSelectedBadge extends TreeselectChoicesListener {
  * @property {HTMLTemplateElement} selectedTagTplTarget
  */
 class Treeselect extends Controller {
-    static targets = ["body", "button", "searchbar", "unselectAllBtn", "selectedGroup", "selectedTag", "selectedTagTpl"]
+    static targets = [
+        "body",
+        "button",
+        "empty",
+        "searchbar",
+        "unselectAllBtn",
+        "selectedGroup",
+        "selectedTag",
+        "selectedTagTpl",
+    ]
     static values = {minSearchLength: {type: Number, default: 3}}
 
     initialize() {
@@ -372,9 +382,10 @@ class Treeselect extends Controller {
 
         this.isFiltered = !belowThreshold
         const normalizedNeedle = normalize(search)
-        await Promise.all(
+        const results = await Promise.all(
             this.children.values().map(it => it.search(search, this.minSearchLengthValue, normalizedNeedle)),
         )
+        this.emptyTarget.hidden = belowThreshold || results.some(it => it)
     }
 
     /**
