@@ -89,11 +89,11 @@ class FicheDetectionQuerySet(FichesCommonQueryset):
                 "organisme_nuisible",
                 "statut_reglementaire",
                 "fiche_zone_delimitee",
+                "createur",
             )
         )
         return self.select_related(
             "contexte",
-            "createur",
             "statut_evenement",
         ).prefetch_related(
             "lieux",
