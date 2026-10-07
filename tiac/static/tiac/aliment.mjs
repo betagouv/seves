@@ -88,6 +88,7 @@ class AlimentFormController extends BaseFormInModal {
      */
     renderCard(aliment) {
         // language=HTML
+        const canDelete = aliment.is_used_in_conclusion === "False"
         return `<div class="aliment-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
@@ -111,7 +112,9 @@ class AlimentFormController extends BaseFormInModal {
                         <button
                             class="fr-btn fr-btn--secondary fr-icon-delete-bin-line fr-mb-0 delete-button"
                             type="button"
-                            data-action="${this.identifier}#onDelete:prevent:default"
+                            ${canDelete ? "" : "disabled"}
+                            ${canDelete ? "" : 'title="Suppression impossible : aliment présent dans la conclusion."'}
+                            ${canDelete ? `data-action="${this.identifier}#onDelete:prevent:default"` : ""}
                         >Supprimer</button>
                     </div>
                 </div>

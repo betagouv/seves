@@ -624,6 +624,10 @@ class RepasSuspect(models.Model):
         with reversion.create_revision():
             super().save(*args, **kwargs)
 
+    @property
+    def is_used_in_conclusion(self):
+        return self.investigation.etat == self.investigation.Etat.CONCLU and self == self.investigation.conclusion_repas
+
 
 @reversion.register()
 class AlimentSuspect(models.Model):
@@ -677,6 +681,12 @@ class AlimentSuspect(models.Model):
     def save(self, *args, **kwargs):
         with reversion.create_revision():
             super().save(*args, **kwargs)
+
+    @property
+    def is_used_in_conclusion(self):
+        return (
+            self.investigation.etat == self.investigation.Etat.CONCLU and self == self.investigation.conclusion_aliment
+        )
 
 
 @reversion.register()
