@@ -29,6 +29,9 @@ def test_investigation_tiac_detail_page_content(live_server, page: Page):
 
     expect(details_page.context_block.get_by_text(str(evenement.createur), exact=True)).to_be_visible()
     expect(
+        details_page.context_block.get_by_text(evenement.date_creation.strftime("%d/%m/%Y"), exact=True)
+    ).to_be_visible()
+    expect(
         details_page.context_block.get_by_text(evenement.date_reception.strftime("%d/%m/%Y"), exact=True)
     ).to_be_visible()
     expect(
