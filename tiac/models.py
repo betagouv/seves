@@ -536,6 +536,11 @@ class InvestigationTiac(
     def can_add_or_edit_conclusion(self):
         return self.etat in (self.Etat.EN_COURS, self.Etat.CONCLU)
 
+    def can_user_edit_conclusion(self, user):
+        if self.is_cloture:
+            return self.display_warning_modification(user)
+        return self.can_add_or_edit_conclusion and self.can_be_modified(user)
+
     def publish(self):
         self.etat = self.Etat.EN_COURS
         if self.suspicion_conclusion:

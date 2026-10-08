@@ -50,7 +50,7 @@ def generic_test_ac_can_update_fiche_even_when_state_is_cloture(
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     page.get_by_role("button", name="Actions").click()
     page.get_by_role("button", name="Modifier l'événement").click()
-    expect(page.get_by_text("Modification d'une fiche clôturée", exact=True)).to_be_visible()
+    expect(page.get_by_text("Modification d'une fiche clôturée", exact=True).filter(visible=True)).to_be_visible()
     page.get_by_role("link", name="Poursuivre la modification").click()
     page.wait_for_url(re.compile(r".*(modification|edition).*"))
 
