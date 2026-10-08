@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.forms import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
@@ -567,6 +568,7 @@ class InvestigationTiacDetailView(
         ]
         context["etablissements"] = list(self.get_object().etablissements.all())
         context["dates_repas"] = [r.datetime_repas for r in self.get_object().repas.all() if r.datetime_repas]
+        context["can_edit_conclusion"] = self.get_object().can_user_edit_conclusion(self.request.user)
         context["conclusion_form"] = ConclusionForm(instance=self.get_object())
         return context
 
@@ -664,7 +666,7 @@ class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, Us
         return InvestigationTiac.objects.all().get_user_can_view(user=self.request.user)
 
     def test_func(self):
-        return self.get_object().can_be_modified(self.request.user)
+        return self.get_object().can_user_edit_conclusion(self.request.user)
 
     def _empty_conclusion(self):
         self.object.suspicion_conclusion = None
@@ -679,6 +681,8 @@ class ConclusionUpdateView(MediaDefiningMixin, WithFormErrorsAsMessagesMixin, Us
         self.object = self.get_object()
         form = self.get_form()
         if "delete" in self.request.POST:
+            if self.object.is_cloture:
+                raise PermissionDenied
             self._empty_conclusion()
             notify_conclusion(self.object, self.request.user)
             messages.success(self.request, "La conclusion a été supprimée.")

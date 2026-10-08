@@ -1,5 +1,6 @@
 import random
 
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from playwright.sync_api import Page, expect
 import pytest
@@ -629,3 +630,56 @@ def test_conclusion_form_clears_repas_and_aliment_when_switching_to_discarded(li
     assert evenement.suspicion_conclusion == SuspicionConclusion.DISCARDED
     assert evenement.conclusion_repas is None
     assert evenement.conclusion_aliment is None
+
+
+def test_ac_can_edit_conclusion_of_cloture_investigation(
+    live_server, page: Page, mocked_authentification_user, mus_contact
+):
+    mocked_authentification_user.agent.structure = mus_contact.structure
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.CLOTURE,
+        suspicion_conclusion=SuspicionConclusion.UNKNOWN,
+        conclusion_comment="Initial comment",
+    )
+    detail_page = InvestigationTiacDetailsPage(page, live_server.url)
+    detail_page.navigate(evenement)
+    detail_page.page.get_by_role("button", name="Actions").click()
+    detail_page.edit_conclusion_button.click()
+    expect(detail_page.current_modal.get_by_text("Modification d'une fiche clôturée", exact=True)).to_be_visible()
+    detail_page.current_modal.get_by_role("button", name="Poursuivre la modification").click()
+
+    expect(detail_page.suspicion_conclusion_field).to_have_value(SuspicionConclusion.UNKNOWN)
+    expect(detail_page.page.locator("#id_conclusion_comment")).to_have_value("Initial comment")
+    expect(detail_page.delete_conclusion_button).to_have_count(0)
+    detail_page.page.locator("#id_conclusion_comment").fill("New comment")
+    detail_page.save_conclusion()
+
+    expect(detail_page.page.get_by_text("L’évènement a été mis à jour avec succès.", exact=True)).to_be_visible()
+    expect(detail_page.page.get_by_text("Clôturé", exact=True)).to_be_visible()
+    evenement.refresh_from_db()
+    assert evenement.conclusion_comment == "New comment"
+    assert evenement.etat == InvestigationTiac.Etat.CLOTURE
+
+    content_type = ContentType.objects.get_for_model(InvestigationTiac)
+    page.goto(
+        f"{live_server.url}{reverse('revision-list', kwargs={'content_type': content_type.pk, 'pk': evenement.pk})}"
+    )
+    history_row = page.locator("tr", has_text="New comment")
+    expect(history_row).to_contain_text("Initial comment")
+    expect(history_row).to_contain_text("Modifié après clôture")
+
+
+def test_cant_forge_conclusion_delete_on_cloture_investigation(client, mocked_authentification_user, mus_contact):
+    mocked_authentification_user.agent.structure = mus_contact.structure
+    evenement = InvestigationTiacFactory(
+        etat=InvestigationTiac.Etat.CLOTURE, suspicion_conclusion=SuspicionConclusion.UNKNOWN
+    )
+
+    response = client.post(
+        reverse("tiac:investigation-tiac-edition-conclusion", kwargs={"pk": evenement.pk}), data={"delete": ""}
+    )
+
+    assert response.status_code == 403
+    evenement.refresh_from_db()
+    assert evenement.suspicion_conclusion == SuspicionConclusion.UNKNOWN
+    assert evenement.etat == InvestigationTiac.Etat.CLOTURE
