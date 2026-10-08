@@ -13,6 +13,7 @@ from core.tests.generic_tests.contacts import (
     generic_test_add_multiple_contacts_agents_to_an_evenement,
     generic_test_cant_add_contact_agent_if_he_cant_access_domain,
     generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain,
+    generic_test_contact_agent_disabled_has_no_message_link,
     generic_test_remove_contact_agent_from_an_evenement,
     generic_test_remove_contact_structure_from_an_evenement,
 )
@@ -346,3 +347,8 @@ def test_can_preview_image_from_message_details(live_server, page):
 def test_can_download_zip_attachments_of_message(live_server, page):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_can_download_zip_attachments_of_message(live_server, page, object)
+
+
+def test_contact_agent_disabled_has_no_message_link(live_server, page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    generic_test_contact_agent_disabled_has_no_message_link(live_server, page, evenement)

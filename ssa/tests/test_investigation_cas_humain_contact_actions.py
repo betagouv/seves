@@ -5,6 +5,7 @@ from core.tests.generic_tests.contacts import (
     generic_test_add_multiple_contacts_agents_to_an_evenement,
     generic_test_cant_add_contact_agent_if_he_cant_access_domain,
     generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain,
+    generic_test_contact_agent_disabled_has_no_message_link,
     generic_test_remove_contact_agent_from_an_evenement,
     generic_test_remove_contact_structure_from_an_evenement,
 )
@@ -62,3 +63,8 @@ def test_cant_add_contact_structure_if_any_agent_cant_access_domain(live_server,
         choice_js_cant_pick,
         evenement,
     )
+
+
+def test_contact_agent_disabled_has_no_message_link(live_server, page):
+    evenement = InvestigationCasHumainFactory(etat=EvenementInvestigationCasHumain.Etat.EN_COURS)
+    generic_test_contact_agent_disabled_has_no_message_link(live_server, page, evenement)
