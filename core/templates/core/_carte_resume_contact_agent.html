@@ -6,9 +6,13 @@
     {% endif %}
 </div>
 <div class="fr-col-4">
-    <a href="{% url 'message-add' content_type.pk object.pk %}?type=message&contact={{ contact.pk }}" class="fr-link email">
-        {{ contact.email }}
-    </a>
+    {% if contact.agent.user.is_active %}
+        <a href="{% url 'message-add' content_type.pk object.pk %}?type=message&contact={{ contact.pk }}" class="fr-link email">
+            {{ contact.email }}
+        </a>
+    {% else %}
+        {{ contact.email }} <span class="fr-badge fr-badge--sm fr-badge--no-icon">Désactivé</span>
+    {% endif %}
 </div>
 <div class="fr-col-3 phone">{{ contact.agent.telephone }}</div>
 {% if can_delete_contact %}

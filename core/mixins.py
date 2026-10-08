@@ -183,7 +183,9 @@ class WithContactFormsInContextMixin:
 
 class WithContactQuerysetMixin:
     def get_agents(self, obj):
-        return obj.contacts.agents_only().select_related("agent__structure").order_by_structure_and_name()
+        return (
+            obj.contacts.agents_only().select_related("agent__structure", "agent__user").order_by_structure_and_name()
+        )
 
     def get_structures(self, obj):
         return obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
