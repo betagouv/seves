@@ -60,6 +60,7 @@ class RepasFormController extends BaseFormInModal {
     renderCard(repas) {
         // language=HTML
         const nbParticpants = `Participants : ${repas.nombre_participant}`
+        const canDelete = repas.is_used_in_conclusion === "False"
         return `<div class="repas-card fr-card" data-${this.identifier}-target="cardContainer">
             <div class="fr-card__body">
                 <div class="fr-card__content">
@@ -84,7 +85,9 @@ class RepasFormController extends BaseFormInModal {
                         <button
                             class="fr-btn fr-btn--secondary fr-icon-delete-bin-line fr-mb-0 delete-button"
                             type="button"
-                            data-action="${this.identifier}#onDelete:prevent:default"
+                            ${canDelete ? "" : "disabled"}
+                            ${canDelete ? "" : 'title="Suppression impossible : repas présent dans la conclusion."'}
+                            ${canDelete ? `data-action="${this.identifier}#onDelete:prevent:default"` : ""}
                         >Supprimer</button>
                     </div>
                 </div>

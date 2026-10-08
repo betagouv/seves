@@ -652,12 +652,18 @@ class InvestigationTiacFormPage(WithAnalyseAlimentaireMixin, WithEtablissementMi
     def delete_danger_syndromique(self, index):
         self.get_dangers_syndromiques().nth(index).get_by_role("button", name="Supprimer").click()
 
+    def delete_repas_btn(self, index):
+        return self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer")
+
+    def delete_aliment_btn(self, index):
+        return self.page.locator(".aliment-card").nth(index).get_by_role("button", name="Supprimer")
+
     def delete_repas(self, index):
-        self.page.locator(".repas-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.delete_repas_btn(index).click()
         self.current_modal.get_by_role("button", name="Supprimer").click()
 
     def delete_aliment(self, index):
-        self.page.locator(".aliment-card").nth(index).get_by_role("button", name="Supprimer").click()
+        self.page.delete_aliment_btn(index).click()
         self.current_modal.get_by_role("button", name="Supprimer").click()
 
     @property

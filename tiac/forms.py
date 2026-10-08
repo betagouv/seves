@@ -472,6 +472,7 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Motif de suspicion du repas",
     )
+    is_used_in_conclusion = forms.BooleanField(widget=forms.HiddenInput, required=False)
 
     class Meta:
         model = RepasSuspect
@@ -484,7 +485,13 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
             "departement",
             "type_collectivite",
             "motif_suspicion",
+            "is_used_in_conclusion",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["is_used_in_conclusion"].initial = self.instance.is_used_in_conclusion
 
 
 class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
@@ -518,6 +525,7 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Motif de suspicion de l'aliment",
     )
+    is_used_in_conclusion = forms.BooleanField(widget=forms.HiddenInput, required=False)
 
     @property
     def media(self):
@@ -544,7 +552,13 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
             "description_composition",
             "description_produit",
             "motif_suspicion",
+            "is_used_in_conclusion",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["is_used_in_conclusion"].initial = self.instance.is_used_in_conclusion
 
 
 class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
