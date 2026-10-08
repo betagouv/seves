@@ -71,8 +71,8 @@
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut foyer' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='departement' display_name='Dpt' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='commune' display_name='Commune' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='displayed_detenteur' display_name='Détenteur' %}</th>
-                            <th scope="col">Type prod. foyer</th>
+                            <th scope="col">Détenteur </th>
+                            <th scope="col">Type de lieu</th>
                             <th scope="col">Espèces présentes</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
                         </tr>
@@ -92,7 +92,7 @@
                                 <td>{{ evenement.departement.numero|or_empty_value_tag:"table" }}</td>
                                 <td>{{ evenement.displayed_commune|or_empty_value_tag:"table" }}</td>
                                 <td>{{ evenement.displayed_detenteur|or_empty_value_tag:"table" }}</td>
-                                <td>-</td>
+                                <td>{{ evenement.get_type_lieu_display }}</td>
                                 <td>{{ evenement.displayed_especes|or_empty_value_tag:"table" }}</td>
                                 <td>
                                     <span class="fr-badge fr-badge--{{ evenement.etat|etat_color }} fr-badge--no-icon">{{ evenement.readable_etat }}</span>

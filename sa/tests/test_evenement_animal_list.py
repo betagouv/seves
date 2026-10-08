@@ -84,6 +84,7 @@ def test_evenement_animal_list_displays_events_and_links_to_details(live_server,
     expect(row).to_contain_text(evenement.departement.numero)
     expect(row).to_contain_text(f"{evenement.commune} ({evenement.code_insee})")
     expect(row).to_contain_text(evenement.numero_identifiant_etablissement)
+    expect(row).to_contain_text(evenement.get_type_lieu_display())
     expect(row).to_contain_text(evenement.espece.name)
     expect(row).to_contain_text(evenement.get_etat_display())
 

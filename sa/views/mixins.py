@@ -15,7 +15,6 @@ class WithFilteredListMixin(WithOrderingMixin):
             "statut_evenement": "statut_evenement",
             "creation": "date_creation",
             "etat": "etat",
-            "displayed_detenteur": "displayed_detenteur",
         }
 
     def get_default_order_by(self):
