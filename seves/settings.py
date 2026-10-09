@@ -121,6 +121,7 @@ TEMPLATES = [
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
                 "sa.context_processors.pre_creation_form",
+                "ssa.context_processors.satisfaction_notice",
             ],
         },
     },
@@ -417,5 +418,10 @@ USERS_DEFAULT_GROUPS = env.list("USERS_DEFAULT_GROUPS", default=[])
 GEOCODE_URL = "https://data.geopf.fr/geocodage"
 MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
 MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)
+
+# Bandeau questionnaire de satisfaction
+ALIM_SATISFACTION_NOTICE_ENABLED = env.bool("ALIM_SATISFACTION_NOTICE_ENABLED", default=False)
+ALIM_SATISFACTION_NOTICE_VERSION = env.str("ALIM_SATISFACTION_NOTICE_VERSION", default="1")
+ALIM_SATISFACTION_SURVEY_URL = env("ALIM_SATISFACTION_SURVEY_URL", default="")
 
 VOLUMINOUS_EXTRACT_THRESHOLD = 1000
