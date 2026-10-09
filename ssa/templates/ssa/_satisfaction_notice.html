@@ -1,0 +1,14 @@
+<div class="fr-notice fr-notice--info fr-hidden dismissible-notice-js" id="alim-satisfaction-notice"
+     data-storage-key="notice-dismissed:{{ notice.id }}:{{ request.user.pk }}">
+    <div class="fr-container">
+        <div class="fr-notice__body">
+            <p>
+                <span class="fr-notice__title"><strong>Votre avis compte :</strong> un questionnaire de satisfaction sur la verticale alimentaire est à votre disposition.</span>
+                <span class="fr-notice__desc"><strong>Vos suggestions nous aideront à faire évoluer Sèves.</strong></span>
+                <a class="fr-notice__link" href="{{ notice.survey_url }}" target="_blank" rel="noopener"
+                   title="Répondre au questionnaire - nouvelle fenêtre">Répondre au questionnaire</a>
+            </p>
+            <button type="button" class="fr-btn--close fr-btn" title="Masquer le message">Masquer le message</button>
+        </div>
+    </div>
+</div>
