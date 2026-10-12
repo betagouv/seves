@@ -51,7 +51,9 @@ export class MessageFormController extends Controller {
         event.preventDefault()
         event.target.click()
         if (this.element.reportValidity()) {
-            this.draftBtnTarget.disabled = true
+            if (this.hasDraftBtnTarget) {
+                this.draftBtnTarget.disabled = true
+            }
             this.sendBtnTarget.disabled = true
         }
     }

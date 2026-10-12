@@ -68,15 +68,18 @@
                     <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link">{{ message.get_message_type_display|capfirst }}{% if message.is_draft %} [BROUILLON]{% endif %}</a>
                 </td>
                 <td>
-                    {% if message.can_be_deleted %}
-                        <div class="fr-pl-2w">
+                    <div class="fr-pl-2w fr-flex">
+                        {% if message.is_note %}
+                            <a href="{{ message.get_update_url }}" class="fr-icon-edit-line fr-btn fr-btn--tertiary no-border" title="Modifier la note" data-testid="message-edit-{{ message.pk }}">Modifier la note</a>
+                        {% else %}
+                            <button class="fr-icon-edit-line fr-btn fr-btn--tertiary no-border" disabled="true"></button>
+                        {% endif %}
+                        {% if message.can_be_deleted %}
                             <button class="fr-icon-delete-bin-line fr-btn fr-btn--tertiary no-border" data-fr-opened="false" aria-controls="fr-modal-delete{{ message.pk }}"></button>
-                        </div>
-                    {% else %}
-                        <div class="fr-pl-2w">
+                        {% else %}
                             <button class="fr-icon-delete-bin-line fr-btn fr-btn--tertiary no-border" disabled="true"></button>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
         {% endfor %}

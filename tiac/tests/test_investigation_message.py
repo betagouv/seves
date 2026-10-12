@@ -29,6 +29,7 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_message_in_new_tab,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_update_published_note_from_another_user,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
@@ -166,6 +167,12 @@ def test_can_update_draft_note_in_new_tab(
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_update_draft_note_in_new_tab(
         live_server, page, mocked_authentification_user, evenement, mailoutbox
+    )
+
+
+def test_can_update_published_note_from_another_user(live_server, page: Page, mailoutbox):
+    generic_test_can_update_published_note_from_another_user(
+        live_server, page, InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS), mailoutbox
     )
 
 
