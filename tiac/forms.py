@@ -569,6 +569,11 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
             auto_select_children=False,
         ),
     )
+    reference_souche = forms.CharField(
+        required=False,
+        label=" Référence souche",
+        widget=forms.TextInput(attrs={"placeholder": "Sérotype, génotype, clade…"}),
+    )
 
     @property
     def media(self):
