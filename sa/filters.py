@@ -12,10 +12,11 @@ from core.filters_mixins import WithDatePublicationFilterMixin, WithEtatFilterMi
 from core.form_mixins import js_module
 from core.mixins import WithEtatMixin, normalize
 from core.models import Departement, Region
-from core.widgets import TreeselectCheckbox, TreeselectGroup, TreeselectItem, TreeselectRadio
+from core.widgets import TreeselectCheckbox, TreeselectGroup, TreeselectItem
 from sa.forms.especes_concernees import EspeceTreeselectRadio
 from sa.models.analyse import Analyse, ResultatAnalyse
 from sa.models.evenement import ContexteSuspicion, StatutAnimal, StatutEvenement, TypeDetenteur, TypeLieu
+from sa.models.typage import TYPAGE_NIVEAU_2_VALUE_PREFIX, TYPAGE_NIVEAU_3_VALUE_PREFIX
 from sa.models.veterinaire import Veterinaire
 
 from .models import Espece, EvenementAnimal, Maladie
@@ -82,11 +83,12 @@ class EvenementAnimalFilter(
         label="N° de fiche",
         widget=TextInput(attrs={"placeholder": "Ex : 12"}),
     )
-    maladie = django_filters.ModelChoiceFilter(
+    maladie = django_filters.MultipleChoiceFilter(
         label="Maladie",
-        queryset=Maladie.objects.all(),
-        widget=TreeselectRadio(
-            choices=Maladie.treeselect_choices,
+        method="filter_maladie",
+        choices=Maladie.choices_with_typages,
+        widget=TreeselectCheckbox(
+            choices=Maladie.treeselect_choices_with_typages,
             attrs={"placeholder": "Rechercher", "min_search_length": 2},
         ),
     )
@@ -242,6 +244,18 @@ class EvenementAnimalFilter(
                 output_field=CharField(),
             )
         ).filter(numero_complet__icontains=value)
+
+    def filter_maladie(self, queryset, name, value):
+        conditions = Q()
+        for selected in value:
+            if selected.startswith(TYPAGE_NIVEAU_3_VALUE_PREFIX):
+                conditions |= Q(typage_id=selected.removeprefix(TYPAGE_NIVEAU_3_VALUE_PREFIX))
+            elif selected.startswith(TYPAGE_NIVEAU_2_VALUE_PREFIX):
+                maladie_id, valeur_niveau_2 = selected.removeprefix(TYPAGE_NIVEAU_2_VALUE_PREFIX).split("-", 1)
+                conditions |= Q(maladie_id=maladie_id, typage__valeur_niveau_2=valeur_niveau_2)
+            else:
+                conditions |= Q(maladie_id=selected)
+        return queryset.filter(conditions) if conditions else queryset
 
     def filter_full_text_search(self, queryset, name, value):
         return queryset.search(value)
