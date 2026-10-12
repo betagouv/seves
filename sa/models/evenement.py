@@ -19,6 +19,7 @@ from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.widgets import TreeselectGroup, TreeselectItem
 from sa.managers import EvenementAnimalManager
+from sa.models.analyse import ResultatAnalyse
 from sa.models.maladie import Maladie
 
 
@@ -505,6 +506,15 @@ class EvenementAnimal(
     )
     typage_champ_libre = models.CharField(max_length=255, blank=True, verbose_name="Typage complémentaire")
 
+    evenement_source = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="evenements_enfants",
+        verbose_name="Événement source",
+    )
+
     @classmethod
     def _get_annee_and_numero(cls, acronym):
         annee_courante = datetime.datetime.now().year
@@ -627,6 +637,20 @@ class EvenementAnimal(
     @property
     def displayed_especes(self):
         return ", ".join([espece.str_with_identifiant for espece in self.especes_exposees.all()])
+
+    @property
+    def detected_maladies_without_evenement_enfant(self):
+        """
+        Maladies différentes de celle de l'événement détectées par une analyse, pour lesquelles aucun
+        événement enfant n'a encore été créé depuis cet événement.
+        """
+        return (
+            Maladie.objects.filter(analyses__evenement=self, analyses__resultat=ResultatAnalyse.DETECTE)
+            .exclude(pk=self.maladie_id)
+            .exclude(pk__in=self.evenements_enfants.values("maladie"))
+            .distinct()
+            .order_by("name")
+        )
 
     class Meta:
         constraints = [

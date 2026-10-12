@@ -6,8 +6,11 @@ from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Media
+from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
@@ -27,7 +30,7 @@ from core.mixins import (
 from sa.forms.evenement import EvenementAnimalForm
 from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
-from sa.models.evenement import StatutAnimal
+from sa.models.evenement import StatutAnimal, TypeDetenteur
 
 from .mixins import WithFilteredListMixin
 
@@ -166,6 +169,70 @@ class EvenementAnimalBaseView(
 
 
 class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
+    @cached_property
+    def evenement_source(self):
+        pk = self.request.GET.get("evenement_source")
+        if not pk:
+            return None
+        try:
+            evenement = EvenementAnimal.objects.get(pk=pk)
+        except (ValueError, EvenementAnimal.DoesNotExist):
+            raise Http404("Fiche non trouvée")
+        if not evenement.can_user_access(self.request.user):
+            raise Http404("Fiche non trouvée")
+        return evenement
+
+    @property
+    def should_copy_evenement_source(self):
+        return self.evenement_source is not None and self.request.method == "GET"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.should_copy_evenement_source:
+            source = self.evenement_source
+            fields = [f for f in EvenementAnimalForm.Meta.fields if f not in ("maladie", "espece", "statut_animal")]
+            initial.update({field: getattr(source, field) for field in fields})
+            initial["type_detenteur"] = (
+                TypeDetenteur.PARTICULIER if source.nom_particulier else TypeDetenteur.ETABLISSEMENT
+            )
+        return initial
+
+    def get_analyse_formset_kwargs(self):
+        kwargs = super().get_analyse_formset_kwargs()
+        if self.should_copy_evenement_source:
+            analyses = self.evenement_source.analyses.exclude(maladie=self.evenement_source.maladie)
+            kwargs["initial"] = [model_to_dict(analyse, exclude=["id", "evenement"]) for analyse in analyses]
+        return kwargs
+
+    def get_veterinaire_formset_kwargs(self):
+        kwargs = super().get_veterinaire_formset_kwargs()
+        if self.should_copy_evenement_source:
+            kwargs["initial"] = [
+                {**model_to_dict(veterinaire, exclude=["id", "evenement"]), "departement": veterinaire.departement}
+                for veterinaire in self.evenement_source.veterinaires.all()
+            ]
+        return kwargs
+
+    def get_especes_concernees_formset_kwargs(self):
+        kwargs = super().get_especes_concernees_formset_kwargs()
+        if self.should_copy_evenement_source:
+            # The first row is the one of the main espece, as its espece cannot be changed
+            especes_concernees = sorted(
+                self.evenement_source.especes_exposees.all(),
+                key=lambda espece_concernee: espece_concernee.espece_id != self.evenement_source.espece_id,
+            )
+            kwargs["initial"] = [
+                {
+                    **model_to_dict(espece_concernee, exclude=["id", "evenement", "situation_unite_regle"]),
+                    "type_lieu": espece_concernee.type_lieu,
+                    "mode_elevage": espece_concernee.mode_elevage,
+                    "type_production": espece_concernee.type_production,
+                    "type_elevage": espece_concernee.type_elevage,
+                }
+                for espece_concernee in especes_concernees
+            ] or kwargs["initial"]
+        return kwargs
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
@@ -180,7 +247,17 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
         context["maladie"] = Maladie.objects.get(pk=self.request.GET.get("maladie"))
         context["espece"] = Espece.objects.get(pk=self.request.GET.get("espece"))
         context["statut_animal"] = StatutAnimal(self.request.GET.get("statut_animal"))
+        if self.evenement_source:
+            content_type = ContentType.objects.get_for_model(self.evenement_source)
+            context["evenement_source_free_link"] = {
+                "value": f"{content_type.pk}-{self.evenement_source.pk}",
+                "label": str(self.evenement_source),
+            }
         return context
+
+    def form_valid(self, form):
+        form.instance.evenement_source = self.evenement_source
+        return super().form_valid(form)
 
     def get_success_message(self):
         return (
@@ -227,7 +304,26 @@ class EvenementAnimalDetailsView(
         context["content_type"] = ContentType.objects.get_for_model(self.object)
         context["latest_version"] = self.object.latest_version
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["detected_maladie_alerts"] = self.get_detected_maladie_alerts()
         return context
+
+    def get_detected_maladie_alerts(self):
+        creation_url = reverse("sa:evenement-animal-creation")
+        return [
+            {
+                "maladie": maladie,
+                "creation_url": f"{creation_url}?"
+                + urlencode(
+                    {
+                        "maladie": maladie.pk,
+                        "espece": self.object.espece_id,
+                        "statut_animal": self.object.statut_animal,
+                        "evenement_source": self.object.pk,
+                    }
+                ),
+            }
+            for maladie in self.object.detected_maladies_without_evenement_enfant
+        ]
 
 
 class EvenementAnimalDocumentExportView(WithDocumentExportContextMixin, UserPassesTestMixin, View):

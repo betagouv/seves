@@ -128,11 +128,11 @@
                             <fieldset class="fr-segmented">
                                 <div class="fr-segmented__elements">
                                     <div class="fr-segmented__element">
-                                        <input value="etablissement" checked type="radio" id="etablissement-btn" name="type_detenteur" data-detenteur-form-target="etablissementRadio">
+                                        <input value="etablissement" {% if form.type_detenteur.value != "particulier" %}checked{% endif %} type="radio" id="etablissement-btn" name="type_detenteur" data-detenteur-form-target="etablissementRadio">
                                         <label class="fr-label" for="etablissement-btn" data-action="click->detenteur-form#onEtablissementLabelClick">Établissement</label>
                                     </div>
                                     <div class="fr-segmented__element">
-                                        <input value="particulier" type="radio" id="particulier-btn" name="type_detenteur" data-detenteur-form-target="particulierRadio">
+                                        <input value="particulier" {% if form.type_detenteur.value == "particulier" %}checked{% endif %} type="radio" id="particulier-btn" name="type_detenteur" data-detenteur-form-target="particulierRadio">
                                         <label class="fr-label" for="particulier-btn" data-action="click->detenteur-form#onParticulierLabelClick">Particulier</label>
                                     </div>
                                 </div>
@@ -317,6 +317,9 @@
                                         {% for existing_link in form.instance.free_links_values_and_labels %}
                                             <option value="{{ existing_link.value }}" selected>{{ existing_link.label }}</option>
                                         {% endfor %}
+                                        {% if evenement_source_free_link %}
+                                            <option value="{{ evenement_source_free_link.value }}" selected>{{ evenement_source_free_link.label }}</option>
+                                        {% endif %}
                                     </select>
                                 </div>
                             </div>
