@@ -16,6 +16,7 @@ from sa.tests.factories import (
     EvenementAnimalFactory,
     MaladieFactory,
     TuberculoseFactory,
+    TypageFactory,
     VeterinaireFactory,
 )
 from sa.tests.pages import EvenementListPage
@@ -127,6 +128,43 @@ def test_evenement_animal_list_filter_by_maladie(live_server, page: Page):
     expect(search_page.row(matching.numero)).to_be_visible()
     expect(search_page.row(other.numero)).to_have_count(0)
     expect(search_page.maladie_treeselect.main_button).to_have_text(maladie.name_with_acronym)
+
+
+def test_evenement_animal_list_filter_by_typage_niveau_3(live_server, page: Page):
+    maladie = MaladieFactory(is_highlighted=False)
+    sb2539 = TypageFactory(maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="SB2539")
+    sb2232 = TypageFactory(maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="SB2232")
+    matching = EvenementAnimalFactory(maladie=maladie, typage=sb2539)
+    other_typage = EvenementAnimalFactory(maladie=maladie, typage=sb2232)
+    no_typage = EvenementAnimalFactory(maladie=maladie)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.maladie_treeselect.check_option("Autre", maladie.name_with_acronym, "Mycobacterium bovis", "SB2539")
+    search_page.submit_search()
+
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.row(other_typage.numero)).to_have_count(0)
+    expect(search_page.row(no_typage.numero)).to_have_count(0)
+
+
+def test_evenement_animal_list_filter_by_typage_niveau_2(live_server, page: Page):
+    maladie = MaladieFactory(is_highlighted=False)
+    bovis_niveau_3 = TypageFactory(maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="SB2539")
+    bovis = TypageFactory(maladie=maladie, valeur_niveau_2="Mycobacterium bovis", valeur_niveau_3="")
+    caprae = TypageFactory(maladie=maladie, valeur_niveau_2="Mycobacterium caprae", valeur_niveau_3="")
+    matching_niveau_3 = EvenementAnimalFactory(maladie=maladie, typage=bovis_niveau_3)
+    matching_niveau_2 = EvenementAnimalFactory(maladie=maladie, typage=bovis)
+    other = EvenementAnimalFactory(maladie=maladie, typage=caprae)
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    search_page.maladie_treeselect.check_option("Autre", maladie.name_with_acronym, "Mycobacterium bovis")
+    search_page.submit_search()
+
+    expect(search_page.row(matching_niveau_3.numero)).to_be_visible()
+    expect(search_page.row(matching_niveau_2.numero)).to_be_visible()
+    expect(search_page.row(other.numero)).to_have_count(0)
 
 
 def test_evenement_animal_list_filter_by_espece_courante(live_server, page: Page):
@@ -596,11 +634,11 @@ def test_evenement_animal_list_performances(live_server, client, django_assert_n
     EvenementAnimalFactory.create_batch(3)
 
     client.get(reverse("sa:evenement-liste"))
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(18):
         client.get(reverse("sa:evenement-liste"))
 
     evenement, *others = EvenementAnimalFactory.create_batch(3)
     EspeceConcerneeFactory.create_batch(3, evenement=evenement)
 
-    with django_assert_num_queries(18):
+    with django_assert_num_queries(19):
         client.get(reverse("sa:evenement-liste"))
