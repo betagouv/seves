@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import Media
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ngettext
 from django_countries.fields import CountryField
@@ -693,7 +694,7 @@ class StructureSelectionForVisibiliteForm(forms.ModelForm, DSFRForm):
 class CompteRenduDemandeInterventionForm(BaseCompteRenduDemandeInterventionForm):
     recipients = forms.MultipleChoiceField(
         choices=[("mus", "MUS"), ("bsv", "BSV")],
-        label="Destinataires",
+        label=mark_safe('<span class="label-marked">Destinataires </span>'),
         widget=DSFRCheckboxSelectMultiple(attrs={"class": "fr-checkbox-group"}),
     )
 
