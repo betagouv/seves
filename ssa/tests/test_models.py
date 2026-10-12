@@ -5,7 +5,7 @@ import pytest
 from core.factories import DocumentFactory
 from core.models import Document
 from ssa.constants import CategorieDanger, PretAManger
-from ssa.factories import EvenementProduitFactory
+from ssa.factories import EvenementProduitFactory, InvestigationCasHumainFactory
 
 
 @pytest.mark.django_db
@@ -58,3 +58,11 @@ def test_cant_create_document_with_invalid_document_type():
     DocumentFactory(
         content_object=EvenementProduitFactory(), document_type=Document.TypeDocument.CERTIFICAT_PHYTOSANITAIRE
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("factory", [EvenementProduitFactory, InvestigationCasHumainFactory])
+def test_numero_is_unique(factory):
+    evenement = factory()
+    with pytest.raises(IntegrityError):
+        factory(numero_annee=evenement.numero_annee, numero_evenement=evenement.numero_evenement)
