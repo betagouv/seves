@@ -98,8 +98,11 @@ class Command(BaseCommand):
                     ligne += 1
                     self.save_contact(row, ligne)
 
-        User.objects.exclude(email__in=self.found_emails).exclude(agent__structure__niveau1=SEVES_STRUCTURE).update(
-            is_active=False
+        users_to_remove = User.objects.exclude(email__in=self.found_emails).exclude(
+            agent__structure__niveau1=SEVES_STRUCTURE
         )
+        users_to_remove.update(is_active=False)
+        Agent.objects.filter(user__in=users_to_remove).update(removed_from_agricoll=True)
+
         end_time = time.time()
         self.stdout.write(self.style.SUCCESS(f"Importation terminée en {int(end_time - start_time)} secondes"))
