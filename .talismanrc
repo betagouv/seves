@@ -6,6 +6,7 @@ allowed_patterns:
 - 'Object.keys\(.+\)?'
 - '\.passedElement'
 - 'url("[^"]*")'  # Allow css' url() function
+- 'key=lambda'  # Allow python sort keys
 fileignoreconfig:
 - filename: sa/models/evenement.py
   checksum: 0ba1e626d3fb4e933abe64df2e6fa13131576d3b9b5b8eaaad76dde09e1d5c65
