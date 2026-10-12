@@ -5,8 +5,6 @@
     data-controller="document-form"
     {% if not form.instance.pk %}
         data-document-form-file-id-value="__file_id__"
-    {% else %}
-        data-document-form-delete-url-value="{% url 'document-delete' pk=form.instance.pk %}"
     {% endif %}
     data-document-form-loading-class="loading"
     data-document-form-deleting-class="deleting"
@@ -43,6 +41,7 @@
                             class="fr-btn fr-btn--sm fr-icon-delete-bin-line fr-btn--tertiary delete-btn"
                             data-document-form-target="deleteBtn"
                             data-action="document-form#onDelete:stop:prevent"
+                            {% if form.instance.pk %}data-document-form-delete-url-param="{% url 'document-delete' pk=form.instance.pk %}"{% endif %}
                         >
                             Supprimer
                         </button>

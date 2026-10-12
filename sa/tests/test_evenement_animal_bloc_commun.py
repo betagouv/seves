@@ -54,6 +54,7 @@ from core.tests.generic_tests.messages import (
     generic_test_cant_see_drafts_from_other_users,
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft,
     generic_test_handle_document_validation_error,
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
@@ -297,6 +298,12 @@ def test_can_add_and_see_point_de_situation_in_new_tab_without_document(live_ser
 def test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, mailoutbox):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, object, mailoutbox)
+
+
+def test_document_removed_from_modal_after_upload_is_not_attached_to_draft(live_server, page):
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(
+        live_server, page, EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    )
 
 
 def test_can_delete_my_own_message(live_server, page, mocked_authentification_user, mailoutbox):

@@ -775,7 +775,9 @@ class AbstractMessageHandlingView(
         return MessageDocumentUploadFormSet(**kwargs)
 
     def get_document_formset_kwargs(self, related_to, **kwargs) -> dict:
-        return super().get_document_formset_kwargs(related_to, queryset=self.get_object().documents.all())
+        return super().get_document_formset_kwargs(
+            related_to, queryset=self.get_object().documents.filter(is_deleted=False)
+        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

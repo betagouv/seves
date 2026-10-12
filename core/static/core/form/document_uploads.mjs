@@ -264,7 +264,6 @@ class BaseDocumentFormset extends Controller {
  * @property {HTMLElement} element
  * @property {Number} fileIdValue
  * @property {Number} stateValue
- * @property {String} deleteUrlValue
  * @property {HTMLFormElement} formTarget
  * @property {HTMLInputElement} documentFileTarget
  * @property {Boolean} hasDocumentFileTarget
@@ -289,7 +288,6 @@ class DocumentForm extends Controller {
     static values = {
         state: {type: Number, default: DOCUMENT_STATE.IDLE},
         fileId: {type: Number, default: -1},
-        deleteUrl: {type: String, default: ""},
     }
     static targets = [
         "form",
@@ -470,17 +468,19 @@ class DocumentForm extends Controller {
         }
     }
 
-    async onDelete() {
+    /** @param {{deleteUrl: String | undefined}} params */
+    async onDelete({params: {deleteUrl}}) {
         try {
             this.stateValue = DOCUMENT_STATE.DELETING
-            if (this.deleteUrlValue.length > 0) {
+            if (deleteUrl) {
                 this.abortController = new AbortController()
-                await fetchPool(this.deleteUrlValue, {
+                const result = await fetchPool(deleteUrl, {
                     method: "POST",
                     headers: {
                         "X-CSRFToken": this.getCookie("csrftoken"),
                     },
                 })
+                if (!result.ok) return
             }
             this.element.remove()
             this.dispatch(COMMON_EVENTS.DOCUMENT_DELETE, {
@@ -533,4 +533,4 @@ class DocumentForm extends Controller {
     }
 }
 
-export {DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm, BaseDocumentFormset}
+export {BaseDocumentFormset, DOCUMENT_FORM_ID, DOCUMENT_FORMSET_ID, DocumentForm}
