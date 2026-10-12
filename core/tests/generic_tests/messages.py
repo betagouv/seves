@@ -411,6 +411,36 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     assert len(mailoutbox) == 1
 
 
+def generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_note()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.type("My content")
+
+    message_page.add_basic_document()
+    assert message_page.get_existing_documents_title == [message_page.BASIC_DOCUMENT_NAME]
+
+    message_page.open_document_modal()
+    message_page.get_accordion(message_page.BASIC_DOCUMENT_NAME).get_by_role("button", name="Supprimer").click()
+    expect(message_page.get_accordion(message_page.BASIC_DOCUMENT_NAME)).to_have_count(0)
+    message_page.close_document_modal_no_validate()
+    expect(page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+    message_page.save_as_draft_message()
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    message = Message.objects.get()
+    assert message.is_draft
+    assert message.documents.filter(is_deleted=False).count() == 0
+    expect(page.locator("#table-sm-row-key-1 .ri-attachment-line")).to_have_count(0)
+
+    message_page.open_message()
+    expect(page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+    assert message_page.get_existing_documents_title == []
+
+
 def generic_test_handle_document_validation_error(live_server, page: Page, choice_js_fill, object):
     active_contact = ContactAgentFactory(
         with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
@@ -734,6 +764,7 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     assert "Documents déposés sur Sèves en pièce jointe de ce message" in mail.body
     assert "Mon document numero 3 (Autre document)" in mail.body
     assert "Mon document (Autre document)" in mail.body
+    assert "Mon document numero 2" not in mail.body
 
 
 def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user, mailoutbox):

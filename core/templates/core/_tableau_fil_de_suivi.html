@@ -60,7 +60,7 @@
                     <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link fr-cell--multiline">{% if message.is_draft %}[BROUILLON] {% endif %}{{ message.title|truncatechars:100 }}</a>
                 </td>
                 <td>
-                    {% if message.documents.exists %}
+                    {% if message.has_documents %}
                         <a href="{{ message.get_message_url }}" {% if not message.is_draft %}target="_blank"{% endif %} rel="noreferrer" class="cell-link"><i class="ri-attachment-line ri-xl" aria-hidden="true"></i></a>
                     {% endif %}
                 </td>

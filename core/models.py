@@ -525,6 +525,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         return self.status == self.Status.FINALISE
 
     @property
+    def has_documents(self):
+        return any(not document.is_deleted for document in self.documents.all())
+
+    @property
     def safe_message_content(self):
         soup = BeautifulSoup(self.content, "html.parser")
         filter_tags_and_attributes(soup)
