@@ -806,6 +806,10 @@ class AbstractMessageHandlingView(
         if message.is_finalise:
             form.instance.date_publication = timezone.now()
         form.instance.save()
+        if form.is_published_update:
+            messages.success(self.request, "L'élément a bien été modifié.", extra_tags="core messages")
+            return response
+
         try:
             transaction.on_commit(lambda: notify_message(message))
         except OperationalError:

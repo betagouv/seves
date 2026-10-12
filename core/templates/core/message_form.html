@@ -121,17 +121,21 @@
 
                 <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-mt-4v">
                     <li>
-                        <button
-                            type="submit"
-                            value="{{ message_status.BROUILLON }}"
-                            name="action"
-                            class="fr-btn fr-btn--secondary"
-                            data-action="message-form#onSend"
-                            data-message-form-target="draftBtn"
-                            data-testid="draft-fildesuivi-add-submit"
-                        >
-                            Enregistrer comme brouillon
-                        </button>
+                        {% if form.is_published_update %}
+                            <a href="{{ go_back_url }}" class="fr-btn fr-btn--secondary" data-testid="fildesuivi-update-cancel">Annuler</a>
+                        {% else %}
+                            <button
+                                type="submit"
+                                value="{{ message_status.BROUILLON }}"
+                                name="action"
+                                class="fr-btn fr-btn--secondary"
+                                data-action="message-form#onSend"
+                                data-message-form-target="draftBtn"
+                                data-testid="draft-fildesuivi-add-submit"
+                            >
+                                Enregistrer comme brouillon
+                            </button>
+                        {% endif %}
                     </li>
                     <li>
                         <button
@@ -142,7 +146,7 @@
                             data-action="message-form#onSend"
                             data-message-form-target="sendBtn"
                             data-testid="fildesuivi-add-submit"
-                        >Envoyer
+                        >{% if form.is_published_update %}Enregistrer{% else %}{{ form.send_button_label }}{% endif %}
                         </button>
                     </li>
                 </ul>

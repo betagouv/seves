@@ -221,6 +221,52 @@ def generic_test_can_update_draft_point_situation_in_new_tab(
     assert len(mailoutbox) == 0
 
 
+def generic_test_can_update_published_note_from_another_user(live_server, page: Page, object, mailoutbox):
+    sender = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    )
+    date_picked = timezone.make_aware(datetime(2025, 1, 1, 15, 0, 0))
+    note = MessageFactory(
+        content_object=object,
+        sender=sender,
+        message_type=Message.NOTE,
+        recipients=[],
+        date_picked=date_picked,
+    )
+    message = MessageFactory(content_object=object, message_type=Message.MESSAGE)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    expect(page.get_by_test_id(f"message-edit-{message.pk}")).to_have_count(0)
+    expect(page.locator("table.fil-de-suivi .fr-icon-edit-line[disabled]")).to_have_count(1)
+
+    page.get_by_test_id(f"message-edit-{note.pk}").click()
+    page.wait_for_url(f"**{note.get_update_url()}")
+
+    message_page = UpdateMessagePage(page)
+    expect(message_page.save_as_draft_button).to_have_count(0)
+    expect(page.get_by_test_id("fildesuivi-update-cancel")).to_be_visible()
+    expect(message_page.submit_button).to_have_text("Enregistrer")
+    expect(message_page.message_date).to_have_value("2025-01-01T15:00")
+
+    message_page.message_title.fill("Titre mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+    expect(page.get_by_text("L'élément a bien été modifié.")).to_be_visible()
+
+    note.refresh_from_db()
+    assert note.message_type == Message.NOTE
+    assert note.status == Message.Status.FINALISE
+    assert note.title == "Titre mis à jour"
+    assert note.content == "<p>Contenu mis à jour</p>"
+    assert note.date_picked == date_picked
+    assert note.sender == sender
+    assert note.sender_structure == sender.agent.structure
+    assert len(mailoutbox) == 0
+
+
 def generic_test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):
@@ -515,6 +561,7 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_note()
     expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+    expect(message_page.submit_button).to_have_text("Publier")
 
     expect(
         message_page.page.locator(

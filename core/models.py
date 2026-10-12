@@ -532,8 +532,14 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
     def _is_owner(self, contact):
         return self.sender == contact
 
+    @property
+    def is_note(self):
+        return self.message_type == self.NOTE
+
     def can_be_updated(self, user):
-        return self.is_draft and self._is_owner(user.agent.contact_set.get())
+        if self.is_draft:
+            return self._is_owner(user.agent.contact_set.get())
+        return self.is_finalise and self.is_note and self.content_object.can_user_access(user)
 
     def can_user_delete(self, user):
         agent_contact = user.agent.contact_set.get()
@@ -598,7 +604,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         return intro
 
     def _user_can_interact(self, user):
-        return self._is_owner(user.agent.contact_set.get())
+        return self._is_owner(user.agent.contact_set.get()) or self.can_be_updated(user)
 
     def save(self, *args, **kwargs):
         if self.is_finalise:
