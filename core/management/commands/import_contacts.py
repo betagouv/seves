@@ -73,6 +73,7 @@ class Command(BaseCommand):
                     "complement_fonction": row.get("Complément_fonction", ""),
                     "telephone": row.get("Téléphone", ""),
                     "mobile": row.get("Mobile", ""),
+                    "removed_from_agricoll": False,
                 },
             )
 

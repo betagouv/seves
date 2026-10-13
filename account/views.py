@@ -45,7 +45,7 @@ class HandlePermissionsView(FormView):
         structure = self.request.user.agent.structure
         self.users_in_structure = (
             User.objects.exclude(pk=self.request.user.pk)
-            .filter(agent__structure=structure)
+            .filter(agent__structure=structure, agent__removed_from_agricoll=False)
             .select_related("agent")
             .prefetch_related("groups")
             .order_by("agent__nom")
