@@ -127,6 +127,49 @@ def test_can_remove_permissions(live_server, page, mocked_authentification_user)
 
 
 @pytest.mark.django_db
+def test_user_removed_from_agricoll_is_not_displayed(live_server, page, mocked_authentification_user):
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.add(access_admin_group)
+    agent = AgentFactory(structure=structure, prenom="Paul", nom="Present")
+    removed_agent = AgentFactory(structure=structure, prenom="Jean", nom="Parti", removed_from_agricoll=True)
+
+    page.goto(f"{live_server.url}/{reverse('handle-permissions')}")
+
+    expect(page.get_by_text(str(agent))).to_be_visible()
+    expect(page.get_by_text(str(removed_agent))).not_to_be_visible()
+    for group in ("sv", "ssa", "sa"):
+        expect(page.locator(f"input[id='{group}_{agent.user.pk}']")).to_be_visible()
+        expect(page.locator(f"input[id='{group}_{removed_agent.user.pk}']")).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_cant_change_permissions_of_user_removed_from_agricoll(
+    client, mailoutbox, mocked_authentification_user, settings
+):
+    settings.SEND_PERMISSION_NOTIFICATION = True
+    sv_group, _ = Group.objects.get_or_create(name=settings.SV_GROUP)
+    access_admin_group, _ = Group.objects.get_or_create(name=CAN_GIVE_ACCESS_GROUP)
+    structure = mocked_authentification_user.agent.structure
+    mocked_authentification_user.groups.add(access_admin_group)
+    removed_agent = ContactAgentFactory(agent__structure=structure, agent__removed_from_agricoll=True).agent
+    removed_agent.user.groups.add(sv_group)
+
+    client.post(
+        reverse("handle-permissions"),
+        data={
+            f"ssa_{removed_agent.user.pk}": "on",
+            f"sa_{removed_agent.user.pk}": "on",
+            "next": reverse("sv:evenement-liste"),
+        },
+        follow=True,
+    )
+
+    assert set(removed_agent.user.groups.all()) == {sv_group}
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.django_db
 def test_cant_remove_permissions_for_myself(live_server, page, mocked_authentification_user):
     group, _ = Group.objects.get_or_create(name="access_admin")
     mocked_authentification_user.groups.add(group)
