@@ -13,6 +13,24 @@
 		directives `
 		Include @coraza.conf-recommended
 		Include @crs-setup.conf.example
+
+		# False positive exclusions
+
+		# TIAC free text: a word at the start of a line ("Export", "finger"...) looks like a Unix command
+		SecRule REQUEST_FILENAME "@rx ^/tiac/(evenement-simple/(creation|\d+/edition)|investigation-tiac/(creation|edition/\d+))$" "id:10001,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:contenu,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:precisions,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:/^repas-\d+-menu$/,ctl:ruleRemoveTargetByTag=attack-lfi;ARGS:contenu"
+
+		# SSA free text (same cause) and chemical denominations mistaken for SQL
+		SecRule REQUEST_FILENAME "@rx ^/ssa/evenement-produit/(creation|\d+/modification)$" "id:10002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description_complementaire,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:evaluation,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:lots,ctl:ruleRemoveTargetById=942100;ARGS:denomination"
+
+		# Messages: editor HTML, sanitized by an allowlist on the Django side (core/html.py)
+		SecRule REQUEST_FILENAME "@rx ^/core/(message-add/\d+/\d+|message/\d+/update)/$" "id:10003,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:content,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:content,ctl:ruleRemoveTargetByTag=attack-injection-php;ARGS:content"
+
+		# Document upload: filenames with an apostrophe ("demande d'information.eml")
+		SecRule REQUEST_FILENAME "@streq /core/document-upload/" "id:10004,phase:1,pass,nolog,ctl:ruleRemoveById=920120,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:nom"
+
+		# OIDC login callback: the random "state" can contain a PHP function name
+		SecRule REQUEST_FILENAME "@streq /login-eap-callback" "id:10005,phase:1,pass,nolog,ctl:ruleRemoveTargetById=933150;ARGS:state"
+
 		Include @owasp_crs/*.conf
 		SecRuleEngine On
 		SecRuleEngine DetectionOnly
