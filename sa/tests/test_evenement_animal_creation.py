@@ -468,7 +468,7 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
     expect(creation_page._address_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
         input_data.adresse_lieu_dit_etablissement
     )
-    expect(creation_page._commune_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+    expect(creation_page.commune_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
         "Lille"
     )
 
@@ -1107,3 +1107,47 @@ def test_commune_and_departement_are_saved_from_coordinates(live_server, page: P
     assert evenement.commune == "Lille"
     assert evenement.code_insee == "59350"
     assert evenement.departement.numero == "59"
+
+
+def test_can_create_evenement_animal_with_detenteur_etablissement_commune_autocomplete(
+    live_server, page: Page, ensure_departements
+):
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    ensure_departements("Nord")
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    call_count = {"count": 0}
+
+    def handle(route):
+        data = [
+            {
+                "codesPostaux": ["59000", "59160"],
+                "nom": "Lille",
+                "code": "59350",
+                "departement": {"code": "59", "nom": "Nord"},
+            }
+        ]
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    creation_page.page.route(
+        "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement,codesPostaux&boost=population&limit=15",
+        handle,
+    )
+    creation_page.commune_etablissement_choicejs.try_select_option("Lille (59160)", search="Lille")
+    assert call_count["count"] == 1
+    expect(creation_page.code_insee_etablissement).to_have_value("59350")
+    expect(creation_page.departement_etablissement).to_have_value("59")
+    expect(creation_page.pays_etablissement).to_have_value("FR")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.commune_etablissement == "Lille"
+    assert evenement.code_insee_etablissement == "59350"
+    assert evenement.departement_etablissement.numero == "59"
+    assert evenement.pays_etablissement.code == "FR"
