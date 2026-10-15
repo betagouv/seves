@@ -310,8 +310,9 @@
                     <div class="fr-grid-row fr-grid-row--gutters">
                         <div class="fr-col-12 fr-col-lg-6">
                             <div data-controller="free-link-via-api" data-free-link-via-api-api-url-value="{% url 'sa:find-free-link'  %}" class="free-links">
-                                <span class="fr-hint-text fr-mb-1w">Saisissez au moins 3 caractères du numéro d'événement pour afficher des suggestions</span>
                                 <div>
+                                    <label for="id_free_link" class="fr-label">Événements liés</label>
+                                    <span class="fr-hint-text fr-mb-2v">Saisissez au moins 3 caractères du numéro d'événement pour afficher des suggestions</span>
                                     <select class="fr-hidden" id="id_free_link" data-free-link-via-api-target="input"  name="free_link" multiple></select>
                                     <select data-free-link-via-api-target="select" multiple="true">
                                         {% for existing_link in form.instance.free_links_values_and_labels %}
