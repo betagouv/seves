@@ -26,7 +26,7 @@ def readd_organismes_nuisibles(apps, _):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sv", "0135_on_papilio_demodocus"),
+        ("sv", "0136_auto_20261009_0843"),
     ]
 
     operations = [migrations.RunPython(remove_organismes_nuisibles, reverse_code=readd_organismes_nuisibles)]
