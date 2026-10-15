@@ -87,7 +87,7 @@ class WithEtablissementDetenteurUtils:
         return ChoiceJSPage(self.page, self.page.get_by_test_id("ban-search-etablissement"))
 
     @cached_property
-    def _commune_etablissement_choicejs(self):
+    def commune_etablissement_choicejs(self):
         return ChoiceJSPage(self.page, self.page.get_by_test_id("communes-search-etablissement"))
 
     @cached_property
@@ -112,7 +112,7 @@ class WithEtablissementDetenteurUtils:
             ),
         )
 
-        self._commune_etablissement_choicejs.try_select_option(config["option_name"], search=config["search_text"])
+        self.commune_etablissement_choicejs.try_select_option(config["option_name"], search=config["search_text"])
         self.page.unroute(url)
 
     def fill_siret_etablissement(self, exact_siret, *, search=None):
