@@ -145,7 +145,7 @@
                         data-controller="address-search-autocomplete"
                     >
                         <div class="fr-col-12 fr-col-lg-4">
-                            {% dsfr_form_field form.numero_identifiant_etablissement|set_data:"detenteur-form-target:numeroIdentifiantEtablissement" %}
+                            {% dsfr_form_field form.numero_identifiant_etablissement|set_data:"detenteur-form-target:numeroIdentifiantEtablissement"|set_data:"action:input->detenteur-form#onNumeroIdentifiantEtablissementInput" %}
                             {% dsfr_form_field form.raison_sociale_etablissement|set_data:"detenteur-form-target:raisonSocialeInput" %}
                             {% dsfr_form_field form.departement_etablissement|set_data:"address-search-autocomplete-target:departement" %}
                         </div>

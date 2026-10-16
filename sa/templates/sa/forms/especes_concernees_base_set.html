@@ -5,6 +5,7 @@
         class="especes-concernees-row"
         data-controller="especes-concernees-row situation-unite"
         data-situation-unite-form-prefix-value="{{ form.prefix }}"
+        {% if is_first %}data-action="detenteur-form:numeroIdentifiantChanged@window->especes-concernees-row#onNumeroIdentifiantDetenteurChanged"{% endif %}
     >
         {{ form.id }}
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
@@ -19,7 +20,7 @@
                 {% dsfr_form_field form.espece %}
             </div>
         </td>
-        <td>{% dsfr_form_field form.identifiant %}</td>
+        <td>{% dsfr_form_field form.identifiant|set_data:"especes-concernees-row-target:identifiantInput" %}</td>
         <td class="situation-unite-cell">
             <button
                 type="button"
