@@ -5,6 +5,16 @@ import {normalize} from "Utils"
 const WIDGET_IDENTIFIER = "treeselect"
 const GROUP_IDENTIFIER = "treeselect-group"
 const CHOICES_CHANGED_EVENT = "choices"
+const NAVIGATION_KEYS = new Set([
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "PageUp",
+    "PageDown",
+    "Home",
+    "End",
+])
 
 let counter = 0
 
@@ -256,8 +266,8 @@ class TreeselectGroup extends TreeselectGroupConnectable {
             }
         }
 
-        // Open group accordion
-        if (checked) {
+        // Open group accordion, unless the whole dropdown is closing
+        if (checked && !this.treeselect.closesOnChange(evt.target)) {
             this.collapseTargets.forEach(async it => {
                 await dsfrDisclosePromise(dsfr(it).collapse)
                 it.scrollIntoView({block: "center"})
@@ -299,6 +309,7 @@ class TreeselectSelectedBadge extends TreeselectChoicesListener {
  * *** Targets ***
  * @property {HTMLElement} bodyTarget
  * @property {HTMLButtonElement} buttonTarget
+ * @property {HTMLElement} collapseTarget
  * @property {HTMLElement} emptyTarget
  * @property {HTMLInputElement} searchbarTarget
  * @property {HTMLButtonElement[]} unselectAllBtnTargets
@@ -311,6 +322,7 @@ class Treeselect extends Controller {
     static targets = [
         "body",
         "button",
+        "collapse",
         "empty",
         "searchbar",
         "unselectAllBtn",
@@ -319,6 +331,8 @@ class Treeselect extends Controller {
         "selectedTagTpl",
     ]
     static values = {minSearchLength: {type: Number, default: 3}}
+
+    #isNavigatingWithKeyboard = false
 
     initialize() {
         this.choices = new Map()
@@ -333,7 +347,7 @@ class Treeselect extends Controller {
     connect() {
         new Promise(resolve => {
             for (const it of this.element.querySelectorAll("input:checked")) {
-                this.onChange({target: it})
+                this.#updateChoices(it)
             }
             resolve()
         })
@@ -365,6 +379,19 @@ class Treeselect extends Controller {
         this.dispatch(CHOICES_CHANGED_EVENT, {detail: {choices: this.choices}})
     }
 
+    close() {
+        dsfr(this.collapseTarget).collapse.conceal()
+        this.buttonTarget.focus()
+    }
+
+    /**
+     * Single choice widgets close as soon as a value is picked, except while browsing the options with the keyboard.
+     * @param {HTMLInputElement} input
+     */
+    closesOnChange(input) {
+        return input.type === "radio" && input.checked && !this.#isNavigatingWithKeyboard
+    }
+
     setDisabledState(disabled) {
         this.element.classList.toggle("fr-treeselect--disabled", disabled)
         this.buttonTarget.disabled = disabled
@@ -388,11 +415,24 @@ class Treeselect extends Controller {
         this.emptyTarget.hidden = belowThreshold || results.some(it => it)
     }
 
+    /** @param {KeyboardEvent} evt */
+    onKeyboard(evt) {
+        this.#isNavigatingWithKeyboard = evt.type === "keydown" && NAVIGATION_KEYS.has(evt.key)
+    }
+
     /**
      * @param {Event} param0
      * @param {HTMLInputElement} param0.target
      */
     onChange({target}) {
+        this.#updateChoices(target)
+        if (this.closesOnChange(target)) {
+            this.close()
+        }
+    }
+
+    /** @param {HTMLInputElement} target */
+    #updateChoices(target) {
         const label = target.labels[0].textContent.trim() || target.ariaLabel
         const value = target.value.trim()
         const categorisedLabel = target.dataset.categorisedLabel || label
