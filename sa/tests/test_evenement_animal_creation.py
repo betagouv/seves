@@ -183,7 +183,8 @@ def test_can_create_evenement_animal_with_localisation_block(live_server, mocked
     assert evenement.code_insee == "59350"
     assert evenement.numero_identifiant == input_data.numero_identifiant
     assert evenement.type_lieu == input_data.type_lieu
-    assert evenement.coordinates == input_data.coordinates
+    assert evenement.coordinates.y == 50.6311
+    assert evenement.coordinates.x == 3.0468
 
 
 def test_can_create_evenement_animal_with_ban_auto_complete(
@@ -1129,6 +1130,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_commune_autoco
                 "codesPostaux": ["59000", "59160"],
                 "nom": "Lille",
                 "code": "59350",
+                "centre": {"type": "Point", "coordinates": [3.0468, 50.6311]},
                 "departement": {"code": "59", "nom": "Nord"},
             }
         ]
@@ -1136,7 +1138,7 @@ def test_can_create_evenement_animal_with_detenteur_etablissement_commune_autoco
         call_count["count"] += 1
 
     creation_page.page.route(
-        "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement,codesPostaux&boost=population&limit=15",
+        "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement,codesPostaux,centre&boost=population&limit=15",
         handle,
     )
     creation_page.commune_etablissement_choicejs.try_select_option("Lille (59160)", search="Lille")
