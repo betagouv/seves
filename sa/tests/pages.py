@@ -19,6 +19,7 @@ def _default_lille_commune_config():
             "nom": "Lille",
             "code": "59350",
             "_score": 1.8082078747980779,
+            "centre": {"type": "Point", "coordinates": [3.0468, 50.6311]},
             "departement": {"code": "59", "nom": "Nord"},
         }
     ]
@@ -63,7 +64,7 @@ class WithAddressAndCommuneUtils:
     def force_commune(self, config=None):
         config = config or _default_lille_commune_config()
 
-        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux,centre&boost=population&limit=15"
 
         self.page.route(
             url,
