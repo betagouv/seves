@@ -3,7 +3,11 @@ import {BaseFormSetController} from "BaseFormset"
 import {Controller} from "Stimulus"
 
 class EspeceConcerneeRowController extends Controller {
-    static targets = ["deleteInput"]
+    static targets = ["deleteInput", "identifiantInput"]
+
+    onNumeroIdentifiantDetenteurChanged({detail: {value}}) {
+        this.identifiantInputTarget.value = value
+    }
 
     onDelete() {
         this.deleteInputTarget.value = "on"

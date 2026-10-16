@@ -126,6 +126,10 @@ class DetenteurFormController extends Controller {
         this.nomParticulierTarget.required = true
     }
 
+    onNumeroIdentifiantEtablissementInput() {
+        this.dispatch("numeroIdentifiantChanged", {detail: {value: this.numeroIdentifiantEtablissementTarget.value}})
+    }
+
     siretEtablissementTargetConnected(el) {
         this.#sireneWidget = setUpSiretChoices(el, "bottom")
     }
