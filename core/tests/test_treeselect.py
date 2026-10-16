@@ -288,15 +288,21 @@ def test_shortcut_behavior(navigate_to_form, page: Page):
 
 def test_check_group_input_opens_group_accordion(navigate_to_form, page: Page):
     navigate_to_form(TestForm())
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_checkbox"))
 
-    for treeselect in (
-        TreeselectPage(page, page.get_by_test_id("animal_radio")),
-        TreeselectPage(page, page.get_by_test_id("animal_checkbox")),
-    ):
-        with treeselect.opened_treeselect():
-            treeselect.check_option(*TestChoices.BERLIN.splitted_label, close_after=False)
-            for option in treeselect.container.get_by_label(TestChoices.PORTE_DE_BRANDEBOURG.uncategorized_label).all():
-                expect(option).to_be_visible()
+    with treeselect.opened_treeselect():
+        treeselect.check_option(*TestChoices.BERLIN.splitted_label, close_after=False)
+        for option in treeselect.container.get_by_label(TestChoices.PORTE_DE_BRANDEBOURG.uncategorized_label).all():
+            expect(option).to_be_visible()
+
+
+def test_radio_closes_dropdown_once_option_is_chosen(navigate_to_form, page: Page):
+    navigate_to_form(TestForm())
+    treeselect = TreeselectPage(page, page.get_by_test_id("animal_radio"))
+
+    treeselect.check_option(*TestChoices.MUNICH.splitted_label, close_after=False)
+    expect(treeselect.options_container).not_to_be_visible()
+    expect(treeselect.main_button).to_be_focused()
 
 
 def test_checking_group_input_opens_group_dropdown(navigate_to_form, page: Page):

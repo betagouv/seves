@@ -141,7 +141,9 @@ fileignoreconfig:
 - filename: tiac/tests/test_investigation_details_actions.py
   checksum: de0caaa5587cb8a90054dd9715e047abbedc50683f8eedb5acf21a823c7c89ef
 - filename: core/static/core/form/widgets/treeselect.mjs
-  checksum: ba4564b7f9f62ca759e7e9a4951331717d458569c9f3dbd5c19ad32c9fa24e03
+  checksum: 223b294197d7bcee6b5756d24343263b4f19aba1447e03ca75f7f4accd3e304d
+- filename: core/templates/core/form/widgets/treeselect.html
+  checksum: 865037bdbe03e516df50bef9a3884653d8ad01ceb1b6d626653bdbb908e2d8bd
 - filename: sa/migrations/0010_analyse.py
   checksum: ae08f5940a3e3513cc524d8e395a89621ef822ff5ec852a5d4cb46745a9a2b6f
 - filename: sa/migrations/0018_veterinaire.py
