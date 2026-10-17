@@ -86,6 +86,8 @@ class AddressSearchAutocompleteController extends Controller {
             [this.codeInseeTargets, customProperties.inseeCode],
             [this.codePostalTargets, customProperties.postCode],
             [this.departementTargets, customProperties.departementCode],
+            [this.latitudeTargets, customProperties.lat],
+            [this.longitudeTargets, customProperties.long],
         ])
     }
 
