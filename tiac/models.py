@@ -115,6 +115,11 @@ class EvenementSimple(
 
     objects = EvenementSimpleManager()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["numero_annee", "numero_evenement"], name="unique_evenement_simple_numero"),
+        ]
+
     def save(self, *args, **kwargs):
         with transaction.atomic():
             with reversion.create_revision():
@@ -583,6 +588,9 @@ class InvestigationTiac(
             models.CheckConstraint(
                 condition=Q(analyses_sur_les_malades=Analyses.OUI) | (Q(precisions="")),
                 name="precision_only_if_analyse",
+            ),
+            models.UniqueConstraint(
+                fields=["numero_annee", "numero_evenement"], name="unique_investigation_tiac_numero"
             ),
         )
 
