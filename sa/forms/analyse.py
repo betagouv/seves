@@ -2,11 +2,13 @@ import json
 
 from django import forms
 from django.db.models import Case, When
+from django.forms import Media
 from django.utils import timezone
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import SEVESChoiceField
-from core.widgets import TreeselectRadio
+from core.form_mixins import js_module
+from core.widgets import TreeselectItem, TreeselectRadio
 from sa.models import Maladie
 from sa.models.analyse import Analyse, ResultatAnalyse
 from sa.models.laboratoire import Laboratoire, LaboratoireType
@@ -32,12 +34,6 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Date du résultat",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
-    )
-    laboratoire = forms.ModelChoiceField(
-        label="Laboratoire",
-        queryset=Laboratoire.objects.none(),
-        required=True,
-        widget=forms.Select(attrs={"required": True}),
     )
     methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none(), required=False)
     resultat = SEVESChoiceField(
@@ -105,7 +101,14 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         if maladie_initial and not self.instance.pk and not self.is_bound:
             self.fields["maladie"].initial = maladie_initial
 
-        self.fields["laboratoire"].queryset = self.get_laboratoire_queryset()
+        labo_queryset = self.get_laboratoire_queryset()
+        self.fields["laboratoire"].queryset = labo_queryset
+        self.fields["laboratoire"].widget = TreeselectRadio(
+            choices=[
+                TreeselectItem(value=labo.pk, label=labo.name, categorised_label=labo.name) for labo in labo_queryset
+            ],
+            attrs={"placeholder": "Rechercher", "required": True},
+        )
 
         laboratoire_id = self.data.get(self.add_prefix("laboratoire")) if self.is_bound else None
         if not laboratoire_id:
@@ -123,3 +126,13 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         if cleaned_data.get("resultat") != ResultatAnalyse.EN_ATTENTE and not cleaned_data.get("methode"):
             self.add_error("methode", "La méthode est obligatoire lorsque le résultat n'est pas « En attente ».")
         return cleaned_data
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(
+                js_module("core/form/widgets/treeselect_dsfr.mjs"),
+                js_module("core/form/widgets/treeselect.mjs"),
+            ),
+            css={"all": ("core/form/widgets/treeselect_dsfr.css",)},
+        )

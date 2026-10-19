@@ -103,12 +103,12 @@ def test_methode_options_are_filtered_by_selected_laboratoire(live_server, page:
     methode_select = modal.locator('[id$="-methode"]')
     assert methode_select.is_disabled()
 
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_1.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_1)
     assert not methode_select.is_disabled()
     assert methode_select.locator("option").count() == 2  # placeholder + methode_1
     methode_select.select_option(str(methode_1.pk))
 
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_2)
     assert methode_select.locator("option").count() == 2  # placeholder + methode_2
     assert methode_select.input_value() == ""
 
@@ -128,10 +128,10 @@ def test_methode_stays_selected_when_new_laboratoire_also_offers_it(live_server,
     modal = creation_page.open_analyse_modal()
     methode_select = modal.locator('[id$="-methode"]')
 
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_1.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_1)
     methode_select.select_option(str(methode_commune.pk))
 
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_2)
     assert methode_select.input_value() == str(methode_commune.pk)
 
 
@@ -150,7 +150,7 @@ def test_methode_options_include_all_methodes_sorted_alphabetically_for_autre_la
     creation_page.fill_required_fields(input_data)
 
     modal = creation_page.open_analyse_modal()
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_autre.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_autre)
 
     methode_select = modal.locator('[id$="-methode"]')
     labels = methode_select.locator("option").all_inner_texts()
@@ -177,7 +177,7 @@ def test_changing_laboratoire_when_editing_saved_analyse_clears_incompatible_met
     methode_select = modal.locator('[id$="-methode"]')
     assert methode_select.input_value() == str(methode_1.pk)
 
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire_2.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_2)
     assert methode_select.input_value() == ""
     assert methode_select.locator("option").count() == 2  # placeholder + methode_2
 
@@ -196,7 +196,7 @@ def test_methode_is_optional_when_resultat_is_en_attente(live_server, page: Page
     modal = creation_page.open_analyse_modal()
     creation_page.fill_analyse_maladie(modal, maladie)
     modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire)
     modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
     creation_page.close_analyse_modal()
 
@@ -222,7 +222,7 @@ def test_methode_becomes_required_when_resultat_is_not_en_attente(live_server, p
     modal = creation_page.open_analyse_modal()
     creation_page.fill_analyse_maladie(modal, maladie)
     modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire)
     modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.DETECTE)
     modal.locator(".save-btn").click()
 
@@ -332,7 +332,7 @@ def test_analyse_maladie_is_required(live_server, page: Page):
         maladie.name_with_acronym
     )
     modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
-    modal.locator('[id$="-laboratoire"]').select_option(str(laboratoire.pk))
+    creation_page.fill_analyse_laboratoire(modal, laboratoire)
     modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
     modal.locator(".save-btn").click()
 
