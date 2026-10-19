@@ -325,7 +325,7 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_nd(self):
-        if self.maladie.needs_date_nd:
+        if self.maladie.needs_date_nd and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
