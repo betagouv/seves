@@ -225,6 +225,42 @@ def test_can_edit_investigation_elements(live_server, page: Page, ensure_departe
     )
 
 
+def test_cant_edit_investigation_elements_used_in_conclusion(
+    live_server,
+    page: Page,
+):
+
+    investigation: InvestigationTiac = InvestigationTiacFactory(
+        suspicion_conclusion=SuspicionConclusion.UNKNOWN,
+        with_repas=1,
+        with_aliment_suspect=1,
+    )
+    investigation.etat = InvestigationTiac.Etat.CONCLU
+    investigation.suspicion_conclusion = SuspicionConclusion.CONFIRMED
+    investigation.selected_hazard = ["Salmonella"]
+    investigation.conclusion_aliment = investigation.aliments.get()
+    investigation.conclusion_repas = investigation.repas.get()
+    investigation.save()
+
+    edit_page = InvestigationTiacEditPage(page, live_server.url, investigation)
+    edit_page.navigate()
+
+    expect(edit_page.delete_repas_btn(0)).to_be_disabled()
+    expect(edit_page.delete_repas_btn(0)).to_have_attribute(
+        "title", "Suppression impossible : repas présent dans la conclusion."
+    )
+    expect(edit_page.delete_aliment_btn(0)).to_be_disabled()
+    expect(edit_page.delete_aliment_btn(0)).to_have_attribute(
+        "title", "Suppression impossible : aliment présent dans la conclusion."
+    )
+    edit_page.submit()
+
+    investigation.refresh_from_db()
+
+    assert investigation.repas.count() == 1
+    assert investigation.aliments.count() == 1
+
+
 def test_cancel_edit_on_etablissement_reset_all_value(
     live_server, page: Page, ensure_departements, assert_models_are_equal
 ):

@@ -1,5 +1,6 @@
 import abc
 from collections import defaultdict
+from collections.abc import Mapping
 import datetime
 from enum import property as enum_property
 from functools import cached_property, wraps
@@ -7,7 +8,6 @@ import io
 import json
 import logging
 import re
-from typing import Mapping
 import unicodedata
 from urllib.parse import urlencode
 
@@ -183,7 +183,9 @@ class WithContactFormsInContextMixin:
 
 class WithContactQuerysetMixin:
     def get_agents(self, obj):
-        return obj.contacts.agents_only().select_related("agent__structure").order_by_structure_and_name()
+        return (
+            obj.contacts.agents_only().select_related("agent__structure", "agent__user").order_by_structure_and_name()
+        )
 
     def get_structures(self, obj):
         return obj.contacts.structures_only().order_by("structure__libelle").select_related("structure")
@@ -773,7 +775,9 @@ class AbstractMessageHandlingView(
         return MessageDocumentUploadFormSet(**kwargs)
 
     def get_document_formset_kwargs(self, related_to, **kwargs) -> dict:
-        return super().get_document_formset_kwargs(related_to, queryset=self.get_object().documents.all())
+        return super().get_document_formset_kwargs(
+            related_to, queryset=self.get_object().documents.filter(is_deleted=False)
+        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -804,6 +808,10 @@ class AbstractMessageHandlingView(
         if message.is_finalise:
             form.instance.date_publication = timezone.now()
         form.instance.save()
+        if form.is_published_update:
+            messages.success(self.request, "L'élément a bien été modifié.", extra_tags="core messages")
+            return response
+
         try:
             transaction.on_commit(lambda: notify_message(message))
         except OperationalError:

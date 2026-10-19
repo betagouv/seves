@@ -142,6 +142,13 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
     )
 
     # Localisation
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.order_by("numero").all(),
+        to_field_name="numero",
+        required=False,
+        empty_label=settings.SELECT_EMPTY_CHOICE,
+        label="Département",
+    )
     adresse_lieu_dit = forms.CharField(
         label="Adresse ou lieu-dit", required=False, widget=forms.Select(attrs={"hidden": "hidden"})
     )
@@ -351,6 +358,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "adresse_lieu_dit",
             "commune",
             "code_insee",
+            "departement",
             "numero_identifiant",
             "type_lieu",
             "coordinates",
@@ -373,6 +381,16 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             # Adis
             *adis_fields,
         ]
+        autocomplete_fields = [
+            "adresse_lieu_dit",
+            "commune",
+            "siret_etablissement",
+            "adresse_lieu_dit_etablissement",
+            "commune_etablissement",
+            "adresse_particulier",
+            "commune_particulier",
+        ]
+
         widgets = {
             "maladie": forms.HiddenInput,
             "espece": forms.HiddenInput,
@@ -411,7 +429,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self.fields["date_notification_adis"].widget.attrs["max"] = today
         self.fields["date_cloture_adis"].widget.attrs["max"] = today
 
-        type_detenteur = self.fields["type_detenteur"].initial
+        type_detenteur = self.initial.get("type_detenteur", self.fields["type_detenteur"].initial)
         if self.is_bound:
             type_detenteur = self.data.get("type_detenteur")
 
@@ -443,6 +461,11 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("type_detenteur")
             for field in self.Meta.detenteur_fields:
                 self.fields.pop(field)
+
+        if not self.is_bound:
+            for field in self.Meta.autocomplete_fields:
+                if field in self.fields and (value := self.initial.get(field)):
+                    self.fields[field].widget.choices = [(value, value)]
 
     def _init_typage_fields(self):
         self.niveaux3_par_niveau2 = {}

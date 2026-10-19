@@ -56,6 +56,8 @@ def test_data_integrity(mock_csv_data):
     _reset_contacts()
     user = UserFactory(email="not_in_agricoll@test.com", username="not_in_agricoll@test.com")
     User.objects.filter(pk=user.pk).update(is_active=True)
+    agent_not_in_agricoll = AgentFactory(user=user)
+    assert agent_not_in_agricoll.removed_from_agricoll is False
     assert User.objects.get(pk=user.pk).is_active is True
     seves_team_user = AgentFactory(structure__niveau1=SEVES_STRUCTURE).user
     User.objects.filter(pk=seves_team_user.pk).update(is_active=True)
@@ -124,6 +126,7 @@ def test_data_integrity(mock_csv_data):
     assert contact3.agent.user.is_active is False
 
     assert User.objects.get(pk=user.pk).is_active is False
+    assert agent_not_in_agricoll.removed_from_agricoll is False
     assert User.objects.get(pk=seves_team_user.pk).is_active is True
 
 

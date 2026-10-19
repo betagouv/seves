@@ -54,3 +54,8 @@ class VeterinaireForm(DsfrBaseForm, forms.ModelForm):
         self.fields["especes"].queryset = Espece.objects.filter(pk=espece_id) if espece_id else Espece.objects.none()
         if espece_id and not self.instance.pk and not self.is_bound:
             self.fields["especes"].initial = [espece_id]
+
+        if not self.is_bound:
+            for field in ("adresse_lieu_dit", "commune"):
+                if value := self.initial.get(field):
+                    self.fields[field].widget.choices = [(value, value)]

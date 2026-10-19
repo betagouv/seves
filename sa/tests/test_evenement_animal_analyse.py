@@ -1,6 +1,3 @@
-import datetime
-
-from django.utils import timezone
 from playwright.sync_api import Page, expect
 
 from core.tests.pages import TreeselectPage
@@ -273,10 +270,7 @@ def test_deleting_evenement_deletes_its_analyses(live_server, page: Page, db):
 
 
 def test_can_add_analyse_confirmed_will_change_statut_and_date(live_server, page: Page, assert_models_are_equal):
-    today = timezone.localtime(timezone.now()).date()
-    input_data = EvenementAnimalFactory.build(
-        statut_evenement=StatutEvenement.SUSPECT, date_statut_changed=today - datetime.timedelta(days=3)
-    )
+    input_data = EvenementAnimalFactory.build(statut_evenement=StatutEvenement.SUSPECT)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     laboratoire = LaboratoireFactory()
@@ -298,7 +292,7 @@ def test_can_add_analyse_confirmed_will_change_statut_and_date(live_server, page
     assert_models_are_equal(analyse, saved_analyse, to_exclude=FIELDS_TO_EXCLUDE_ANALYSE)
     evenemment = EvenementAnimal.objects.get()
     assert evenemment.statut_evenement == StatutEvenement.CONFIRME
-    assert evenemment.date_statut_changed == today
+    assert evenemment.date_statut_changed == analyse.date_resultat
 
 
 def test_analyse_maladie_treeselect_lists_all_maladies_without_groups_and_is_searchable(live_server, page: Page):

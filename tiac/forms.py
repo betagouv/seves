@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import Media, MultipleChoiceField
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import ContactModelMultipleChoiceField, MultiModelChoiceField, SEVESChoiceField
@@ -435,7 +436,7 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
     template_name = "tiac/forms/repas_suspect.html"
 
     denomination = forms.CharField(
-        label="Dénomination",
+        label=mark_safe("<span class='label-marked'>Dénomination</span>"),
         required=True,
         help_text="Nom court permettant d'identifier le repas",
         widget=forms.TextInput(attrs={"required": "required", "placeholder": "Par ex. : dîner du 18 chez Lisette"}),
@@ -471,6 +472,7 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Motif de suspicion du repas",
     )
+    is_used_in_conclusion = forms.BooleanField(widget=forms.HiddenInput, required=False)
 
     class Meta:
         model = RepasSuspect
@@ -483,7 +485,13 @@ class RepasSuspectForm(DsfrBaseForm, forms.ModelForm):
             "departement",
             "type_collectivite",
             "motif_suspicion",
+            "is_used_in_conclusion",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["is_used_in_conclusion"].initial = self.instance.is_used_in_conclusion
 
 
 class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
@@ -517,6 +525,7 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
         required=False,
         label="Motif de suspicion de l'aliment",
     )
+    is_used_in_conclusion = forms.BooleanField(widget=forms.HiddenInput, required=False)
 
     @property
     def media(self):
@@ -543,7 +552,13 @@ class AlimentSuspectForm(DsfrBaseForm, forms.ModelForm):
             "description_composition",
             "description_produit",
             "motif_suspicion",
+            "is_used_in_conclusion",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["is_used_in_conclusion"].initial = self.instance.is_used_in_conclusion
 
 
 class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
@@ -567,6 +582,11 @@ class AnalyseAlimentaireForm(DsfrBaseForm, forms.ModelForm):
             choices=CategorieDanger.treeselect_choices_with_dangers_courants(CategorieDanger.danger_courants_tiac),
             auto_select_children=False,
         ),
+    )
+    reference_souche = forms.CharField(
+        required=False,
+        label=" Référence souche",
+        widget=forms.TextInput(attrs={"placeholder": "Sérotype, génotype, clade…"}),
     )
 
     @property

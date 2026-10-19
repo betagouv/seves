@@ -13,10 +13,18 @@ from sa.models.especes_concernees import EspeceConcernee
 from sa.models.veterinaire import Veterinaire
 from sa.referentiels import situation_unite
 
+
+class WithExtraFormsForInitialMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and self.initial_extra:
+            self.extra = max(self.extra, len(self.initial_extra))
+
+
 MAX_ANALYSES = 5
 
 
-class AnalyseBaseFormSet(BaseInlineFormSet):
+class AnalyseBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSet):
     template_name = "sa/forms/analyse_base_set.html"
     deletion_widget = forms.HiddenInput
 
@@ -41,7 +49,7 @@ AnalyseFormSet = inlineformset_factory(
 MAX_VETERINAIRES = 5
 
 
-class VeterinaireBaseFormSet(BaseInlineFormSet):
+class VeterinaireBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSet):
     template_name = "sa/forms/veterinaire_base_set.html"
     deletion_widget = forms.HiddenInput
 
@@ -64,7 +72,7 @@ VeterinaireFormSet = inlineformset_factory(
 )
 
 
-class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
+class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSet):
     template_name = "sa/forms/especes_concernees_base_set.html"
     deletion_widget = forms.HiddenInput
 
@@ -72,6 +80,7 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
     def media(self):
         return super().media + Media(
             js=(
+                js_module("sa/espece_autres.mjs"),
                 js_module("sa/especes_concernees.mjs"),
                 js_module("sa/situation_unite.mjs"),
             ),
@@ -101,10 +110,7 @@ class EspeceConcerneeBaseFormSet(BaseInlineFormSet):
 
     @property
     def autres_especes(self):
-        return [
-            {"id": pk, "name": name}
-            for pk, name in Espece.objects.filter(is_highlighted=False).order_by("name").values_list("pk", "name")
-        ]
+        return Espece.autres_for_virtual_list()
 
 
 EspeceConcerneeFormSet = inlineformset_factory(

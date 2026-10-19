@@ -29,9 +29,11 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_message_in_new_tab,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_update_published_note_from_another_user,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft,
     generic_test_handle_document_validation_error,
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
@@ -169,6 +171,12 @@ def test_can_update_draft_note_in_new_tab(
     )
 
 
+def test_can_update_published_note_from_another_user(live_server, page: Page, mailoutbox):
+    generic_test_can_update_published_note_from_another_user(
+        live_server, page, InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS), mailoutbox
+    )
+
+
 def test_can_update_draft_point_situation_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, mailoutbox
 ):
@@ -237,6 +245,12 @@ def test_structure_show_only_one_entry_in_select(live_server, page: Page, mocked
 def test_can_add_message_in_new_tab_with_documents(live_server, page: Page, choice_js_fill, mailoutbox):
     evenement = InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
     generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, evenement, mailoutbox)
+
+
+def test_document_removed_from_modal_after_upload_is_not_attached_to_draft(live_server, page: Page):
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(
+        live_server, page, InvestigationTiacFactory(etat=InvestigationTiac.Etat.EN_COURS)
+    )
 
 
 def test_can_delete_my_own_message(live_server, page: Page, mocked_authentification_user, mailoutbox):

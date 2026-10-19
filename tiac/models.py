@@ -150,6 +150,9 @@ class EvenementSimple(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and (not self.is_cloture or user.agent.structure.is_ac)
+
     def can_be_transfered(self, user):
         return self.can_user_access(user) and self.is_published
 
@@ -406,6 +409,9 @@ class InvestigationTiac(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and (not self.is_cloture or user.agent.structure.is_ac)
+
     def get_soft_delete_success_message(self):
         return f"L'investigation TIAC {self.numero} a bien été supprimée"
 
@@ -530,6 +536,11 @@ class InvestigationTiac(
     def can_add_or_edit_conclusion(self):
         return self.etat in (self.Etat.EN_COURS, self.Etat.CONCLU)
 
+    def can_user_edit_conclusion(self, user):
+        if self.is_cloture:
+            return self.display_warning_modification(user)
+        return self.can_add_or_edit_conclusion and self.can_be_modified(user)
+
     def publish(self):
         self.etat = self.Etat.EN_COURS
         if self.suspicion_conclusion:
@@ -624,6 +635,10 @@ class RepasSuspect(models.Model):
         with reversion.create_revision():
             super().save(*args, **kwargs)
 
+    @property
+    def is_used_in_conclusion(self):
+        return self.investigation.etat == self.investigation.Etat.CONCLU and self == self.investigation.conclusion_repas
+
 
 @reversion.register()
 class AlimentSuspect(models.Model):
@@ -677,6 +692,12 @@ class AlimentSuspect(models.Model):
     def save(self, *args, **kwargs):
         with reversion.create_revision():
             super().save(*args, **kwargs)
+
+    @property
+    def is_used_in_conclusion(self):
+        return (
+            self.investigation.etat == self.investigation.Etat.CONCLU and self == self.investigation.conclusion_aliment
+        )
 
 
 @reversion.register()

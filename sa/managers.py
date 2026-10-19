@@ -14,9 +14,24 @@ class EvenementAnimalQuerySet(EvenementManagerMixin, models.QuerySet):
         return self.order_by("-numero_annee", "-numero_evenement")
 
     def optimized_for_list(self):
-        return self.select_related("maladie", "espece", "createur")
+        return self.select_related("maladie", "espece", "createur", "departement").prefetch_related(
+            "especes_exposees__espece"
+        )
 
     def get_user_can_view(self, user):
         from sa.models import EvenementAnimal
 
         return self.filter(Q(createur=user.agent.structure) | ~Q(etat=EvenementAnimal.Etat.BROUILLON))
+
+    def search(self, query):
+        fields = [
+            "raison_sociale_etablissement",
+            "numero_identifiant_etablissement",
+            "siret_etablissement",
+            "description",
+            "commentaire",
+        ]
+        query_object = Q()
+        for f in fields:
+            query_object |= Q(**{f"{f}__unaccent__icontains": query})
+        return self.filter(query_object)

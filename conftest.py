@@ -1,8 +1,9 @@
+from collections.abc import Iterable
 import contextlib
 from datetime import datetime
 import os
 import random
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import patch
 
 from django.conf import settings

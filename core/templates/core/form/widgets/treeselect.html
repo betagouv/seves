@@ -89,7 +89,7 @@
         id="fr-treeselect-{{ widget.attrs.id }}"
         class="fr-treeselect fr-nav__item"
         data-controller="treeselect"
-        data-action="dsfr.search->treeselect#onSearch"
+        data-action="dsfr.search->treeselect#onSearch keydown->treeselect#onKeyboard:capture keyup->treeselect#onKeyboard:capture"
         {% if widget.attrs.min_search_length %}data-treeselect-min-search-length-value="{{ widget.attrs.min_search_length }}"{% endif %}
     >
         <div class="fr-treeselect__wrapper">
@@ -104,7 +104,11 @@
             >
                 Choisir dans la liste
             </button>
-            <div id="fr-treeselect__collapse-{{ widget.attrs.id }}" class="fr-treeselect__collapse fr-collapse">
+            <div
+                id="fr-treeselect__collapse-{{ widget.attrs.id }}"
+                class="fr-treeselect__collapse fr-collapse"
+                data-treeselect-target="collapse"
+            >
                 {% if widget.has_search_bar %}
                     <div class="fr-treeselect__head">
                         <div class="fr-search-bar" role="search">
@@ -172,6 +176,9 @@
                         {% for optgroup in widget.optgroups %}
                             {% include optgroup.template_name with widget=optgroup %}
                         {% endfor %}
+                    </section>
+                    <section class="fr-treeselect__empty" data-treeselect-target="empty" hidden>
+                        Aucun résultat
                     </section>
                 </div>
             </div>

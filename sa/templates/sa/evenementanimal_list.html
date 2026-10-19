@@ -1,39 +1,57 @@
 {% extends "sa/base.html" %}
-{% load etat_tags or_empty_value_tag static dsfr_tags %}
+{% load etat_tags or_empty_value_tag static dsfr_tags statut_tags %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
+    <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'sa/evenement_list.css' %}">
 {% endblock %}
 
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
 
 {% block content %}
-    <form id="search-form" method="get">
+    <form id="search-form" method="get" data-controller="evenement-animal-search-form">
+        {% include "sa/_evenement_animal_advanced_filters.html" %}
         <div class="fr-p-4v evenements_liste__header">
             <div class="evenements_liste__header--title">
                 <h2 class="fr-h3">Rechercher un événement</h2>
+                <button
+                    type="button"
+                    class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-filter-line"
+                    aria-controls="advanced-filters"
+                    aria-expanded="false"
+                    data-evenement-animal-search-form-target="advancedFiltersButton"
+                    data-action="evenement-animal-search-form#openAdvancedFilters"
+                >
+                    Filtres avancés
+                    <span class="fr-tag fr-tag--sm fr-hidden fr-ml-2v" data-evenement-animal-search-form-target="counter"></span>
+                </button>
             </div>
-            <div class="evenements_liste__search-form">
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.annee %}
-                </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.numero %}
-                </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.maladie %}
-                </div>
-                <div class="fr-fieldset__element">
+            <div class="evenement-animal-search-form">
+                <div>{% dsfr_form_field filter.form.annee %}</div>
+                <div>{% dsfr_form_field filter.form.maladie %}</div>
+                <div>{% dsfr_form_field filter.form.numero %}</div>
+                <div
+                    data-controller="espece-autres"
+                    data-espece-autres-name-value="{{ filter.form.espece.html_name }}"
+                    data-espece-autres-source-value="search-autres-especes"
+                    data-action="click->espece-autres#loadAutres"
+                >
                     {% dsfr_form_field filter.form.espece %}
                 </div>
-                <div class="fr-fieldset__element">
-                    {% dsfr_form_field filter.form.etat %}
-                </div>
-                <div class="fr-fieldset__element evenements_liste__header--actions">
-                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn">Effacer</button>
+                <div>{% dsfr_form_field filter.form.statut %}</div>
+                <div>{% dsfr_form_field filter.form.start_date %}</div>
+                <div>{% dsfr_form_field filter.form.end_date %}</div>
+                <div>{% dsfr_form_field filter.form.full_text_search %}</div>
+                <div>{% dsfr_form_field filter.form.departement %}</div>
+                <div>{% dsfr_form_field filter.form.numero_adis %}</div>
+                <div>{% dsfr_form_field filter.form.commune %}</div>
+                <div class="evenement-animal-search-form__actions">
+                    <button type="reset" class="fr-btn fr-btn--tertiary-no-outline fr-mr-2w" id="reset-btn" data-action="evenement-animal-search-form#onReset:stop:prevent">Effacer</button>
                     <button type="submit" class="fr-btn" data-testid="submit-search">Rechercher</button>
                 </div>
             </div>
+            {{ filter.form.autres_especes|json_script:"search-autres-especes" }}
         </div>
     </form>
 
@@ -47,12 +65,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='Événement' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='espece' display_name='Espèce' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut de l’événement' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Date de création' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='createur' display_name='Créateur' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut foyer' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='departement' display_name='Dpt' %}</th>
+                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='commune' display_name='Commune' %}</th>
+                            <th scope="col">Détenteur </th>
+                            <th scope="col">Type de lieu</th>
+                            <th scope="col">Espèces présentes</th>
                             <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
                         </tr>
                     </thead>
@@ -62,11 +83,17 @@
                                 <td>
                                     <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
                                 </td>
-                                <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
-                                <td>{{ evenement.espece|or_empty_value_tag:"table" }}</td>
-                                <td>{{ evenement.get_statut_evenement_display|or_empty_value_tag:"table" }}</td>
                                 <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                                <td>{{ evenement.createur|truncatechars:30 }}</td>
+                                <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
+                                <td>
+                                    <p class="fr-badge fr-badge--no-icon {{ evenement.statut_evenement|statut_color }} fr-m-0 fr-my-2v">{{ evenement.get_statut_evenement_display }}</p>
+                                    <br/>{{ evenement.date_statut_changed|date:"d/m/Y"|or_empty_value_tag:"table" }}
+                                </td>
+                                <td>{{ evenement.departement.numero|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.displayed_commune|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.displayed_detenteur|or_empty_value_tag:"table" }}</td>
+                                <td>{{ evenement.get_type_lieu_display }}</td>
+                                <td>{{ evenement.displayed_especes|or_empty_value_tag:"table" }}</td>
                                 <td>
                                     <span class="fr-badge fr-badge--{{ evenement.etat|etat_color }} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
                                 </td>

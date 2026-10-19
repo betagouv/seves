@@ -5,6 +5,12 @@
     <link rel="stylesheet" href="{% static 'tiac/base.css' %}"/>
 {% endblock %}
 
+{% block notice %}
+    {% if satisfaction_notice %}
+        {% include "ssa/_satisfaction_notice.html" with notice=satisfaction_notice %}
+    {% endif %}
+{% endblock %}
+
 {% block product_nav %}
     <li class="btn-add-group fr-my-auto">
         <nav role="navigation" class="fr-translate fr-nav">

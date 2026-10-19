@@ -7,6 +7,9 @@
                 {% if can_be_modified %}
                     {% if display_warning_modification %}
                         <li><button data-fr-opened="false" aria-controls="modal-warning-update" type="button" class="fr-translate__language fr-nav__link fr-icon-edit-fill fr-icon--sm">Modifier l'événement</button></li>
+                        {% if can_edit_conclusion %}
+                            <li><button data-fr-opened="false" aria-controls="modal-warning-update-conclusion" type="button" class="fr-translate__language fr-nav__link fr-icon-edit-fill fr-icon--sm">Modifier la conclusion</button></li>
+                        {% endif %}
                     {% else %}
                         <li><a class="fr-translate__language fr-nav__link fr-icon-edit-fill fr-icon--sm" href="{{ object.get_update_url}}">Modifier l'événement</a></li>
                     {% endif %}

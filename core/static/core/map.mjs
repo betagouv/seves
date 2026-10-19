@@ -6,6 +6,8 @@ const DISTANT_ZOOM = 5
 const CLOSE_UP_ZOOM = 10
 const PRECISE_ZOOM = 15
 
+const COORDINATE_CHANGE_DEBOUNCE_MS = 500
+
 const DEFAULT_CENTER_CONFIG = {center: {lat: 48.866667, lon: 2.333333}, zoom: DISTANT_ZOOM}
 
 const PARCEL_WFS_URL = "https://data.geopf.fr/wfs/ows"
@@ -83,6 +85,7 @@ class MapController extends BaseMapController {
         geoApiRoot: String,
         region: String,
         departement: String,
+        communeFromCoordinates: Boolean,
     }
 
     async defaultCenterConfig() {
@@ -133,8 +136,16 @@ class MapController extends BaseMapController {
         }
     }
 
-    setAddressFieldsByLongLat(e) {
-        fetch(`${this.reverseApiValue}?lon=${e.lngLat.lng}&lat=${e.lngLat.lat}&limit=1`)
+    setAddressFieldsByLongLat(lngLat) {
+        if (this.communeFromCoordinatesValue) {
+            this.setCommuneFieldsByLongLat(lngLat)
+        } else {
+            this.setAddressFieldsFromReverseApi(lngLat)
+        }
+    }
+
+    setAddressFieldsFromReverseApi(lngLat) {
+        fetch(`${this.reverseApiValue}?lon=${lngLat.lng}&lat=${lngLat.lat}&limit=1`)
             .then(res => res.json())
             .then(json => {
                 const feature = json.features?.[0]
@@ -167,6 +178,26 @@ class MapController extends BaseMapController {
             })
     }
 
+    setCommuneFieldsByLongLat(lngLat) {
+        const params = new URLSearchParams({lat: lngLat.lat, lon: lngLat.lng, fields: "nom,code,departement"})
+        fetch(`${this.geoApiRootValue}/communes?${params}`)
+            .then(res => res.json())
+            .then(communes => {
+                const commune = communes?.[0]
+                if (!commune) return
+                this.communeSelectTarget.dispatchEvent(new CustomEvent("forcedChoice", {detail: {value: commune.nom}}))
+                this.codeInseeInputTarget.value = commune.code
+                if (this.hasDepartementInputTarget) {
+                    const options = Array.from(this.departementInputTarget.options)
+                    const match = options.find(o => o.value === commune.departement?.code)
+                    if (match) this.departementInputTarget.value = match.value
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors de la récupération de la commune:", error)
+            })
+    }
+
     setMarkerPosition(lngLat) {
         if (this.marker) {
             this.marker.setLngLat(lngLat)
@@ -179,7 +210,7 @@ class MapController extends BaseMapController {
         this.setMarkerPosition(e.lngLat)
         this.latitudeInputTarget.value = e.lngLat.lat
         this.longitudeInputTarget.value = e.lngLat.lng
-        this.setAddressFieldsByLongLat(e)
+        this.setAddressFieldsByLongLat(e.lngLat)
         if (this.hasNumeroIdentifiantInputTarget) {
             this.setNumeroIdentifiantByLongLat(e.lngLat)
         }
@@ -305,6 +336,7 @@ class MapController extends BaseMapController {
     }
 
     disconnect() {
+        clearTimeout(this._coordinateChangeTimeout)
         this._parcelAbortController?.abort()
         this.map?.remove()
     }
@@ -318,6 +350,13 @@ class MapController extends BaseMapController {
         this.setMarkerPosition({lat, lon})
         this.map.setCenter({lat, lon})
         this.map.setZoom(PRECISE_ZOOM)
+        if (this.communeFromCoordinatesValue) {
+            clearTimeout(this._coordinateChangeTimeout)
+            this._coordinateChangeTimeout = setTimeout(
+                () => this.setCommuneFieldsByLongLat({lat, lng: lon}),
+                COORDINATE_CHANGE_DEBOUNCE_MS,
+            )
+        }
     }
 
     toggleParcelles() {

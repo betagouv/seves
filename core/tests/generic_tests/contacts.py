@@ -169,3 +169,23 @@ def generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain(
     choice_js_cant_pick(
         contact_page.page, "#add-contact-structure-form .choices", contact.agent.nom, contact.display_with_agent_unit
     )
+
+
+def generic_test_contact_agent_disabled_has_no_message_link(live_server, page, object):
+    active_contact = ContactAgentFactory(with_active_agent=True)
+    disabled_contact = ContactAgentFactory()
+    disabled_contact.agent.user.is_active = False
+    disabled_contact.agent.user.save()
+    object.contacts.set([active_contact, disabled_contact])
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    WithContactsPage(page)
+
+    active_card = page.get_by_test_id("contacts-agents").filter(has_text=active_contact.email)
+    expect(active_card.get_by_role("link", name=active_contact.email)).to_be_visible()
+    expect(active_card.get_by_text("Désactivé", exact=True)).not_to_be_visible()
+
+    disabled_card = page.get_by_test_id("contacts-agents").filter(has_text=disabled_contact.email)
+    expect(disabled_card.get_by_text(disabled_contact.email)).to_be_visible()
+    expect(disabled_card.get_by_role("link", name=disabled_contact.email)).not_to_be_visible()
+    expect(disabled_card.get_by_text("Désactivé", exact=True)).to_be_visible()

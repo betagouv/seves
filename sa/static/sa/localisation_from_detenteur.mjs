@@ -98,6 +98,7 @@ class LocalisationFromDetenteurController extends Controller {
             city,
             inseeCode,
             postCode: bestMatch?.postCode,
+            context: bestMatch?.context,
             lat: bestMatch?.lat,
             long: bestMatch?.long,
         })

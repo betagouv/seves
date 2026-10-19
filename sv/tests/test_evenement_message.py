@@ -41,9 +41,11 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_message_in_new_tab,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_update_published_note_from_another_user,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft,
     generic_test_handle_document_validation_error,
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
@@ -127,6 +129,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     message_page.new_compte_rendu()
 
     expect(page.get_by_text("Nouveau compte rendu sur demande d'intervention")).to_be_visible()
+    expect(page.locator(".label-marked", has_text="Destinataires")).to_be_visible()
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
     message_page.add_basic_message_content()
@@ -619,6 +622,43 @@ def test_cant_forge_post_of_message_to_update_existing_message(client, mocked_au
     assert message.title != "Test"
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "message_type",
+    [
+        Message.MESSAGE,
+        Message.POINT_DE_SITUATION,
+        Message.DEMANDE_INTERVENTION,
+        Message.COMPTE_RENDU,
+        Message.FIN_SUIVI,
+        Message.NOTIFICATION_AC,
+    ],
+)
+def test_cant_update_published_message_that_is_not_a_note(client, message_type):
+    evenement = EvenementFactory(etat=Evenement.Etat.EN_COURS)
+    message = MessageFactory(content_object=evenement, message_type=message_type)
+
+    payload = {"id": message.pk, "title": "Test", "content": "Test", "action": Message.Status.FINALISE}
+    response = client.post(reverse("message-update", kwargs={"pk": message.pk}), data=payload)
+
+    assert response.status_code == 403
+    message.refresh_from_db()
+    assert message.title != "Test"
+
+
+@pytest.mark.django_db
+def test_cant_update_note_of_evenement_we_cant_see(client):
+    evenement = EvenementFactory(createur=Structure.objects.create(libelle="A new structure"))
+    note = MessageFactory(content_object=evenement, message_type=Message.NOTE, recipients=[])
+
+    payload = {"id": note.pk, "title": "Test", "content": "Test", "action": Message.Status.FINALISE}
+    response = client.post(reverse("message-update", kwargs={"pk": note.pk}), data=payload)
+
+    assert response.status_code == 403
+    note.refresh_from_db()
+    assert note.title != "Test"
+
+
 def test_can_delete_document_attached_to_message(live_server, page: Page, mocked_authentification_user: User):
     evenement = EvenementFactory()
     structure, _ = Structure.objects.get_or_create(niveau1="MUS", niveau2="MUS", libelle="MUS")
@@ -875,6 +915,10 @@ def test_can_update_draft_note_in_new_tab(live_server, page: Page, mocked_authen
     )
 
 
+def test_can_update_published_note_from_another_user(live_server, page: Page, mailoutbox):
+    generic_test_can_update_published_note_from_another_user(live_server, page, EvenementFactory(), mailoutbox)
+
+
 def test_can_update_draft_point_situation_in_new_tab(live_server, page: Page, mocked_authentification_user, mailoutbox):
     generic_test_can_update_draft_point_situation_in_new_tab(
         live_server, page, mocked_authentification_user, EvenementFactory(), mailoutbox
@@ -910,6 +954,14 @@ def test_can_see_and_delete_documents_from_draft_message_in_new_tab(
         EvenementFactory(),
         mocked_authentification_user,
         mailoutbox,
+    )
+
+
+def test_document_removed_from_modal_after_upload_is_not_attached_to_draft(
+    live_server, page: Page, mocked_authentification_user
+):
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(
+        live_server, page, EvenementFactory()
     )
 
 

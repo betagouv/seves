@@ -1,5 +1,8 @@
 from django.db import models
 
+TYPAGE_NIVEAU_2_VALUE_PREFIX = "typ-n-2-"
+TYPAGE_NIVEAU_3_VALUE_PREFIX = "typ-n-3-"
+
 
 class Typage(models.Model):
     maladie = models.ForeignKey(
@@ -21,6 +24,15 @@ class Typage(models.Model):
                 name="unique_typage_maladie_valeurs",
             ),
         ]
+
+    @property
+    def niveau_2_value(self):
+        """Value shared by every typage of the same maladie and valeur_niveau_2, used in treeselect filters"""
+        return f"{TYPAGE_NIVEAU_2_VALUE_PREFIX}{self.maladie_id}-{self.valeur_niveau_2}"
+
+    @property
+    def niveau_3_value(self):
+        return f"{TYPAGE_NIVEAU_3_VALUE_PREFIX}{self.pk}"
 
     def __str__(self):
         return f"{self.maladie.name} - {self.valeur_niveau_2} {self.valeur_niveau_3}".strip()

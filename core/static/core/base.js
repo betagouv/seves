@@ -29,3 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1000)
     }
 })
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".dismissible-notice-js").forEach(notice => {
+        const storageKey = notice.dataset.storageKey
+        try {
+            if (localStorage.getItem(storageKey)) return notice.remove()
+        } catch {}
+        notice.classList.remove("fr-hidden")
+        notice.querySelector(".fr-btn--close").addEventListener("click", () => {
+            try {
+                localStorage.setItem(storageKey, new Date().toISOString())
+            } catch {}
+            notice.remove()
+        })
+    })
+})

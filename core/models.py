@@ -70,6 +70,7 @@ class Agent(models.Model):
     complement_fonction = models.TextField(blank=True)
     telephone = models.CharField(max_length=20, blank=True)
     mobile = models.CharField(max_length=20, blank=True)
+    removed_from_agricoll = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"
@@ -524,6 +525,10 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         return self.status == self.Status.FINALISE
 
     @property
+    def has_documents(self):
+        return any(not document.is_deleted for document in self.documents.all())
+
+    @property
     def safe_message_content(self):
         soup = BeautifulSoup(self.content, "html.parser")
         filter_tags_and_attributes(soup)
@@ -532,8 +537,14 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
     def _is_owner(self, contact):
         return self.sender == contact
 
+    @property
+    def is_note(self):
+        return self.message_type == self.NOTE
+
     def can_be_updated(self, user):
-        return self.is_draft and self._is_owner(user.agent.contact_set.get())
+        if self.is_draft:
+            return self._is_owner(user.agent.contact_set.get())
+        return self.is_finalise and self.is_note and self.content_object.can_user_access(user)
 
     def can_user_delete(self, user):
         agent_contact = user.agent.contact_set.get()
@@ -598,7 +609,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         return intro
 
     def _user_can_interact(self, user):
-        return self._is_owner(user.agent.contact_set.get())
+        return self._is_owner(user.agent.contact_set.get()) or self.can_be_updated(user)
 
     def save(self, *args, **kwargs):
         if self.is_finalise:

@@ -89,8 +89,8 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         self.fields["laboratoire"].queryset = self.get_laboratoire_queryset()
 
         laboratoire_id = self.data.get(self.add_prefix("laboratoire")) if self.is_bound else None
-        if not laboratoire_id and self.instance and self.instance.pk:
-            laboratoire_id = self.instance.laboratoire_id
+        if not laboratoire_id:
+            laboratoire_id = self.initial.get("laboratoire")
         self.fields["methode"].queryset = self.get_methode_queryset(laboratoire_id)
         if not laboratoire_id:
             self.fields["methode"].widget.attrs["disabled"] = "disabled"

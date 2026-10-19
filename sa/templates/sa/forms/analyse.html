@@ -2,7 +2,7 @@
 
 {% dsfr_form_field form.maladie %}
 {% dsfr_form_field form.date_prelevement %}
-{% dsfr_form_field form.date_resultat %}
+{% dsfr_form_field form.date_resultat|set_data:"analyse-form-target:dateResultatInput" %}
 {% dsfr_form_field form.laboratoire|set_data:"analyse-form-target:laboratoireSelect"|set_data:"action:change->analyse-form#onLaboratoireChange" %}
 {% dsfr_form_field form.methode|set_data:"analyse-form-target:methodeSelect"|set_data:"errormessage:La méthode est obligatoire lorsque le résultat n'est pas « En attente »." %}
 {% dsfr_form_field form.resultat|set_data:"analyse-form-target:resultatSelect"|set_data:"action:change->analyse-form#onResultatChange" %}

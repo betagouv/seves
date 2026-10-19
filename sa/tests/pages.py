@@ -1,9 +1,10 @@
 import contextlib
 from functools import cached_property
 import json
+import re
 
 from django.urls import reverse
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Locator, Page, expect
 
 from core.pages import WithActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
@@ -420,6 +421,9 @@ class EvenementListPage(WithPreCreationFormPage):
         super().__init__(page, base_url)
         self.page = page
         self.base_url = base_url
+        self.maladie_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_maladie"))
+        self.espece_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_espece"))
+        self.departement_treeselect = TreeselectPage(self.page, self.page.locator("#fr-treeselect-id_departement"))
 
     def navigate(self):
         self.page.goto(f"{self.base_url}{reverse('sa:evenement-liste')}")
@@ -434,19 +438,93 @@ class EvenementListPage(WithPreCreationFormPage):
 
     @property
     def numero_field(self):
-        return self.search_form.get_by_label("N° événement")
+        return self.search_form.get_by_label("N° de fiche")
 
     @property
-    def maladie_field(self):
-        return self.search_form.get_by_label("Maladie")
+    def statut_field(self):
+        return self.search_form.get_by_label("Statut", exact=True)
 
     @property
-    def espece_field(self):
-        return self.search_form.get_by_label("Espèce")
+    def start_date_field(self):
+        return self.search_form.get_by_label("Publication entre le")
+
+    @property
+    def end_date_field(self):
+        return self.search_form.locator(".evenement-animal-search-form").get_by_label("et le", exact=True)
+
+    @property
+    def full_text_search_field(self):
+        return self.search_form.get_by_label("Recherche libre")
+
+    @property
+    def numero_adis_field(self):
+        return self.search_form.get_by_label("N° ADIS")
+
+    @property
+    def commune_field(self):
+        return self.search_form.get_by_label("Commune du foyer")
+
+    @property
+    def advanced_filters_button(self):
+        return self.page.get_by_role("button", name="Filtres avancés")
+
+    @property
+    def advanced_filters(self):
+        return self.page.locator("#advanced-filters")
 
     @property
     def etat_field(self):
-        return self.search_form.get_by_label("État de l'événement")
+        return self.advanced_filters.get_by_label("État", exact=True)
+
+    def advanced_field(self, label):
+        return self.advanced_filters.get_by_label(label, exact=True)
+
+    def fill_advanced_date_range(self, label, start, end):
+        date_range = self.advanced_filters.locator(".advanced-filters__date-range").filter(
+            has=self.page.get_by_label(label, exact=True)
+        )
+        date_range.get_by_label(label, exact=True).fill(start)
+        date_range.get_by_label("et le", exact=True).fill(end)
+
+    def open_advanced_filters(self):
+        self.advanced_filters_button.click()
+        expect(self.advanced_filters).to_be_visible()
+
+    def apply_advanced_filters(self):
+        self.advanced_filters.get_by_role("button", name="Appliquer").click()
+
+    def cancel_advanced_filters(self):
+        self.advanced_filters.get_by_role("button", name="Annuler").click()
+        expect(self.advanced_filters).to_be_hidden()
+
+    def search_with_advanced_filters(self, fields_by_label):
+        self.open_advanced_filters()
+        for label, value in fields_by_label.items():
+            field = self.advanced_field(label)
+            if field.evaluate("it => it.tagName") == "SELECT":
+                field.select_option(label=value)
+            else:
+                field.fill(value)
+        self.apply_advanced_filters()
+
+    def select_maladie(self, maladie):
+        group = "Les plus fréquentes" if maladie.is_highlighted else "Autre"
+        self.maladie_treeselect.check_option(group, maladie.name_with_acronym)
+
+    def select_espece(self, espece):
+        group = "Les plus fréquentes" if espece.is_highlighted else "Autres"
+        with self.espece_treeselect.opened_treeselect():
+            self.espece_treeselect.search(espece.name)
+            self.espece_treeselect.check_option(group, espece.name)
+
+    def select_departement(self, departement):
+        self.departement_treeselect.check_option(departement.region.nom, str(departement))
+
+    def select_region(self, region):
+        with self.departement_treeselect.opened_treeselect():
+            region_input = self.departement_treeselect.options_container.get_by_label(region.nom, exact=True)
+            region_input.evaluate("it => it.click()")
+            expect(region_input).to_be_checked()
 
     def submit_search(self):
         self.page.get_by_role("button", name="Rechercher").click()
@@ -493,6 +571,7 @@ class EvenementAnimalFormPage(
         "adresse_lieu_dit",
         "commune",
         "code_insee",
+        "departement",
         "type_lieu",
         "numero_identifiant",
         "coordinates_0",  # Lat
@@ -528,6 +607,13 @@ class EvenementAnimalFormPage(
         self.base_url = base_url
         for field in self.fields:
             setattr(self, field, page.locator(f"#id_{field}"))
+        self.communes_from_coordinates = []
+        self.page.route(
+            re.compile(r"/communes\?lat="),
+            lambda route: route.fulfill(
+                status=200, content_type="application/json", body=json.dumps(self.communes_from_coordinates)
+            ),
+        )
 
     def url(self, maladie, espece, statut):
         return (
@@ -662,8 +748,9 @@ class EvenementAnimalFormPage(
         self.telephone_particulier.fill(evenement.telephone_particulier)
 
 
-class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin):
+class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin, WithPreCreationFormPage):
     def __init__(self, page: Page, base_url):
+        super().__init__(page, base_url)
         self.page = page
         self.base_url = base_url
 

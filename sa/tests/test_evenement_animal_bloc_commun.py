@@ -13,6 +13,7 @@ from core.tests.generic_tests.contacts import (
     generic_test_add_multiple_contacts_agents_to_an_evenement,
     generic_test_cant_add_contact_agent_if_he_cant_access_domain,
     generic_test_cant_add_contact_structure_if_any_agent_cant_access_domain,
+    generic_test_contact_agent_disabled_has_no_message_link,
     generic_test_remove_contact_agent_from_an_evenement,
     generic_test_remove_contact_structure_from_an_evenement,
 )
@@ -50,9 +51,11 @@ from core.tests.generic_tests.messages import (
     generic_test_can_update_draft_message_in_new_tab,
     generic_test_can_update_draft_note_in_new_tab,
     generic_test_can_update_draft_point_situation_in_new_tab,
+    generic_test_can_update_published_note_from_another_user,
     generic_test_cant_see_drafts_from_other_users,
     generic_test_cant_see_messages_in_internal_state,
     generic_test_contact_shorcut_excludes_agent_and_structures_in_fin_suivi,
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft,
     generic_test_handle_document_validation_error,
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
@@ -200,6 +203,12 @@ def test_can_update_draft_note_in_new_tab(live_server, page, mocked_authentifica
     generic_test_can_update_draft_note_in_new_tab(live_server, page, mocked_authentification_user, object, mailoutbox)
 
 
+def test_can_update_published_note_from_another_user(live_server, page, mailoutbox):
+    generic_test_can_update_published_note_from_another_user(
+        live_server, page, EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS), mailoutbox
+    )
+
+
 def test_can_update_draft_point_situation_in_new_tab(live_server, page, mocked_authentification_user, mailoutbox):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_can_update_draft_point_situation_in_new_tab(
@@ -298,6 +307,12 @@ def test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_
     generic_test_can_add_message_in_new_tab_with_documents(live_server, page, choice_js_fill, object, mailoutbox)
 
 
+def test_document_removed_from_modal_after_upload_is_not_attached_to_draft(live_server, page):
+    generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(
+        live_server, page, EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    )
+
+
 def test_can_delete_my_own_message(live_server, page, mocked_authentification_user, mailoutbox):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_can_delete_my_own_message(live_server, page, object, mocked_authentification_user, mailoutbox)
@@ -346,3 +361,8 @@ def test_can_preview_image_from_message_details(live_server, page):
 def test_can_download_zip_attachments_of_message(live_server, page):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_can_download_zip_attachments_of_message(live_server, page, object)
+
+
+def test_contact_agent_disabled_has_no_message_link(live_server, page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    generic_test_contact_agent_disabled_has_no_message_link(live_server, page, evenement)

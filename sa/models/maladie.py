@@ -1,3 +1,7 @@
+from functools import partial
+from itertools import groupby
+from operator import attrgetter
+
 from django.db import models
 from django.utils.functional import classproperty, lazy
 
@@ -28,6 +32,10 @@ class DescriptionType(models.TextChoices):
     TUBERCULOSE = (
         "tuberculose",
         "Les événements concernant une tuberculose peu commune ou dont on suspecte un impact zoonotique doivent être notifiés dans Sèves. Tous les autres événements restent traités dans SIGAL et CartoGIP.",
+    )
+    AUTRE = (
+        "autre",
+        "Sélectionnez cette valeur si vous souhaitez échanger au sujet d’un événement lié à une maladie exotique, notamment zoonotique, qui ne figure pas dans la liste proposée.",
     )
 
 
@@ -80,21 +88,51 @@ class Maladie(models.Model):
             html_name_prefix=None,
         )
 
+    def _treeselect_choice_with_typages(self):
+        typages = [typage for typage in self.typages.all() if typage.valeur_niveau_2]
+        if not typages:
+            return self._treeselect_item
+
+        niveaux_2 = []
+        for valeur_niveau_2, typages_niveau_2 in groupby(typages, key=attrgetter("valeur_niveau_2")):
+            typages_niveau_2 = list(typages_niveau_2)
+            value = typages_niveau_2[0].niveau_2_value
+            niveaux_3 = [
+                TreeselectItem(value=typage.niveau_3_value, label=typage.valeur_niveau_3, categorised_label=None)
+                for typage in typages_niveau_2
+                if typage.valeur_niveau_3
+            ]
+            niveaux_2.append(
+                TreeselectGroup(value=value, label=valeur_niveau_2, categorised_label=None, choices=niveaux_3)
+                if niveaux_3
+                else TreeselectItem(value=value, label=valeur_niveau_2, categorised_label=None)
+            )
+
+        return TreeselectGroup(
+            value=self.pk, label=self.name_with_acronym, categorised_label=self.name_with_acronym, choices=niveaux_2
+        )
+
     @staticmethod
-    def _build_treeselect_choices():
-        most_frequent_queryset = Maladie.objects.filter(is_highlighted=True).order_by("name")
-        most_frequent_choices = [maladie._treeselect_item for maladie in most_frequent_queryset]
+    def _build_treeselect_choices(*, with_typages=False):
+        queryset = Maladie.objects.order_by("name")
+        if with_typages:
+            queryset = queryset.prefetch_related("typages")
+
+        def build_choices(maladies):
+            return [
+                maladie._treeselect_choice_with_typages() if with_typages else maladie._treeselect_item
+                for maladie in maladies
+            ]
+
         most_frequent_group = TreeselectGroup(
             label="Les plus fréquentes",
-            choices=most_frequent_choices,
+            choices=build_choices(queryset.filter(is_highlighted=True)),
             categorised_label=None,
             can_expand=False,
         )
-        other_queryset = Maladie.objects.filter(is_highlighted=False).order_by("name")
-        other_choices = [maladie._treeselect_item for maladie in other_queryset]
         other_group = TreeselectGroup(
             label="Autre",
-            choices=other_choices,
+            choices=build_choices(queryset.filter(is_highlighted=False)),
             categorised_label=None,
         )
 
@@ -103,6 +141,20 @@ class Maladie(models.Model):
     @classproperty
     def treeselect_choices(cls):
         return lazy(cls._build_treeselect_choices, tuple)()
+
+    @classproperty
+    def treeselect_choices_with_typages(cls):
+        return lazy(partial(cls._build_treeselect_choices, with_typages=True), tuple)()
+
+    @staticmethod
+    def choices_with_typages():
+        choices = []
+        for maladie in Maladie.objects.prefetch_related("typages"):
+            choices.append((maladie.pk, maladie.name_with_acronym))
+            for typage in maladie.typages.all():
+                choices.append((typage.niveau_2_value, typage.valeur_niveau_2))
+                choices.append((typage.niveau_3_value, typage.valeur_niveau_3))
+        return choices
 
     @staticmethod
     def _build_all_treeselect_choices():

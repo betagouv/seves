@@ -19,6 +19,7 @@ from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
 from core.widgets import TreeselectGroup, TreeselectItem
 from sa.managers import EvenementAnimalManager
+from sa.models.analyse import ResultatAnalyse
 from sa.models.maladie import Maladie
 
 
@@ -91,6 +92,13 @@ class Espece(models.Model):
             categorised_label=None,
         )
         return frequent_group, other_group
+
+    @staticmethod
+    def autres_for_virtual_list():
+        return [
+            {"id": pk, "name": name}
+            for pk, name in Espece.objects.filter(is_highlighted=False).order_by("name").values_list("pk", "name")
+        ]
 
 
 class StatutAnimal(models.TextChoices):
@@ -400,6 +408,14 @@ class EvenementAnimal(
             ),
         ],
     )
+    departement = models.ForeignKey(
+        "core.Departement",
+        on_delete=models.PROTECT,
+        verbose_name="Département",
+        blank=True,
+        null=True,
+        related_name="sa_evenements_localisation",
+    )
     numero_identifiant = models.CharField(
         max_length=255,
         verbose_name="Identifiant parcelle, culture",
@@ -489,6 +505,15 @@ class EvenementAnimal(
         verbose_name="Typage",
     )
     typage_champ_libre = models.CharField(max_length=255, blank=True, verbose_name="Typage complémentaire")
+
+    evenement_source = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="evenements_enfants",
+        verbose_name="Événement source",
+    )
 
     @classmethod
     def _get_annee_and_numero(cls, acronym):
@@ -602,6 +627,30 @@ class EvenementAnimal(
     @property
     def typage_niveau_3_intitule(self):
         return self.maladie.intitule_typage_niveau_3
+
+    @property
+    def displayed_commune(self):
+        if not self.commune:
+            return None
+        return f"{self.commune} ({self.code_insee})" if self.code_insee else self.commune
+
+    @property
+    def displayed_especes(self):
+        return ", ".join([espece.str_with_identifiant for espece in self.especes_exposees.all()])
+
+    @property
+    def detected_maladies_without_evenement_enfant(self):
+        """
+        Maladies différentes de celle de l'événement détectées par une analyse, pour lesquelles aucun
+        événement enfant n'a encore été créé depuis cet événement.
+        """
+        return (
+            Maladie.objects.filter(analyses__evenement=self, analyses__resultat=ResultatAnalyse.DETECTE)
+            .exclude(pk=self.maladie_id)
+            .exclude(pk__in=self.evenements_enfants.values("maladie"))
+            .distinct()
+            .order_by("name")
+        )
 
     class Meta:
         constraints = [

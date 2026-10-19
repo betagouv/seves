@@ -136,6 +136,7 @@ class DocumentEditForm(DSFRForm, forms.ModelForm):
 
 class CommonMessageForm(forms.ModelForm):
     show_placeholder = True
+    send_button_label = "Envoyer"
 
     def __init__(
         self,
@@ -158,6 +159,7 @@ class CommonMessageForm(forms.ModelForm):
 
         self.sender = sender
         self.obj = obj
+        self.is_published_update = instance.is_finalise
         super().__init__(
             data,
             files,
@@ -252,6 +254,8 @@ class CommonMessageForm(forms.ModelForm):
 
     def _add_related_objects(self):
         self.instance.status = self.status
+        if self.is_published_update:
+            return
         self.instance.sender = self.sender
         self.instance.sender_structure = self.sender.agent.structure
 
@@ -260,6 +264,8 @@ class CommonMessageForm(forms.ModelForm):
         self.status = self.data.get("action", self.data.get("status"))
         if self.status not in Message.Status:
             raise NotImplementedError
+        if self.is_published_update:
+            self.status = Message.Status.FINALISE
 
     def handle_files(self, kwargs):
         if kwargs.get("data") and kwargs.get("files"):
@@ -270,7 +276,8 @@ class CommonMessageForm(forms.ModelForm):
             field.label = self.fields[field.name].label
 
     def _add_object_field(self, obj, message_type):
-        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type), self.sender)
+        sender = self.instance.sender if self.is_published_update and self.instance.sender else self.sender
+        field = MessageObjectField(obj, Message.get_email_type_display_from_value(message_type), sender)
         new_field = ("message_object", field)
         fields = list(self.fields.items())
         index = next(i for i, (name, _) in enumerate(fields) if name == "title")
@@ -340,10 +347,16 @@ class NoteForm(CommonMessageForm, DsfrBaseForm):
     )
 
     show_placeholder = False
+    send_button_label = "Publier"
 
     def __init__(self, *args, sender, obj, **kwargs):
         super().__init__(*args, sender=sender, obj=obj, **kwargs)
         self._add_object_field(obj, Message.NOTE)
+        if self.is_published_update:
+            self.fields["date_picked"].help_text = (
+                "Cette date détermine la position de la note dans le fil de suivi. "
+                "Si elle n’est pas remplie, elle sera fixée à la date de modification de la note"
+            )
 
         self.handle_files(kwargs)
         self.set_labels()

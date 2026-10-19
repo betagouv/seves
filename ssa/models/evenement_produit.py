@@ -270,6 +270,9 @@ class EvenementProduit(
     def can_user_delete(self, user):
         return self.can_user_access(user)
 
+    def can_be_deleted(self, user):
+        return self.can_user_delete(user) and (not self.is_cloture or user.agent.structure.is_ac)
+
     def get_soft_delete_success_message(self):
         return f"L'évènement {self.numero} a bien été supprimé"
 

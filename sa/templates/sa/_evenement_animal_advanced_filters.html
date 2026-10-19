@@ -1,0 +1,52 @@
+{% load dsfr_tags %}
+<aside
+    id="advanced-filters"
+    class="sidebar advanced-filters"
+    aria-labelledby="advanced-filters-title"
+    data-evenement-animal-search-form-target="advancedFilters"
+    data-action="keydown.esc->evenement-animal-search-form#cancelAdvancedFilters"
+>
+    <div class="advanced-filters__header">
+        <h2 id="advanced-filters-title" class="fr-h6 fr-mb-0">Filtres avancés</h2>
+        <button type="button" class="fr-btn--close fr-btn" title="Fermer" aria-controls="advanced-filters" data-action="evenement-animal-search-form#cancelAdvancedFilters">Fermer</button>
+    </div>
+
+    <div class="advanced-filters__body">
+        <div>{% dsfr_form_field filter.form.etat %}</div>
+        {% include "sa/_date_range_filter.html" with start=filter.form.start_date_confirmation end=filter.form.end_date_confirmation %}
+        <div>{% dsfr_form_field filter.form.resultat_confirmation %}</div>
+        <div>{% dsfr_form_field filter.form.context_suspicion %}</div>
+        {% include "sa/_date_range_filter.html" with start=filter.form.start_date_first_symptoms end=filter.form.end_date_first_symptoms %}
+
+        <fieldset class="advanced-filters__group">
+            <legend class="advanced-filters__group-title">Détenteur</legend>
+            {% dsfr_form_field filter.form.type_detenteur %}
+            {% dsfr_form_field filter.form.numero_identifiant_detenteur %}
+            {% dsfr_form_field filter.form.commune_detenteur %}
+            {% dsfr_form_field filter.form.nom_detenteur %}
+        </fieldset>
+
+        <fieldset class="advanced-filters__group">
+            <legend class="advanced-filters__group-title">Foyer</legend>
+            {% dsfr_form_field filter.form.type_lieu %}
+        </fieldset>
+
+        <fieldset class="advanced-filters__group">
+            <legend class="advanced-filters__group-title">Vétérinaire</legend>
+            {% dsfr_form_field filter.form.veterinaire %}
+            {% dsfr_form_field filter.form.numero_dpe %}
+        </fieldset>
+
+        <fieldset class="advanced-filters__group">
+            <legend class="advanced-filters__group-title">Mesures de gestion</legend>
+            {% include "sa/_date_range_filter.html" with start=filter.form.start_date_apdi end=filter.form.end_date_apdi %}
+            {% include "sa/_date_range_filter.html" with start=filter.form.start_date_apms end=filter.form.end_date_apms %}
+            {% include "sa/_date_range_filter.html" with start=filter.form.start_date_levee end=filter.form.end_date_levee %}
+        </fieldset>
+    </div>
+
+    <div class="advanced-filters__footer">
+        <button type="button" class="fr-btn fr-btn--tertiary" data-action="evenement-animal-search-form#cancelAdvancedFilters">Annuler</button>
+        <button type="button" class="fr-btn" data-action="evenement-animal-search-form#applyAdvancedFilters">Appliquer</button>
+    </div>
+</aside>

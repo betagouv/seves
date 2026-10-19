@@ -14,7 +14,7 @@ const RESULTAT_EN_ATTENTE = "en_attente"
  * @property {Object} laboratoiresTypesValue
  */
 class AnalyseFormController extends BaseFormInModal {
-    static targets = ["laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect"]
+    static targets = ["laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect", "dateResultatInput"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
@@ -94,7 +94,14 @@ class AnalyseFormController extends BaseFormInModal {
         this.element.insertAdjacentHTML("beforeend", this.renderCard(analyse))
         this.element.insertAdjacentHTML("beforeend", this.renderDeleteConfirmationDialog(analyse))
         if (this.confirmationInputTarget.checked === true) {
-            this.element.dispatchEvent(new CustomEvent("resultConfirmed", {bubbles: true}))
+            this.element.dispatchEvent(
+                new CustomEvent("resultConfirmed", {
+                    detail: {
+                        date: this.dateResultatInputTarget.value,
+                    },
+                    bubbles: true,
+                }),
+            )
         }
         dsfr(this.dialogTarget).modal.conceal()
     }

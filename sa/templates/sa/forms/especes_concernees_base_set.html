@@ -10,10 +10,11 @@
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
         <td>
             <div
-                data-controller="especes-concernees-espece"
-                data-especes-concernees-espece-name-value="{{ form.espece.html_name }}"
+                data-controller="espece-autres"
+                data-espece-autres-name-value="{{ form.espece.html_name }}"
+                data-espece-autres-source-value="especes-concernees-autres"
                 data-situation-unite-target="especeField"
-                data-action="click->especes-concernees-espece#loadAutres change->situation-unite#onEspeceChange"
+                data-action="click->espece-autres#loadAutres change->situation-unite#onEspeceChange"
             >
                 {% dsfr_form_field form.espece %}
             </div>
@@ -135,8 +136,6 @@
                         <p class="fr-ml-4v">Animaux mis à mort sur place</p>
                         <h6 class="fr-h6 fr-mb-1v">Vaccinés</h6>
                         <p class="fr-ml-4v">Nombre d'animaux vaccinés dans l'unité</p>
-                    </div>
-                    <div class="fr-modal__footer">
                         <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-btns-group--icon-left">
                             <button class="fr-btn" aria-controls="modal-aide">
                                 Fermer

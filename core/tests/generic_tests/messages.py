@@ -221,6 +221,52 @@ def generic_test_can_update_draft_point_situation_in_new_tab(
     assert len(mailoutbox) == 0
 
 
+def generic_test_can_update_published_note_from_another_user(live_server, page: Page, object, mailoutbox):
+    sender = ContactAgentFactory(
+        with_active_agent__with_groups=(settings.SSA_GROUP, settings.SV_GROUP, settings.SA_GROUP)
+    )
+    date_picked = timezone.make_aware(datetime(2025, 1, 1, 15, 0, 0))
+    note = MessageFactory(
+        content_object=object,
+        sender=sender,
+        message_type=Message.NOTE,
+        recipients=[],
+        date_picked=date_picked,
+    )
+    message = MessageFactory(content_object=object, message_type=Message.MESSAGE)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    expect(page.get_by_test_id(f"message-edit-{message.pk}")).to_have_count(0)
+    expect(page.locator("table.fil-de-suivi .fr-icon-edit-line[disabled]")).to_have_count(1)
+
+    page.get_by_test_id(f"message-edit-{note.pk}").click()
+    page.wait_for_url(f"**{note.get_update_url()}")
+
+    message_page = UpdateMessagePage(page)
+    expect(message_page.save_as_draft_button).to_have_count(0)
+    expect(page.get_by_test_id("fildesuivi-update-cancel")).to_be_visible()
+    expect(message_page.submit_button).to_have_text("Enregistrer")
+    expect(message_page.message_date).to_have_value("2025-01-01T15:00")
+
+    message_page.message_title.fill("Titre mis à jour")
+    message_page.erase_message_content()
+    message_page.message_content.type("Contenu mis à jour")
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+    expect(page.get_by_text("L'élément a bien été modifié.")).to_be_visible()
+
+    note.refresh_from_db()
+    assert note.message_type == Message.NOTE
+    assert note.status == Message.Status.FINALISE
+    assert note.title == "Titre mis à jour"
+    assert note.content == "<p>Contenu mis à jour</p>"
+    assert note.date_picked == date_picked
+    assert note.sender == sender
+    assert note.sender_structure == sender.agent.structure
+    assert len(mailoutbox) == 0
+
+
 def generic_test_can_update_draft_demande_intervention_in_new_tab(
     live_server, page: Page, choice_js_fill, mocked_authentification_user, object, mailoutbox
 ):
@@ -363,6 +409,36 @@ def generic_test_can_see_delete_and_modify_documents_from_draft_message_in_new_t
     assert document_to_remove_2 not in not_deleted.all()
     assert document_to_edit.nom == f"New {document_to_edit_nom_old}"
     assert len(mailoutbox) == 1
+
+
+def generic_test_document_removed_from_modal_after_upload_is_not_attached_to_draft(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page)
+    message_page.new_note()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+    message_page.message_title.fill("Title of the message")
+    message_page.message_content.type("My content")
+
+    message_page.add_basic_document()
+    assert message_page.get_existing_documents_title == [message_page.BASIC_DOCUMENT_NAME]
+
+    message_page.open_document_modal()
+    message_page.get_accordion(message_page.BASIC_DOCUMENT_NAME).get_by_role("button", name="Supprimer").click()
+    expect(message_page.get_accordion(message_page.BASIC_DOCUMENT_NAME)).to_have_count(0)
+    message_page.close_document_modal_no_validate()
+    expect(page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+
+    message_page.save_as_draft_message()
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+
+    message = Message.objects.get()
+    assert message.is_draft
+    assert message.documents.filter(is_deleted=False).count() == 0
+    expect(page.locator("#table-sm-row-key-1 .ri-attachment-line")).to_have_count(0)
+
+    message_page.open_message()
+    expect(page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
+    assert message_page.get_existing_documents_title == []
 
 
 def generic_test_handle_document_validation_error(live_server, page: Page, choice_js_fill, object):
@@ -515,6 +591,7 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     message_page = CreateMessagePage(page, container_id="#message-form")
     message_page.new_note()
     expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+    expect(message_page.submit_button).to_have_text("Publier")
 
     expect(
         message_page.page.locator(
@@ -687,6 +764,7 @@ def generic_test_can_add_message_in_new_tab_with_documents(live_server, page: Pa
     assert "Documents déposés sur Sèves en pièce jointe de ce message" in mail.body
     assert "Mon document numero 3 (Autre document)" in mail.body
     assert "Mon document (Autre document)" in mail.body
+    assert "Mon document numero 2" not in mail.body
 
 
 def generic_test_can_delete_my_own_message(live_server, page: Page, object, mocked_authentification_user, mailoutbox):

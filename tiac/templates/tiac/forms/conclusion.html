@@ -54,7 +54,7 @@
 
                                 <div class="fr-flex fr-flex--space-between fr-flex--row">
                                     <div class="fr-btns-group">
-                                        {% if form.instance.suspicion_conclusion %}
+                                        {% if form.instance.suspicion_conclusion and not form.instance.is_cloture %}
                                             <button
                                                 type="submit"
                                                 name="delete"

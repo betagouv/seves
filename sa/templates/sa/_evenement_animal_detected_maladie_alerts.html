@@ -1,0 +1,11 @@
+{% for alert in detected_maladie_alerts %}
+    <div class="fr-alert fr-alert--warning fr-mt-2v fr-mb-4v" data-testid="detected-maladie-alert">
+        <h2 class="fr-alert__title">La maladie détectée est différente de la maladie suspectée</h2>
+        <p>
+            Une analyse a détecté {{ alert.maladie.name }}, alors que cet événement a été créé pour une suspicion de {{ object.maladie.name }}.
+            Si la maladie détectée doit être déclarée dans Sèves, créez un nouvel événement : les informations déjà saisies y seront reprises.
+        </p>
+        <p class="fr-text--xs fr-mt-2v">Pour rappel : {{ alert.maladie.get_description_type_display }}</p>
+        <a class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-2v" href="{{ alert.creation_url }}">Créer un nouvel événement</a>
+    </div>
+{% endfor %}

@@ -12,8 +12,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_court": "Acanthoscelides obtectus",
     },
     {"code_oepp": "1ACARO", "libelle_long": "Acarida (Acariens)", "libelle_court": "Acarida"},
-    {"code_oepp": "ACIEKA", "libelle_long": "Acidiella kagoshimensis", "libelle_court": "Acidiella kagoshimensis"},
-    {"code_oepp": "ACIXBO", "libelle_long": "Acidoxantha bombacis", "libelle_court": "Acidoxantha bombacis"},
     {"code_oepp": "1ACLRG", "libelle_long": "Acleris", "libelle_court": "Acleris"},
     {"code_oepp": "ACLRGL", "libelle_long": "Acleris gloverana", "libelle_court": "Acleris gloverana"},
     {"code_oepp": "ACLRIS", "libelle_long": "Acleris issikii", "libelle_court": "Acleris issikii"},
@@ -364,7 +362,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_long": "Bursaphelenchus xylophilus (dépérissement des pins|nématode du bois de pin|nématode du pin)",
         "libelle_court": "Bursaphelenchus xylophilus",
     },
-    {"code_oepp": "CLMYFL", "libelle_long": "Callistomyia flavilabris", "libelle_court": "Callistomyia flavilabris"},
     {"code_oepp": "CAMGAL", "libelle_long": "Campiglossa albiceps", "libelle_court": "Campiglossa albiceps"},
     {"code_oepp": "CAMGCA", "libelle_long": "Campiglossa californica", "libelle_court": "Campiglossa californica"},
     {"code_oepp": "CAMGDU", "libelle_long": "Campiglossa duplex", "libelle_court": "Campiglossa duplex"},
@@ -898,7 +895,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_long": "Euphranta japonica (mouche japonaise du cerisier)",
         "libelle_court": "Euphranta japonica",
     },
-    {"code_oepp": "EPHNOS", "libelle_long": "Euphranta oshimensis", "libelle_court": "Euphranta oshimensis"},
     {
         "code_oepp": "EURHBR",
         "libelle_long": "Eurhizococcus brasiliensis",
@@ -940,7 +936,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_long": "Fusarium oxysporum f. sp. albedinis (maladie du bayoud du palmier dattier)",
         "libelle_court": "Fusarium oxysporum f. sp. albedinis",
     },
-    {"code_oepp": "GASZNI", "libelle_long": "Gastrozona nigrifemur", "libelle_court": "Gastrozona nigrifemur"},
     {"code_oepp": "GEOHMO", "libelle_long": "Geosmithia morbida", "libelle_court": "Geosmithia morbida"},
     {
         "code_oepp": "GILPPO",
@@ -1091,7 +1086,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_court": "Impatiens necrotic spot virus",
     },
     {"code_oepp": "1INSEC", "libelle_long": "Insecta (Insectes)", "libelle_court": "Insecta"},
-    {"code_oepp": "INZWOB", "libelle_long": "Insizwa oblita", "libelle_court": "Insizwa oblita"},
     {"code_oepp": "IPSXAM", "libelle_long": "Ips amitinus (petit bostryche du pin)", "libelle_court": "Ips amitinus"},
     {"code_oepp": "IPSXCE", "libelle_long": "Ips cembrae (grand bostryche du mélèze)", "libelle_court": "Ips cembrae"},
     {"code_oepp": "IPSXDU", "libelle_long": "Ips duplicatus", "libelle_court": "Ips duplicatus"},
@@ -1333,8 +1327,6 @@ ORGANISMES_NUISIBLES = [
     {"code_oepp": "PRABMY", "libelle_long": "Parabemisia myricae", "libelle_court": "Parabemisia myricae"},
     {"code_oepp": "PCANTR", "libelle_long": "Paracantha trinotata", "libelle_court": "Paracantha trinotata"},
     {"code_oepp": "PSTELI", "libelle_long": "Parastenopa limata", "libelle_court": "Parastenopa limata"},
-    {"code_oepp": "PTEPFU", "libelle_long": "Paratephritis fukaii", "libelle_court": "Paratephritis fukaii"},
-    {"code_oepp": "PTEPTA", "libelle_long": "Paratephritis takeuchii", "libelle_court": "Paratephritis takeuchii"},
     {"code_oepp": "PTLLVA", "libelle_long": "Paraterellia varipennis", "libelle_court": "Paraterellia varipennis"},
     {"code_oepp": "PTHOGR", "libelle_long": "Parathona gratiosa", "libelle_court": "Parathona gratiosa"},
     {
@@ -2060,7 +2052,6 @@ ORGANISMES_NUISIBLES = [
         "libelle_long": "Unaspis citri (cochenille blanche du tronc)",
         "libelle_court": "Unaspis citri",
     },
-    {"code_oepp": "URORCH", "libelle_long": "Urophora christophi", "libelle_court": "Urophora christophi"},
     {
         "code_oepp": "VENTNA",
         "libelle_long": "Venturia nashicola (tavelure du nashi|tavelure du poirier du Japon)",
