@@ -175,8 +175,8 @@ class InvestigationTiacFactory(BaseTiacFactory, DjangoModelFactory):
 
     # Cas
     nb_sick_persons = factory.Faker("pyint", min_value=0, max_value=10)
-    nb_sick_persons_to_hospital = factory.Faker("pyint", min_value=0, max_value=10)
-    nb_dead_persons = factory.Faker("pyint", min_value=0, max_value=10)
+    nb_sick_persons_to_hospital = factory.LazyAttribute(lambda o: random.randint(0, o.nb_sick_persons))
+    nb_dead_persons = factory.LazyAttribute(lambda o: random.randint(0, o.nb_sick_persons))
     datetime_first_symptoms = factory.LazyFunction(random_datetime_utc)
     datetime_last_symptoms = factory.LazyFunction(random_datetime_utc)
 
