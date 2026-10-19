@@ -26,16 +26,27 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
     date_prelevement = forms.DateField(
         required=True,
         label="Date du prélèvement",
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "required": True}),
     )
     date_resultat = forms.DateField(
         required=False,
         label="Date du résultat",
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
-    laboratoire = forms.ModelChoiceField(label="Laboratoire", queryset=Laboratoire.objects.none())
+    laboratoire = forms.ModelChoiceField(
+        label="Laboratoire",
+        queryset=Laboratoire.objects.none(),
+        required=True,
+        widget=forms.Select(attrs={"required": True}),
+    )
     methode = forms.ModelChoiceField(label="Méthode", queryset=MethodeAnalyse.objects.none(), required=False)
-    resultat = SEVESChoiceField(label="Résultat", choices=ResultatAnalyse.choices)
+    resultat = SEVESChoiceField(
+        label="Résultat",
+        choices=ResultatAnalyse.choices,
+        initial=ResultatAnalyse.EN_ATTENTE,
+        required=True,
+        widget=forms.Select(attrs={"required": True}),
+    )
     resultat_confirmation = forms.BooleanField(
         label="Résultat valant confirmation",
         required=False,
@@ -45,7 +56,15 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
 
     class Meta:
         model = Analyse
-        exclude = ("evenement",)
+        fields = (
+            "maladie",
+            "date_prelevement",
+            "laboratoire",
+            "resultat",
+            "date_resultat",
+            "methode",
+            "resultat_confirmation",
+        )
 
     def get_laboratoire_queryset(self):
         return Laboratoire.objects.order_by(
