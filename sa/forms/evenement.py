@@ -443,7 +443,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("date_nd1")
             self.fields.pop("date_nd2")
 
-        if self.maladie.needs_date_nd is False:
+        if not self.show_mesures_third_row:
             self.fields.pop("date_nd")
 
         if self.user.agent.structure.is_ac is False:
@@ -531,7 +531,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
 
     @property
     def show_mesures_third_row(self):
-        return self.maladie.needs_date_nd
+        return self.maladie.needs_date_nd and self.statut_animal != StatutAnimal.SAUVAGE
 
     @property
     def show_mesures_block(self):

@@ -143,7 +143,7 @@ def test_evenement_animal_details_page_mesures_block_needs_dates_desinfection(li
 
 
 def test_evenement_animal_details_page_mesures_block_needs_date_nd(live_server, page: Page):
-    evenement = EvenementAnimalFactory(maladie=TuberculoseFactory())
+    evenement = EvenementAnimalFactory(maladie=TuberculoseFactory(), statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)

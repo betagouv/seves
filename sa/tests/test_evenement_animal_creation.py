@@ -703,7 +703,7 @@ def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order
 
 
 def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = AcarapioseFactory()
     espece = EspeceFactory()
 
@@ -720,7 +720,7 @@ def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page:
 
 
 def test_can_create_evenement_animal_when_maladie_needs_date_nd(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True, statut_animal=StatutAnimal.DETENU)
     maladie = AcarapioseFactory()
     espece = EspeceFactory()
 
