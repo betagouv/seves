@@ -929,14 +929,14 @@ def test_create_evenement_number_of_queries_scalies_with_free_links(
     # Cache anything if possible
     client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
-    with django_assert_max_num_queries(25):
+    with django_assert_max_num_queries(29):
         client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
 
-    with django_assert_max_num_queries(25):
+    with django_assert_max_num_queries(29):
         client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
 

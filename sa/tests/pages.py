@@ -179,12 +179,17 @@ class WithAnalyseMixin:
             maladie.name_with_acronym
         )
 
+    def fill_analyse_laboratoire(self, modal: Locator, laboratoire):
+        TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-laboratoire"]')).check_option(
+            laboratoire.name
+        )
+
     def fill_analyse(self, modal: Locator, analyse: Analyse):
         self.fill_analyse_maladie(modal, analyse.maladie)
         modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
         if analyse.date_resultat:
             modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
-        modal.locator('[id$="-laboratoire"]').select_option(str(analyse.laboratoire_id))
+        self.fill_analyse_laboratoire(modal, analyse.laboratoire)
         modal.locator('[id$="-methode"]').select_option(str(analyse.methode_id))
         modal.locator('[id$="-resultat"]').select_option(analyse.resultat)
         if analyse.resultat_confirmation:

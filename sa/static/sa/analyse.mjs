@@ -57,9 +57,14 @@ class AnalyseFormController extends BaseFormInModal {
     updateMethodeRequired() {
         this.methodeSelectTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
     }
+    getLaboratoireId() {
+        return (
+            this.fieldsetTarget.querySelector(`input[name="${this.formPrefixValue}-laboratoire"]:checked`)?.value ?? ""
+        )
+    }
 
     refreshMethodeOptions({keepSelection}) {
-        const laboratoireId = this.laboratoireSelectTarget.value
+        const laboratoireId = this.getLaboratoireId()
         const previousValue = keepSelection ? this.methodeSelectTarget.value : ""
         const methodes = this.methodesParLaboratoireValue[laboratoireId] || []
 
@@ -83,8 +88,7 @@ class AnalyseFormController extends BaseFormInModal {
     }
 
     getLaboratoireType() {
-        const laboratoireId = this.laboratoireSelectTarget.value
-        return this.laboratoiresTypesValue[laboratoireId]
+        return this.laboratoiresTypesValue[this.getLaboratoireId()]
     }
 
     /** @param {Object} analyse */
