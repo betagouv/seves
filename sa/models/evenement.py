@@ -54,6 +54,7 @@ class Espece(models.Model):
             label="Les plus fréquentes",
             choices=frequent_choices,
             categorised_label=None,
+            can_expand=False,
         )
         other_group = TreeselectGroup(
             label="Autres",
