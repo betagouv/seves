@@ -4,6 +4,7 @@ from playwright.sync_api import expect
 from core.factories import ContactAgentFactory, DepartementFactory, StructureFactory
 from core.mixins import WithEtatMixin
 from core.models import LienLibre
+from ssa.constants import CategorieDanger, SourceInvestigationCasHumain
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
@@ -280,3 +281,14 @@ def test_cant_update_investigation_cas_humain_in_draft_from_other_structure(
     update_page.submit_as_draft(wait_for="")
     evenement.refresh_from_db()
     assert evenement.evaluation != "Test"
+
+
+def test_source_do_listeriose_preselects_listeria_monocytogenes_on_update(live_server, page):
+    evenement = InvestigationCasHumainFactory(source=SourceInvestigationCasHumain.CAS_GROUPES, categorie_danger="")
+    update_page = InvestigationCasHumainFormPage(page, live_server.url)
+    update_page.navigate_update_page(evenement)
+    update_page.source.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    update_page.submit_as_draft()
+
+    evenement.refresh_from_db()
+    assert evenement.categorie_danger == CategorieDanger.LISTERIA_MONOCYTOGENES
