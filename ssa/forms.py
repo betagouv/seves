@@ -273,6 +273,13 @@ class InvestigationCasHumainForm(DsfrBaseForm, WithEvenementCommonMixin, WithLat
 
     source = SEVESChoiceField(choices=SourceInvestigationCasHumain.choices, required=True)
 
+    source_do_listeriose = SourceInvestigationCasHumain.DO_LISTERIOSE
+    danger_do_listeriose = CategorieDanger.LISTERIA_MONOCYTOGENES
+
+    @property
+    def media(self):
+        return super().media + Media(js=(js_module("ssa/investigation_cas_humain_form.mjs"),))
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
