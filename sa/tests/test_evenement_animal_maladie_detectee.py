@@ -111,7 +111,9 @@ def test_alert_displayed_when_analyse_detects_another_maladie(live_server, page:
         f"Une analyse a détecté {detected_maladie.name}, alors que cet événement a été créé pour une suspicion de "
         f"{evenement.maladie.name}."
     )
-    expect(alert).to_contain_text(f"Pour rappel : {detected_maladie.get_description_type_display()}")
+    expect(alert).to_contain_text(
+        f"Pour rappel : [{detected_maladie.name}] {detected_maladie.get_description_type_display()}"
+    )
     expect(alert.get_by_role("link", name="Créer un nouvel événement")).to_be_visible()
     expect(alert.locator(".fr-btn--close")).to_have_count(0)
 
