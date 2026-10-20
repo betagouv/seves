@@ -37,6 +37,10 @@ class DescriptionType(models.TextChoices):
         "autre",
         "Sélectionnez cette valeur si vous souhaitez échanger au sujet d’un événement lié à une maladie exotique, notamment zoonotique, qui ne figure pas dans la liste proposée.",
     )
+    SAISIE_FACULTATIVE = (
+        "saisie_facultative",
+        "La saisie de cette maladie dans Sèves n'est pas obligatoire. Elle reste possible si votre DDPP souhaite assurer son suivi dans l'outil.",
+    )
 
 
 class Maladie(models.Model):
