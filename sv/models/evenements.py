@@ -185,6 +185,8 @@ class Evenement(
         return not self.is_cloture and self.can_user_access(user)
 
     def can_be_updated(self, user):
+        if self.is_deleted:
+            return False
         return self._user_can_interact(user) or (not self.is_draft and user.agent.structure.is_mus_or_bsv)
 
     def display_warning_modification(self, user):

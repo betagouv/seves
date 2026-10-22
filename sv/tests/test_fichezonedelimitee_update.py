@@ -406,3 +406,17 @@ def test_cant_update_fiche_zone_delimitee_form_if_evenement_is_cloture(client):
     assert response.status_code == 403
     fiche_zone.refresh_from_db()
     assert fiche_zone.commentaire != "AAAA"
+
+
+@pytest.mark.django_db
+def test_cant_update_fiche_zone_delimitee_form_if_evenement_is_deleted(client):
+    fiche_zone = FicheZoneFactory()
+    evenement = EvenementFactory(fiche_zone_delimitee=fiche_zone, etat=Evenement.Etat.EN_COURS)
+
+    response = client.get(fiche_zone.get_update_url())
+    assert response.status_code == 200
+
+    evenement.is_deleted = True
+    evenement.save()
+    response = client.get(fiche_zone.get_update_url())
+    assert response.status_code == 403
