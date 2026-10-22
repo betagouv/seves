@@ -265,6 +265,17 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     def message_content(self):
         return self.page.locator("#rich-text-editor .ql-editor")
 
+    def paste_html_in_message_content(self, html):
+        self.message_content.click()
+        self.message_content.evaluate(
+            """(editor, html) => {
+                const clipboardData = new DataTransfer()
+                clipboardData.setData("text/html", html)
+                editor.dispatchEvent(new ClipboardEvent("paste", {clipboardData, bubbles: true, cancelable: true}))
+            }""",
+            html,
+        )
+
     def erase_message_content(self):
         self.message_content.click()
         expect(self.message_content).to_be_focused()
