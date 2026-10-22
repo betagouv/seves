@@ -47,6 +47,10 @@
     font-style: italic;
     color: var(--text-disabled-grey);
 }
+.message-unread,
+.message-unread .fr-tag {
+    font-weight: bold;
+}
 
 .message-date {
     font-size: 0.75rem;

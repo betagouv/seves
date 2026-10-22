@@ -60,6 +60,7 @@ from core.tests.generic_tests.messages import (
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
+    generic_test_unread_messages_are_highlighted,
 )
 from sa.tests.factories import EvenementAnimalFactory
 
@@ -351,6 +352,11 @@ def test_cant_see_messages_in_internal_state(live_server, page, mocked_authentif
 def test_message_ordering(live_server, page, mocked_authentification_user):
     object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
     generic_test_message_ordering(live_server, page, mocked_authentification_user, object)
+
+
+def test_unread_messages_are_highlighted(live_server, page, mocked_authentification_user):
+    object = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    generic_test_unread_messages_are_highlighted(live_server, page, mocked_authentification_user, object)
 
 
 def test_can_preview_image_from_message_details(live_server, page):
