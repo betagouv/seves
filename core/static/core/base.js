@@ -45,3 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     })
 })
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.message-unread a[target="_blank"]').forEach(link =>
+        link.addEventListener("click", event => {
+            event.currentTarget.closest(".message-unread").classList.remove("message-unread")
+        }),
+    )
+})

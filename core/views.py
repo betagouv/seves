@@ -45,7 +45,7 @@ from .mixins import (
     WithFormErrorsAsMessagesMixin,
     WithPublishMixin,
 )
-from .models import Contact, Document, FinSuiviContact, Message, user_is_referent_national
+from .models import Contact, Document, FinSuiviContact, Message, MessageRead, user_is_referent_national
 from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
 
@@ -298,6 +298,10 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
 
     def get_fiche_object(self):
         return self.fiche
+
+    def get(self, request, *args, **kwargs):
+        MessageRead.objects.get_or_create(message=self.message, agent=request.user.agent)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
