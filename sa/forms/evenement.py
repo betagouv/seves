@@ -9,7 +9,7 @@ from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import MultiModelChoiceField, SEVESChoiceField
-from core.form_mixins import WithFreeLinksMixin, js_module
+from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_module
 from core.mixins import WithEtatMixin
 from core.models import Departement
 from core.widgets import TreeselectRadio
@@ -98,7 +98,7 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         return [{"id": pk, "name": name} for pk, name in Espece.objects.order_by("name").values_list("pk", "name")]
 
 
-class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     type_detenteur = forms.ChoiceField(
         choices=TypeDetenteur.choices,
         initial=TypeDetenteur.ETABLISSEMENT,

@@ -4,6 +4,7 @@ from .views import (
     EvenementAnimalCreationView,
     EvenementAnimalDetailsView,
     EvenementAnimalDocumentExportView,
+    EvenementAnimalUpdateView,
     EvenementListView,
 )
 from .views.api import FindFreeLinksView
@@ -24,6 +25,11 @@ urlpatterns = [
         "evenement-animal/<int:pk>/",
         EvenementAnimalDetailsView.as_view(),
         name="evenement-animal-details",
+    ),
+    path(
+        "evenement-animal/<int:pk>/modification/",
+        EvenementAnimalUpdateView.as_view(),
+        name="evenement-animal-update",
     ),
     path(
         "evenement-animal/<int:pk>/document/",
