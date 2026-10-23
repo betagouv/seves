@@ -1,4 +1,5 @@
 from django.db import models
+import reversion
 
 
 class ResultatAnalyse(models.TextChoices):
@@ -9,6 +10,7 @@ class ResultatAnalyse(models.TextChoices):
     NON_INTERPRETABLE = "non_interpretable", "Non interprétable"
 
 
+@reversion.register()
 class Analyse(models.Model):
     evenement = models.ForeignKey(
         "sa.EvenementAnimal", on_delete=models.CASCADE, verbose_name="Événement", related_name="analyses"
