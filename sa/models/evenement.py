@@ -285,7 +285,7 @@ class TypeDetenteur(models.TextChoices):
     PARTICULIER = "particulier", "Particulier"
 
 
-@reversion.register
+@reversion.register(follow=["analyses", "veterinaires", "especes_exposees"])
 class EvenementAnimal(
     AllowsSoftDeleteMixin,
     WithNumeroMixin,
@@ -545,6 +545,9 @@ class EvenementAnimal(
     def get_absolute_url(self):
         return reverse("sa:evenement-animal-details", kwargs={"pk": self.pk})
 
+    def get_update_url(self):
+        return reverse("sa:evenement-animal-update", kwargs={"pk": self.pk})
+
     @property
     def latest_version(self):
         return (
@@ -557,6 +560,13 @@ class EvenementAnimal(
     @property
     def show_mesures_block(self):
         return self.maladie.needs_arrete
+
+    def get_prefetch_for_revision_list_view(self):
+        return [
+            ("_prefetched_analyses", self.analyses.all()),
+            ("_prefetched_veterinaires", self.veterinaires.all()),
+            ("_prefetched_especes_exposees", self.especes_exposees.all()),
+        ]
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"

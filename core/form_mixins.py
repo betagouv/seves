@@ -95,3 +95,4 @@ class WithLatestVersionLocking(forms.Form):
                 "Les modifications n'ont pas pu être enregistrées car un autre utilisateur à modifié la fiche.",
                 code="blocking_error",
             )
+        return self.cleaned_data
