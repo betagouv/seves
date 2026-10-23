@@ -91,7 +91,7 @@ class TreeselectGroupConnectable extends TreeselectChoicesListener {
      */
     async onChoicesChanged({target, detail: {choices}}) {
         for (const it of this.inputTargets) {
-            if (target === it) continue
+            if (target === it || it.dataset.selects !== undefined) continue
             if (choices.has(it.value.trim()) && !it.checked) {
                 it.checked = true
             } else if (!choices.has(it.value.trim()) && it.checked) {
@@ -427,9 +427,23 @@ class Treeselect extends Controller {
      * @param {HTMLInputElement} param0.target
      */
     onChange({target}) {
+        if (target.dataset.selects !== undefined) {
+            this.#applyDataSelects(target)
+            return
+        }
         this.#updateChoices(target)
         if (this.closesOnChange(target)) {
             this.close()
+        }
+    }
+
+    #applyDataSelects(selector) {
+        selector.checked = false
+        for (const value of JSON.parse(selector.dataset.selects)) {
+            const input = this.element.querySelector(`input:not([data-selects])[value="${value}"]`)
+            if (input === null || input.checked) continue
+            input.checked = true
+            this.#updateChoices(input)
         }
     }
 
