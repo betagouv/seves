@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from reversion.models import Version
 
-from core.mixins import WithNumeroMixin, sort_tree
+from core.mixins import WithNumeroMixin, lock_numero_generation, sort_tree
 from core.models import Document, Structure
 from ssa.constants import CategorieDanger
 
@@ -62,15 +62,11 @@ class WithSharedNumeroMixin(WithNumeroMixin):
     def _get_annee_and_numero(cls):
         from . import EvenementInvestigationCasHumain, EvenementProduit
 
+        lock_numero_generation("ssa.numero")
         annee_courante = timezone.now().year
 
         def last_num(model):
-            fiche = (
-                model._base_manager.filter(numero_annee=annee_courante)
-                .select_for_update()
-                .order_by("-numero_evenement")
-                .first()
-            )
+            fiche = model._base_manager.filter(numero_annee=annee_courante).order_by("-numero_evenement").first()
             return fiche.numero_evenement if fiche else 0
 
         numero = max(last_num(EvenementInvestigationCasHumain), last_num(EvenementProduit)) + 1
