@@ -616,6 +616,30 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
 
 
+def generic_test_can_add_and_see_note_with_content_pasted_from_email(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_note()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.paste_html_in_message_content(
+        "<table><tr><td>"
+        '<p><span style="color: rgba(0, 0, 0, 0.87)">Bonjour,</span></p>'
+        '<p>Contactez <a href="mailto:test@example.com">test@example.com</a></p>'
+        "</td></tr></table>"
+        "<blockquote>Message d'origine</blockquote>"
+    )
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+    assert object.messages.get().content == "<p>Bonjour,</p><p>Contactez test@example.com</p><p>Message d'origine</p>"
+
+    new_page = message_page.open_message()
+    expect(new_page.get_by_text("Contactez test@example.com")).to_be_visible()
+    expect(new_page.get_by_text("Message d'origine")).to_be_visible()
+
+
 def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page: Page, object):
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")

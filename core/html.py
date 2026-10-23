@@ -1,12 +1,55 @@
 ALLOWED_TAGS = ["h2", "p", "ol", "li", "span", "strong", "br", "s", "em", "u", "ul"]
+REMOVED_WITH_CONTENT_TAGS = ["script", "style"]
+BLOCK_TAGS = [
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "dd",
+    "div",
+    "dl",
+    "dt",
+    "figcaption",
+    "figure",
+    "footer",
+    "h1",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "main",
+    "nav",
+    "pre",
+    "section",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+]
 
 
 def filter_tags_and_attributes(soup):
+    """
+    Only keep the tags supported by the editor without losing the text (e.g. when pasting a formatted email):
+    - unsupported block elements are converted into paragraphs, or unwrapped if they contain other blocks
+    - unsupported inline elements are unwrapped
+    """
     for tag in soup.find_all(True):
-        if tag.name not in ALLOWED_TAGS:
+        if tag.decomposed:
+            continue
+        if tag.name in REMOVED_WITH_CONTENT_TAGS:
             tag.decompose()
-        else:
+        elif tag.name in ALLOWED_TAGS:
             tag.attrs = {"class": tag.get("class")} if tag.get("class") else {}
+        elif tag.name in BLOCK_TAGS and not tag.find(BLOCK_TAGS + ["p", "h2", "ol", "ul", "li"]):
+            tag.name = "p"
+            tag.attrs = {}
+        else:
+            tag.unwrap()
 
 
 def replace_ol_elements_with_ul(soup):
