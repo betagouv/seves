@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
+import json
 import typing
 
 from django.forms import Media, widgets
@@ -29,6 +30,7 @@ class TreeselectItem(Promise):
     label: str
     categorised_label: str | None
     html_name_prefix: str | None = None
+    selects: Iterable[Any] = ()
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -121,7 +123,13 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                 if choice.categorised_label:
                     attrs["data-categorised-label"] = choice.categorised_label
                 option_name = name
-                if choice.html_name_prefix:
+
+                option_attrs = attrs
+                if choice.selects:
+                    option_name = ""
+                    option_attrs = {**attrs, "data-selects": json.dumps([str(it) for it in choice.selects])}
+                    selected = False
+                elif choice.html_name_prefix:
                     option_name = f"{choice.html_name_prefix}-{name}"
                     selected = str(choice.value) in value
                 else:
@@ -134,7 +142,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     selected,
                     self.parent.get_next_id(),
                     subindex=None,
-                    attrs=attrs,
+                    attrs=option_attrs,
                 )
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):

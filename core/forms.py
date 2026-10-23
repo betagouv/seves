@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from bs4 import BeautifulSoup
 from django import forms
@@ -26,6 +26,7 @@ from core.form_mixins import DSFRForm
 from core.html import filter_tags_and_attributes, replace_ol_elements_with_ul
 from core.models import Contact, Departement, Document, Message, Structure
 from core.validators import MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_MEGABYTES
+from core.widgets import TreeselectCheckbox, TreeselectGroup, TreeselectItem
 
 User = get_user_model()
 
@@ -307,6 +308,55 @@ class BasicMessageForm(CommonMessageForm, DsfrBaseForm):
             queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
 
         self.fields["recipients"].queryset = queryset
+
+        contacts_by_region = defaultdict(list)
+        contact_structures = [r for r in queryset if r.structure]
+        for contact in contact_structures:
+            if contact.structure.region:
+                contacts_by_region[contact.structure.region.nom].append(contact.pk)
+            if contact.structure.departement:
+                contacts_by_region[contact.structure.departement.region.nom].append(contact.pk)
+
+        structures = TreeselectGroup(
+            label="Structures",
+            choices=[
+                TreeselectItem(
+                    value=recipient.pk,
+                    label=recipient.display_with_agent_unit,
+                    categorised_label=recipient.display_with_agent_unit,
+                )
+                for recipient in contact_structures
+            ],
+            categorised_label=None,
+        )
+        regions = TreeselectGroup(
+            label="Régions (Toutes les structures)",
+            choices=tuple(
+                TreeselectItem(value=f"region-{nom}", label=nom, categorised_label=None, selects=pks)
+                for nom, pks in sorted(contacts_by_region.items())
+            ),
+            can_expand=True,
+            categorised_label=None,
+        )
+        agents = TreeselectGroup(
+            label="Agents",
+            choices=[
+                TreeselectItem(
+                    value=recipient.pk,
+                    label=recipient.display_with_agent_unit,
+                    categorised_label=recipient.display_with_agent_unit,
+                )
+                for recipient in queryset
+                if recipient.agent
+            ],
+            categorised_label=None,
+        )
+
+        self.fields["recipients"].widget = TreeselectCheckbox(
+            choices=(structures, regions, agents),
+            attrs={"placeholder": "Rechercher", "required": True},
+        )
+
         self.fields["recipients_copy"].queryset = queryset
 
         if self._get_structures(obj):
