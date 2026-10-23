@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
+import reversion
 
 
 class TypeVeterinaire(models.TextChoices):
@@ -7,6 +8,7 @@ class TypeVeterinaire(models.TextChoices):
     MANDATE = "mandate", "Mandaté"
 
 
+@reversion.register()
 class Veterinaire(models.Model):
     evenement = models.ForeignKey(
         "sa.EvenementAnimal", on_delete=models.CASCADE, verbose_name="Événement", related_name="veterinaires"
