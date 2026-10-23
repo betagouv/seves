@@ -36,6 +36,7 @@ from core.tests.generic_tests.messages import (
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
+    generic_test_unread_messages_are_highlighted,
 )
 from ssa.factories import EvenementProduitFactory
 from ssa.models import EvenementProduit
@@ -135,6 +136,11 @@ def test_cant_see_drafts_from_other_users(live_server, page: Page):
 def test_message_ordering(live_server, page: Page, mocked_authentification_user):
     evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
     generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement_produit)
+
+
+def test_unread_messages_are_highlighted(live_server, page: Page, mocked_authentification_user):
+    evenement_produit = EvenementProduitFactory(etat=EvenementProduit.Etat.EN_COURS)
+    generic_test_unread_messages_are_highlighted(live_server, page, mocked_authentification_user, evenement_produit)
 
 
 def test_can_preview_image_from_message_details(live_server, page: Page, mocked_authentification_user):

@@ -50,6 +50,7 @@ from core.tests.generic_tests.messages import (
     generic_test_message_ordering,
     generic_test_only_displays_app_contacts,
     generic_test_structure_show_only_one_entry_in_select,
+    generic_test_unread_messages_are_highlighted,
 )
 from seves import settings
 from sv.factories import EvenementFactory
@@ -885,6 +886,11 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
 def test_message_ordering(live_server, page: Page, mocked_authentification_user):
     evenement = EvenementFactory()
     generic_test_message_ordering(live_server, page, mocked_authentification_user, evenement)
+
+
+def test_unread_messages_are_highlighted(live_server, page: Page, mocked_authentification_user):
+    evenement = EvenementFactory()
+    generic_test_unread_messages_are_highlighted(live_server, page, mocked_authentification_user, evenement)
 
 
 def test_can_preview_image_from_message_details(live_server, page: Page, mocked_authentification_user):

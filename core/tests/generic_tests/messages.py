@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 from typing import Literal
 import zipfile
 
@@ -1064,6 +1065,29 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     assert message_page.message_title_in_table(6) == finalise_recent.title
     assert message_page.message_title_in_table(7) == note_with_specific_picked_date.title
     assert message_page.message_title_in_table(8) == finalise_oldest.title
+
+
+def generic_test_unread_messages_are_highlighted(live_server, page: Page, mocked_authentification_user, object):
+    own_message = MessageFactory(
+        content_object=object,
+        message_type=Message.MESSAGE,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+    )
+    Message.objects.filter(pk=own_message.pk).update(date_publication=timezone.now() - timedelta(hours=1))
+    MessageFactory(content_object=object, message_type=Message.MESSAGE)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    unread_row = page.locator("#table-sm-row-key-1")
+    expect(unread_row).to_have_class(re.compile("message-unread"))
+    expect(unread_row.locator("td:nth-child(4) a")).to_have_css("font-weight", "700")
+    expect(page.locator("#table-sm-row-key-2")).not_to_have_class(re.compile("message-unread"))
+
+    new_page = ListOfMessagesPage(page).open_message(1)
+    new_page.wait_for_load_state()
+    expect(unread_row).not_to_have_class(re.compile("message-unread"))
+
+    page.reload()
+    expect(page.locator(".message-unread")).to_have_count(0)
 
 
 def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):

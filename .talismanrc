@@ -35,7 +35,7 @@ fileignoreconfig:
 - filename: core/views.py
   checksum: dd7abfcb004df5833e92c64806dc6436672d4ceb9727ca495ac3f7431c6d776f
 - filename: core/templates/core/_tableau_fil_de_suivi.html
-  checksum: a2e29ecc50a1417f69a383adb1228a8c26d35980fa3ee3d2dfb7f0f416f14186
+  checksum: a14f17fcdd60d9fcff89ad28e96f09a1bfb8d4cb975328c2e6b9967b24855cae
 - filename: ssa/tests/pages.py
   checksum: 13f50c16e3e5b6b187725c13c7d814a526fc4d6242dbb42a383ef00095a8ca09
 - filename: sv/templates/sv/_evenement_sort_link.html
@@ -164,5 +164,7 @@ fileignoreconfig:
   checksum: ab2a12c41eb547c6da1b3c59e0858578ec7bc4c9d9f96485909c0700a1af9d47
 - filename: core/static/core/base.js
   checksum: e62bb8f205f7f012d182cf0713d927503e3f20a815e3a30b67bf1cff9c5e5474
+- filename: core/migrations/0069_message_read.py
+  checksum: b6067ab927d8c77c8f4528ae30a1ab19fc49819d6e0f6fe399f856e49c2f4047
 
 version: "1.0"
