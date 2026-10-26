@@ -342,3 +342,10 @@ def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
     expect(details_page.block("Flux analytique")).not_to_be_visible()
     expect(details_page.block("Typage")).not_to_be_visible()
     expect(details_page.block("Vétérinaires")).not_to_be_visible()
+
+
+def test_evenement_animal_details_page_block_in_draft(live_server, page: Page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.BROUILLON)
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+    expect(details_page.page.get_by_text("Informations générales", exact=True).filter(visible=True)).to_have_count(1)
