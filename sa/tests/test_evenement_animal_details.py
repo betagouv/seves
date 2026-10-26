@@ -328,7 +328,7 @@ def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
     expect(details_page.block("Enquête épidémiologique")).to_be_visible()
     expect(details_page.block("Espèces concernées et exposées")).to_be_visible()
     expect(details_page.block("Mesures de gestion")).to_be_visible()
-    expect(details_page.block("Flux analytique")).to_be_visible()
+    expect(details_page.block("Analyses")).to_be_visible()
     expect(details_page.block("Typage")).to_be_visible()
     expect(details_page.block("Vétérinaires")).to_be_visible()
 
@@ -339,7 +339,7 @@ def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
     expect(details_page.block("Enquête épidémiologique")).not_to_be_visible()
     expect(details_page.block("Espèces concernées et exposées")).not_to_be_visible()
     expect(details_page.block("Mesures de gestion")).not_to_be_visible()
-    expect(details_page.block("Flux analytique")).not_to_be_visible()
+    expect(details_page.block("Analyses")).not_to_be_visible()
     expect(details_page.block("Typage")).not_to_be_visible()
     expect(details_page.block("Vétérinaires")).not_to_be_visible()
 
