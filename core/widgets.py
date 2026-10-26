@@ -95,8 +95,6 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
         context["aria_controls_prefix"] = self._aria_controls_prefix(name, attrs)
         if isinstance(self.item, TreeselectGroup):
             context["can_expand"] = self.item.can_expand
-            if self.item.categorised_label:
-                attrs["data-categorised-label"] = self.item.categorised_label
             if self.item.value:
                 context["group_option"] = self.create_option(
                     name,
@@ -105,7 +103,7 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     self.get_selected(self.item.value, value),
                     self.parent.get_next_id(),
                     None,
-                    attrs,
+                    self._attrs_with_categorised_label(attrs, self.item.categorised_label),
                     group_option=True,
                 )
         return context
@@ -118,8 +116,6 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
             else:
                 if not isinstance(choice, TreeselectItem):
                     choice = TreeselectItem(value=choice[0], label=choice[1], categorised_label=None)
-                if choice.categorised_label:
-                    attrs["data-categorised-label"] = choice.categorised_label
                 option_name = name
                 if choice.html_name_prefix:
                     option_name = f"{choice.html_name_prefix}-{name}"
@@ -134,8 +130,16 @@ class TreeselectGroupWidget(widgets.ChoiceWidget):
                     selected,
                     self.parent.get_next_id(),
                     subindex=None,
-                    attrs=attrs,
+                    attrs=self._attrs_with_categorised_label(attrs, choice.categorised_label),
                 )
+
+    @staticmethod
+    def _attrs_with_categorised_label(attrs, categorised_label):
+        # attrs is shared, copy it to make it "private"
+        attrs = {k: v for k, v in attrs.items() if k != "data-categorised-label"}
+        if categorised_label:
+            attrs["data-categorised-label"] = categorised_label
+        return attrs
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None, *, group_option=False):
         context = super().create_option(name, value, label, selected, index, subindex, attrs)
