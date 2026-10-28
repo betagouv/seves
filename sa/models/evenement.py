@@ -712,4 +712,13 @@ class EvenementAnimal(
                 name="evenementanimal_dates_desinfection_order",
                 violation_error_message="Les dates D0, ND1 et ND2 doivent respecter l'ordre D0 ≤ ND1 ≤ ND2.",
             ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(date_apms__isnull=True) | Q(date_apdi__isnull=True) | Q(date_apms__lte=F("date_apdi")))
+                    & (Q(date_apdi__isnull=True) | Q(date_levee__isnull=True) | Q(date_apdi__lte=F("date_levee")))
+                    & (Q(date_apms__isnull=True) | Q(date_levee__isnull=True) | Q(date_apms__lte=F("date_levee")))
+                ),
+                name="evenementanimal_dates_arretes_order",
+                violation_error_message="Les dates APMS, APDI et levée doivent respecter l'ordre APMS ≤ APDI ≤ levée.",
+            ),
         ]

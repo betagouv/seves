@@ -315,13 +315,13 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_apdi(self):
-        if self.maladie.needs_arrete:
-            return fake.date_this_decade()
+        if self.maladie.needs_arrete and self.date_apms:
+            return fake.date_between(start_date=self.date_apms, end_date=self.date_apms + timedelta(days=30))
 
     @factory.lazy_attribute
     def date_levee(self):
-        if self.maladie.needs_arrete:
-            return fake.date_this_decade()
+        if self.maladie.needs_arrete and self.date_apdi:
+            return fake.date_between(start_date=self.date_apdi, end_date=self.date_apdi + timedelta(days=30))
 
     @factory.lazy_attribute
     def date_nd(self):

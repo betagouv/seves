@@ -1,9 +1,11 @@
+from datetime import date
 import json
 import re
 
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import DepartementFactory
 from core.models import LienLibre
@@ -664,6 +666,75 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     assert evenement.date_apms == input_data.date_apms
     assert evenement.date_apdi == input_data.date_apdi
     assert evenement.date_levee == input_data.date_levee
+
+
+@pytest.mark.parametrize(
+    "date_apms,date_apdi,date_levee",
+    [
+        ("2026-03-01", "2026-03-01", "2026-03-01"),
+        ("2026-03-01", "", "2026-03-10"),
+        ("", "2026-03-01", "2026-03-10"),
+        ("", "", ""),
+    ],
+)
+def test_can_create_evenement_animal_with_dates_arretes_in_order(
+    live_server, page: Page, date_apms, date_apdi, date_levee
+):
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    maladie = MaladieFactory(needs_arrete=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_apms.fill(date_apms)
+    creation_page.date_apdi.fill(date_apdi)
+    creation_page.date_levee.fill(date_levee)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.date_apms == (date.fromisoformat(date_apms) if date_apms else None)
+    assert evenement.date_apdi == (date.fromisoformat(date_apdi) if date_apdi else None)
+    assert evenement.date_levee == (date.fromisoformat(date_levee) if date_levee else None)
+
+
+@pytest.mark.parametrize(
+    "date_apms,date_apdi,date_levee,field_in_error,error_message",
+    [
+        ("2026-03-10", "2026-03-01", "", "date_apdi", "La date APDI doit être postérieure ou égale à la date APMS."),
+        (
+            "2026-03-10",
+            "",
+            "2026-03-01",
+            "date_levee",
+            "La date de levée doit être postérieure ou égale à la date APMS.",
+        ),
+        (
+            "",
+            "2026-03-10",
+            "2026-03-01",
+            "date_levee",
+            "La date de levée doit être postérieure ou égale à la date APDI.",
+        ),
+    ],
+)
+def test_cant_create_evenement_animal_with_dates_arretes_not_in_order(
+    live_server, page: Page, date_apms, date_apdi, date_levee, field_in_error, error_message
+):
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    maladie = MaladieFactory(needs_arrete=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_apms.fill(date_apms)
+    creation_page.date_apdi.fill(date_apdi)
+    creation_page.date_levee.fill(date_levee)
+    creation_page.submit_as_draft(wait_for=None)
+
+    expect(page.locator(f"#id_{field_in_error}-desc-error")).to_have_text(error_message)
+    assert EvenementAnimal.objects.count() == 0
 
 
 def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):

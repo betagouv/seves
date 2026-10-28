@@ -88,3 +88,20 @@ def test_maladie_treeselect_choices_with_typages_are_sorted_numerically():
 
     assert [choice.label for choice in maladie_choice] == ["PTV-1", "PTV-2", "PTV-10"]
     assert [choice.label for choice in maladie_choice[0]] == ["H1N2", "H1N10", "H2N1", "H10N1"]
+
+
+@pytest.mark.django_db
+def test_evenement_animal_dates_arretes_constraints():
+    today = timezone.localtime(timezone.now()).date()
+    yesterday = today - datetime.timedelta(days=1)
+
+    EvenementAnimalFactory(maladie__needs_arrete=True, date_apms=today, date_apdi=today, date_levee=today)
+    EvenementAnimalFactory(maladie__needs_arrete=True, date_apms=None, date_apdi=None, date_levee=None)
+
+    for dates in (
+        {"date_apms": today, "date_apdi": yesterday, "date_levee": None},
+        {"date_apms": today, "date_apdi": None, "date_levee": yesterday},
+        {"date_apms": None, "date_apdi": today, "date_levee": yesterday},
+    ):
+        with transaction.atomic(), pytest.raises(IntegrityError):
+            EvenementAnimalFactory(maladie__needs_arrete=True, **dates)

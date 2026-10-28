@@ -443,10 +443,11 @@ def test_evenement_animal_list_filter_by_contexte_suspicion(live_server, page: P
     ],
 )
 def test_evenement_animal_list_filter_by_date_range(live_server, page: Page, label, model_field):
-    matching = EvenementAnimalFactory(**{model_field: date(2026, 3, 15)})
-    too_early = EvenementAnimalFactory(**{model_field: date(2026, 2, 28)})
-    too_late = EvenementAnimalFactory(**{model_field: date(2026, 4, 1)})
-    without_date = EvenementAnimalFactory(**{model_field: None})
+    dates = {"date_apms": None, "date_apdi": None, "date_levee": None}
+    matching = EvenementAnimalFactory(**{**dates, model_field: date(2026, 3, 15)})
+    too_early = EvenementAnimalFactory(**{**dates, model_field: date(2026, 2, 28)})
+    too_late = EvenementAnimalFactory(**{**dates, model_field: date(2026, 4, 1)})
+    without_date = EvenementAnimalFactory(**{**dates, model_field: None})
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
