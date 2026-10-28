@@ -599,7 +599,21 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             else:
                 self.instance.typage = None
 
+        self._clean_dates_arretes(cleaned_data)
+
         return cleaned_data
+
+    def _clean_dates_arretes(self, cleaned_data):
+        date_apms = cleaned_data.get("date_apms")
+        date_apdi = cleaned_data.get("date_apdi")
+        date_levee = cleaned_data.get("date_levee")
+
+        if date_apms and date_apdi and date_apdi < date_apms:
+            self.add_error("date_apdi", "La date APDI doit être postérieure ou égale à la date APMS.")
+        if date_apms and date_levee and date_levee < date_apms:
+            self.add_error("date_levee", "La date de levée doit être postérieure ou égale à la date APMS.")
+        if date_apdi and date_levee and date_levee < date_apdi:
+            self.add_error("date_levee", "La date de levée doit être postérieure ou égale à la date APDI.")
 
     def get_queryset(self, model, user, instance):
         return (
