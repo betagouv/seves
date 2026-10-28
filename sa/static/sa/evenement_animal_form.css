@@ -40,8 +40,56 @@
     margin-right: 2rem;
 }
 
+#especes-concernees-table {
+    width: 100%;
+}
+
 #especes-concernees-table .fr-table__container {
     overflow: unset; /* Allows treeselect to open the dropdown with all the options */
+}
+
+#especes-concernees-table th,
+#especes-concernees-table td {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    white-space: normal;
+}
+
+#especes-concernees-table .espece-col {
+    min-width: 15rem;
+}
+
+#especes-concernees-table .identifiant-col,
+#especes-concernees-table .situation-unite-col {
+    width: 9rem;
+}
+
+#especes-concernees-table .effectif-col {
+    width: 5.5rem;
+}
+
+#especes-concernees-table .actions-col {
+    width: 3.5rem;
+}
+
+#especes-concernees-table tbody .fr-input {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+#especes-concernees-table tbody .fr-input-group > .fr-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0, 0, 0, 0);
+}
+
+#especes-concernees-table tbody .fr-input-group > .fr-label + * {
+    margin-top: 0;
 }
 
 .veterinaire-fields {
