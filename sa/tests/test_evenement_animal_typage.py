@@ -8,6 +8,7 @@ from sa.tests.factories import (
     EspeceFactory,
     EvenementAnimalFactory,
     TuberculoseFactory,
+    TypageFactory,
 )
 from sa.tests.pages import EvenementAnimalFormPage
 
@@ -132,6 +133,32 @@ def test_typage_niveau_3_options_follow_selected_niveau_2(live_server, page: Pag
 
     creation_page.typage_niveau_2.select_option("Mycobacterium caprae")
     expect(creation_page.typage_niveau_3).to_be_disabled()
+
+
+def test_typage_options_are_sorted_numerically(live_server, page: Page):
+    maladie = TuberculoseFactory()
+    maladie.typages.all().delete()
+    for valeur_niveau_2, valeur_niveau_3 in [
+        ("PTV-10", ""),
+        ("PTV-2", ""),
+        ("PTV-1", "H10N1"),
+        ("PTV-1", "H2N1"),
+        ("PTV-1", "H1N10"),
+        ("PTV-1", "H1N2"),
+    ]:
+        TypageFactory(maladie=maladie, valeur_niveau_2=valeur_niveau_2, valeur_niveau_3=valeur_niveau_3)
+    espece = EspeceFactory()
+    input_data = EvenementAnimalFactory.build()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+
+    niveau_2_texts = [o.inner_text() for o in creation_page.typage_niveau_2.locator("option").element_handles()]
+    assert niveau_2_texts == [settings.SELECT_EMPTY_CHOICE, "PTV-1", "PTV-2", "PTV-10"]
+
+    creation_page.typage_niveau_2.select_option("PTV-1")
+    niveau_3_texts = [o.inner_text() for o in creation_page.typage_niveau_3.locator("option").element_handles()]
+    assert niveau_3_texts == [settings.SELECT_EMPTY_CHOICE, "H1N2", "H1N10", "H2N1", "H10N1"]
 
 
 def test_can_create_evenement_animal_with_typage_block(

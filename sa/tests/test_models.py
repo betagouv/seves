@@ -4,8 +4,15 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 import pytest
 
+from sa.models import Maladie
 from sa.models.evenement import StatutAnimal, TypeLieu
-from sa.tests.factories import AcarapioseFactory, AdenomatoseFactory, EvenementAnimalFactory, TuberculoseFactory
+from sa.tests.factories import (
+    AcarapioseFactory,
+    AdenomatoseFactory,
+    EvenementAnimalFactory,
+    TuberculoseFactory,
+    TypageFactory,
+)
 
 
 @pytest.mark.django_db
@@ -59,3 +66,25 @@ def test_evenement_animal_dates_mesures_constraints():
             EvenementAnimalFactory(
                 maladie__needs_dates_desinfection=True, date_nd1=today + datetime.timedelta(days=3), date_nd2=today
             )
+
+
+@pytest.mark.django_db
+def test_maladie_treeselect_choices_with_typages_are_sorted_numerically():
+    maladie = TuberculoseFactory()
+    maladie.typages.all().delete()
+    for valeur_niveau_2, valeur_niveau_3 in [
+        ("PTV-10", ""),
+        ("PTV-2", ""),
+        ("PTV-1", "H10N1"),
+        ("PTV-1", "H2N1"),
+        ("PTV-1", "H1N10"),
+        ("PTV-1", "H1N2"),
+    ]:
+        TypageFactory(maladie=maladie, valeur_niveau_2=valeur_niveau_2, valeur_niveau_3=valeur_niveau_3)
+
+    maladie_choice = next(
+        choice for group in Maladie.treeselect_choices_with_typages for choice in group if choice.value == maladie.pk
+    )
+
+    assert [choice.label for choice in maladie_choice] == ["PTV-1", "PTV-2", "PTV-10"]
+    assert [choice.label for choice in maladie_choice[0]] == ["H1N2", "H1N10", "H2N1", "H10N1"]
