@@ -276,7 +276,11 @@ def test_can_add_analyse_confirmed_will_change_statut_and_date(live_server, page
     laboratoire = LaboratoireFactory()
     methode = MethodeAnalyseFactory(laboratoires=[laboratoire])
     analyse = AnalyseFactory.build(
-        maladie=maladie, laboratoire=laboratoire, methode=methode, resultat_confirmation=True
+        maladie=maladie,
+        laboratoire=laboratoire,
+        methode=methode,
+        resultat=ResultatAnalyse.DETECTE,
+        resultat_confirmation=True,
     )
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)

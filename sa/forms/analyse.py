@@ -125,6 +125,8 @@ class AnalyseForm(DsfrBaseForm, forms.ModelForm):
         cleaned_data = super().clean()
         if cleaned_data.get("resultat") != ResultatAnalyse.EN_ATTENTE and not cleaned_data.get("methode"):
             self.add_error("methode", "La méthode est obligatoire lorsque le résultat n'est pas « En attente ».")
+        if cleaned_data.get("resultat") == ResultatAnalyse.EN_ATTENTE:
+            cleaned_data["date_resultat"] = None
         return cleaned_data
 
     @property
