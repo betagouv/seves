@@ -310,17 +310,17 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_apms(self):
-        if self.maladie.needs_arrete:
+        if self.maladie.needs_arrete and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
     def date_apdi(self):
-        if self.maladie.needs_arrete:
+        if self.maladie.needs_arrete and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
     def date_levee(self):
-        if self.maladie.needs_arrete:
+        if self.maladie.needs_arrete and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
@@ -334,19 +334,19 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_d_zero(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
     def date_nd1(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.date_d_zero:
             return fake.date_between(
                 start_date=self.date_d_zero + timedelta(days=1), end_date=self.date_d_zero + timedelta(days=30)
             )
 
     @factory.lazy_attribute
     def date_nd2(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.date_nd1:
             return fake.date_between(
                 start_date=self.date_nd1 + timedelta(days=1), end_date=self.date_nd1 + timedelta(days=30)
             )
