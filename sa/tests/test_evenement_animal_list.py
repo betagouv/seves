@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from itertools import pairwise
 
 from django.urls import reverse
 from django.utils import timezone
@@ -194,6 +195,42 @@ def test_evenement_animal_list_filter_by_autre_espece(live_server, page: Page):
     expect(search_page.row(matching.numero)).to_be_visible()
     expect(search_page.row(other.numero)).to_have_count(0)
     expect(search_page.espece_treeselect.main_button).to_have_text(espece.name)
+
+
+def test_evenement_animal_list_autres_especes_with_long_names_do_not_overlap(live_server, page: Page):
+    especes = [
+        EspeceFactory(name=f"Poisson {name} avec un nom suffisamment long pour revenir à la ligne ({latin_name})")
+        for name, latin_name in [
+            ("arc-en-ciel du fleuve Murray", "Melanotaenia fluviatilis"),
+            ("arc-en-ciel oriental", "Melanotaenia splendida"),
+            ("archer commun", "Toxotes chatareus"),
+        ]
+    ]
+    matching = EvenementAnimalFactory(espece=especes[1])
+
+    search_page = EvenementListPage(page, live_server.url)
+    search_page.navigate()
+    with search_page.espece_treeselect.opened_treeselect():
+        search_page.espece_treeselect.search("suffisamment long")
+        search_page.espece_treeselect.open_group("Autres")
+        rows = page.get_by_test_id("virtual-viewport").locator(".fr-treeselect__element:visible")
+        expect(rows).to_have_count(len(especes))
+        boxes = rows.evaluate_all("""rows => rows.map(row => {
+            const label = row.querySelector("label").getBoundingClientRect()
+            const {top, bottom} = row.getBoundingClientRect()
+            return {top, bottom, labelTop: label.top, labelBottom: label.bottom, labelHeight: label.height}
+        })""")
+
+    for box in boxes:
+        assert box["labelHeight"] > 30, "Label is expected to span several lines"
+        assert box["top"] <= box["labelTop"] and box["labelBottom"] <= box["bottom"]
+    for box, next_box in pairwise(boxes):
+        assert box["bottom"] <= next_box["top"]
+
+    search_page.select_espece(especes[1])
+    search_page.submit_search()
+    expect(search_page.row(matching.numero)).to_be_visible()
+    expect(search_page.espece_treeselect.main_button).to_have_text(especes[1].name)
 
 
 def test_evenement_animal_list_filter_by_numero(live_server, page: Page):
