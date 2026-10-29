@@ -22,7 +22,7 @@ class AnalyseFormController extends BaseFormInModal {
 
     connect() {
         this.updateMethodeRequired()
-        this.updateDateResulatRequired()
+        this.updateDateResultatState()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -53,15 +53,20 @@ class AnalyseFormController extends BaseFormInModal {
 
     onResultatChange() {
         this.updateMethodeRequired()
-        this.updateDateResulatRequired()
+        this.updateDateResultatState()
     }
 
     updateMethodeRequired() {
         this.methodeSelectTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
     }
 
-    updateDateResulatRequired() {
-        this.dateResultatInputTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
+    updateDateResultatState() {
+        const isEnAttente = this.resultatSelectTarget.value === RESULTAT_EN_ATTENTE
+        this.dateResultatInputTarget.disabled = isEnAttente
+        this.dateResultatInputTarget.required = !isEnAttente
+        if (isEnAttente) {
+            this.dateResultatInputTarget.value = ""
+        }
     }
 
     getLaboratoireId() {
