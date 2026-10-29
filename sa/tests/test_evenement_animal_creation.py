@@ -648,7 +648,7 @@ def test_double_click_on_map_without_parcelle_leaves_numero_identifiant_unchange
 
 
 def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(needs_arrete=True)
     espece = EspeceFactory()
 
@@ -667,7 +667,7 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
 
 
 def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(name="Needs date desinfection", needs_date_nd=False, needs_dates_desinfection=True)
     espece = EspeceFactory()
 
@@ -686,7 +686,7 @@ def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_
 
 
 def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(name="Needs date desinfection order", needs_date_nd=False, needs_dates_desinfection=True)
     espece = EspeceFactory()
 
@@ -704,8 +704,8 @@ def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order
 
 
 def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
-    maladie = AcarapioseFactory()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.SAUVAGE)
+    maladie = TuberculoseFactory()
     espece = EspeceFactory()
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
@@ -717,7 +717,7 @@ def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page:
     expect(creation_page.date_d_zero).not_to_be_visible()
     expect(creation_page.date_nd1).not_to_be_visible()
     expect(creation_page.date_nd2).not_to_be_visible()
-    expect(creation_page.date_nd).to_be_visible()
+    expect(creation_page.date_nd).not_to_be_visible()
 
 
 def test_can_create_evenement_animal_when_maladie_needs_date_nd(live_server, page: Page):

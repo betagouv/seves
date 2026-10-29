@@ -167,3 +167,15 @@ class Maladie(models.Model):
     @classproperty
     def all_treeselect_choices(cls):
         return lazy(cls._build_all_treeselect_choices, tuple)()
+
+    @property
+    def show_mesures_first_row(self):
+        return self.needs_arrete
+
+    @property
+    def show_mesures_second_row(self):
+        return self.needs_dates_desinfection
+
+    @property
+    def show_mesures_third_row(self):
+        return self.needs_date_nd

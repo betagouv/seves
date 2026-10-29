@@ -119,7 +119,7 @@ def test_evenement_animal_details_page_with_missing_information(live_server, pag
 
 
 def test_evenement_animal_details_page_mesures_block_needs_arrete(live_server, page: Page):
-    evenement = EvenementAnimalFactory(maladie__needs_arrete=True)
+    evenement = EvenementAnimalFactory(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -131,7 +131,7 @@ def test_evenement_animal_details_page_mesures_block_needs_arrete(live_server, p
 
 
 def test_evenement_animal_details_page_mesures_block_needs_dates_desinfection(live_server, page: Page):
-    evenement = EvenementAnimalFactory(maladie=DNCFactory())
+    evenement = EvenementAnimalFactory(maladie=DNCFactory(), statut_animal=StatutAnimal.DETENU)
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -317,8 +317,10 @@ def test_evenement_animal_details_page_typage_block(live_server, page: Page):
     expect(block.get_by_text("Autre spoligotype", exact=True)).to_be_visible()
 
 
-def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
-    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS, maladie=TuberculoseFactory())
+def test_evenement_animal_detail_page_synthese_content_detenu(live_server, page: Page):
+    evenement = EvenementAnimalFactory(
+        etat=WithEtatMixin.Etat.EN_COURS, maladie=TuberculoseFactory(), statut_animal=StatutAnimal.DETENU
+    )
 
     details_page = EvenementAnimalDetailsPage(page, live_server.url)
     details_page.navigate(evenement)
@@ -328,6 +330,35 @@ def test_evenement_animal_detail_page_synthese_content(live_server, page: Page):
     expect(details_page.block("Enquête épidémiologique")).to_be_visible()
     expect(details_page.block("Espèces concernées et exposées")).to_be_visible()
     expect(details_page.block("Mesures de gestion")).to_be_visible()
+    expect(details_page.block("Analyses")).to_be_visible()
+    expect(details_page.block("Typage")).to_be_visible()
+    expect(details_page.block("Vétérinaires")).to_be_visible()
+
+    details_page.open_synthese()
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).not_to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).not_to_be_visible()
+    expect(details_page.block("Mesures de gestion")).not_to_be_visible()
+    expect(details_page.block("Analyses")).not_to_be_visible()
+    expect(details_page.block("Typage")).not_to_be_visible()
+    expect(details_page.block("Vétérinaires")).not_to_be_visible()
+
+
+def test_evenement_animal_detail_page_synthese_content_sauvage(live_server, page: Page):
+    evenement = EvenementAnimalFactory(
+        etat=WithEtatMixin.Etat.EN_COURS, maladie=TuberculoseFactory(), statut_animal=StatutAnimal.SAUVAGE
+    )
+
+    details_page = EvenementAnimalDetailsPage(page, live_server.url)
+    details_page.navigate(evenement)
+
+    expect(details_page.block("Informations générales")).to_be_visible()
+    expect(details_page.block("Informations")).to_be_visible()
+    expect(details_page.block("Enquête épidémiologique")).to_be_visible()
+    expect(details_page.block("Espèces concernées et exposées")).to_be_visible()
+    expect(details_page.block("Mesures de gestion")).not_to_be_visible()
     expect(details_page.block("Analyses")).to_be_visible()
     expect(details_page.block("Typage")).to_be_visible()
     expect(details_page.block("Vétérinaires")).to_be_visible()
