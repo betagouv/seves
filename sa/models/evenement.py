@@ -559,7 +559,15 @@ class EvenementAnimal(
 
     @property
     def show_mesures_block(self):
-        return self.maladie.needs_arrete
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return False
+        return any(
+            [
+                self.maladie.show_mesures_first_row,
+                self.maladie.show_mesures_second_row,
+                self.maladie.show_mesures_third_row,
+            ]
+        )
 
     def get_prefetch_for_revision_list_view(self):
         return [

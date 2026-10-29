@@ -347,6 +347,16 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             "telephone_particulier",
         ]
 
+        mesures_fields = [
+            "date_apms",
+            "date_apdi",
+            "date_levee",
+            "date_d_zero",
+            "date_nd1",
+            "date_nd2",
+            "date_nd",
+        ]
+
         fields = [
             "maladie",
             "espece",
@@ -371,13 +381,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             # Typage
             "typage_champ_libre",
             # Mesures de gestion
-            "date_apms",
-            "date_apdi",
-            "date_levee",
-            "date_d_zero",
-            "date_nd1",
-            "date_nd2",
-            "date_nd",
+            *mesures_fields,
             # Adis
             *adis_fields,
         ]
@@ -414,6 +418,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         self._add_free_links(model=EvenementAnimal)
         self.fields["maladie"].initial = self.maladie_id
         self.maladie = Maladie.objects.get(id=self.maladie_id)
+        self.maladie_object = self.maladie
         self._init_typage_fields()
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
@@ -443,8 +448,12 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             self.fields.pop("date_nd1")
             self.fields.pop("date_nd2")
 
-        if not self.show_mesures_third_row:
+        if not self.maladie.show_mesures_third_row:
             self.fields.pop("date_nd")
+
+        if self.show_mesures_block is False:
+            for field in self.Meta.mesures_fields:
+                self.fields.pop(field, None)
 
         if self.user.agent.structure.is_ac is False:
             for field in self.Meta.adis_fields:
@@ -522,20 +531,16 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         return self.statut_animal == StatutAnimal.DETENU
 
     @property
-    def show_mesures_first_row(self):
-        return self.maladie.needs_arrete
-
-    @property
-    def show_mesures_second_row(self):
-        return self.maladie.needs_dates_desinfection
-
-    @property
-    def show_mesures_third_row(self):
-        return self.maladie.needs_date_nd and self.statut_animal != StatutAnimal.SAUVAGE
-
-    @property
     def show_mesures_block(self):
-        return self.show_mesures_first_row or self.show_mesures_second_row or self.show_mesures_third_row
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return False
+        return any(
+            [
+                self.maladie.show_mesures_first_row,
+                self.maladie.show_mesures_second_row,
+                self.maladie.show_mesures_third_row,
+            ]
+        )
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
