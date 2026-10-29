@@ -729,4 +729,22 @@ class EvenementAnimal(
                 name="evenementanimal_dates_arretes_order",
                 violation_error_message="Les dates APMS, APDI et levée doivent respecter l'ordre APMS ≤ APDI ≤ levée.",
             ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(statut_animal=StatutAnimal.SAUVAGE)
+                    | (
+                        Q(date_apms__isnull=True)
+                        & Q(date_apdi__isnull=True)
+                        & Q(date_levee__isnull=True)
+                        & Q(date_d_zero__isnull=True)
+                        & Q(date_nd1__isnull=True)
+                        & Q(date_nd2__isnull=True)
+                        & Q(date_nd__isnull=True)
+                    )
+                ),
+                name="evenementanimal_no_mesures_gestion_when_sauvage",
+                violation_error_message=(
+                    "Les dates des mesures de gestion ne peuvent pas être renseignées pour un animal sauvage"
+                ),
+            ),
         ]
