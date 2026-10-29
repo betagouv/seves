@@ -170,7 +170,7 @@ pillow==13.0.0
     #   pikepdf
 platformdirs==4.13.5
     # via virtualenv
-playwright==1.63.0
+playwright==1.64.1
     # via
     #   -r requirements.in
     #   pytest-playwright
