@@ -59,13 +59,32 @@ def test_evenement_animal_dates_mesures_constraints():
     with pytest.raises(IntegrityError):
         with transaction.atomic():
             EvenementAnimalFactory(
-                maladie__needs_dates_desinfection=True, date_d_zero=today + datetime.timedelta(days=3), date_nd1=today
+                statut_animal=StatutAnimal.DETENU,
+                maladie__needs_dates_desinfection=True,
+                date_d_zero=today + datetime.timedelta(days=3),
+                date_nd1=today,
             )
     with pytest.raises(IntegrityError):
         with transaction.atomic():
             EvenementAnimalFactory(
-                maladie__needs_dates_desinfection=True, date_nd1=today + datetime.timedelta(days=3), date_nd2=today
+                statut_animal=StatutAnimal.DETENU,
+                maladie__needs_dates_desinfection=True,
+                date_nd1=today + datetime.timedelta(days=3),
+                date_nd2=today,
             )
+
+
+@pytest.mark.django_db
+def test_evenement_animal_no_mesures_gestion_when_sauvage_constraint():
+    today = timezone.localtime(timezone.now()).date()
+    maladie = TuberculoseFactory()
+
+    EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE, maladie=maladie)
+    EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU, maladie=maladie, date_apms=today, date_nd=today)
+
+    for field in ("date_apms", "date_apdi", "date_levee", "date_d_zero", "date_nd1", "date_nd2", "date_nd"):
+        with transaction.atomic(), pytest.raises(IntegrityError):
+            EvenementAnimalFactory(statut_animal=StatutAnimal.SAUVAGE, maladie=maladie, **{field: today})
 
 
 @pytest.mark.django_db
