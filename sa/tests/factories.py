@@ -364,11 +364,21 @@ class AnalyseFactory(DjangoModelFactory):
     evenement = factory.SubFactory(EvenementAnimalFactory)
     maladie = factory.SelfAttribute("evenement.maladie")
     date_prelevement = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
-    date_resultat = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
     laboratoire = factory.SubFactory(LaboratoireFactory)
     methode = factory.SubFactory(MethodeAnalyseFactory)
     resultat = FuzzyChoice(ResultatAnalyse.values)
-    resultat_confirmation = FuzzyChoice([True, False])
+
+    @factory.lazy_attribute
+    def date_resultat(self):
+        if self.resultat == ResultatAnalyse.EN_ATTENTE:
+            return None
+        return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
+    def resultat_confirmation(self):
+        if self.resultat == ResultatAnalyse.EN_ATTENTE:
+            return False
+        return random.choice([True, False])
 
     @factory.post_generation
     def link_methode_to_laboratoire(self, create, extracted, **kwargs):
