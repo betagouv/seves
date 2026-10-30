@@ -32,8 +32,6 @@ certifi==2026.10.19
     #   sentry-sdk
 cffi==2.0.0
     # via cryptography
-cfgv==3.4.0
-    # via pre-commit
 charset-normalizer==3.3.2
     # via requests
 click==8.1.8
@@ -52,15 +50,12 @@ cryptography==50.0.0
     # via mozilla-django-oidc
 diff-match-patch==20241021
     # via django-reversion-compare
-distlib==0.4.4
-    # via virtualenv
 dj-importmap==1.0.0
     # via -r requirements.in
 django==6.1.1
     # via
     #   -r requirements.in
     #   dj-importmap
-    #   django-debug-toolbar
     #   django-dirtyfields
     #   django-dsfr
     #   django-filter
@@ -74,8 +69,6 @@ django==6.1.1
     #   mozilla-django-oidc
     #   sentry-sdk
 django-countries==8.2.0
-    # via -r requirements.in
-django-debug-toolbar==7.1.1
     # via -r requirements.in
 django-dirtyfields==1.9.9
     # via -r requirements.in
@@ -101,34 +94,14 @@ django-waffle==5.0.0
     # via -r requirements.in
 django-widget-tweaks==1.5.1
     # via django-dsfr
-djhtml==3.0.11
-    # via -r requirements.in
 docxcompose3==1.4.5
     # via -r requirements.in
 docxtpl==0.20.2
     # via -r requirements.in
-execnet==2.1.1
-    # via pytest-xdist
-factory-boy==3.3.3
-    # via -r requirements.in
-faker==37.12.0
-    # via
-    #   -r requirements.in
-    #   factory-boy
-filelock==4.2.1
-    # via
-    #   python-discovery
-    #   virtualenv
-greenlet==3.1.1
-    # via playwright
 gunicorn==26.2.0
     # via -r requirements.in
-identify==2.5.35
-    # via pre-commit
 idna==3.15
     # via requests
-iniconfig==2.0.0
-    # via pytest
 jinja2==3.1.6
     # via docxtpl
 jmespath==1.0.1
@@ -153,101 +126,44 @@ mozilla-django-oidc==5.0.2
     # via -r requirements.in
 nh3==0.3.2
     # via django-post-office
-nodeenv==1.8.0
-    # via pre-commit
 packaging==26.3
     # via
     #   kombu
     #   pikepdf
-    #   pytest
-    #   pytest-rerunfailures
-    #   virtualenv
 pikepdf==10.16.0
     # via -r requirements.in
 pillow==13.0.0
     # via
     #   -r requirements.in
     #   pikepdf
-platformdirs==4.13.5
-    # via virtualenv
-playwright==1.63.0
-    # via
-    #   -r requirements.in
-    #   pytest-playwright
-pluggy==1.5.0
-    # via pytest
-pre-commit==4.6.2
-    # via -r requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
 psycopg2-binary==2.9.13
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyee==13.0.0
-    # via playwright
 pygments==2.20.0
-    # via
-    #   pytest
-    #   rich
+    # via rich
 pyjwt==2.15.0
     # via
     #   -r requirements.in
     #   mozilla-django-oidc
-pytest==9.0.3
-    # via
-    #   pytest-base-url
-    #   pytest-django
-    #   pytest-env
-    #   pytest-playwright
-    #   pytest-rerunfailures
-    #   pytest-split
-    #   pytest-xdist
-pytest-base-url==2.1.0
-    # via pytest-playwright
-pytest-django==4.14.0
-    # via -r requirements.in
-pytest-env==1.7.1
-    # via -r requirements.in
-pytest-playwright==0.9.0
-    # via -r requirements.in
-pytest-rerunfailures==16.7
-    # via -r requirements.in
-pytest-split==0.11.0
-    # via -r requirements.in
-pytest-xdist==3.8.0
-    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   celery
-python-discovery==1.6.1
-    # via virtualenv
 python-docx==1.2.0
     # via
     #   docxcompose3
     #   docxtpl
-python-dotenv==1.2.2
-    # via pytest-env
 python-magic==0.4.27
     # via -r requirements.in
-python-slugify==8.0.4
-    # via pytest-playwright
-pyyaml==6.0.1
-    # via pre-commit
 redis==8.1.0
     # via -r requirements.in
 requests==2.33.0
-    # via
-    #   mozilla-django-oidc
-    #   pytest-base-url
-    #   requests-mock
-requests-mock==1.12.1
-    # via -r requirements.in
+    # via mozilla-django-oidc
 rich==14.2.0
     # via django-reversion-compare
-ruff==0.17.1
-    # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
 sentry-sdk[django]==2.68.1
@@ -259,21 +175,14 @@ six==1.16.0
 soupsieve==2.9
     # via beautifulsoup4
 sqlparse==0.6.0
-    # via
-    #   django
-    #   django-debug-toolbar
-text-unidecode==1.3
-    # via python-slugify
+    # via django
 typing-extensions==4.11.0
     # via
     #   beautifulsoup4
     #   django-countries
-    #   pyee
     #   python-docx
 tzdata==2025.2
-    # via
-    #   faker
-    #   kombu
+    # via kombu
 tzlocal==5.3.1
     # via celery
 urllib3==2.8.0
@@ -286,13 +195,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.14.13
-    # via pre-commit
 wcwidth==0.2.13
     # via prompt-toolkit
 whitenoise==6.12.0
     # via -r requirements.in
-
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==84.2.1
-    # via nodeenv
