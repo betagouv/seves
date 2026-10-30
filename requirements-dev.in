@@ -1,0 +1,15 @@
+-r requirements.txt
+djhtml
+django-debug-toolbar
+factory-boy
+faker
+pre-commit
+pytest-django
+pytest-env
+pytest-xdist
+pytest-playwright
+pytest-split
+pytest-rerunfailures
+playwright
+ruff
+requests-mock
