@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade "pip<26.2" pip-tools
-          pip-sync
+          pip-sync requirements-dev.txt
       - name: Check no missing migrations
         run: python manage.py makemigrations --check --dry-run >  /dev/null
       - name: Run ruff
@@ -102,7 +102,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade "pip<26.2" pip-tools
-          pip-sync
+          pip-sync requirements-dev.txt
       - name: Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(playwright --version | awk '{print $2}')" >> $GITHUB_ENV
       - name: Cache playwright binaries

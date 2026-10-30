@@ -7,7 +7,6 @@ django-storages[s3]
 mozilla-django-oidc
 django-filter
 django-post_office
-factory-boy
 django-reversion
 python-magic
 celery
@@ -24,20 +23,6 @@ docxtpl
 docxcompose3
 django-dirtyfields
 beautifulsoup4
-# Dev
-djhtml
-django-debug-toolbar
-faker
-pre-commit
-pytest-django
-pytest-env
-pytest-xdist
-pytest-playwright
-pytest-split
-pytest-rerunfailures
-playwright
-ruff
-requests-mock
 pikepdf
 pillow
 pyjwt
