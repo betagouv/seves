@@ -93,10 +93,24 @@ Se rendre sur http://localhost:8000/
 # Gestion des dépendances Python
 Les dépendances sont gérées via [pip-tools](https://github.com/jazzband/pip-tools).
 
-Pour ajouter une nouvelle dépendance au projet :
+Les dépendances sont réparties dans deux fichiers :
+
+requirements.in : dépendances de prod (seul requirements.txt est installé par Scalingo)
+requirements-dev.in : dépendances de dev qui inclut donc aussi les dépendances de prod
+
+Pour ajouter une nouvelle dépendance de prod au projet :
+
 - ajoutez la dépendance dans le fichier requirements.in
-- executez la commande `pip-compile` (pour mettre à à jour le fichier `requirements.txt`)
-- executez la commande `pip-sync` (installation de la nouvelle dépendance)
+- pip-compile requirements.in
+- pip-compile requirements-dev.in
+- pip-sync requirements-dev.txt
+
+Pour ajouter une nouvelle dépendance de dev au projet :
+
+- ajoutez la dépendance dans le fichier requirements-dev.in
+- pip-compile requirements-dev.in
+- pip-sync requirements-dev.txt
+
 
 # Travailler avec un service S3 local
 
