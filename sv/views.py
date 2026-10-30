@@ -471,13 +471,13 @@ class FicheZoneDelimiteeCreateView(MediaDefiningMixin, WithFormErrorsAsMessagesM
         return reverse("sv:evenement-details", args=[self.object.evenement.numero]) + "?tab=zone"
 
     def dispatch(self, request, *args, **kwargs):
+        source = request.POST if request.method == "POST" else request.GET
         try:
             self.evenement = Evenement.objects.select_related("organisme_nuisible", "statut_reglementaire").get(
-                pk=self.request.GET.get("evenement") or self.request.POST.get("evenement")
+                pk=source.get("evenement")
             )
         except Evenement.DoesNotExist:
             return HttpResponseBadRequest("L'événement n'existe pas.")
-
         if self.evenement.fiche_zone_delimitee:
             return HttpResponseBadRequest("L'événement est déjà rattaché à une fiche zone délimitée.")
 
