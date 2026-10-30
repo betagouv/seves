@@ -23,14 +23,6 @@
 	  {
 		"command": "0 4,16 * * * ./bin/fetch_and_import_contacts.sh",
 	    "size": "M"
-	  },
-	  {
-		"command": "10 * * * * python manage.py refresh_ssa_materialized_views",
-	    "size": "M"
-	  },
-	  {
-		"command": "10 * * * * python manage.py refresh_tiac_materialized_views",
-	    "size": "M"
 	  }
 	]
   }
