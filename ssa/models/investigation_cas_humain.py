@@ -57,6 +57,13 @@ class EvenementInvestigationCasHumain(
 
     objects = InvestigationCasHumainManager()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["numero_annee", "numero_evenement"], name="unique_investigation_cas_humain_numero"
+            ),
+        ]
+
     @property
     def numero(self):
         return f"A-{self.numero_annee}.{self.numero_evenement}"

@@ -1,6 +1,6 @@
 import datetime
 
-from core.mixins import WithNumeroMixin
+from core.mixins import WithNumeroMixin, lock_numero_generation
 
 
 class WithSharedNumeroMixin(WithNumeroMixin):
@@ -8,15 +8,11 @@ class WithSharedNumeroMixin(WithNumeroMixin):
     def _get_annee_and_numero(cls):
         from .models import EvenementSimple, InvestigationTiac
 
+        lock_numero_generation("tiac.numero")
         annee_courante = datetime.datetime.now().year
 
         def last_num(model):
-            fiche = (
-                model._base_manager.filter(numero_annee=annee_courante)
-                .select_for_update()
-                .order_by("-numero_evenement")
-                .first()
-            )
+            fiche = model._base_manager.filter(numero_annee=annee_courante).order_by("-numero_evenement").first()
             return fiche.numero_evenement if fiche else 0
 
         numero = max(last_num(EvenementSimple), last_num(InvestigationTiac)) + 1

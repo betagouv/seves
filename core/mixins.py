@@ -10,6 +10,7 @@ import logging
 import re
 import unicodedata
 from urllib.parse import urlencode
+import zlib
 
 from bs4 import BeautifulSoup
 from celery.exceptions import OperationalError
@@ -17,7 +18,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import connection, models, transaction
 from django.forms import BaseModelFormSet, Media
 from django.forms.utils import RenderableMixin
 from django.http import HttpResponseRedirect
@@ -563,6 +564,13 @@ class WithFormErrorsAsMessagesMixin(FormView):
         return super().form_invalid(form)
 
 
+def lock_numero_generation(key):
+    if not connection.in_atomic_block:
+        raise transaction.TransactionManagementError("La génération d'un numéro doit se faire dans une transaction")
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [zlib.crc32(key.encode())])
+
+
 class WithNumeroMixin(models.Model):
     numero_annee = models.IntegerField(verbose_name="Année")
     numero_evenement = models.IntegerField(verbose_name="Numéro")
@@ -572,13 +580,9 @@ class WithNumeroMixin(models.Model):
 
     @classmethod
     def _get_annee_and_numero(cls):
+        lock_numero_generation(cls._meta.label)
         annee_courante = datetime.datetime.now().year
-        last_fiche = (
-            cls._base_manager.filter(numero_annee=annee_courante)
-            .select_for_update()
-            .order_by("-numero_evenement")
-            .first()
-        )
+        last_fiche = cls._base_manager.filter(numero_annee=annee_courante).order_by("-numero_evenement").first()
         numero_evenement = last_fiche.numero_evenement + 1 if last_fiche else 1
         return annee_courante, numero_evenement
 

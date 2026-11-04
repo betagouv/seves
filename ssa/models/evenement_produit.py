@@ -345,6 +345,9 @@ class EvenementProduit(
                 ),
                 name="pam_requires_danger_bacterien",
             ),
+            models.UniqueConstraint(
+                fields=["numero_annee", "numero_evenement"], name="unique_evenement_produit_numero"
+            ),
         ]
 
 
