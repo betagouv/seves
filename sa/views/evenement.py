@@ -84,7 +84,7 @@ class EvenementAnimalBaseView(
         return VeterinaireFormSet(**self.get_veterinaire_formset_kwargs())
 
     def get_veterinaire_formset_kwargs(self):
-        kwargs = {"form_kwargs": {"espece_id": self.request.GET.get("espece")}}
+        kwargs = {"form_kwargs": {"especes_concernees_formset": self.especes_concernees_formset}}
         if self.object:
             kwargs["instance"] = self.object
         if self.request.POST:
@@ -168,10 +168,11 @@ class EvenementAnimalBaseView(
         self.object = form.save()
         self.analyse_formset.instance = self.object
         self.analyse_formset.save()
-        self.veterinaire_formset.instance = self.object
-        self.veterinaire_formset.save()
+        # Especes concernees must be saved first, as they may be linked to veterinaires
         self.especes_concernees_formset.instance = self.object
         self.especes_concernees_formset.save()
+        self.veterinaire_formset.instance = self.object
+        self.veterinaire_formset.save()
         self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
@@ -213,23 +214,37 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
             kwargs["initial"] = [model_to_dict(analyse, exclude=["id", "evenement"]) for analyse in analyses]
         return kwargs
 
+    @cached_property
+    def especes_concernees_source(self):
+        return sorted(
+            self.evenement_source.especes_exposees.all(),
+            key=lambda espece_concernee: espece_concernee.espece_id != self.evenement_source.espece_id,
+        )
+
     def get_veterinaire_formset_kwargs(self):
         kwargs = super().get_veterinaire_formset_kwargs()
         if self.should_copy_evenement_source:
+            prefixes_by_pk = {
+                espece_concernee.pk: self.especes_concernees_formset.add_prefix(index)
+                for index, espece_concernee in enumerate(self.especes_concernees_source)
+            }
             kwargs["initial"] = [
-                {**model_to_dict(veterinaire, exclude=["id", "evenement"]), "departement": veterinaire.departement}
-                for veterinaire in self.evenement_source.veterinaires.all()
+                {
+                    **model_to_dict(veterinaire, exclude=["id", "evenement", "especes_concernees"]),
+                    "departement": veterinaire.departement,
+                    "especes_concernees": [
+                        prefixes_by_pk[espece_concernee.pk]
+                        for espece_concernee in veterinaire.especes_concernees.all()
+                        if espece_concernee.pk in prefixes_by_pk
+                    ],
+                }
+                for veterinaire in self.evenement_source.veterinaires.prefetch_related("especes_concernees")
             ]
         return kwargs
 
     def get_especes_concernees_formset_kwargs(self):
         kwargs = super().get_especes_concernees_formset_kwargs()
         if self.should_copy_evenement_source:
-            # The first row is the one of the main espece, as its espece cannot be changed
-            especes_concernees = sorted(
-                self.evenement_source.especes_exposees.all(),
-                key=lambda espece_concernee: espece_concernee.espece_id != self.evenement_source.espece_id,
-            )
             kwargs["initial"] = [
                 {
                     **model_to_dict(espece_concernee, exclude=["id", "evenement", "situation_unite_regle"]),
@@ -238,7 +253,7 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
                     "type_production": espece_concernee.type_production,
                     "type_elevage": espece_concernee.type_elevage,
                 }
-                for espece_concernee in especes_concernees
+                for espece_concernee in self.especes_concernees_source
             ] or kwargs["initial"]
         return kwargs
 
@@ -296,11 +311,6 @@ class EvenementAnimalUpdateView(UserPassesTestMixin, EvenementAnimalBaseView, Up
     def get_analyse_formset_kwargs(self):
         kwargs = super().get_analyse_formset_kwargs()
         kwargs["form_kwargs"]["maladie_initial"] = self.object.maladie_id
-        return kwargs
-
-    def get_veterinaire_formset_kwargs(self):
-        kwargs = super().get_veterinaire_formset_kwargs()
-        kwargs["form_kwargs"]["espece_id"] = self.object.espece_id
         return kwargs
 
     def get_form_kwargs(self):

@@ -167,7 +167,7 @@ def test_can_create_evenement_from_alert(
     )
     other_espece_concernee = EspeceConcerneeFactory(evenement=source, espece=EspeceFactory())
     espece_concernee = EspeceConcerneeFactory(evenement=source, espece=source.espece)
-    veterinaire = VeterinaireFactory(evenement=source)
+    veterinaire = VeterinaireFactory(evenement=source, especes_concernees=[other_espece_concernee])
     source_contact = ContactAgentFactory()
     source.contacts.add(source_contact)
 
@@ -198,7 +198,7 @@ def test_can_create_evenement_from_alert(
 
     copied_veterinaire = evenement_enfant.veterinaires.get()
     assert_models_are_equal(veterinaire, copied_veterinaire, to_exclude=to_exclude)
-    assert list(copied_veterinaire.especes.all()) == [source.espece]
+    assert list(copied_veterinaire.especes_concernees.all()) == [especes_concernees[1]]
 
     assert LienLibre.objects.for_both_objects(source, evenement_enfant) is not None
     assert source_contact not in evenement_enfant.contacts.all()

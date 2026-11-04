@@ -54,7 +54,9 @@ class Veterinaire(models.Model):
     telephone = models.CharField(max_length=20, blank=True, verbose_name="Numéro de téléphone")
     courriel = models.EmailField(blank=True, verbose_name="Courriel")
 
-    especes = models.ManyToManyField("sa.Espece", related_name="veterinaires", blank=True, verbose_name="Espèces")
+    especes_concernees = models.ManyToManyField(
+        "sa.EspeceConcernee", related_name="veterinaires", blank=True, verbose_name="Espèces"
+    )
 
     class Meta:
         verbose_name = "Vétérinaire"
@@ -62,3 +64,7 @@ class Veterinaire(models.Model):
 
     def __str__(self):
         return f"{self.nom} {self.prenom} - {self.nom_structure}".strip()
+
+    @property
+    def displayed_especes(self):
+        return ", ".join(espece_concernee.str_with_identifiant for espece_concernee in self.especes_concernees.all())
