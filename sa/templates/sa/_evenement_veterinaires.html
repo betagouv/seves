@@ -17,8 +17,8 @@
                             </div>
                             <div class="fr-card__desc">
                                 {% dsfr_badge label=veterinaire.get_type_veterinaire_display|upper extra_classes="fr-badge--info fr-badge--no-icon fr-m-0 fr-mt-2v" %}
-                                {% for espece in veterinaire.especes.all %}
-                                    {% dsfr_badge label=espece.name extra_classes="fr-badge--no-icon fr-m-0 fr-mt-2v fr-ml-1v" %}
+                                {% for espece_concernee in veterinaire.especes_concernees.all %}
+                                    {% dsfr_badge label=espece_concernee.str_with_identifiant extra_classes="fr-badge--no-icon fr-m-0 fr-mt-2v fr-ml-1v" %}
                                 {% endfor %}
                                 <div class="fr-btns-group--right">
                                     <button data-fr-opened="false" aria-controls="fr-modal-veterinaire-{{ veterinaire.pk }}" class="fr-btn fr-btn--sm fr-btn--tertiary fr-btn--icon-left fr-icon-search-line fr-mt-4v">Voir le détail</button>
