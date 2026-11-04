@@ -28,13 +28,20 @@
 		# Document upload: filenames with an apostrophe ("demande d'information.eml")
 		SecRule REQUEST_FILENAME "@streq /core/document-upload/" "id:10004,phase:1,pass,nolog,ctl:ruleRemoveById=920120,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:nom"
 
-		# OIDC login callback: the random "state" can contain a PHP function name
-		SecRule REQUEST_FILENAME "@streq /login-eap-callback" "id:10005,phase:1,pass,nolog,ctl:ruleRemoveTargetById=933150;ARGS:state"
+		# OIDC login callback: random tokens from the identity provider can match any rule ("rtRim" in state, "ONJBU=" in session_state...)
+		SecRule REQUEST_FILENAME "@streq /login-eap-callback" "id:10005,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=OWASP_CRS;ARGS:state,ctl:ruleRemoveTargetByTag=OWASP_CRS;ARGS:session_state,ctl:ruleRemoveTargetByTag=OWASP_CRS;ARGS:code"
+
+		# SV free text: plant names with quotes ("Acer p. 'Ueno-yama'") mistaken for SQL
+		SecRule REQUEST_FILENAME "@rx ^/sv/fiches-detection/(creation|\d+/modification)/$" "id:10006,phase:1,pass,nolog,ctl:ruleRemoveTargetById=942100;ARGS:/^elements_infestes-\d+-comments$/"
+
+		# PostHog cookies set on .beta.gouv.fr by other services, never read by Seves: their JSON keys ("$initial_...") look like MongoDB operators
+		SecRule REQUEST_COOKIES_NAMES "@rx ^ph_.+_posthog$" "id:10007,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=OWASP_CRS;REQUEST_COOKIES:/^ph_.+_posthog$/"
 
 		Include @owasp_crs/*.conf
 		SecRuleEngine On
 		SecRuleEngine DetectionOnly
 		SecRequestBodyLimit 78643200
+		SecDebugLogLevel 1
 		SecResponseBodyAccess Off
 		`
 	}
