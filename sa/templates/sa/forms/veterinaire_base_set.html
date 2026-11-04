@@ -6,6 +6,7 @@
         data-controller="veterinaire-form"
         data-veterinaire-form-form-prefix-value="{{ form.prefix }}"
         data-veterinaire-form-should-immediately-show-value="{{ should_immediately_show|default:False }}"
+        data-action="especes-concernees-row:changed@window->veterinaire-form#onEspecesConcerneesChanged"
     >
         <button class="fr-btn fr-hidden" type="button" data-fr-opened="false" aria-controls="fr-modal-{{ form.prefix }}"></button>
         <dialog

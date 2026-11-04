@@ -112,6 +112,24 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
     def autres_especes(self):
         return Espece.autres_for_virtual_list()
 
+    @cached_property
+    def veterinaire_choices(self):
+        rows = [(form.prefix, str(form["espece"].value() or ""), form["identifiant"].value()) for form in self.forms]
+        especes = Espece.objects.in_bulk([espece_id for _, espece_id, _ in rows if espece_id.isdigit()])
+        return [
+            (prefix, f"{espece.name} ({identifiant})" if identifiant else espece.name)
+            for prefix, espece_id, identifiant in rows
+            if espece_id.isdigit() and (espece := especes.get(int(espece_id)))
+        ]
+
+    @cached_property
+    def prefixes_by_pk(self):
+        return {form.instance.pk: form.prefix for form in self.forms if form.instance.pk}
+
+    @property
+    def saved_instances_by_prefix(self):
+        return {form.prefix: form.instance for form in self.forms if form.instance.pk}
+
 
 EspeceConcerneeFormSet = inlineformset_factory(
     EvenementAnimal,
