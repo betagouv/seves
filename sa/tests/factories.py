@@ -407,9 +407,9 @@ class VeterinaireFactory(DjangoModelFactory):
     courriel = factory.Faker("email")
 
     @factory.post_generation
-    def especes(self, create, extracted, **kwargs):
-        if create:
-            self.especes.set(extracted if extracted is not None else [self.evenement.espece])
+    def especes_concernees(self, create, extracted, **kwargs):
+        if create and extracted:
+            self.especes_concernees.set(extracted)
 
 
 class EspeceConcerneeFactory(DjangoModelFactory):

@@ -280,6 +280,10 @@ class WithVeterinaireMixin:
         modal.locator('[id$="-telephone"]').fill(veterinaire.telephone)
         modal.locator('[id$="-courriel"]').fill(veterinaire.courriel)
 
+    @staticmethod
+    def get_veterinaire_especes_checkboxes(modal: Locator):
+        return modal.locator('input[type="checkbox"][name$="-especes_concernees"]')
+
     def close_veterinaire_modal(self):
         self.current_modal.locator(".save-btn").click()
         self.current_modal.wait_for(state="hidden", timeout=2_000)

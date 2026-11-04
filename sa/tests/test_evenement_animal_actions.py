@@ -63,8 +63,8 @@ def test_can_download_document_evenement_animal(live_server, page):
 def test_document_evenement_animal_contains_sub_objects(client):
     evenement = EvenementAnimalFactory()
     analyse = AnalyseFactory(evenement=evenement)
-    veterinaire = VeterinaireFactory(evenement=evenement)
     espece_concernee = EspeceConcerneeFactory(evenement=evenement, identifiant="ID-ESPECE-123")
+    veterinaire = VeterinaireFactory(evenement=evenement, especes_concernees=[espece_concernee])
 
     response = client.post(reverse("sa:evenement-animal-export-document", kwargs={"pk": evenement.pk}))
 
@@ -76,6 +76,7 @@ def test_document_evenement_animal_contains_sub_objects(client):
     assert evenement.maladie.name in text
     assert analyse.laboratoire.name in text
     assert veterinaire.nom_structure in text
+    assert f"{espece_concernee.espece.name} (ID-ESPECE-123)" in text
     assert espece_concernee.identifiant in tables_text
     assert "{{" not in text + tables_text
     assert "{%" not in text + tables_text
