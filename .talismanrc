@@ -161,7 +161,7 @@ fileignoreconfig:
 - filename: .env.dist
   checksum: 1b95670d36ffefcb24cc6d74571b3feb8e26bb3e1b0763c43580b1d78b45ccd4
 - filename: seves/settings.py
-  checksum: ab2a12c41eb547c6da1b3c59e0858578ec7bc4c9d9f96485909c0700a1af9d47
+  checksum: c24c2c673c7466197bf997366cee46dfdd2aad92e8cbd2c02dd032c4816133bb
 - filename: core/static/core/base.js
   checksum: e62bb8f205f7f012d182cf0713d927503e3f20a815e3a30b67bf1cff9c5e5474
 - filename: core/migrations/0069_message_read.py
