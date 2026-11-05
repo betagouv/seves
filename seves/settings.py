@@ -121,7 +121,7 @@ TEMPLATES = [
                 "seves.context_processors.environment_class",
                 "seves.context_processors.domains",
                 "sa.context_processors.pre_creation_form",
-                "ssa.context_processors.satisfaction_notice",
+                "seves.context_processors.notice",
             ],
         },
     },
@@ -419,9 +419,20 @@ GEOCODE_URL = "https://data.geopf.fr/geocodage"
 MAESTRO_WEBHOOK_URL = env("MAESTRO_WEBHOOK_URL", default=None)
 MAESTRO_TOKEN = env("MAESTRO_TOKEN", default=None)
 
-# Bandeau questionnaire de satisfaction
-ALIM_SATISFACTION_NOTICE_ENABLED = env.bool("ALIM_SATISFACTION_NOTICE_ENABLED", default=False)
-ALIM_SATISFACTION_NOTICE_VERSION = env.str("ALIM_SATISFACTION_NOTICE_VERSION", default="1")
-ALIM_SATISFACTION_SURVEY_URL = env("ALIM_SATISFACTION_SURVEY_URL", default="")
+# Bandeau de message personalisé
+ALIM_NOTICE_ENABLED = env.bool("ALIM_NOTICE_ENABLED", default=False)
+ALIM_NOTICE_VERSION = env.str("ALIM_NOTICE_VERSION", default="1")
+ALIM_NOTICE_CAN_BE_CLOSED = env.bool("ALIM_NOTICE_CAN_BE_CLOSED", default=True)
+ALIM_NOTICE_HTML = env.str("ALIM_NOTICE_HTML", default="")
+
+SV_NOTICE_ENABLED = env.bool("SV_NOTICE_ENABLED", default=False)
+SV_NOTICE_VERSION = env.str("SV_NOTICE_VERSION", default="1")
+SV_NOTICE_CAN_BE_CLOSED = env.bool("SV_NOTICE_CAN_BE_CLOSED", default=True)
+SV_NOTICE_HTML = env.str("SV_NOTICE_HTML", default="")
+
+SA_NOTICE_ENABLED = env.bool("SA_NOTICE_ENABLED", default=False)
+SA_NOTICE_VERSION = env.str("SA_NOTICE_VERSION", default="1")
+SA_NOTICE_CAN_BE_CLOSED = env.bool("SA_NOTICE_CAN_BE_CLOSED", default=True)
+SA_NOTICE_HTML = env.str("SA_NOTICE_HTML", default="")
 
 VOLUMINOUS_EXTRACT_THRESHOLD = 1000
