@@ -70,8 +70,9 @@ def test_reset_button_clears_form_and_search(live_server, page: Page):
 
 
 def test_evenement_animal_list_displays_events_and_links_to_details(live_server, page: Page):
-    evenement = EvenementAnimalFactory()
-    EspeceConcerneeFactory(evenement=evenement, espece=evenement.espece)
+    espece = EspeceFactory(name="Zèbre des montagnes (Equus zebra)")
+    evenement = EvenementAnimalFactory(espece=espece)
+    EspeceConcerneeFactory(evenement=evenement, espece=espece)
 
     search_page = EvenementListPage(page, live_server.url)
     search_page.navigate()
@@ -86,7 +87,8 @@ def test_evenement_animal_list_displays_events_and_links_to_details(live_server,
     expect(row).to_contain_text(f"{evenement.commune} ({evenement.code_insee})")
     expect(row).to_contain_text(evenement.numero_identifiant_etablissement)
     expect(row).to_contain_text(evenement.get_type_lieu_display())
-    expect(row).to_contain_text(evenement.espece.name)
+    expect(row).to_contain_text("Zèbre des montagnes")
+    expect(row).not_to_contain_text("Equus zebra")
     expect(row).to_contain_text(evenement.get_etat_display())
 
     row.get_by_role("link", name=evenement.numero, exact=True).click()
