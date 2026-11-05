@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (localStorage.getItem(storageKey)) return notice.remove()
         } catch {}
         notice.classList.remove("fr-hidden")
-        notice.querySelector(".fr-btn--close").addEventListener("click", () => {
+        notice.querySelector(".fr-btn--close")?.addEventListener("click", () => {
             try {
                 localStorage.setItem(storageKey, new Date().toISOString())
             } catch {}

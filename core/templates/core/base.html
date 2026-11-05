@@ -28,7 +28,9 @@
     </head>
 
     <body class="{{ environment_class }}">
-        {% block notice %}{% endblock %}
+        {% if notice %}
+            {% include "core/_notice.html" %}
+        {% endif %}
         <header role="banner" class="fr-header">
             <div class="fr-header__body">
                 <div class="fr-px-1w">
