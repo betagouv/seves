@@ -60,7 +60,13 @@ class EspeceConcernee(models.Model):
 
     @property
     def str_with_identifiant(self):
-        return f"{self.espece.name} ({self.identifiant})" if self.identifiant else self.espece.name
+        name_without_precisions = self.espece.name
+        if "(" in self.espece.name:
+            name_without_precisions, _ = self.espece.name.rsplit("(")
+
+        if self.identifiant:
+            return f"{name_without_precisions.strip()} ({self.identifiant})"
+        return name_without_precisions
 
     def clean(self):
         super().clean()
