@@ -7,7 +7,7 @@ from .views import (
     EvenementAnimalUpdateView,
     EvenementListView,
 )
-from .views.api import FindFreeLinksView
+from .views.api import FindFreeLinksView, GetMassActionStatus
 
 app_name = "sa"
 urlpatterns = [
@@ -40,5 +40,10 @@ urlpatterns = [
         "api/freelinks/recherche/",
         FindFreeLinksView.as_view(),
         name="find-free-link",
+    ),
+    path(
+        "api/mass-action/status/",
+        GetMassActionStatus.as_view(),
+        name="mass-action-status",
     ),
 ]

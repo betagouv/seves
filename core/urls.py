@@ -12,6 +12,7 @@ from .views import (
     DocumentUploadView,
     EvenementOuvrirView,
     FinDeSuiviHandlingView,
+    MassFinDeSuiviHandlingView,
     MessageCreateView,
     MessageDetailsView,
     MessageUpdateView,
@@ -109,6 +110,11 @@ urlpatterns = [
         "evenement/fin-de-suivi/",
         FinDeSuiviHandlingView.as_view(),
         name="evenement-fin-de-suivi",
+    ),
+    path(
+        "evenement/fin-de-suivi/mass/",
+        MassFinDeSuiviHandlingView.as_view(),
+        name="evenement-fin-de-suivi-mass",
     ),
     path(
         "siret/<str:siret>/",
