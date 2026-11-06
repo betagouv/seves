@@ -530,6 +530,26 @@ class FinDeSuiviHandlingView(View):
         raise NotImplementedError
 
 
+class MassFinDeSuiviHandlingView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data.get("content_type"))
+        objects = content_type.model_class().objects.filter(pk__in=data.get("pks").split(","))
+
+        if not data["mode"] == "add":
+            raise NotImplementedError
+
+        for obj in objects:
+            if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
+                continue
+
+            obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
+        messages.success(request, "Fin(s) de suivi réalisée(s) avec succès.")
+        return redirect(objects[0].get_list_url())
+
+
 def sirene_api(request, siret: str):
     if not settings.SIRENE_API_KEY or not settings.SIRENE_API_BASE:
         return HttpResponse(status=401)

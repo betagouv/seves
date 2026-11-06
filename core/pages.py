@@ -455,6 +455,69 @@ class WithActionsPage:
         self.page.get_by_test_id("submit-delete-modal").click()
 
 
+class WithMassActionsPage:
+    @property
+    def mass_actions_button(self):
+        return self.page.get_by_role("button", name="Actions groupées")
+
+    @property
+    def mass_actions_dropdown(self):
+        return self.page.locator("#action-1")
+
+    @property
+    def master_checkbox(self):
+        return self.page.locator("#master-checkbox")
+
+    @property
+    def row_checkboxes(self):
+        return self.page.locator('[data-mass-actions-target="checkbox"]')
+
+    def checkbox_for(self, obj):
+        return self.page.locator(f'input[type="checkbox"][name="{obj.pk}"]')
+
+    def select(self, *objects):
+        for obj in objects:
+            self.checkbox_for(obj).check(force=True)
+
+    def select_all(self):
+        self.master_checkbox.check(force=True)
+
+    def unselect_all(self):
+        self.master_checkbox.uncheck(force=True)
+
+    def open_mass_actions(self):
+        self.mass_actions_button.click()
+        expect(self.mass_actions_dropdown).to_be_visible()
+
+    @property
+    def fin_de_suivi_modal(self):
+        return self.page.locator("#modal-fin-suivi")
+
+    @property
+    def fin_de_suivi_modal_content(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="finSuiviModalContent"]')
+
+    @property
+    def fin_de_suivi_submit_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="submit"]')
+
+    @property
+    def fin_de_suivi_cancel_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="cancel"]')
+
+    @property
+    def fin_de_suivi_close_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="close"]')
+
+    def open_fin_de_suivi_modal(self):
+        self.open_mass_actions()
+        self.mass_actions_dropdown.get_by_role("button", name="Signaler la fin de suivi").click()
+        expect(self.fin_de_suivi_modal).to_be_visible()
+
+    def confirm_fin_de_suivi(self):
+        self.fin_de_suivi_submit_button.click()
+
+
 class WithSyntheseBlockMixin:
     @property
     def synthese_block(self):

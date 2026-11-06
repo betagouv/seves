@@ -2,7 +2,7 @@ import json
 
 from django import forms
 from django.conf import settings
-from django.forms import Media, MultipleChoiceField
+from django.forms import CheckboxInput, Media, MultipleChoiceField
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
@@ -639,4 +639,22 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
             required=False,
             label="Sélectionner un objet",
             model_choices=choices,
+        )
+
+
+class MassActionForm(DsfrBaseForm):
+    def __init__(self, *args, **kwargs):
+        self.queryset = kwargs.pop("queryset")
+        super().__init__(*args, **kwargs)
+
+        for obj in self.queryset:
+            self.fields[str(obj.pk)] = forms.BooleanField(label="", widget=CheckboxInput, required=False)
+
+    def get_bound_field(self, pk):
+        return self[str(pk)]
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("sa/mass_actions_controller.js"),),
         )

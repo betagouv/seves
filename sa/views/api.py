@@ -1,7 +1,10 @@
+import json
+
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.views import View
 
+from core.models import FinSuiviContact
 from sa.models import EvenementAnimal
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
 
@@ -35,3 +38,24 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
             ]
 
         return JsonResponse({"results": results})
+
+
+class GetMassActionStatus(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON invalide"}, status=400)
+
+        action = data.get("action")
+        pks = data.get("pks")
+
+        queryset = EvenementAnimal.objects.all().get_user_can_view(self.request.user).filter(pk__in=pks)
+        if action == "fin_suivi":
+            can_be_done = 0
+            for evenement in queryset:
+                if FinSuiviContact.can_add_fin_de_suivi(evenement, self.request.user):
+                    can_be_done += 1
+            return JsonResponse({"can_be_done": can_be_done})
+
+        raise NotImplementedError

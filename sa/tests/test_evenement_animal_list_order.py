@@ -22,7 +22,7 @@ def test_order_by_numero_evenement(
     }
     page.goto(url_builder_for_list_ordering("numero_evenement", direction, "sa:evenement-liste"))
     page.get_by_role("link", name="N°", exact=True).click()
-    assert_events_order(page, evenements, expected_order, column=1)
+    assert_events_order(page, evenements, expected_order)
 
 
 @pytest.mark.parametrize(
@@ -43,4 +43,4 @@ def test_order_by_maladie(
     }
     page.goto(url_builder_for_list_ordering("maladie", direction, "sa:evenement-liste"))
     page.get_by_role("link", name="Maladie").click()
-    assert_events_order(page, evenements, expected_order, column=1)
+    assert_events_order(page, evenements, expected_order)

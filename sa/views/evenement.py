@@ -27,7 +27,7 @@ from core.mixins import (
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
 )
-from sa.forms.evenement import EvenementAnimalForm
+from sa.forms.evenement import EvenementAnimalForm, MassActionForm
 from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal, TypeDetenteur
@@ -40,7 +40,12 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
     paginate_by = 100
 
     def get_media(self, **context_data) -> Media:
-        return context_data["filter"].form.media if "filter" in context_data else Media()
+        media = super().get_media(**context_data)
+        if "filter" in context_data:
+            media += context_data["filter"].form.media
+
+        media += context_data["mass_action_form"].media
+        return media
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,6 +57,8 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
 
+        context["mass_action_form"] = MassActionForm(queryset=context["page_obj"].object_list)
+        context["content_type"] = ContentType.objects.get_for_model(EvenementAnimal)
         return context
 
 

@@ -6,7 +6,7 @@ import re
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
-from core.pages import WithActionsPage, WithSyntheseBlockMixin
+from core.pages import WithActionsPage, WithMassActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import Analyse, EvenementAnimal, Veterinaire
 from seves import settings
@@ -427,7 +427,7 @@ class WithPreCreationFormPage:
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 
 
-class EvenementListPage(WithPreCreationFormPage):
+class EvenementListPage(WithPreCreationFormPage, WithMassActionsPage):
     def __init__(self, page: Page, base_url):
         super().__init__(page, base_url)
         self.page = page
