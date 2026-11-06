@@ -3489,8 +3489,7 @@ ESPECES = [
 
 def populate_especes(apps, schema_editor):
     Espece = apps.get_model("sa", "Espece")
-    for name in ESPECES:
-        Espece.objects.update_or_create(name=name)
+    Espece.objects.bulk_create([Espece(name=name) for name in ESPECES], ignore_conflicts=True)
 
 
 def noop(apps, schema_editor):
