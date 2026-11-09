@@ -680,7 +680,7 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
 def test_can_create_evenement_animal_with_dates_arretes_in_order(
     live_server, page: Page, date_apms, date_apdi, date_levee
 ):
-    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(needs_arrete=True)
     espece = EspeceFactory()
 
@@ -721,7 +721,7 @@ def test_can_create_evenement_animal_with_dates_arretes_in_order(
 def test_cant_create_evenement_animal_with_dates_arretes_not_in_order(
     live_server, page: Page, date_apms, date_apdi, date_levee, field_in_error, error_message
 ):
-    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(needs_arrete=True)
     espece = EspeceFactory()
 
