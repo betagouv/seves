@@ -166,5 +166,7 @@ fileignoreconfig:
   checksum: e62bb8f205f7f012d182cf0713d927503e3f20a815e3a30b67bf1cff9c5e5474
 - filename: core/migrations/0069_message_read.py
   checksum: b6067ab927d8c77c8f4528ae30a1ab19fc49819d6e0f6fe399f856e49c2f4047
+- filename: sa/tests/test_evenement_animal_mass_actions.py
+  checksum: aa253514182dd3e4d0ba41f2dd4b11ba4558ffc4273aa860aedabd72dde7a0f7
 
 version: "1.0"

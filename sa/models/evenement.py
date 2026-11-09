@@ -548,7 +548,8 @@ class EvenementAnimal(
     def get_update_url(self):
         return reverse("sa:evenement-animal-update", kwargs={"pk": self.pk})
 
-    def get_list_url(self):
+    @classmethod
+    def get_list_url(cls):
         return reverse("sa:evenement-liste")
 
     @property

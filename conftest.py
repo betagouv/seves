@@ -323,6 +323,13 @@ def mus_contact():
 
 
 @pytest.fixture
+def ac_user(mocked_authentification_user, mus_contact):
+    mocked_authentification_user.agent.structure = mus_contact.structure
+    mocked_authentification_user.agent.save()
+    return mocked_authentification_user
+
+
+@pytest.fixture
 def force_utc(settings):
     settings.TIME_ZONE = "UTC"
     timezone.activate("UTC")

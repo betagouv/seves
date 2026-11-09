@@ -62,19 +62,30 @@
         </div>
 
         {% include "sa/_mass_actions_fin_suivi.html" %}
+        {% if can_mass_cloturer %}
+            {% include "sa/_mass_actions_cloture.html" %}
+        {% endif %}
 
-        <nav role="navigation" class="fr-translate fr-nav mass-actions fr-mt-4v" >
-            <div class="fr-nav__item">
-                <button class="fr-translate__btn fr-btn fr-btn--secondary fr-btn--lg" data-mass-actions-target="navigation" disabled aria-controls="action-1" aria-expanded="false" title="Sélectionner une action">Actions groupées</button>
-                <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
-                    <ul class="fr-menu__list">
-                        <li>
-                            <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
-                        </li>
-                    </ul>
+        <div class="mass-actions-toolbar fr-mt-4v">
+            <nav role="navigation" class="fr-translate fr-nav mass-actions">
+                <div class="fr-nav__item">
+                    <button class="fr-translate__btn fr-btn fr-btn--secondary fr-btn--lg" data-mass-actions-target="navigation" disabled aria-controls="action-1" aria-expanded="false" title="Sélectionner une action">Actions groupées</button>
+                    <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
+                        <ul class="fr-menu__list">
+                            <li>
+                                <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                            </li>
+                            {% if can_mass_cloturer %}
+                                <li>
+                                    <button data-action="mass-actions#onCloture:prevent:default" class="fr-translate__language fr-nav__link"><span class="fr-icon-close-circle-fill fr-icon--sm fr-mr-2v" aria-hidden="true"></span>Clôturer</button>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+            <span aria-live="polite" data-mass-actions-target="selectionCount" data-testid="mass-actions-selection-count"></span>
+        </div>
 
         {% if paginator.count > 0 %}
             <form method="post">
@@ -85,7 +96,7 @@
                             <tr>
                                 <th scope="col" class="mass-actions-col">
                                     <div class="fr-checkbox-group fr-mb-2w">
-                                        <input id="master-checkbox" type="checkbox" data-action="change->mass-actions#onMasterCheckboxChange">
+                                        <input id="master-checkbox" type="checkbox" data-mass-actions-target="masterCheckbox" data-action="change->mass-actions#onMasterCheckboxChange">
                                         <label for="master-checkbox" class="fr-label">
                                             <span class="fr-sr-only">Cocher toutes les cases du tableau</span>
                                         </label>

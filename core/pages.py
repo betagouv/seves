@@ -490,12 +490,16 @@ class WithMassActionsPage:
         expect(self.mass_actions_dropdown).to_be_visible()
 
     @property
+    def selection_count(self):
+        return self.page.get_by_test_id("mass-actions-selection-count")
+
+    @property
     def fin_de_suivi_modal(self):
         return self.page.locator("#modal-fin-suivi")
 
     @property
     def fin_de_suivi_modal_content(self):
-        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="finSuiviModalContent"]')
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="modalContent"]')
 
     @property
     def fin_de_suivi_submit_button(self):
@@ -516,6 +520,34 @@ class WithMassActionsPage:
 
     def confirm_fin_de_suivi(self):
         self.fin_de_suivi_submit_button.click()
+
+    @property
+    def cloture_modal(self):
+        return self.page.locator("#modal-cloture")
+
+    @property
+    def cloture_modal_content(self):
+        return self.cloture_modal.locator('[data-mass-actions-target="modalContent"]')
+
+    @property
+    def cloture_submit_button(self):
+        return self.cloture_modal.locator('[data-mass-actions-target="submit"]')
+
+    @property
+    def cloture_cancel_button(self):
+        return self.cloture_modal.locator('[data-mass-actions-target="cancel"]')
+
+    @property
+    def cloture_close_button(self):
+        return self.cloture_modal.locator('[data-mass-actions-target="close"]')
+
+    def open_cloture_modal(self):
+        self.open_mass_actions()
+        self.mass_actions_dropdown.get_by_role("button", name="Clôturer").click()
+        expect(self.cloture_modal).to_be_visible()
+
+    def confirm_cloture(self):
+        self.cloture_submit_button.click()
 
 
 class WithSyntheseBlockMixin:
