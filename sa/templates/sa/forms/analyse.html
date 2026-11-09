@@ -1,6 +1,6 @@
 {% load dsfr_tags widget_tweaks %}
 
-{% dsfr_form_field form.maladie %}
+{% dsfr_form_field form.maladie|set_data:"action:change->analyse-form#onMaladieChange" %}
 {% dsfr_form_field form.date_prelevement %}
 {% dsfr_form_field form.laboratoire|set_data:"analyse-form-target:laboratoireSelect"|set_data:"action:change->analyse-form#onLaboratoireChange" %}
 {% dsfr_form_field form.resultat|set_data:"analyse-form-target:resultatSelect"|set_data:"action:change->analyse-form#onResultatChange" %}

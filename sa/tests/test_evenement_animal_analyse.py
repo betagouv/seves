@@ -3,6 +3,7 @@ import datetime
 from playwright.sync_api import Page, expect
 
 from core.tests.pages import TreeselectPage
+from sa.forms.analyse import AnalyseForm
 from sa.models import Analyse, EvenementAnimal, Maladie
 from sa.models.analyse import ResultatAnalyse
 from sa.models.evenement import StatutEvenement
@@ -384,3 +385,70 @@ def test_date_resultat_becomes_required_when_resultat_is_not_en_attente(live_ser
     creation_page.submit_as_draft()
     saved_analyse = EvenementAnimal.objects.get().analyses.get()
     assert saved_analyse.date_resultat == datetime.date(2024, 1, 1)
+
+
+def _get_laboratoire_groups(treeselect: TreeselectPage):
+    frequent_group, other_group = treeselect.options_container.locator(".fr-treeselect__group").all()
+    return frequent_group, other_group
+
+
+def test_analyse_laboratoires_are_grouped_according_to_selected_maladie(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie, other_maladie = MaladieFactory(), MaladieFactory()
+    espece = EspeceFactory()
+    laboratoire_frequent = LaboratoireFactory(name="Laboratoire fréquent Alpha")
+    laboratoire_autre = LaboratoireFactory(name="Laboratoire autre Beta")
+    maladie.laboratoires_frequents.set([laboratoire_frequent])
+    other_maladie.laboratoires_frequents.set([laboratoire_autre])
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    treeselect = creation_page.get_analyse_laboratoire_treeselect(modal)
+    treeselect.open_treeselect()
+    frequent_group, other_group = _get_laboratoire_groups(treeselect)
+    expect(frequent_group.locator(".fr-treeselect__group-header")).to_have_text("Les plus fréquents")
+    expect(other_group.locator(".fr-treeselect__group-header")).to_have_text("Autres")
+    expect(frequent_group.locator("label")).to_have_text([laboratoire_frequent.name])
+    expect(other_group.get_by_label(laboratoire_frequent.name, exact=True)).to_have_count(0)
+    expect(other_group.get_by_label(laboratoire_autre.name, exact=True)).to_have_count(1)
+    treeselect.close_treeselect()
+
+    creation_page.fill_analyse_maladie(modal, other_maladie)
+
+    treeselect.open_treeselect()
+    expect(frequent_group.locator("label")).to_have_text([laboratoire_autre.name])
+    expect(other_group.get_by_label(laboratoire_autre.name, exact=True)).to_have_count(0)
+    expect(other_group.get_by_label(laboratoire_frequent.name, exact=True)).to_have_count(1)
+    treeselect.close_treeselect()
+
+    creation_page.fill_analyse_laboratoire(modal, laboratoire_autre)
+    modal.locator('[id$="date_prelevement"]').fill("2024-01-01")
+    modal.locator('[id$="-resultat"]').select_option(ResultatAnalyse.EN_ATTENTE)
+    creation_page.close_analyse_modal()
+    creation_page.submit_as_draft()
+
+    saved_analyse = EvenementAnimal.objects.get().analyses.get()
+    assert saved_analyse.maladie == other_maladie
+    assert saved_analyse.laboratoire == laboratoire_autre
+
+
+def test_analyse_laboratoires_are_not_grouped_when_maladie_has_no_frequent_laboratoire(live_server, page: Page):
+    input_data = EvenementAnimalFactory.build()
+    maladie = MaladieFactory()
+    maladie.laboratoires_frequents.clear()
+    espece = EspeceFactory()
+    LaboratoireFactory.create_batch(2)
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    modal = creation_page.open_analyse_modal()
+    treeselect = creation_page.get_analyse_laboratoire_treeselect(modal)
+    treeselect.open_treeselect()
+    for header in treeselect.options_container.locator(".fr-treeselect__group-header").all():
+        expect(header).to_be_hidden()
+    assert treeselect.options_labels == [labo.name for labo in AnalyseForm().get_laboratoire_queryset()]
