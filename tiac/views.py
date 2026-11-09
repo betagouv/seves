@@ -334,7 +334,7 @@ class EvenementTransformView(UserPassesTestMixin, UpdateView):
         CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Passé en investigation TIAC"})
         for contact in self.object.get_contacts_structures_not_in_fin_suivi():
             self.object.add_fin_suivi(structure=contact.structure, made_by=self.request.user)
-        self.object.cloturer()
+        self.object.cloturer(self.request.user)
         self.object.follow_up = EvenementFollowUp.INVESGTIGATION_TIAC
         self.object.save()
         self._copy_etablissements()

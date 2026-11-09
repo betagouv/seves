@@ -59,6 +59,10 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
 
         context["mass_action_form"] = MassActionForm(queryset=context["page_obj"].object_list)
         context["content_type"] = ContentType.objects.get_for_model(EvenementAnimal)
+        context["can_mass_cloturer"] = EvenementAnimal.can_be_cloture_by(self.request.user)
+        query_without_page = self.request.GET.copy()
+        query_without_page.pop("page", None)
+        context["query_without_page"] = query_without_page.urlencode()
         return context
 
 

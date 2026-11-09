@@ -1,4 +1,5 @@
 import contextlib
+from functools import cached_property
 import io
 import json
 import logging
@@ -475,12 +476,50 @@ class CloturerView(View):
             messages.error(request, error_message)
             return redirect(redirect_url)
 
-        if object.is_the_only_remaining_structure(self.request.user, object.get_contacts_structures_not_in_fin_suivi()):
-            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
-
-        object.cloturer()
+        object.cloturer(request.user)
         messages.success(request, object.get_cloture_confirm_message())
         return redirect(redirect_url)
+
+
+class MassActionView(View):
+    """Action groupée sur les objets cochés depuis la vue de liste"""
+
+    http_method_names = ["post"]
+
+    @cached_property
+    def model(self):
+        return ContentType.objects.get(pk=self.request.POST.get("content_type")).model_class()
+
+    def get_objects(self):
+        pks = [pk for pk in self.request.POST.get("pks", "").split(",") if pk.isdigit()]
+        return self.model.objects.filter(pk__in=pks)
+
+    def redirect_to_list(self):
+        url = self.model.get_list_url()
+        query = self.request.POST.get("query")
+        return safe_redirect(f"{url}?{query}" if query else url)
+
+
+class MassCloturerView(MassActionView):
+    def post(self, request):
+        nb_clotures = 0
+        for obj in self.get_objects():
+            can_cloturer, _ = obj.can_be_cloture(request.user)
+            if not can_cloturer:
+                continue
+            obj.cloturer(request.user)
+            nb_clotures += 1
+
+        if nb_clotures:
+            message = ngettext(
+                "%(count)d événement a été clôturé avec succès.",
+                "%(count)d événements ont été clôturés avec succès.",
+                nb_clotures,
+            ) % {"count": nb_clotures}
+            messages.success(request, message)
+        else:
+            messages.error(request, "Aucun événement n'a été clôturé.")
+        return self.redirect_to_list()
 
 
 class EvenementOuvrirView(View):
@@ -530,24 +569,28 @@ class FinDeSuiviHandlingView(View):
         raise NotImplementedError
 
 
-class MassFinDeSuiviHandlingView(View):
-    http_method_names = ["post"]
-
+class MassFinDeSuiviHandlingView(MassActionView):
     def post(self, request):
-        data = self.request.POST
-        content_type = ContentType.objects.get(pk=data.get("content_type"))
-        objects = content_type.model_class().objects.filter(pk__in=data.get("pks").split(","))
-
-        if not data["mode"] == "add":
+        if not self.request.POST["mode"] == "add":
             raise NotImplementedError
 
-        for obj in objects:
+        nb_fins_suivi = 0
+        for obj in self.get_objects():
             if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
                 continue
-
             obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
-        messages.success(request, "Fin(s) de suivi réalisée(s) avec succès.")
-        return redirect(objects[0].get_list_url())
+            nb_fins_suivi += 1
+
+        if nb_fins_suivi:
+            message = ngettext(
+                "Fin de suivi réalisée avec succès pour %(count)d événement.",
+                "Fin de suivi réalisée avec succès pour %(count)d événements.",
+                nb_fins_suivi,
+            ) % {"count": nb_fins_suivi}
+            messages.success(request, message)
+        else:
+            messages.error(request, "Aucune fin de suivi n'a été réalisée.")
+        return self.redirect_to_list()
 
 
 def sirene_api(request, siret: str):

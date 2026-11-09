@@ -1,0 +1,33 @@
+<dialog id="modal-cloture" class="fr-modal" aria-labelledby="modal-cloture-title" aria-modal="true" data-mass-actions-target="clotureModal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button aria-controls="modal-cloture" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h2 id="modal-cloture-title" class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                            Clôturer des événements
+                        </h2>
+                        <div data-mass-actions-target="modalContent"></div>
+                    </div>
+                    <div class="fr-modal__footer">
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                            <button type="button" class="fr-btn fr-btn--secondary fr-hidden" aria-controls="modal-cloture" data-mass-actions-target="close">Fermer</button>
+                            <button type="button" class="fr-btn fr-btn--secondary fr-hidden" aria-controls="modal-cloture" data-mass-actions-target="cancel">Annuler</button>
+                            <form action="{% url 'cloturer-mass' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="pks" value="" data-mass-actions-target="pkInput">
+                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                <input type="hidden" name="query" value="{{ query_without_page }}">
+                                <button type="submit" class="fr-btn fr-hidden" data-mass-actions-target="submit">Clôturer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
