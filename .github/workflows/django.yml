@@ -63,7 +63,7 @@ jobs:
         run: biome ci .
   test:
     needs: [build]
-    runs-on: ghcr.io/osgeo/gdal:ubuntu-small-latest
+    runs-on: ghcr.io/osgeo/gdal:ubuntu-full-latest
     strategy:
       fail-fast: false
       matrix:
