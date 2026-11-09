@@ -9,6 +9,8 @@ from sa.models.evenement import StatutAnimal, TypeLieu
 from sa.tests.factories import (
     AcarapioseFactory,
     AdenomatoseFactory,
+    EspeceConcerneeFactory,
+    EspeceFactory,
     EvenementAnimalFactory,
     TuberculoseFactory,
     TypageFactory,
@@ -105,3 +107,18 @@ def test_evenement_animal_dates_arretes_constraints():
     ):
         with transaction.atomic(), pytest.raises(IntegrityError):
             EvenementAnimalFactory(maladie__needs_arrete=True, **dates)
+
+
+@pytest.mark.django_db
+def test_espece_str_with_identifiant():
+    espece = EspeceFactory(name="Very compliquated (alternative name) (optional name 2) (latin name)")
+    assert (
+        EspeceConcerneeFactory(espece=espece, identifiant="").str_with_identifiant
+        == "Very compliquated (alternative name) (optional name 2)"
+    )
+
+    espece = EspeceFactory(name="Simple (latin name)")
+    assert EspeceConcerneeFactory(espece=espece, identifiant="").str_with_identifiant == "Simple"
+
+    espece = EspeceFactory(name="Simple (latin name)")
+    assert EspeceConcerneeFactory(espece=espece, identifiant="123").str_with_identifiant == "Simple (123)"
