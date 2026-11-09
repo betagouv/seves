@@ -63,6 +63,12 @@ class Maladie(models.Model):
         related_name="maladies_concernees",
         verbose_name="Espèces concernées",
     )
+    laboratoires_frequents = models.ManyToManyField(
+        "sa.Laboratoire",
+        blank=True,
+        related_name="maladies_frequentes",
+        verbose_name="Laboratoires les plus fréquents",
+    )
 
     intitule_typage_niveau_2 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 2)")
     intitule_typage_niveau_3 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 3)")

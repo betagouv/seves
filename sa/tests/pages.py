@@ -179,10 +179,11 @@ class WithAnalyseMixin:
             maladie.name_with_acronym
         )
 
+    def get_analyse_laboratoire_treeselect(self, modal: Locator):
+        return TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-laboratoire"]'))
+
     def fill_analyse_laboratoire(self, modal: Locator, laboratoire):
-        TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-laboratoire"]')).check_option(
-            laboratoire.name
-        )
+        self.get_analyse_laboratoire_treeselect(modal).check_option(laboratoire.name)
 
     def fill_analyse(self, modal: Locator, analyse: Analyse):
         self.fill_analyse_maladie(modal, analyse.maladie)
