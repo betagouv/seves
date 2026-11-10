@@ -20,7 +20,7 @@ def link_veterinaires_to_especes(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0043_analyse_date_resultat_required_unless_en_attente"),
+        ("sa", "0044_evenementanimal_no_mesures_gestion_when_sauvage"),
     ]
 
     operations = [

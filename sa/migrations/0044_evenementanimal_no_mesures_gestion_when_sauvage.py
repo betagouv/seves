@@ -20,7 +20,7 @@ def clear_mesures_gestion_when_sauvage(apps, _):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("sa", "0042_evenementanimal_dates_arretes_order"),
+        ("sa", "0043_analyse_date_resultat_required_unless_en_attente"),
     ]
 
     operations = [
