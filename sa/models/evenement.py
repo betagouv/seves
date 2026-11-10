@@ -5,7 +5,7 @@ import functools
 from django.contrib.gis.db.models import PointField
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.functional import classproperty, lazy
@@ -13,7 +13,13 @@ from django_countries.fields import CountryField
 import reversion
 from reversion.models import Version
 
-from core.mixins import AllowModificationMixin, WithFreeLinkIdsMixin, WithNumeroMixin, normalize
+from core.mixins import (
+    AllowModificationMixin,
+    WithFreeLinkIdsMixin,
+    WithNumeroMixin,
+    lock_numero_generation,
+    normalize,
+)
 from core.model_mixins import WithBlocCommunFieldsMixin, WithContactPermissionMixin, WithFicheDocumentPermissionMixin
 from core.models import Document, Structure
 from core.soft_delete_mixins import AllowsSoftDeleteMixin
@@ -518,10 +524,10 @@ class EvenementAnimal(
 
     @classmethod
     def _get_annee_and_numero(cls, acronym):
+        lock_numero_generation(f"sa.numero.{acronym}")
         annee_courante = datetime.datetime.now().year
         last_fiche = (
             cls._base_manager.filter(numero_annee=annee_courante, maladie__acronym=acronym)
-            .select_for_update()
             .order_by("-numero_evenement")
             .first()
         )
@@ -536,11 +542,12 @@ class EvenementAnimal(
         return self.numero
 
     def save(self, *args, **kwargs):
-        if not self.numero_annee and not self.numero_evenement:
-            annee, numero = EvenementAnimal._get_annee_and_numero(self.maladie.acronym)
-            self.numero_annee = annee
-            self.numero_evenement = numero
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            if not self.numero_annee and not self.numero_evenement:
+                annee, numero = EvenementAnimal._get_annee_and_numero(self.maladie.acronym)
+                self.numero_annee = annee
+                self.numero_evenement = numero
+            super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("sa:evenement-animal-details", kwargs={"pk": self.pk})

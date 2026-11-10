@@ -13,6 +13,7 @@ from core.mixins import (
     WithFreeLinkIdsMixin,
     WithMessageUrlsMixin,
     WithVisibiliteMixin,
+    lock_numero_generation,
 )
 from core.model_mixins import (
     WithBlocCommunFieldsMixin,
@@ -79,13 +80,9 @@ class Evenement(
 
     @classmethod
     def _get_annee_and_numero(self):
+        lock_numero_generation(Evenement._meta.label)
         annee_courante = datetime.datetime.now().year
-        last_fiche = (
-            Evenement._base_manager.filter(numero_annee=annee_courante)
-            .select_for_update()
-            .order_by("-numero_evenement")
-            .first()
-        )
+        last_fiche = Evenement._base_manager.filter(numero_annee=annee_courante).order_by("-numero_evenement").first()
         numero_evenement = last_fiche.numero_evenement + 1 if last_fiche else 1
         return annee_courante, numero_evenement
 
