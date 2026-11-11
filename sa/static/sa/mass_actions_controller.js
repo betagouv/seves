@@ -3,17 +3,42 @@ import {Controller} from "Stimulus"
 
 const pluralize = (count, singular, plural) => (count > 1 ? plural : singular)
 
+const findTarget = (modal, name) => modal.querySelector(`[data-mass-actions-target="${name}"]`)
+
+/** Actions sur le suivi, qui partagent la même modale et le même formulaire */
+const SUIVI_ACTIONS = {
+    fin_suivi: {
+        mode: "add",
+        title: "Signaler une fin de suivi",
+        submit: `<span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi`,
+        eligibleTo: "la fin de suivi",
+        eligibility: "Seuls les événements en cours peuvent faire l'objet d'une fin de suivi.",
+        confirmation: count =>
+            `Vous êtes sur le point de signaler la fin de suivi de ${count} ${pluralize(count, "événement", "événements")}. Le suivi pourra être repris ultérieurement.`,
+    },
+    reprise_suivi: {
+        mode: "remove",
+        title: "Reprendre le suivi",
+        submit: `<span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>Reprendre le suivi`,
+        eligibleTo: "la reprise de suivi",
+        eligibility:
+            "Seuls les événements en fin de suivi peuvent reprendre le suivi. Un événement clôturé ne peut pas être rouvert.",
+        confirmation: count =>
+            `Vous êtes sur le point de reprendre le suivi de ${count} ${pluralize(count, "événement. Son statut", "événements. Leur statut")} redeviendra « En cours ».`,
+    },
+}
+
 /**
  * @property {HTMLButtonElement} navigationTarget
  * @property {HTMLInputElement[]} checkboxTargets
  * @property {HTMLInputElement} masterCheckboxTarget
  * @property {HTMLElement} selectionCountTarget
- * @property {HTMLDialogElement} finSuiviModalTarget
+ * @property {HTMLDialogElement} modalTarget
  * @property {HTMLDialogElement} clotureModalTarget
  * @property {string} apiUrlValue
  */
 class MassActionController extends Controller {
-    static targets = ["navigation", "checkbox", "masterCheckbox", "selectionCount", "finSuiviModal", "clotureModal"]
+    static targets = ["navigation", "checkbox", "masterCheckbox", "selectionCount", "modal", "clotureModal"]
     static values = {apiUrl: String}
 
     get selectedPks() {
@@ -72,29 +97,35 @@ class MassActionController extends Controller {
      * @param {boolean} canSubmit False when none of the selected evenements is eligible
      */
     openModal(modal, html, canSubmit = false) {
-        const find = name => modal.querySelector(`[data-mass-actions-target="${name}"]`)
-        find("modalContent").innerHTML = html
-        find("pkInput").value = canSubmit ? this.selectedPks.join(",") : ""
-        find("close").classList.toggle("fr-hidden", canSubmit)
-        find("cancel").classList.toggle("fr-hidden", !canSubmit)
-        find("submit").classList.toggle("fr-hidden", !canSubmit)
+        findTarget(modal, "modalContent").innerHTML = html
+        findTarget(modal, "pkInput").value = canSubmit ? this.selectedPks.join(",") : ""
+        findTarget(modal, "close").classList.toggle("fr-hidden", canSubmit)
+        findTarget(modal, "cancel").classList.toggle("fr-hidden", !canSubmit)
+        findTarget(modal, "submit").classList.toggle("fr-hidden", !canSubmit)
         dsfr(modal).modal.disclose()
     }
 
-    async onFinDeSuivi() {
+    notEligibleAlert(selected, details) {
+        const subject =
+            selected > 1
+                ? `aucun des ${selected} événements sélectionnés n'est éligible`
+                : "l'événement sélectionné n'est pas éligible"
+        return `<div class="fr-alert fr-alert--info fr-alert--sm">
+            <p>Action impossible : ${subject}${details}</p>
+        </div>`
+    }
+
+    async onMassAction({params: {action: name}}) {
+        const action = SUIVI_ACTIONS[name]
         const selected = this.selectedPks.length
-        const {can_be_done: nbEligibles} = await this.fetchStatus("fin_suivi")
-        const rule = "Seuls les événements en cours peuvent faire l'objet d'une fin de suivi."
+        const {can_be_done: nbEligibles} = await this.fetchStatus(name)
+
+        findTarget(this.modalTarget, "modalTitle").textContent = action.title
+        findTarget(this.modalTarget, "modeInput").value = action.mode
+        findTarget(this.modalTarget, "submit").innerHTML = action.submit
 
         if (nbEligibles === 0) {
-            const subject =
-                selected > 1
-                    ? `aucun des ${selected} événements sélectionnés n'est éligible`
-                    : "l'événement sélectionné n'est pas éligible"
-            const html = `<div class="fr-alert fr-alert--info fr-alert--sm">
-                <p>Action impossible : ${subject}. ${rule}</p>
-            </div>`
-            this.openModal(this.finSuiviModalTarget, html)
+            this.openModal(this.modalTarget, this.notEligibleAlert(selected, `. ${action.eligibility}`))
             return
         }
 
@@ -102,11 +133,11 @@ class MassActionController extends Controller {
         if (nbEligibles < selected) {
             const nbIgnored = selected - nbEligibles
             html += `<div class="fr-alert fr-alert--info fr-alert--sm fr-mb-2w">
-                <p>${nbEligibles} des ${selected} événements sélectionnés ${pluralize(nbEligibles, "est éligible", "sont éligibles")} à la fin de suivi. ${nbIgnored} ${pluralize(nbIgnored, "sera ignoré", "seront ignorés")}. ${rule}</p>
+                <p>${nbEligibles} des ${selected} événements sélectionnés ${pluralize(nbEligibles, "est éligible", "sont éligibles")} à ${action.eligibleTo}. ${nbIgnored} ${pluralize(nbIgnored, "sera ignoré", "seront ignorés")}. ${action.eligibility}</p>
             </div>`
         }
-        html += `<p>Vous êtes sur le point de signaler la fin de suivi de ${nbEligibles} ${pluralize(nbEligibles, "événement", "événements")}. Le suivi pourra être repris ultérieurement.</p>`
-        this.openModal(this.finSuiviModalTarget, html, true)
+        html += `<p>${action.confirmation(nbEligibles)}</p>`
+        this.openModal(this.modalTarget, html, true)
     }
 
     async onCloture() {
@@ -122,14 +153,8 @@ class MassActionController extends Controller {
             .join(", ")
 
         if (nbEligibles === 0) {
-            const subject =
-                selected > 1
-                    ? `aucun des ${selected} événements sélectionnés n'est éligible`
-                    : "l'événement sélectionné n'est pas éligible"
-            const html = `<div class="fr-alert fr-alert--info fr-alert--sm">
-                <p>Action impossible : ${subject} (${ineligibles}). Seuls les événements en cours ou en fin de suivi peuvent être clôturés.</p>
-            </div>`
-            this.openModal(this.clotureModalTarget, html)
+            const details = ` (${ineligibles}). Seuls les événements en cours ou en fin de suivi peuvent être clôturés.`
+            this.openModal(this.clotureModalTarget, this.notEligibleAlert(selected, details))
             return
         }
 

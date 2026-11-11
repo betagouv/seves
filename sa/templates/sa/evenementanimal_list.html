@@ -61,7 +61,7 @@
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
         </div>
 
-        {% include "sa/_mass_actions_fin_suivi.html" %}
+        {% include "sa/_mass_actions_modal.html" %}
         {% if can_mass_cloturer %}
             {% include "sa/_mass_actions_cloture.html" %}
         {% endif %}
@@ -73,11 +73,14 @@
                     <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
                         <ul class="fr-menu__list">
                             <li>
-                                <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                                <button data-action="mass-actions#onMassAction:prevent" data-mass-actions-action-param="fin_suivi" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                            </li>
+                            <li>
+                                <button data-action="mass-actions#onMassAction:prevent" data-mass-actions-action-param="reprise_suivi" class="fr-translate__language fr-nav__link"><span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>Reprendre le suivi</button>
                             </li>
                             {% if can_mass_cloturer %}
                                 <li>
-                                    <button data-action="mass-actions#onCloture:prevent:default" class="fr-translate__language fr-nav__link"><span class="fr-icon-close-circle-fill fr-icon--sm fr-mr-2v" aria-hidden="true"></span>Clôturer</button>
+                                    <button data-action="mass-actions#onCloture:prevent" class="fr-translate__language fr-nav__link"><span class="fr-icon-close-circle-fill fr-icon--sm fr-mr-2v" aria-hidden="true"></span>Clôturer</button>
                                 </li>
                             {% endif %}
                         </ul>

@@ -499,6 +499,12 @@ class MassActionView(View):
         query = self.request.POST.get("query")
         return safe_redirect(f"{url}?{query}" if query else url)
 
+    def add_result_message(self, count, singular, plural, *, error):
+        if count:
+            messages.success(self.request, ngettext(singular, plural, count) % {"count": count})
+        else:
+            messages.error(self.request, error)
+
 
 class MassCloturerView(MassActionView):
     def post(self, request):
@@ -510,15 +516,12 @@ class MassCloturerView(MassActionView):
             obj.cloturer(request.user)
             nb_clotures += 1
 
-        if nb_clotures:
-            message = ngettext(
-                "%(count)d événement a été clôturé avec succès.",
-                "%(count)d événements ont été clôturés avec succès.",
-                nb_clotures,
-            ) % {"count": nb_clotures}
-            messages.success(request, message)
-        else:
-            messages.error(request, "Aucun événement n'a été clôturé.")
+        self.add_result_message(
+            nb_clotures,
+            "%(count)d événement a été clôturé avec succès.",
+            "%(count)d événements ont été clôturés avec succès.",
+            error="Aucun événement n'a été clôturé.",
+        )
         return self.redirect_to_list()
 
 
@@ -533,7 +536,8 @@ class EvenementOuvrirView(View):
             return redirect(redirect_url)
         with transaction.atomic():
             user_contact = self.request.user.agent.structure.contact_set.get()
-            if fin_suivi := obj.fin_suivi.filter(contact=user_contact):
+            if fin_suivi := obj.fin_suivi.filter(contact=user_contact).first():
+                fin_suivi._user = self.request.user
                 fin_suivi.delete()
             obj.publish()
             messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
@@ -571,26 +575,42 @@ class FinDeSuiviHandlingView(View):
 
 class MassFinDeSuiviHandlingView(MassActionView):
     def post(self, request):
-        if not self.request.POST["mode"] == "add":
+        mode = self.request.POST["mode"]
+        if mode == "add":
+            self.add_result_message(
+                self.add_fin_suivi(),
+                "Fin de suivi réalisée avec succès pour %(count)d événement.",
+                "Fin de suivi réalisée avec succès pour %(count)d événements.",
+                error="Aucune fin de suivi n'a été réalisée.",
+            )
+        elif mode == "remove":
+            self.add_result_message(
+                self.remove_fin_suivi(),
+                "Suivi repris pour %(count)d événement.",
+                "Suivi repris pour %(count)d événements.",
+                error="Aucun suivi n'a été repris.",
+            )
+        else:
             raise NotImplementedError
+        return self.redirect_to_list()
 
-        nb_fins_suivi = 0
+    def add_fin_suivi(self):
+        nb_updated = 0
         for obj in self.get_objects():
             if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
                 continue
             obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
-            nb_fins_suivi += 1
+            nb_updated += 1
+        return nb_updated
 
-        if nb_fins_suivi:
-            message = ngettext(
-                "Fin de suivi réalisée avec succès pour %(count)d événement.",
-                "Fin de suivi réalisée avec succès pour %(count)d événements.",
-                nb_fins_suivi,
-            ) % {"count": nb_fins_suivi}
-            messages.success(request, message)
-        else:
-            messages.error(request, "Aucune fin de suivi n'a été réalisée.")
-        return self.redirect_to_list()
+    def remove_fin_suivi(self):
+        nb_updated = 0
+        for obj in self.get_objects():
+            if not obj.is_published or not FinSuiviContact.can_remove_fin_de_suivi(obj, self.request.user):
+                continue
+            obj.remove_fin_suivi(self.request.user)
+            nb_updated += 1
+        return nb_updated
 
 
 def sirene_api(request, siret: str):
