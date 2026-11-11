@@ -42,6 +42,7 @@ class WithBlocCommunFieldsMixin(models.Model):
             content_type=ContentType.objects.get_for_model(self.__class__),
             contact=Contact.objects.get(structure=user.agent.structure),
         )
+        fin_suivi._user = user
         fin_suivi.delete()
 
 

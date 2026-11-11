@@ -15,8 +15,8 @@ from sa.tests.pages import EvenementListPage
 from sa.views import EvenementListView
 
 
-def _evenement_en_cours(user, *, with_fin_de_suivi=False):
-    evenement = EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
+def _evenement(user, *, etat=EvenementAnimal.Etat.EN_COURS, with_fin_de_suivi=False):
+    evenement = EvenementAnimalFactory(etat=etat)
     contact = user.agent.structure.contact_set.get()
     evenement.contacts.add(contact)
     if with_fin_de_suivi:
@@ -29,7 +29,7 @@ def _evenement_en_cours(user, *, with_fin_de_suivi=False):
 
 
 def test_master_checkbox_checks_all_rows(live_server, page: Page, mocked_authentification_user):
-    evenements = [_evenement_en_cours(mocked_authentification_user) for _ in range(3)]
+    evenements = [_evenement(mocked_authentification_user) for _ in range(3)]
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
@@ -49,7 +49,7 @@ def test_master_checkbox_checks_all_rows(live_server, page: Page, mocked_authent
 def test_mass_actions_button_is_disabled_until_a_checkbox_is_checked(
     live_server, page: Page, mocked_authentification_user
 ):
-    evenement = _evenement_en_cours(mocked_authentification_user)
+    evenement = _evenement(mocked_authentification_user)
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
@@ -64,18 +64,18 @@ def test_mass_actions_button_is_disabled_until_a_checkbox_is_checked(
 
 
 def test_mass_fin_de_suivi_when_all_evenements_are_ok(live_server, page: Page, mocked_authentification_user):
-    evenements = [_evenement_en_cours(mocked_authentification_user) for _ in range(3)]
+    evenements = [_evenement(mocked_authentification_user) for _ in range(3)]
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
     list_page.select_all()
     list_page.open_fin_de_suivi_modal()
 
-    expect(list_page.fin_de_suivi_modal_content).to_contain_text(
+    expect(list_page.mass_action_modal_content).to_contain_text(
         "Vous êtes sur le point de signaler la fin de suivi de 3 événements."
     )
-    expect(list_page.fin_de_suivi_submit_button).to_be_visible()
-    list_page.confirm_fin_de_suivi()
+    expect(list_page.mass_action_submit_button).to_be_visible()
+    list_page.confirm_mass_action()
 
     expect(page.get_by_text("Fin de suivi réalisée avec succès pour 3 événements.")).to_be_visible()
     assert FinSuiviContact.objects.count() == 3
@@ -90,39 +90,39 @@ def test_mass_fin_de_suivi_when_all_evenements_are_ok(live_server, page: Page, m
 
 def test_mass_fin_de_suivi_when_no_evenement_is_ok(live_server, page: Page, mocked_authentification_user):
     for _ in range(3):
-        _evenement_en_cours(mocked_authentification_user, with_fin_de_suivi=True)
+        _evenement(mocked_authentification_user, with_fin_de_suivi=True)
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
     list_page.select_all()
     list_page.open_fin_de_suivi_modal()
 
-    expect(list_page.fin_de_suivi_modal_content).to_have_text(
+    expect(list_page.mass_action_modal_content).to_have_text(
         "Action impossible : aucun des 3 événements sélectionnés n'est éligible. "
         "Seuls les événements en cours peuvent faire l'objet d'une fin de suivi."
     )
-    expect(list_page.fin_de_suivi_submit_button).to_be_hidden()
-    expect(list_page.fin_de_suivi_close_button).to_be_visible()
+    expect(list_page.mass_action_submit_button).to_be_hidden()
+    expect(list_page.mass_action_close_button).to_be_visible()
 
     assert FinSuiviContact.objects.count() == 3
 
 
 def test_mass_fin_de_suivi_when_only_some_evenements_are_ok(live_server, page: Page, mocked_authentification_user):
-    eligibles = [_evenement_en_cours(mocked_authentification_user) for _ in range(2)]
+    eligibles = [_evenement(mocked_authentification_user) for _ in range(2)]
     for _ in range(3):
-        _evenement_en_cours(mocked_authentification_user, with_fin_de_suivi=True)
+        _evenement(mocked_authentification_user, with_fin_de_suivi=True)
 
     list_page = EvenementListPage(page, live_server.url)
     list_page.navigate()
     list_page.select_all()
     list_page.open_fin_de_suivi_modal()
 
-    expect(list_page.fin_de_suivi_modal_content).to_contain_text(
+    expect(list_page.mass_action_modal_content).to_contain_text(
         "2 des 5 événements sélectionnés sont éligibles à la fin de suivi. 3 seront ignorés."
     )
-    expect(list_page.fin_de_suivi_submit_button).to_be_visible()
+    expect(list_page.mass_action_submit_button).to_be_visible()
 
-    list_page.confirm_fin_de_suivi()
+    list_page.confirm_mass_action()
 
     expect(page.get_by_text("Fin de suivi réalisée avec succès pour 2 événements.")).to_be_visible()
     assert FinSuiviContact.objects.count() == 5
@@ -135,14 +135,23 @@ def test_mass_fin_de_suivi_when_only_some_evenements_are_ok(live_server, page: P
         ).exists()
 
 
+@pytest.mark.parametrize(
+    "mode,with_fin_de_suivi,error",
+    [
+        ("add", True, "Aucune fin de suivi n'a été réalisée."),
+        ("remove", False, "Aucun suivi n'a été repris."),
+    ],
+)
 @pytest.mark.parametrize("with_selection", [True, False])
-def test_mass_fin_de_suivi_when_nothing_is_done(client, mocked_authentification_user, with_selection):
-    evenement = _evenement_en_cours(mocked_authentification_user, with_fin_de_suivi=True)
+def test_mass_suivi_action_when_nothing_is_done(
+    client, mocked_authentification_user, mode, with_fin_de_suivi, error, with_selection
+):
+    evenement = _evenement(mocked_authentification_user, with_fin_de_suivi=with_fin_de_suivi)
 
     response = client.post(
         reverse("evenement-fin-de-suivi-mass"),
         data={
-            "mode": "add",
+            "mode": mode,
             "pks": str(evenement.pk) if with_selection else "",
             "content_type": ContentType.objects.get_for_model(evenement).pk,
             "query": "etat=en_cours",
@@ -150,10 +159,118 @@ def test_mass_fin_de_suivi_when_nothing_is_done(client, mocked_authentification_
     )
 
     assert response.url == f"{reverse('sa:evenement-liste')}?etat=en_cours"
-    assert [str(message) for message in get_messages(response.wsgi_request)] == [
-        "Aucune fin de suivi n'a été réalisée."
-    ]
+    assert [str(message) for message in get_messages(response.wsgi_request)] == [error]
+    assert FinSuiviContact.objects.count() == (1 if with_fin_de_suivi else 0)
+
+
+def test_mass_reprise_suivi_when_all_evenements_are_ok(live_server, page: Page, mocked_authentification_user):
+    evenements = [_evenement(mocked_authentification_user, with_fin_de_suivi=True) for _ in range(3)]
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select_all()
+    list_page.open_reprise_suivi_modal()
+
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "Vous êtes sur le point de reprendre le suivi de 3 événements. Leur statut redeviendra « En cours »."
+    )
+    expect(list_page.mass_action_submit_button).to_be_visible()
+    list_page.confirm_mass_action()
+
+    expect(page.get_by_text("Suivi repris pour 3 événements.")).to_be_visible()
+    assert FinSuiviContact.objects.count() == 0
+    expect(page.locator(".evenements__list-row").get_by_text("En cours", exact=True)).to_have_count(3)
+    expect(list_page.master_checkbox).not_to_be_checked()
+    expect(list_page.mass_actions_button).to_be_disabled()
+
+    structure = mocked_authentification_user.agent.structure
+    for evenement in evenements:
+        assert (
+            Version.objects.get_for_object(evenement)
+            .filter(revision__comment=f"La structure {structure} a repris le suivi sur cette fiche")
+            .exists()
+        )
+
+
+def test_mass_reprise_suivi_when_no_evenement_is_ok(live_server, page: Page, mocked_authentification_user):
+    _evenement(mocked_authentification_user)
+    _evenement(mocked_authentification_user, etat=EvenementAnimal.Etat.CLOTURE, with_fin_de_suivi=True)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select_all()
+    list_page.open_reprise_suivi_modal()
+
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "Action impossible : aucun des 2 événements sélectionnés n'est éligible."
+    )
+    expect(list_page.mass_action_submit_button).to_be_hidden()
+    expect(list_page.mass_action_close_button).to_be_visible()
+
     assert FinSuiviContact.objects.count() == 1
+
+
+def test_mass_reprise_suivi_when_only_some_evenements_are_ok(live_server, page: Page, mocked_authentification_user):
+    eligibles = [_evenement(mocked_authentification_user, with_fin_de_suivi=True) for _ in range(2)]
+    _evenement(mocked_authentification_user)
+    cloture = _evenement(mocked_authentification_user, etat=EvenementAnimal.Etat.CLOTURE, with_fin_de_suivi=True)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select_all()
+    list_page.open_reprise_suivi_modal()
+
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "2 des 4 événements sélectionnés sont éligibles à la reprise de suivi. 2 seront ignorés."
+    )
+    expect(list_page.mass_action_submit_button).to_be_visible()
+
+    list_page.confirm_mass_action()
+
+    expect(page.get_by_text("Suivi repris pour 2 événements.")).to_be_visible()
+    assert FinSuiviContact.objects.get().object_id == cloture.id
+    for evenement in eligibles:
+        assert not evenement.fin_suivi.exists()
+
+
+def test_mass_reprise_suivi_can_be_cancelled(live_server, page: Page, mocked_authentification_user):
+    _evenement(mocked_authentification_user, with_fin_de_suivi=True)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select_all()
+    list_page.open_reprise_suivi_modal()
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "Vous êtes sur le point de reprendre le suivi de 1 événement. Son statut redeviendra « En cours »."
+    )
+
+    list_page.mass_action_cancel_button.click()
+
+    expect(list_page.mass_action_modal).to_be_hidden()
+    assert FinSuiviContact.objects.count() == 1
+
+
+def test_mass_reprise_suivi_messages_are_singular_for_one_evenement(
+    live_server, page: Page, mocked_authentification_user
+):
+    eligible = _evenement(mocked_authentification_user, with_fin_de_suivi=True)
+    non_eligible = _evenement(mocked_authentification_user)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select(eligible, non_eligible)
+    list_page.open_reprise_suivi_modal()
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "1 des 2 événements sélectionnés est éligible à la reprise de suivi. 1 sera ignoré."
+    )
+    list_page.mass_action_cancel_button.click()
+    expect(list_page.mass_action_modal).to_be_hidden()
+
+    list_page.checkbox_for(eligible).uncheck(force=True)
+    list_page.open_reprise_suivi_modal()
+    expect(list_page.mass_action_modal_content).to_contain_text(
+        "Action impossible : l'événement sélectionné n'est pas éligible."
+    )
 
 
 def _add_contact_structure(evenement, *, with_fin_de_suivi):
