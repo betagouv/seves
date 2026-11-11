@@ -109,11 +109,18 @@ def fin_suivi_added(sender, instance: FinSuiviContact, created, **kwargs):
 
 @receiver(pre_delete, sender=FinSuiviContact)
 def fin_suivi_removed(sender, instance, **kwargs):
+    # Version manuelle (comme pour l'ajout) : un create_revision imbriqué serait fusionné dans la révision
+    # de la requête, ce qui casse la reprise de suivi sur plusieurs objets dans une même requête.
     with transaction.atomic():
-        with reversion.create_revision():
-            reversion.set_comment(f"La structure {instance.contact} a repris le suivi sur cette fiche")
-            reversion.add_meta(CustomRevisionMetaData, extra_data={"field": "Statut"})
-            reversion.add_to_revision(instance.content_object)
+        revision = create_manual_version(
+            instance.content_object,
+            f"La structure {instance.contact} a repris le suivi sur cette fiche",
+            user=getattr(instance, "_user", None),
+        )
+        CustomRevisionMetaData.objects.create(revision=revision, extra_data={"field": "Statut"})
+        if getattr(instance.content_object, "_update_last_updated_on_revision", False):
+            instance.content_object.last_updated = revision.date_created
+            instance.content_object.save(update_fields=["last_updated"])
 
 
 @receiver(user_logged_in)

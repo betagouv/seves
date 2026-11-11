@@ -1,15 +1,39 @@
 import {applicationReady} from "Application"
 import {Controller} from "Stimulus"
 
+const plural = (count, singular, plural) => (count > 1 ? plural : singular)
+
+const ACTIONS = {
+    fin_suivi: {
+        mode: "add",
+        title: "Signaler une fin de suivi",
+        submit: `<span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi`,
+        eligibility: "Seuls les événements en cours peuvent faire l'objet d'une fin de suivi.",
+        confirmation: canBeDone =>
+            `Vous êtes sur le point de signaler la fin de suivi de ${canBeDone} ${plural(canBeDone, "événement", "événements")}. Le suivi pourra être repris ultérieurement.`,
+    },
+    reprise_suivi: {
+        mode: "remove",
+        title: "Reprendre le suivi",
+        submit: `<span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>Reprendre le suivi`,
+        eligibility:
+            "Seuls les événements en fin de suivi peuvent reprendre le suivi. Un événement clôturé ne peut pas être rouvert.",
+        confirmation: canBeDone =>
+            `Vous êtes sur le point de reprendre le suivi de ${canBeDone} ${plural(canBeDone, "événement. Son statut", "événements. Leur statut")} redeviendra « En cours ».`,
+    },
+}
+
 class MassActionController extends Controller {
     static targets = [
         "navigation",
         "checkbox",
-        "finSuiviModal",
-        "finSuiviModalContent",
+        "modal",
+        "modalTitle",
+        "modalContent",
         "close",
         "cancel",
         "submit",
+        "modeInput",
         "pkInput",
     ]
     static values = {apiUrl: String}
@@ -39,65 +63,54 @@ class MassActionController extends Controller {
         return this.checkboxTargets.filter(checkbox => checkbox.checked).map(item => item.name)
     }
 
-    showFinDeSuiviNotPossible(data, nbElements) {
-        const html = `<div class="fr-alert fr-alert--info">
-                      <p>Action impossible : aucun des événéments sélectionnés n'est éligible. Seul les événéments en cours peuvent faire l'objet d'une fin de suivi.</p>
-                    </div>
-                    `
-        this.closeTarget.classList.remove("fr-hidden")
-        this.finSuiviModalContentTarget.innerHTML = html
-        dsfr(this.finSuiviModalTarget).modal.disclose()
+    getModalContent(action, canBeDone, nbElements) {
+        if (canBeDone === 0) {
+            const selection = plural(
+                nbElements,
+                "l'événement sélectionné n'est pas éligible",
+                `aucun des ${nbElements} événements sélectionnés n'est éligible`,
+            )
+            return `<div class="fr-alert fr-alert--info">
+                        <p>Action impossible : ${selection}. ${action.eligibility}</p>
+                    </div>`
+        }
+
+        let html = ""
+        if (canBeDone < nbElements) {
+            const ignored = nbElements - canBeDone
+            html += `<div class="fr-alert fr-alert--warning">
+                         <p>${canBeDone} ${plural(canBeDone, "événement", "événements")} sur ${nbElements} ${plural(canBeDone, "peut", "peuvent")} faire l'objet de cette action. ${ignored} ${plural(ignored, "sera ignoré", "seront ignorés")}. ${action.eligibility}</p>
+                     </div>`
+        }
+        html += `<p class="fr-mt-2v">${action.confirmation(canBeDone)}</p>`
+        return html
     }
 
-    showFinDeSuiviPossible(data, nbElements) {
-        const html = `Vous êtes sur le point de signaler la fin de suivi de ${data.can_be_done} événements. Le suivi pourra être repris ultérieurement.`
-
-        this.cancelTarget.classList.remove("fr-hidden")
-        this.submitTarget.classList.remove("fr-hidden")
-        this.finSuiviModalContentTarget.innerHTML = html
-        this.pkInputTarget.value = this.getSelectedElements().join(",")
-        dsfr(this.finSuiviModalTarget).modal.disclose()
+    showModal(action, canBeDone, nbElements) {
+        const canBeSubmitted = canBeDone > 0
+        this.modalTitleTarget.textContent = action.title
+        this.modalContentTarget.innerHTML = this.getModalContent(action, canBeDone, nbElements)
+        this.submitTarget.innerHTML = action.submit
+        this.modeInputTarget.value = action.mode
+        this.pkInputTarget.value = canBeSubmitted ? this.getSelectedElements().join(",") : ""
+        this.closeTarget.classList.toggle("fr-hidden", canBeSubmitted)
+        this.cancelTarget.classList.toggle("fr-hidden", !canBeSubmitted)
+        this.submitTarget.classList.toggle("fr-hidden", !canBeSubmitted)
+        dsfr(this.modalTarget).modal.disclose()
     }
 
-    showFinDeSuiviPartiallyPossible(data, nbElements) {
-        let html = `<div class="fr-alert fr-alert--warning">
-                              <p>${data.can_be_done} événements sur ${nbElements} peuvent faire l'objet de cette action. ${nbElements - data.can_be_done} sera/seront ignoré(s). Seuls les événéments en cours peuvent faire l'objet d'une fin de suivi.</p>
-                            </div>`
-        html += `<p class="fr-mt-2v">Vous êtes sur le point de signaler la fin de suivi de ${data.can_be_done} événements. Le suivi pourra être repris ultérieurement.</p>`
-
-        this.cancelTarget.classList.remove("fr-hidden")
-        this.submitTarget.classList.remove("fr-hidden")
-        this.finSuiviModalContentTarget.innerHTML = html
-        this.pkInputTarget.value = this.getSelectedElements().join(",")
-        dsfr(this.finSuiviModalTarget).modal.disclose()
-    }
-
-    onFinDeSuivi() {
+    onMassAction({params: {action}}) {
         const elements = this.getSelectedElements()
-        const nbElements = elements.length
         fetch(this.apiUrlValue, {
             headers: {
                 "Content-Type": "application/json",
-
                 "X-CSRFToken": this.getCookie("csrftoken"),
             },
             method: "POST",
-            body: JSON.stringify({action: "fin_suivi", pks: elements}),
+            body: JSON.stringify({action, pks: elements}),
         })
             .then(response => response.json())
-            .then(data => {
-                this.cancelTarget.classList.add("fr-hidden")
-                this.closeTarget.classList.add("fr-hidden")
-                this.submitTarget.classList.add("fr-hidden")
-                this.pkInputTarget.value = ""
-                if (data.can_be_done === 0) {
-                    this.showFinDeSuiviNotPossible(data, nbElements)
-                } else if (data.can_be_done === nbElements) {
-                    this.showFinDeSuiviPossible(data, nbElements)
-                } else {
-                    this.showFinDeSuiviPartiallyPossible(data, nbElements)
-                }
-            })
+            .then(data => this.showModal(ACTIONS[action], data.can_be_done, elements.length))
     }
 }
 

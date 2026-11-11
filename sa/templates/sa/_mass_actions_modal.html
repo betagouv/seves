@@ -1,0 +1,33 @@
+<dialog id="modal-mass-action" class="fr-modal" aria-labelledby="modal-mass-action-title" aria-modal="true" data-mass-actions-target="modal">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button aria-controls="modal-mass-action" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h2 id="modal-mass-action-title" class="fr-modal__title">
+                            <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                            <span data-mass-actions-target="modalTitle"></span>
+                        </h2>
+                        <div data-mass-actions-target="modalContent">
+                        </div>
+                        <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg">
+                            <button class="fr-btn fr-btn--secondary fr-hidden" aria-controls="modal-mass-action" data-mass-actions-target="close">Fermer</button>
+                            <button class="fr-btn fr-btn--secondary fr-hidden" aria-controls="modal-mass-action" data-mass-actions-target="cancel">Annuler</button>
+
+                            <form action="{% url 'evenement-fin-de-suivi-mass' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="mode" value="" data-mass-actions-target="modeInput">
+                                <input type="hidden" name="pks" value="" data-mass-actions-target="pkInput">
+                                <input type="hidden" name="content_type" value="{{ content_type.pk }}">
+                                <button class="fr-btn fr-hidden" data-mass-actions-target="submit"></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>

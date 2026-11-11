@@ -490,32 +490,38 @@ class WithMassActionsPage:
         expect(self.mass_actions_dropdown).to_be_visible()
 
     @property
-    def fin_de_suivi_modal(self):
-        return self.page.locator("#modal-fin-suivi")
+    def mass_action_modal(self):
+        return self.page.locator("#modal-mass-action")
 
     @property
-    def fin_de_suivi_modal_content(self):
-        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="finSuiviModalContent"]')
+    def mass_action_modal_content(self):
+        return self.mass_action_modal.locator('[data-mass-actions-target="modalContent"]')
 
     @property
-    def fin_de_suivi_submit_button(self):
-        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="submit"]')
+    def mass_action_submit_button(self):
+        return self.mass_action_modal.locator('[data-mass-actions-target="submit"]')
 
     @property
-    def fin_de_suivi_cancel_button(self):
-        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="cancel"]')
+    def mass_action_cancel_button(self):
+        return self.mass_action_modal.locator('[data-mass-actions-target="cancel"]')
 
     @property
-    def fin_de_suivi_close_button(self):
-        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="close"]')
+    def mass_action_close_button(self):
+        return self.mass_action_modal.locator('[data-mass-actions-target="close"]')
+
+    def open_mass_action_modal(self, action_name):
+        self.open_mass_actions()
+        self.mass_actions_dropdown.get_by_role("button", name=action_name).click()
+        expect(self.mass_action_modal).to_be_visible()
 
     def open_fin_de_suivi_modal(self):
-        self.open_mass_actions()
-        self.mass_actions_dropdown.get_by_role("button", name="Signaler la fin de suivi").click()
-        expect(self.fin_de_suivi_modal).to_be_visible()
+        self.open_mass_action_modal("Signaler la fin de suivi")
 
-    def confirm_fin_de_suivi(self):
-        self.fin_de_suivi_submit_button.click()
+    def open_reprise_suivi_modal(self):
+        self.open_mass_action_modal("Reprendre le suivi")
+
+    def confirm_mass_action(self):
+        self.mass_action_submit_button.click()
 
 
 class WithSyntheseBlockMixin:

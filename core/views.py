@@ -494,8 +494,8 @@ class EvenementOuvrirView(View):
             return redirect(redirect_url)
         with transaction.atomic():
             user_contact = self.request.user.agent.structure.contact_set.get()
-            if fin_suivi := obj.fin_suivi.filter(contact=user_contact):
-                fin_suivi.delete()
+            if obj.fin_suivi.filter(contact=user_contact).exists():
+                obj.remove_fin_suivi(self.request.user)
             obj.publish()
             messages.success(request, f"L'événement {obj.numero} a bien été ouvert de nouveau.")
             return redirect(redirect_url)
@@ -538,16 +538,32 @@ class MassFinDeSuiviHandlingView(View):
         content_type = ContentType.objects.get(pk=data.get("content_type"))
         objects = content_type.model_class().objects.filter(pk__in=data.get("pks").split(","))
 
-        if not data["mode"] == "add":
-            raise NotImplementedError
+        if data["mode"] == "add":
+            for obj in objects:
+                if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
+                    continue
 
-        for obj in objects:
-            if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
-                continue
+                obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
+            messages.success(request, "Fin(s) de suivi réalisée(s) avec succès.")
+            return redirect(objects[0].get_list_url())
 
-            obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
-        messages.success(request, "Fin(s) de suivi réalisée(s) avec succès.")
-        return redirect(objects[0].get_list_url())
+        if data["mode"] == "remove":
+            nb_updated = 0
+            for obj in objects:
+                if not obj.is_published or not FinSuiviContact.can_remove_fin_de_suivi(obj, self.request.user):
+                    continue
+
+                obj.remove_fin_suivi(self.request.user)
+                nb_updated += 1
+            message = ngettext(
+                "Suivi repris pour %(count)d événement.",
+                "Suivi repris pour %(count)d événements.",
+                nb_updated,
+            ) % {"count": nb_updated}
+            messages.success(request, message)
+            return redirect(objects[0].get_list_url())
+
+        raise NotImplementedError
 
 
 def sirene_api(request, siret: str):
