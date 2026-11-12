@@ -373,7 +373,9 @@ class WithEtatMixin(models.Model):
     class Meta:
         abstract = True
 
-    def cloturer(self):
+    def cloturer(self, user):
+        if self.is_the_only_remaining_structure(user, self.get_contacts_structures_not_in_fin_suivi()):
+            self.add_fin_suivi(structure=user.agent.structure, made_by=user)
         self.etat = self.Etat.CLOTURE
         self.save()
         notify_object_cloture(self)
@@ -401,8 +403,9 @@ class WithEtatMixin(models.Model):
             return False
         return user.agent.is_in_structure(self.createur) if self.is_draft else False
 
-    def can_be_cloture_by(self, user):
-        return has_needed_group(self, user) and user.agent.structure.is_ac
+    @classmethod
+    def can_be_cloture_by(cls, user):
+        return has_needed_group(cls, user) and user.agent.structure.is_ac
 
     def is_the_only_remaining_structure(self, user, contacts_not_in_fin_suivi) -> bool:
         """Un seul contact sans fin de suivi qui appartient à la structure de l'utilisateur"""

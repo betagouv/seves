@@ -219,6 +219,24 @@ class EvenementManagerMixin:
             )
         )
 
+    def having_structures_not_in_fin_suivi(self, excluded_structure=None):
+        from .models import Contact, FinSuiviContact
+
+        content_type = ContentType.objects.get_for_model(self.model)
+        contacts_query_name = self.model._meta.get_field("contacts").related_query_name()
+        contacts_not_in_fin_suivi = Contact.objects.filter(
+            ~Exists(
+                FinSuiviContact.objects.filter(
+                    content_type=content_type, object_id=OuterRef(OuterRef("pk")), contact=OuterRef("pk")
+                )
+            ),
+            structure__isnull=False,
+            **{contacts_query_name: OuterRef("pk")},
+        )
+        if excluded_structure:
+            contacts_not_in_fin_suivi = contacts_not_in_fin_suivi.exclude(structure=excluded_structure)
+        return self.filter(Exists(contacts_not_in_fin_suivi))
+
 
 class MessageManager(Manager):
     def create_unsaved(self, agent: "Agent", related_to, **kwargs):

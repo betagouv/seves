@@ -475,12 +475,43 @@ class CloturerView(View):
             messages.error(request, error_message)
             return redirect(redirect_url)
 
-        if object.is_the_only_remaining_structure(self.request.user, object.get_contacts_structures_not_in_fin_suivi()):
-            object.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
-
-        object.cloturer()
+        object.cloturer(request.user)
         messages.success(request, object.get_cloture_confirm_message())
         return redirect(redirect_url)
+
+
+def redirect_to_list(model, query):
+    url = model.get_list_url()
+    return safe_redirect(f"{url}?{query}" if query else url)
+
+
+class MassCloturerView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data.get("content_type"))
+        pks = [pk for pk in data.get("pks", "").split(",") if pk.isdigit()]
+        objects = content_type.model_class().objects.filter(pk__in=pks)
+
+        nb_clotures = 0
+        for obj in objects:
+            can_cloturer, _ = obj.can_be_cloture(request.user)
+            if not can_cloturer:
+                continue
+            obj.cloturer(request.user)
+            nb_clotures += 1
+
+        if nb_clotures:
+            message = ngettext(
+                "%(count)d événement a été clôturé avec succès.",
+                "%(count)d événements ont été clôturés avec succès.",
+                nb_clotures,
+            ) % {"count": nb_clotures}
+            messages.success(request, message)
+        else:
+            messages.error(request, "Aucun événement n'a été clôturé.")
+        return redirect_to_list(content_type.model_class(), data.get("query", ""))
 
 
 class EvenementOuvrirView(View):
