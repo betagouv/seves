@@ -61,7 +61,7 @@
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
         </div>
 
-        {% include "sa/_mass_actions_fin_suivi.html" %}
+        {% include "sa/_mass_actions_modal.html" %}
 
         <nav role="navigation" class="fr-translate fr-nav mass-actions fr-mt-4v" >
             <div class="fr-nav__item">
@@ -69,7 +69,10 @@
                 <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
                     <ul class="fr-menu__list">
                         <li>
-                            <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                            <button data-action="mass-actions#onMassAction:prevent" data-mass-actions-action-param="fin_suivi" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                        </li>
+                        <li>
+                            <button data-action="mass-actions#onMassAction:prevent" data-mass-actions-action-param="reprise_suivi" class="fr-translate__language fr-nav__link"><span class="ri-notification-2-fill fr-mr-2v" aria-hidden="true"></span>Reprendre le suivi</button>
                         </li>
                     </ul>
                 </div>

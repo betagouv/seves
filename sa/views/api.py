@@ -58,4 +58,11 @@ class GetMassActionStatus(View):
                     can_be_done += 1
             return JsonResponse({"can_be_done": can_be_done})
 
+        if action == "reprise_suivi":
+            can_be_done = 0
+            for evenement in queryset:
+                if evenement.is_published and FinSuiviContact.can_remove_fin_de_suivi(evenement, self.request.user):
+                    can_be_done += 1
+            return JsonResponse({"can_be_done": can_be_done})
+
         raise NotImplementedError
