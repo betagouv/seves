@@ -674,6 +674,19 @@ class EvenementAnimal(
             .order_by("name")
         )
 
+    @property
+    def maladie_str_with_typage(self):
+        name_without_precisions = self.maladie.name
+        if "(" in name_without_precisions:
+            name_without_precisions, _ = name_without_precisions.rsplit("(", 1)
+
+        if self.typage:
+            typage_value = ", ".join(  # noqa: FLY002
+                [self.typage.valeur_niveau_2, self.typage.valeur_niveau_3, self.typage_champ_libre]
+            )
+            return f"{name_without_precisions.strip()} ({typage_value})"
+        return name_without_precisions.strip()
+
     class Meta:
         constraints = [
             models.CheckConstraint(

@@ -115,7 +115,7 @@
                                         <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
                                     </td>
                                     <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                                    <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
+                                    <td>{{ evenement.maladie_str_with_typage|or_empty_value_tag:"table" }}</td>
                                     <td>
                                         <p class="fr-badge fr-badge--no-icon {{ evenement.statut_evenement|statut_color }} fr-m-0 fr-my-2v">{{ evenement.get_statut_evenement_display }}</p>
                                         <br/>{{ evenement.date_statut_changed|date:"d/m/Y"|or_empty_value_tag:"table" }}

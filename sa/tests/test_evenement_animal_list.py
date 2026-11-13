@@ -72,7 +72,9 @@ def test_reset_button_clears_form_and_search(live_server, page: Page):
 
 def test_evenement_animal_list_displays_events_and_links_to_details(live_server, page: Page):
     espece = EspeceFactory(name="Zèbre des montagnes (Equus zebra)")
-    evenement = EvenementAnimalFactory(espece=espece)
+    maladie = MaladieFactory(name="Fièvre charbonneuse - charbon (Bacillus anthracis)")
+    typage = TypageFactory(maladie=maladie, valeur_niveau_2="V1", valeur_niveau_3="V2")
+    evenement = EvenementAnimalFactory(espece=espece, maladie=maladie, typage=typage, typage_champ_libre="V3")
     EspeceConcerneeFactory(evenement=evenement, espece=espece)
 
     search_page = EvenementListPage(page, live_server.url)
@@ -81,7 +83,7 @@ def test_evenement_animal_list_displays_events_and_links_to_details(live_server,
     row = search_page.row(evenement.numero)
     expect(row).to_be_visible()
     expect(row).to_contain_text(evenement.date_creation.strftime("%d/%m/%Y"))
-    expect(row).to_contain_text(evenement.maladie.name)
+    expect(row).to_contain_text("Fièvre charbonneuse - charbon (V1, V2, V3)")
     expect(row).to_contain_text(evenement.get_statut_evenement_display())
     expect(row).to_contain_text(evenement.date_statut_changed.strftime("%d/%m/%Y"))
     expect(row).to_contain_text(evenement.departement.numero)
