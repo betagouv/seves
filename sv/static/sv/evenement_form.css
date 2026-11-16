@@ -1,6 +1,6 @@
 .evenement-form-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
 }
 .evenement-form-header h1 {

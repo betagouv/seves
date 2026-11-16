@@ -16,7 +16,10 @@
 
         <main class="main-container">
             <div class="evenement-produit-form-header">
-                <h1>{% if form.instance.pk %}Modification l'évènement produit {{ form.instance.numero }}{% else %}Créer un évènement produit{% endif %}</h1>
+                <div>
+                    <h1 class="fr-mb-1w">{% if form.instance.pk %}Modification l'évènement produit {{ form.instance.numero }}{% else %}Créer un évènement produit{% endif %}</h1>
+                    <p class="fr-hint-text">* Champs obligatoires</p>
+                </div>
                 <div class="action-buttons">
                     {% partialdef form_btns inline %}
                         {% if form.instance.pk %}
