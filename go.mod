@@ -3,7 +3,7 @@ module github.com/betagouv/seves
 go 1.26.8
 
 require (
-	github.com/caddyserver/caddy/v2 v2.11.6
+	github.com/caddyserver/caddy/v2 v2.11.9
 	github.com/corazawaf/coraza-caddy/v2 v2.6.2
 )
 
@@ -47,12 +47,13 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da // indirect
 	github.com/dlclark/regexp2/v2 v2.8.0 // indirect
 	github.com/dunglas/go-urlpattern v1.0.0 // indirect
+	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.4 // indirect
-	github.com/go-chi/chi/v5 v5.3.2 // indirect
+	github.com/go-chi/chi/v5 v5.4.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.5 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.10.1 // indirect
@@ -169,9 +170,9 @@ require (
 	go.uber.org/zap/exp v0.3.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260929172509-b39ff6d641ec // indirect
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20261030153154-30a33513ff6d // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
