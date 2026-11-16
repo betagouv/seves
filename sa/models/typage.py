@@ -2,6 +2,7 @@ from django.db import models
 
 TYPAGE_NIVEAU_2_VALUE_PREFIX = "typ-n-2-"
 TYPAGE_NIVEAU_3_VALUE_PREFIX = "typ-n-3-"
+NATURAL_SORT_COLLATION = "natural_sort"
 
 
 class Typage(models.Model):
@@ -11,8 +12,12 @@ class Typage(models.Model):
         related_name="typages",
         verbose_name="Maladie",
     )
-    valeur_niveau_2 = models.CharField(max_length=255, blank=True, verbose_name="Valeur (niveau 2)")
-    valeur_niveau_3 = models.CharField(max_length=255, blank=True, verbose_name="Valeur (niveau 3)")
+    valeur_niveau_2 = models.CharField(
+        max_length=255, blank=True, db_collation=NATURAL_SORT_COLLATION, verbose_name="Valeur (niveau 2)"
+    )
+    valeur_niveau_3 = models.CharField(
+        max_length=255, blank=True, db_collation=NATURAL_SORT_COLLATION, verbose_name="Valeur (niveau 3)"
+    )
 
     class Meta:
         verbose_name = "Typage"

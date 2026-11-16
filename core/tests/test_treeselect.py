@@ -11,7 +11,7 @@ import pytest
 
 from core.mixins import GroupedChoicesMixin
 from core.tests.pages import TreeselectPage
-from core.widgets import TreeselectCheckbox, TreeselectGroup, TreeselectRadio
+from core.widgets import TreeselectCheckbox, TreeselectGroup, TreeselectItem, TreeselectRadio
 
 
 class TestChoices(GroupedChoicesMixin, TextChoices):
@@ -363,3 +363,43 @@ def test_treeselect_requirement(navigate_to_form, page: Page):
     page.get_by_role("button", name="Post").click()
     page.wait_for_load_state("load")
     assert mock.call_count == 1
+
+
+def test_treeselect_button_label_does_not_inherit_categorised_label_from_previous_option(navigate_to_form, page: Page):
+    choices = (
+        TreeselectGroup(
+            label="Les plus fréquentes",
+            choices=(TreeselectItem(value="tub", label="Tuberculose (TUB)", categorised_label="Tuberculose (TUB)"),),
+            can_expand=False,
+            categorised_label=None,
+        ),
+        TreeselectGroup(
+            label="Autre",
+            choices=(
+                TreeselectGroup(
+                    value="bru",
+                    label="Brucellose (BRU)",
+                    categorised_label="Brucellose (BRU)",
+                    choices=(TreeselectItem(value="abortus", label="Brucella abortus", categorised_label=None),),
+                ),
+            ),
+            categorised_label=None,
+        ),
+    )
+
+    class Form(DsfrBaseForm):
+        maladie = forms.MultipleChoiceField(
+            required=False,
+            choices=(("tub", "Tuberculose"), ("bru", "Brucellose"), ("abortus", "Brucella abortus")),
+            widget=TreeselectCheckbox(choices=choices, auto_select_children=False),
+        )
+
+    navigate_to_form(Form())
+    treeselect = TreeselectPage(page, page.get_by_test_id("maladie"))
+
+    treeselect.check_option("Autre", "Brucellose (BRU)", "Brucella abortus")
+    assert treeselect.main_button.inner_text() == "Brucella abortus"
+
+    treeselect.uncheck_all()
+    treeselect.check_option("Autre", "Brucellose (BRU)")
+    assert treeselect.main_button.inner_text() == "Brucellose (BRU)"

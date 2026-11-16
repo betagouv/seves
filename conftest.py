@@ -20,8 +20,10 @@ import pytest
 from core.constants import AC_STRUCTURE, DEPARTEMENTS, MUS_STRUCTURE
 from core.factories import ContactStructureFactory, StructureFactory, UserFactory
 from core.models import Agent, Contact, Departement, Region, Structure
+from core.tests.fast_flush import install_fast_flush
 
 User = get_user_model()
+install_fast_flush()
 
 
 class E2ETestNetworkError(Exception):

@@ -1,0 +1,13 @@
+<div class="fr-notice fr-notice--info fr-hidden dismissible-notice-js" id="alim-satisfaction-notice"
+     data-storage-key="notice-dismissed:{{ notice.id }}:{{ request.user.pk }}">
+    <div class="fr-container">
+        <div class="fr-notice__body">
+            <p>
+                {{ notice.html | safe }}
+            </p>
+            {% if notice.can_be_closed %}
+                <button type="button" class="fr-btn--close fr-btn" title="Masquer le message">Masquer le message</button>
+            {% endif %}
+        </div>
+    </div>
+</div>

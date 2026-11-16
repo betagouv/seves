@@ -380,7 +380,9 @@ class Treeselect extends Controller {
     }
 
     close() {
-        dsfr(this.collapseTarget).collapse.conceal()
+        const collapse = dsfr(this.collapseTarget).collapse
+        if (!collapse.isDisclosed) return
+        collapse.conceal()
         this.buttonTarget.focus()
     }
 

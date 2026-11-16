@@ -111,7 +111,9 @@ def test_alert_displayed_when_analyse_detects_another_maladie(live_server, page:
         f"Une analyse a détecté {detected_maladie.name}, alors que cet événement a été créé pour une suspicion de "
         f"{evenement.maladie.name}."
     )
-    expect(alert).to_contain_text(f"Pour rappel : {detected_maladie.get_description_type_display()}")
+    expect(alert).to_contain_text(
+        f"Pour rappel : [{detected_maladie.name}] {detected_maladie.get_description_type_display()}"
+    )
     expect(alert.get_by_role("link", name="Créer un nouvel événement")).to_be_visible()
     expect(alert.locator(".fr-btn--close")).to_have_count(0)
 
@@ -165,7 +167,7 @@ def test_can_create_evenement_from_alert(
     )
     other_espece_concernee = EspeceConcerneeFactory(evenement=source, espece=EspeceFactory())
     espece_concernee = EspeceConcerneeFactory(evenement=source, espece=source.espece)
-    veterinaire = VeterinaireFactory(evenement=source)
+    veterinaire = VeterinaireFactory(evenement=source, especes_concernees=[other_espece_concernee])
     source_contact = ContactAgentFactory()
     source.contacts.add(source_contact)
 
@@ -196,7 +198,7 @@ def test_can_create_evenement_from_alert(
 
     copied_veterinaire = evenement_enfant.veterinaires.get()
     assert_models_are_equal(veterinaire, copied_veterinaire, to_exclude=to_exclude)
-    assert list(copied_veterinaire.especes.all()) == [source.espece]
+    assert list(copied_veterinaire.especes_concernees.all()) == [especes_concernees[1]]
 
     assert LienLibre.objects.for_both_objects(source, evenement_enfant) is not None
     assert source_contact not in evenement_enfant.contacts.all()

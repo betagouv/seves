@@ -1,9 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+import reversion
 
 from sa.models.evenement import Espece
 
 
+@reversion.register()
 class EspeceConcernee(models.Model):
     evenement = models.ForeignKey(
         "sa.EvenementAnimal", on_delete=models.CASCADE, verbose_name="Événement", related_name="especes_exposees"
@@ -27,6 +29,10 @@ class EspeceConcernee(models.Model):
         related_name="especes_concernees",
         verbose_name="Situation de l'unité",
     )
+
+    class Meta:
+        verbose_name = "Espèce concernée et exposée"
+        verbose_name_plural = "Espèces concernées et exposées"
 
     def __str__(self):
         return f"{self.espece} pour l'événement {self.evenement}"
@@ -54,7 +60,13 @@ class EspeceConcernee(models.Model):
 
     @property
     def str_with_identifiant(self):
-        return f"{self.espece.name} ({self.identifiant})" if self.identifiant else self.espece.name
+        name_without_precisions = self.espece.name
+        if "(" in self.espece.name:
+            name_without_precisions, _ = self.espece.name.rsplit("(", 1)
+
+        if self.identifiant:
+            return f"{name_without_precisions.strip()} ({self.identifiant})"
+        return name_without_precisions.strip()
 
     def clean(self):
         super().clean()

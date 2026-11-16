@@ -5,6 +5,8 @@
         class="especes-concernees-row"
         data-controller="especes-concernees-row situation-unite"
         data-situation-unite-form-prefix-value="{{ form.prefix }}"
+        data-espece-concernee-prefix="{{ form.prefix }}"
+        data-action="change->especes-concernees-row#notifyChanged{% if is_first %} detenteur-form:numeroIdentifiantChanged@window->especes-concernees-row#onNumeroIdentifiantDetenteurChanged{% endif %}"
     >
         {{ form.id }}
         {{ form.DELETE|set_data:"especes-concernees-row-target:deleteInput" }}
@@ -14,12 +16,13 @@
                 data-espece-autres-name-value="{{ form.espece.html_name }}"
                 data-espece-autres-source-value="especes-concernees-autres"
                 data-situation-unite-target="especeField"
+                data-especes-concernees-row-target="especeField"
                 data-action="click->espece-autres#loadAutres change->situation-unite#onEspeceChange"
             >
                 {% dsfr_form_field form.espece %}
             </div>
         </td>
-        <td>{% dsfr_form_field form.identifiant %}</td>
+        <td>{% dsfr_form_field form.identifiant|set_data:"especes-concernees-row-target:identifiantInput" %}</td>
         <td class="situation-unite-cell">
             <button
                 type="button"
@@ -183,16 +186,16 @@
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col" class="fr-col--lg">Espèce</th>
-                                <th scope="col">Identifiant</th>
-                                <th scope="col">Description du site de détention</th>
-                                <th scope="col">Présents</th>
-                                <th scope="col">Morts</th>
-                                <th scope="col">Cas</th>
-                                <th scope="col">Abattus</th>
-                                <th scope="col">Dépeuplés/euthanasiés</th>
-                                <th scope="col">Vaccinés</th>
-                                <th scope="col"><span class="fr-sr-only">Actions</span></th>
+                                <th scope="col" class="espece-col">Espèce</th>
+                                <th scope="col" class="identifiant-col">Identifiant</th>
+                                <th scope="col" class="situation-unite-col">Description du site de détention</th>
+                                <th scope="col" class="effectif-col">Présents</th>
+                                <th scope="col" class="effectif-col">Morts</th>
+                                <th scope="col" class="effectif-col">Cas</th>
+                                <th scope="col" class="effectif-col">Abattus</th>
+                                <th scope="col" class="effectif-col">Dépeuplés/<wbr>euthanasiés</th>
+                                <th scope="col" class="effectif-col">Vaccinés</th>
+                                <th scope="col" class="actions-col"><span class="fr-sr-only">Actions</span></th>
                             </tr>
                         </thead>
                         <tbody data-especes-concernees-formset-target="formsetContainer">

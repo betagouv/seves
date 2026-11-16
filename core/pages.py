@@ -265,6 +265,17 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
     def message_content(self):
         return self.page.locator("#rich-text-editor .ql-editor")
 
+    def paste_html_in_message_content(self, html):
+        self.message_content.click()
+        self.message_content.evaluate(
+            """(editor, html) => {
+                const clipboardData = new DataTransfer()
+                clipboardData.setData("text/html", html)
+                editor.dispatchEvent(new ClipboardEvent("paste", {clipboardData, bubbles: true, cancelable: true}))
+            }""",
+            html,
+        )
+
     def erase_message_content(self):
         self.message_content.click()
         expect(self.message_content).to_be_focused()
@@ -442,6 +453,69 @@ class WithActionsPage:
         self.page.get_by_role("button", name="Actions").click()
         self.action_dropdown.get_by_text("Supprimer l'événement", exact=True).click()
         self.page.get_by_test_id("submit-delete-modal").click()
+
+
+class WithMassActionsPage:
+    @property
+    def mass_actions_button(self):
+        return self.page.get_by_role("button", name="Actions groupées")
+
+    @property
+    def mass_actions_dropdown(self):
+        return self.page.locator("#action-1")
+
+    @property
+    def master_checkbox(self):
+        return self.page.locator("#master-checkbox")
+
+    @property
+    def row_checkboxes(self):
+        return self.page.locator('[data-mass-actions-target="checkbox"]')
+
+    def checkbox_for(self, obj):
+        return self.page.locator(f'input[type="checkbox"][name="{obj.pk}"]')
+
+    def select(self, *objects):
+        for obj in objects:
+            self.checkbox_for(obj).check(force=True)
+
+    def select_all(self):
+        self.master_checkbox.check(force=True)
+
+    def unselect_all(self):
+        self.master_checkbox.uncheck(force=True)
+
+    def open_mass_actions(self):
+        self.mass_actions_button.click()
+        expect(self.mass_actions_dropdown).to_be_visible()
+
+    @property
+    def fin_de_suivi_modal(self):
+        return self.page.locator("#modal-fin-suivi")
+
+    @property
+    def fin_de_suivi_modal_content(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="finSuiviModalContent"]')
+
+    @property
+    def fin_de_suivi_submit_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="submit"]')
+
+    @property
+    def fin_de_suivi_cancel_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="cancel"]')
+
+    @property
+    def fin_de_suivi_close_button(self):
+        return self.fin_de_suivi_modal.locator('[data-mass-actions-target="close"]')
+
+    def open_fin_de_suivi_modal(self):
+        self.open_mass_actions()
+        self.mass_actions_dropdown.get_by_role("button", name="Signaler la fin de suivi").click()
+        expect(self.fin_de_suivi_modal).to_be_visible()
+
+    def confirm_fin_de_suivi(self):
+        self.fin_de_suivi_submit_button.click()
 
 
 class WithSyntheseBlockMixin:

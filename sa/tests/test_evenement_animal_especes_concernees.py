@@ -1,6 +1,7 @@
 from playwright.sync_api import Page, expect
 
 from sa.models import Espece, EspeceConcernee, EvenementAnimal
+from sa.models.evenement import StatutAnimal
 from sa.referentiels import situation_unite
 from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory, SituationUniteRegleFactory
 from sa.tests.pages import EvenementAnimalDetailsPage, EvenementAnimalFormPage
@@ -231,3 +232,21 @@ def test_situation_unite_cancel_discards_changes(live_server, mocked_authentific
     creation_page.submit_as_draft()
     espece_concernee = EspeceConcernee.objects.get()
     assert espece_concernee.type_lieu == ""
+
+
+def test_numero_identifiant_detenteur_is_copied_to_first_espece_concernee_only(
+    live_server, mocked_authentification_user, page: Page
+):
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, StatutAnimal.DETENU)
+    creation_page.add_espece_concernee()
+
+    creation_page.numero_identifiant_etablissement.fill("FR123456")
+
+    first_identifiant = creation_page.get_espece_concernee_row(0).locator('[id$="-identifiant"]')
+    second_identifiant = creation_page.get_espece_concernee_row(1).locator('[id$="-identifiant"]')
+    expect(first_identifiant).to_have_value("FR123456")
+    expect(second_identifiant).to_have_value("")

@@ -119,6 +119,9 @@ export function removeRequired(element) {
     element.querySelectorAll("[required], [pattern]").forEach(field => {
         field.required = false
     })
+    element.querySelectorAll('[aria-required="true"]').forEach(field => {
+        field.ariaRequired = false
+    })
 }
 
 export function getSelectedLabel(element) {

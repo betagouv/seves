@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from docxtpl import DocxTemplate
 
@@ -27,7 +27,7 @@ from core.mixins import (
     WithFormsetInvalidMixin,
     WithFreeLinksListInContextMixin,
 )
-from sa.forms.evenement import EvenementAnimalForm
+from sa.forms.evenement import EvenementAnimalForm, MassActionForm
 from sa.formsets import AnalyseFormSet, EspeceConcerneeFormSet, VeterinaireFormSet
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal, TypeDetenteur
@@ -40,7 +40,12 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
     paginate_by = 100
 
     def get_media(self, **context_data) -> Media:
-        return context_data["filter"].form.media if "filter" in context_data else Media()
+        media = super().get_media(**context_data)
+        if "filter" in context_data:
+            media += context_data["filter"].form.media
+
+        media += context_data["mass_action_form"].media
+        return media
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,6 +57,8 @@ class EvenementListView(WithFilteredListMixin, MediaDefiningMixin, ListView):
             evenement.etat = etat_data["etat"]
             evenement.readable_etat = etat_data["readable_etat"]
 
+        context["mass_action_form"] = MassActionForm(queryset=context["page_obj"].object_list)
+        context["content_type"] = ContentType.objects.get_for_model(EvenementAnimal)
         return context
 
 
@@ -84,7 +91,7 @@ class EvenementAnimalBaseView(
         return VeterinaireFormSet(**self.get_veterinaire_formset_kwargs())
 
     def get_veterinaire_formset_kwargs(self):
-        kwargs = {"form_kwargs": {"espece_id": self.request.GET.get("espece")}}
+        kwargs = {"form_kwargs": {"especes_concernees_formset": self.especes_concernees_formset}}
         if self.object:
             kwargs["instance"] = self.object
         if self.request.POST:
@@ -106,9 +113,18 @@ class EvenementAnimalBaseView(
         return EspeceConcerneeFormSet(**self.get_especes_concernees_formset_kwargs())
 
     def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            return self.object
         if not self.kwargs.get(self.pk_url_kwarg):
             return None
-        return super().get_object(queryset)
+
+        if queryset is None:
+            queryset = self.get_queryset()
+        try:
+            self.object = queryset.select_related("maladie", "espece").get(pk=self.kwargs[self.pk_url_kwarg])
+            return self.object
+        except (ValueError, EvenementAnimal.DoesNotExist):
+            raise Http404("Évènement animal non trouvé")
 
     def get_media(self, **context_data) -> Media:
         return (
@@ -159,10 +175,11 @@ class EvenementAnimalBaseView(
         self.object = form.save()
         self.analyse_formset.instance = self.object
         self.analyse_formset.save()
-        self.veterinaire_formset.instance = self.object
-        self.veterinaire_formset.save()
+        # Especes concernees must be saved first, as they may be linked to veterinaires
         self.especes_concernees_formset.instance = self.object
         self.especes_concernees_formset.save()
+        self.veterinaire_formset.instance = self.object
+        self.veterinaire_formset.save()
         self.add_user_contacts(self.object)
         messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(self.object.get_absolute_url())
@@ -204,23 +221,37 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
             kwargs["initial"] = [model_to_dict(analyse, exclude=["id", "evenement"]) for analyse in analyses]
         return kwargs
 
+    @cached_property
+    def especes_concernees_source(self):
+        return sorted(
+            self.evenement_source.especes_exposees.all(),
+            key=lambda espece_concernee: espece_concernee.espece_id != self.evenement_source.espece_id,
+        )
+
     def get_veterinaire_formset_kwargs(self):
         kwargs = super().get_veterinaire_formset_kwargs()
         if self.should_copy_evenement_source:
+            prefixes_by_pk = {
+                espece_concernee.pk: self.especes_concernees_formset.add_prefix(index)
+                for index, espece_concernee in enumerate(self.especes_concernees_source)
+            }
             kwargs["initial"] = [
-                {**model_to_dict(veterinaire, exclude=["id", "evenement"]), "departement": veterinaire.departement}
-                for veterinaire in self.evenement_source.veterinaires.all()
+                {
+                    **model_to_dict(veterinaire, exclude=["id", "evenement", "especes_concernees"]),
+                    "departement": veterinaire.departement,
+                    "especes_concernees": [
+                        prefixes_by_pk[espece_concernee.pk]
+                        for espece_concernee in veterinaire.especes_concernees.all()
+                        if espece_concernee.pk in prefixes_by_pk
+                    ],
+                }
+                for veterinaire in self.evenement_source.veterinaires.prefetch_related("especes_concernees")
             ]
         return kwargs
 
     def get_especes_concernees_formset_kwargs(self):
         kwargs = super().get_especes_concernees_formset_kwargs()
         if self.should_copy_evenement_source:
-            # The first row is the one of the main espece, as its espece cannot be changed
-            especes_concernees = sorted(
-                self.evenement_source.especes_exposees.all(),
-                key=lambda espece_concernee: espece_concernee.espece_id != self.evenement_source.espece_id,
-            )
             kwargs["initial"] = [
                 {
                     **model_to_dict(espece_concernee, exclude=["id", "evenement", "situation_unite_regle"]),
@@ -229,7 +260,7 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
                     "type_production": espece_concernee.type_production,
                     "type_elevage": espece_concernee.type_elevage,
                 }
-                for espece_concernee in especes_concernees
+                for espece_concernee in self.especes_concernees_source
             ] or kwargs["initial"]
         return kwargs
 
@@ -265,6 +296,51 @@ class EvenementAnimalCreationView(EvenementAnimalBaseView, CreateView):
             if self.object.is_published
             else "L’évènement a été créé avec succès."
         )
+
+
+class EvenementAnimalUpdateView(UserPassesTestMixin, EvenementAnimalBaseView, UpdateView):
+    def test_func(self):
+        return self.get_object().can_be_modified(self.request.user)
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, "object") or self.object is None:
+            self.object = super().get_object(queryset)
+        return self.object
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # Displays the correct type of detenteur when editing the evenement
+        initial["type_detenteur"] = (
+            TypeDetenteur.PARTICULIER if self.object.nom_particulier else TypeDetenteur.ETABLISSEMENT
+        )
+        return initial
+
+    def get_analyse_formset_kwargs(self):
+        kwargs = super().get_analyse_formset_kwargs()
+        kwargs["form_kwargs"]["maladie_initial"] = self.object.maladie_id
+        return kwargs
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        kwargs["maladie"] = self.object.maladie_id
+        kwargs["espece"] = self.object.espece_id
+        kwargs["statut_animal"] = self.object.statut_animal
+        kwargs["structure"] = self.request.user.agent.structure
+        kwargs["latest_version"] = self.object.latest_version.pk if self.object.latest_version else 0
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["maladie"] = self.object.maladie
+        context["espece"] = self.object.espece
+        context["statut_animal"] = StatutAnimal(self.object.statut_animal)
+        return context
+
+    def get_success_message(self):
+        if self.request.POST.get("action") == "publish":
+            return "L’évènement a été publié avec succès."
+        return "L’évènement a bien été modifié."
 
 
 class EvenementAnimalDetailsView(
@@ -304,6 +380,8 @@ class EvenementAnimalDetailsView(
         context["content_type"] = ContentType.objects.get_for_model(self.object)
         context["latest_version"] = self.object.latest_version
         context["can_be_deleted"] = self.get_object().can_be_deleted(self.request.user)
+        context["can_be_modified"] = self.object.can_be_modified(self.request.user)
+        context["display_warning_modification"] = self.object.display_warning_modification(self.request.user)
         context["detected_maladie_alerts"] = self.get_detected_maladie_alerts()
         return context
 

@@ -25,12 +25,13 @@
 
                 <div class="fr-flex fr-flex--row fr-flex--space-between">
                     <div>
-                        <h1 class="fr-mt-2w {% if form.help_text %}fr-mb-0{% endif %}">
+                        <h1 class="fr-mt-2w fr-mb-1w">
                             {% with page_title=page_title|default:form.page_title %}
                                 {% if form.instance.status == form.instance.Status.BROUILLON %}[Brouillon]{% endif %}
                                 {{ message.title|default:page_title }}
                             {% endwith %}
                         </h1>
+                        <p class="fr-hint-text">* Champs obligatoires</p>
                         {% if form.help_text %}
                             <div class="fr-my-4v">
                                 {% dsfr_notice title=form.help_text %}

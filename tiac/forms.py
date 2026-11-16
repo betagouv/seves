@@ -15,7 +15,7 @@ from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_mo
 from core.forms import BaseCompteRenduDemandeInterventionForm, BaseEtablissementForm
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, Structure
-from core.widgets import TreeselectCheckbox, TreeselectRadio
+from core.widgets import NumericTextInput, TreeselectCheckbox, TreeselectRadio
 from ssa.constants import CategorieDanger, CategorieProduit
 from ssa.models import EvenementProduit
 from tiac.constants import (
@@ -64,7 +64,9 @@ class EvenementSimpleForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         label="Signalement déclaré par",
         required=False,
     )
-    nb_sick_persons = forms.IntegerField(required=False, label="Nombre de malades total")
+    nb_sick_persons = forms.IntegerField(
+        required=False, min_value=0, widget=NumericTextInput, label="Nombre de malades total"
+    )
     follow_up = SEVESChoiceField(choices=EvenementFollowUp.choices, label="Suite donnée", required=True)
     modalites_declaration = forms.ChoiceField(
         required=False,
@@ -277,9 +279,13 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         choices=InvestigationFollowUp.choices, widget=forms.RadioSelect, label="Suite donnée", required=True
     )
 
-    nb_sick_persons = forms.IntegerField(required=True, label="Nombre de malades total")
-    nb_sick_persons_to_hospital = forms.IntegerField(required=False, label="Dont conduits à l'hôpital")
-    nb_dead_persons = forms.IntegerField(required=False, label="Dont décédés")
+    nb_sick_persons = forms.IntegerField(
+        required=True, min_value=0, widget=NumericTextInput, label="Nombre de malades total"
+    )
+    nb_sick_persons_to_hospital = forms.IntegerField(
+        required=False, min_value=0, widget=NumericTextInput, label="Dont conduits à l'hôpital"
+    )
+    nb_dead_persons = forms.IntegerField(required=False, min_value=0, widget=NumericTextInput, label="Dont décédés")
     datetime_first_symptoms = forms.DateTimeField(
         required=False,
         label="Première date et heure d'apparition des symptômes",
@@ -385,6 +391,20 @@ class InvestigationTiacForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionL
         today = timezone.localtime(timezone.now()).date().isoformat()
         self.fields["date_reception"].initial = today
         self.fields["date_reception"].widget.attrs["max"] = today
+
+    def clean(self):
+        super().clean()
+        nb_sick_persons = self.cleaned_data.get("nb_sick_persons")
+        if nb_sick_persons is None:
+            return
+
+        for field, label in (
+            ("nb_sick_persons_to_hospital", "conduits à l'hôpital"),
+            ("nb_dead_persons", "décédés"),
+        ):
+            value = self.cleaned_data.get(field)
+            if value is not None and value > nb_sick_persons:
+                self.add_error(field, f"Le nombre de malades {label} ne peut pas dépasser le nombre total de malades.")
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":

@@ -1,14 +1,16 @@
 import {normalize} from "Utils"
 
-const ROW_HEIGHT = 44
+const MIN_ROW_HEIGHT = 44
 const OVERSCAN = 6
 const VIEWPORT_MAX_HEIGHT = 320
-const PAGE_SIZE = Math.max(1, Math.floor(VIEWPORT_MAX_HEIGHT / ROW_HEIGHT))
+const PAGE_SIZE = Math.max(1, Math.floor(VIEWPORT_MAX_HEIGHT / MIN_ROW_HEIGHT))
 
 /**
  * Renders a large flat list of {id, name} radio/checkbox options as a fixed-size pool of
  * recycled DOM rows instead of one element per item, so mounting and filtering stay cheap
  * regardless of how many items there are.
+ * Long labels wrap on several lines: each rendered row is measured and its height is
+ * remembered, so the rows are positioned according to their actual height.
  */
 export class VirtualOptionList {
     #container
@@ -28,6 +30,8 @@ export class VirtualOptionList {
     #pinned = new Map() // value -> {input, label}
     #currentStart = 0 // index of the first item currently rendered in the #pool
     #focusedIndex = null // logical focused item index (independent of DOM recycling)
+    #heights = new Map() // value -> measured row height, kept across searches
+    #offsets = [0] // #offsets[i] is the top of #items[i], #offsets[#items.length] the height of the whole list
 
     /**
      * @param {Object} options
@@ -80,7 +84,7 @@ export class VirtualOptionList {
     #show(items) {
         this.#items = items
         this.#focusedIndex = null
-        this.#spacer.style.height = `${items.length * ROW_HEIGHT}px`
+        this.#computeOffsets()
         this.#viewport.scrollTop = 0
         this.#render()
         this.#status.textContent = `${items.length} espèce${items.length > 1 ? "s" : ""}`
@@ -96,7 +100,7 @@ export class VirtualOptionList {
 
         this.#viewport = document.createElement("div")
         this.#viewport.dataset.testid = "virtual-viewport"
-        this.#viewport.style.cssText = `max-height:${VIEWPORT_MAX_HEIGHT}px;overflow-y:auto;position:relative`
+        this.#viewport.style.cssText = `max-height:${VIEWPORT_MAX_HEIGHT}px;overflow-y:auto;position:relative;overflow-anchor:none;scrollbar-gutter:stable`
 
         this.#spacer = document.createElement("div")
         this.#spacer.style.position = "relative"
@@ -112,11 +116,15 @@ export class VirtualOptionList {
         this.#pinnedContainer.hidden = true
         this.#container.appendChild(this.#pinnedContainer)
 
+        // Measure rows height when their width change
+        const resizeObserver = new ResizeObserver(() => this.#measure())
+
         const poolSize = PAGE_SIZE + OVERSCAN * 2
         for (let i = 0; i < poolSize; i++) {
             const row = document.createElement("div")
             row.className = "fr-treeselect__element"
-            row.style.cssText = `height:${ROW_HEIGHT}px;box-sizing:border-box;align-items:center;display:none`
+            row.style.cssText = `min-height:${MIN_ROW_HEIGHT}px;padding:0.625rem 0;box-sizing:border-box;align-items:center;display:none`
+            resizeObserver.observe(row)
 
             const group = document.createElement("div")
             group.className = this.#inputType === "checkbox" ? "fr-checkbox-group" : "fr-radio-group"
@@ -182,6 +190,7 @@ export class VirtualOptionList {
         const clamped = Math.max(0, Math.min(this.#items.length - 1, index))
         this.#scrollIndexIntoView(clamped)
         this.#render()
+        if (this.#scrollIndexIntoView(clamped)) this.#render()
 
         const slot = this.#pool[clamped - this.#currentStart]
         if (!slot) return
@@ -196,9 +205,10 @@ export class VirtualOptionList {
         }
     }
 
+    /** @returns {boolean} whether the viewport was scrolled */
     #scrollIndexIntoView(index) {
-        const rowTop = index * ROW_HEIGHT
-        const rowBottom = rowTop + ROW_HEIGHT
+        const rowTop = this.#offsets[index]
+        const rowBottom = this.#offsets[index + 1]
         const viewTop = this.#viewport.scrollTop
         const viewBottom = viewTop + this.#viewport.clientHeight
         if (rowTop < viewTop) {
@@ -206,14 +216,61 @@ export class VirtualOptionList {
         } else if (rowBottom > viewBottom) {
             this.#viewport.scrollTop = rowBottom - this.#viewport.clientHeight
         }
+        return this.#viewport.scrollTop !== viewTop
+    }
+
+    #computeOffsets() {
+        const offsets = new Array(this.#items.length + 1)
+        offsets[0] = 0
+        this.#items.forEach((item, i) => {
+            offsets[i + 1] = offsets[i] + (this.#heights.get(String(item.id)) ?? MIN_ROW_HEIGHT)
+        })
+        this.#offsets = offsets
+        this.#spacer.style.height = `${offsets[this.#items.length]}px`
+    }
+
+    #indexAt(y) {
+        let low = 0
+        let high = Math.max(0, this.#items.length - 1)
+        while (low < high) {
+            const mid = Math.ceil((low + high) / 2)
+            if (this.#offsets[mid] <= y) low = mid
+            else high = mid - 1
+        }
+        return low
+    }
+
+    /**
+     * Records the actual height of the rendered rows. Rows are laid out one after the other, so they never overlap.
+     * The offsets of the next items, the size of the scrollbar and the scroll position are updated here.
+     */
+    #measure() {
+        const scrollTop = this.#viewport.scrollTop
+        const topIndex = this.#indexAt(scrollTop)
+        let changed = false
+        let shiftAboveTop = 0
+        this.#pool.forEach(({row}, i) => {
+            const index = this.#currentStart + i
+            const item = this.#items[index]
+            const height = row.offsetHeight
+            if (!item || height === 0) return
+            const value = String(item.id)
+            const previous = this.#heights.get(value) ?? MIN_ROW_HEIGHT
+            if (height === previous) return
+            this.#heights.set(value, height)
+            changed = true
+            if (index < topIndex) shiftAboveTop += height - previous
+        })
+        if (!changed) return
+        this.#computeOffsets()
+        if (shiftAboveTop !== 0) this.#viewport.scrollTop = scrollTop + shiftAboveTop
     }
 
     #render() {
-        const scrollTop = this.#viewport.scrollTop
         const maxStart = Math.max(0, this.#items.length - this.#pool.length)
-        const start = Math.min(maxStart, Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN))
+        const start = Math.min(maxStart, Math.max(0, this.#indexAt(this.#viewport.scrollTop) - OVERSCAN))
         this.#currentStart = start
-        this.#rows.style.transform = `translateY(${start * ROW_HEIGHT}px)`
+        this.#rows.style.transform = `translateY(${this.#offsets[start]}px)`
 
         const mounted = new Set()
         this.#pool.forEach(({row, input, label}, i) => {
@@ -238,6 +295,7 @@ export class VirtualOptionList {
             label.textContent = item.name
         })
         this.#syncPinned(mounted)
+        this.#measure()
     }
 
     #syncPinned(mounted) {

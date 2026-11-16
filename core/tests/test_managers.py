@@ -1,12 +1,20 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 import pytest
 
-from core.factories import ContactAgentFactory, ContactStructureFactory, DocumentFactory, StructureFactory, UserFactory
-from core.models import Contact, Document
+from core.constants import UNREAD_MESSAGES_TRACKING_START_DATE
+from core.factories import (
+    ContactAgentFactory,
+    ContactStructureFactory,
+    DocumentFactory,
+    MessageFactory,
+    StructureFactory,
+    UserFactory,
+)
+from core.models import Contact, Document, Message, MessageRead
 from sv.factories import EvenementFactory
 
 User = get_user_model()
@@ -85,3 +93,23 @@ def test_order_by_structure_and_name():
         contact_ddpp1,
         contact_mus,
     ]
+
+
+@pytest.mark.django_db
+def test_message_with_is_unread():
+    evenement = EvenementFactory()
+    agent = ContactAgentFactory().agent
+    other_agent = ContactAgentFactory().agent
+
+    unread = MessageFactory(content_object=evenement)
+    read = MessageFactory(content_object=evenement)
+    MessageRead.objects.create(message=read, agent=agent)
+    read_by_other_agent = MessageFactory(content_object=evenement)
+    MessageRead.objects.create(message=read_by_other_agent, agent=other_agent)
+    MessageFactory(content_object=evenement, sender=agent.contact_set.get())
+    MessageFactory(content_object=evenement, status=Message.Status.BROUILLON)
+    MessageFactory(content_object=evenement, date_publication=UNREAD_MESSAGES_TRACKING_START_DATE - timedelta(days=1))
+    without_sender = MessageFactory(content_object=evenement, sender=None, sender_structure=StructureFactory())
+
+    unread_messages = Message.objects.with_is_unread(agent).filter(is_unread=True)
+    assert set(unread_messages) == {unread, read_by_other_agent, without_sender}

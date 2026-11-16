@@ -37,11 +37,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (localStorage.getItem(storageKey)) return notice.remove()
         } catch {}
         notice.classList.remove("fr-hidden")
-        notice.querySelector(".fr-btn--close").addEventListener("click", () => {
+        notice.querySelector(".fr-btn--close")?.addEventListener("click", () => {
             try {
                 localStorage.setItem(storageKey, new Date().toISOString())
             } catch {}
             notice.remove()
         })
     })
+})
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.message-unread a[target="_blank"]').forEach(link =>
+        link.addEventListener("click", event => {
+            event.currentTarget.closest(".message-unread").classList.remove("message-unread")
+        }),
+    )
 })

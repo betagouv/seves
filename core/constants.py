@@ -1,4 +1,5 @@
 import contextlib
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.db import models
@@ -18,6 +19,7 @@ SSA_DOMAIN = "Alim (Produit & cas + TIAC & plaintes)"
 SA_DOMAIN = "Santé animale"
 SSA_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
 TIAC_STRUCTURES = [MUS_STRUCTURE, "BEAD", "BETD", "BPMED", "BAMRA", "BEPIAS", "BIB", "SIVEP", "BICMA", "BPRSE", "BSA"]
+UNREAD_MESSAGES_TRACKING_START_DATE = datetime(2026, 10, 22, tzinfo=UTC)
 
 REGIONS = [
     "Auvergne-Rhône-Alpes",

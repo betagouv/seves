@@ -272,6 +272,7 @@ def test_cant_access_add_fiche_zone_delimitee_form_of_evenement_i_cant_see(clien
 def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
     evenement = EvenementFactory(createur=StructureFactory())
     assert client.get(evenement.get_absolute_url()).status_code == 403
+    assert FicheZoneDelimitee.objects.count() == 0
 
     payload = {
         "evenement": evenement.pk,
@@ -297,6 +298,43 @@ def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see(client):
     evenement.refresh_from_db()
     assert evenement.fiche_zone_delimitee is None
     assert response.status_code == 403
+    assert FicheZoneDelimitee.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_forge_add_fiche_zone_delimitee_of_evenement_i_cant_see_with_get_param(client):
+    evenement_i_cant_see = EvenementFactory(createur=StructureFactory())
+    evenement_i_can_see = EvenementFactory()
+    assert client.get(evenement_i_cant_see.get_absolute_url()).status_code == 403
+    assert FicheZoneDelimitee.objects.count() == 0
+
+    payload = {
+        "evenement": evenement_i_cant_see.pk,
+        "latest_version": "0",
+        "commentaire": "",
+        "zones_infestees-TOTAL_FORMS": "1",
+        "zones_infestees-INITIAL_FORMS": "0",
+        "zones_infestees-MIN_NUM_FORMS": "0",
+        "zones_infestees-MAX_NUM_FORMS": "1000",
+        "zones_infestees-0-nom": "",
+        "zones_infestees-0-caracteristique_principale": "",
+        "zones_infestees-0-rayon": "",
+        "zones_infestees-0-unite_rayon": "km",
+        "zones_infestees-0-surface_infestee_totale": "",
+        "zones_infestees-0-unite_surface_infestee_totale": "m2",
+        "rayon_zone_tampon": "",
+        "unite_rayon_zone_tampon": "km",
+        "surface_tampon_totale": "",
+        "unite_surface_tampon_totale": "m2",
+    }
+    response = client.post(
+        reverse("sv:fiche-zone-delimitee-creation") + f"?evenement={evenement_i_can_see.pk}", data=payload
+    )
+
+    evenement_i_cant_see.refresh_from_db()
+    assert evenement_i_cant_see.fiche_zone_delimitee is None
+    assert response.status_code == 403
+    assert FicheZoneDelimitee.objects.count() == 0
 
 
 def test_cant_see_add_fiche_zone_delimitee_btn_if_evenement_is_cloture(live_server, page: Page):

@@ -74,9 +74,7 @@ def test_can_create_investigation_tiac_with_required_fields_only(live_server, mo
     expect(creation_page.page.get_by_text("L’évènement a été créé avec succès.")).to_be_visible()
 
 
-def test_can_create_investigation_tiac_with_required_fields_only_and_publish(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_can_create_investigation_tiac_with_required_fields_only_and_publish(live_server, page: Page):
     input_data = InvestigationTiacFactory.build()
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -106,9 +104,7 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
     assert user_contact_structure in object.contacts.all()
 
 
-def test_can_create_investigation_tiac_with_all_fields(
-    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
-):
+def test_can_create_investigation_tiac_with_all_fields(live_server, page: Page, assert_models_are_equal):
     input_data: InvestigationTiac = InvestigationTiacFactory.build(
         danger_syndromiques_suspectes=[], analyses_sur_les_malades=Analyses.OUI
     )
@@ -149,7 +145,7 @@ def test_can_create_investigation_tiac_with_all_fields(
     )
 
 
-def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentification_user, page: Page):
+def test_can_create_investigation_tiac_etiologie(live_server, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -163,7 +159,7 @@ def test_can_create_investigation_tiac_etiologie(live_server, mocked_authentific
     assert investigation.danger_syndromiques_suspectes == ["toxine des poissons"]
 
 
-def test_can_create_investigation_tiac_ars(live_server, mocked_authentification_user, page: Page):
+def test_can_create_investigation_tiac_ars(live_server, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -181,9 +177,7 @@ def test_can_create_investigation_tiac_ars(live_server, mocked_authentification_
     assert investigation.analyses_sur_les_malades == "oui"
 
 
-def test_can_add_and_delete_danger_in_investigation_tiac_etiologie(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_can_add_and_delete_danger_in_investigation_tiac_etiologie(live_server, page: Page):
     input_data: InvestigationTiac = InvestigationTiacFactory.build()
 
     creation_page = InvestigationTiacFormPage(page, live_server.url)
@@ -309,9 +303,7 @@ def test_can_create_investigation_tiac_with_repas_for_collectivite(
     )
 
 
-def test_can_create_investigation_tiac_with_aliment_with_denomination_only(
-    live_server, mocked_authentification_user, page: Page
-):
+def test_can_create_investigation_tiac_with_aliment_with_denomination_only(live_server, page: Page):
     input_data: AlimentSuspect = AlimentSuspectFactory.build(simple=True)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -329,9 +321,7 @@ def test_can_create_investigation_tiac_with_aliment_with_denomination_only(
     assert investigation.aliments.count() == 1
 
 
-def test_can_create_investigation_tiac_with_aliment_simple(
-    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
-):
+def test_can_create_investigation_tiac_with_aliment_simple(live_server, page: Page, assert_models_are_equal):
     input_data: AlimentSuspect = AlimentSuspectFactory.build(simple=True)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -352,9 +342,7 @@ def test_can_create_investigation_tiac_with_aliment_simple(
     )
 
 
-def test_can_create_investigation_tiac_with_aliment_cuisine(
-    live_server, mocked_authentification_user, page: Page, assert_models_are_equal
-):
+def test_can_create_investigation_tiac_with_aliment_cuisine(live_server, page: Page, assert_models_are_equal):
     input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -391,7 +379,7 @@ def test_can_create_investigation_tiac_with_aliment_and_edit(live_server, mocked
     assert investigation.aliments.get().denomination == "Ma nouvelle dénomination"
 
 
-def test_can_add_and_cancel_aliment(live_server, page: Page, assert_models_are_equal):
+def test_can_add_and_cancel_aliment(live_server, page: Page):
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
     input_data: AlimentSuspect = AlimentSuspectFactory.build(cuisine=True)
 
@@ -493,7 +481,7 @@ def test_can_add_analyses_alimentaires(live_server, page: Page, assert_models_ar
     )
 
 
-def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page, assert_models_are_equal):
+def test_can_add_and_cancel_analyses_alimentaires(live_server, page: Page):
     investigation: InvestigationTiac = InvestigationTiacFactory.build()
     analyse: AnalyseAlimentaire = AnalyseAlimentaireFactory.build()
 
@@ -610,7 +598,7 @@ def test_can_create_etablissement_with_sirene_autocomplete(
     assert etablissement.departement == Departement.objects.get(nom="Paris")
 
 
-def test_ars_notified_is_checked_when_origin_is_ars(live_server, mocked_authentification_user, page: Page):
+def test_ars_notified_is_checked_when_origin_is_ars(live_server, page: Page):
     input_data = InvestigationTiacFactory.build()
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
@@ -644,7 +632,40 @@ def test_ac_can_fill_rasff_number(live_server, mocked_authentification_user, pag
     assert evenement.numero_rasff == "2024.2222"
 
 
-def test_non_ac_cant_fill_rasff_number(live_server, mocked_authentification_user, page: Page):
+def test_non_ac_cant_fill_rasff_number(live_server, page: Page):
     creation_page = InvestigationTiacFormPage(page, live_server.url)
     creation_page.navigate()
     expect(creation_page.numero_rasff).not_to_be_visible()
+
+
+def test_investigation_tiac_cant_have_more_hospitalized_or_dead_than_sick_persons(live_server, page: Page):
+    input_data = InvestigationTiacFactory.build(nb_sick_persons=3)
+    creation_page = InvestigationTiacFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.fill_required_fields(input_data)
+    creation_page.nb_sick_persons_to_hospital.fill("4")
+    creation_page.nb_dead_persons.fill("5")
+    creation_page.page.get_by_test_id("bottom-action-btns").get_by_role(
+        "button", name="Enregistrer le brouillon", exact=True
+    ).click()
+
+    expect(
+        creation_page.page.get_by_text(
+            "Le nombre de malades conduits à l'hôpital ne peut pas dépasser le nombre total de malades."
+        ).first
+    ).to_be_visible()
+    expect(
+        creation_page.page.get_by_text(
+            "Le nombre de malades décédés ne peut pas dépasser le nombre total de malades."
+        ).first
+    ).to_be_visible()
+    assert InvestigationTiac.objects.count() == 0
+
+    creation_page.nb_sick_persons_to_hospital.fill("3")
+    creation_page.nb_dead_persons.fill("3")
+    creation_page.submit_as_draft()
+
+    investigation = InvestigationTiac.objects.get()
+    assert investigation.nb_sick_persons == 3
+    assert investigation.nb_sick_persons_to_hospital == 3
+    assert investigation.nb_dead_persons == 3

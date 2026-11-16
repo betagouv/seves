@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
+    BooleanField,
     Case,
     DateTimeField,
     Exists,
@@ -26,6 +27,7 @@ from core.constants import (
     SEVES_STRUCTURE,
     SSA_STRUCTURES,
     TIAC_STRUCTURES,
+    UNREAD_MESSAGES_TRACKING_START_DATE,
 )
 
 if typing.TYPE_CHECKING:
@@ -258,6 +260,22 @@ class MessageQueryset(QuerySet):
                 output_field=DateTimeField(),
             )
         ).order_by("status", "-displayed_date_orm")
+
+    def with_is_unread(self, agent: "Agent"):
+        from core.models import Message, MessageRead
+
+        return self.annotate(
+            is_unread=Case(
+                When(
+                    Q(status=Message.Status.FINALISE, date_publication__gte=UNREAD_MESSAGES_TRACKING_START_DATE)
+                    & ~Q(sender__agent=agent)
+                    & ~Exists(MessageRead.objects.filter(message=OuterRef("pk"), agent=agent)),
+                    then=Value(True),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        )
 
     def optimized_for_list(self):
         return self.select_related("sender__agent__structure", "sender_structure").prefetch_related(

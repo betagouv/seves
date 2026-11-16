@@ -154,7 +154,9 @@ class WithMessageMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         message_list = self.get_object().messages.for_user(self.request.user)
-        message_list = message_list.optimized_for_list().order_by_status_and_date()
+        message_list = (
+            message_list.optimized_for_list().with_is_unread(self.request.user.agent).order_by_status_and_date()
+        )
         message_filter = MessageFilter(self.request.GET, queryset=message_list)
         contact_agent = None
         if message_filter.qs:

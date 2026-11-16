@@ -1,4 +1,5 @@
 from django.db import models
+import reversion
 
 
 class ResultatAnalyse(models.TextChoices):
@@ -9,6 +10,7 @@ class ResultatAnalyse(models.TextChoices):
     NON_INTERPRETABLE = "non_interpretable", "Non interprétable"
 
 
+@reversion.register()
 class Analyse(models.Model):
     evenement = models.ForeignKey(
         "sa.EvenementAnimal", on_delete=models.CASCADE, verbose_name="Événement", related_name="analyses"
@@ -38,7 +40,12 @@ class Analyse(models.Model):
                 condition=models.Q(methode__isnull=False) | models.Q(resultat=ResultatAnalyse.EN_ATTENTE),
                 name="analyse_methode_required_unless_en_attente",
                 violation_error_message="La méthode est obligatoire lorsque le résultat n'est pas « En attente ».",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(date_resultat__isnull=False) | models.Q(resultat=ResultatAnalyse.EN_ATTENTE),
+                name="date_resultat_required_unless_en_attente",
+                violation_error_message="La date du résultat est obligatoire lorsque le résultat n'est pas « En attente ».",
+            ),
         ]
 
     def __str__(self):

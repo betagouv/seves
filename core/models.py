@@ -630,6 +630,15 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         return timezone.localtime(displayed_date)
 
 
+class MessageRead(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="reads")
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="message_reads")
+    date_read = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["message", "agent"], name="unique_message_read_agent")]
+
+
 @reversion.register()
 class LienLibre(models.Model):
     content_type_1 = models.ForeignKey(ContentType, on_delete=models.PROTECT, related_name="relation_1")

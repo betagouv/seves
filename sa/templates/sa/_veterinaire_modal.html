@@ -43,7 +43,7 @@
                                 <div class="fr-col-3">{{ veterinaire.courriel|or_empty_value_tag }}</div>
                                 <div class="fr-col-3 bold">Espèces</div>
                                 <div class="fr-col-3">
-                                    {% for espece in veterinaire.especes.all %}{{ espece.name }}{% if not forloop.last %}, {% endif %}{% empty %}{{ ""|or_empty_value_tag }}{% endfor %}
+                                    {{ veterinaire.displayed_especes|or_empty_value_tag }}
                                 </div>
                             </div>
                         </div>

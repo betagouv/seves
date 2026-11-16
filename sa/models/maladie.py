@@ -37,6 +37,10 @@ class DescriptionType(models.TextChoices):
         "autre",
         "Sélectionnez cette valeur si vous souhaitez échanger au sujet d’un événement lié à une maladie exotique, notamment zoonotique, qui ne figure pas dans la liste proposée.",
     )
+    SAISIE_FACULTATIVE = (
+        "saisie_facultative",
+        "La saisie de cette maladie dans Sèves n'est pas obligatoire. Elle reste possible si votre DDPP souhaite assurer son suivi dans l'outil.",
+    )
 
 
 class Maladie(models.Model):
@@ -58,6 +62,12 @@ class Maladie(models.Model):
         blank=True,
         related_name="maladies_concernees",
         verbose_name="Espèces concernées",
+    )
+    laboratoires_frequents = models.ManyToManyField(
+        "sa.Laboratoire",
+        blank=True,
+        related_name="maladies_frequentes",
+        verbose_name="Laboratoires les plus fréquents",
     )
 
     intitule_typage_niveau_2 = models.CharField(max_length=255, blank=True, verbose_name="Intitulé (niveau 2)")
@@ -163,3 +173,15 @@ class Maladie(models.Model):
     @classproperty
     def all_treeselect_choices(cls):
         return lazy(cls._build_all_treeselect_choices, tuple)()
+
+    @property
+    def show_mesures_first_row(self):
+        return self.needs_arrete
+
+    @property
+    def show_mesures_second_row(self):
+        return self.needs_dates_desinfection
+
+    @property
+    def show_mesures_third_row(self):
+        return self.needs_date_nd

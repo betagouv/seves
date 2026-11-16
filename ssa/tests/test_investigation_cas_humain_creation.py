@@ -9,6 +9,7 @@ from playwright.sync_api import Page, expect
 from core.constants import AC_STRUCTURE
 from core.mixins import WithEtatMixin
 from core.models import Contact, Departement, LienLibre
+from ssa.constants import CategorieDanger, SourceInvestigationCasHumain
 from ssa.factories import EtablissementFactory, InvestigationCasHumainFactory
 from ssa.models import Etablissement, EvenementInvestigationCasHumain
 from ssa.tests.pages import InvestigationCasHumainFormPage
@@ -521,3 +522,44 @@ def test_add_contacts_on_creation(live_server, mocked_authentification_user, pag
 
     user_contact_structure = Contact.objects.get(structure=mocked_authentification_user.agent.structure)
     assert user_contact_structure in evenement.contacts.all()
+
+
+def test_source_do_listeriose_preselects_listeria_monocytogenes(live_server, page: Page):
+    input_data = InvestigationCasHumainFactory.build()
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.description.fill(input_data.description)
+    creation_page.source.focus()
+    creation_page.source.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    expect(creation_page.source).to_be_focused()
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    assert evenement.categorie_danger == CategorieDanger.LISTERIA_MONOCYTOGENES
+
+
+def test_changing_source_unselects_preselected_listeria_monocytogenes(live_server, page: Page):
+    input_data = InvestigationCasHumainFactory.build()
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.description.fill(input_data.description)
+    creation_page.source.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    creation_page.source.select_option(SourceInvestigationCasHumain.CAS_GROUPES)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    assert evenement.categorie_danger == ""
+
+
+def test_changing_source_keeps_danger_picked_by_user_after_listeria_preselection(live_server, page: Page):
+    input_data = InvestigationCasHumainFactory.build(categorie_danger=CategorieDanger.SALMONELLA_ENTERITIDIS)
+    creation_page = InvestigationCasHumainFormPage(page, live_server.url)
+    creation_page.navigate()
+    creation_page.description.fill(input_data.description)
+    creation_page.source.select_option(SourceInvestigationCasHumain.DO_LISTERIOSE)
+    creation_page.set_categorie_danger(input_data)
+    creation_page.source.select_option(SourceInvestigationCasHumain.CAS_GROUPES)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementInvestigationCasHumain.objects.get()
+    assert evenement.categorie_danger == CategorieDanger.SALMONELLA_ENTERITIDIS

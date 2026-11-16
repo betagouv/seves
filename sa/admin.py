@@ -40,7 +40,7 @@ class MaladieAdmin(admin.ModelAdmin):
         "needs_date_nd",
         "needs_dates_desinfection",
     )
-    filter_horizontal = ("especes_concernees",)
+    filter_horizontal = ("especes_concernees", "laboratoires_frequents")
 
 
 @admin.register(Laboratoire)

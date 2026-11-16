@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 from typing import Literal
 import zipfile
 
@@ -616,6 +617,30 @@ def generic_test_can_add_and_see_note_in_new_tab_without_document(live_server, p
     expect(new_page.get_by_text("Aucun document ajouté", exact=True)).to_be_visible()
 
 
+def generic_test_can_add_and_see_note_with_content_pasted_from_email(live_server, page: Page, object):
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    message_page = CreateMessagePage(page, container_id="#message-form")
+    message_page.new_note()
+    expect(message_page.page.get_by_text("Nouvelle note")).to_be_visible()
+
+    message_page.message_title.fill("Title of the message")
+    message_page.paste_html_in_message_content(
+        "<table><tr><td>"
+        '<p><span style="color: rgba(0, 0, 0, 0.87)">Bonjour,</span></p>'
+        '<p>Contactez <a href="mailto:test@example.com">test@example.com</a></p>'
+        "</td></tr></table>"
+        "<blockquote>Message d'origine</blockquote>"
+    )
+    message_page.submit_message()
+
+    page.wait_for_url(f"**{object.get_absolute_url()}#tabpanel-messages-panel")
+    assert object.messages.get().content == "<p>Bonjour,</p><p>Contactez test@example.com</p><p>Message d'origine</p>"
+
+    new_page = message_page.open_message()
+    expect(new_page.get_by_text("Contactez test@example.com")).to_be_visible()
+    expect(new_page.get_by_text("Message d'origine")).to_be_visible()
+
+
 def generic_test_can_add_and_see_note_in_new_tab_with_specific_date(live_server, page: Page, object):
     page.goto(f"{live_server.url}{object.get_absolute_url()}")
     message_page = CreateMessagePage(page, container_id="#message-form")
@@ -1064,6 +1089,29 @@ def generic_test_message_ordering(live_server, page: Page, mocked_authentificati
     assert message_page.message_title_in_table(6) == finalise_recent.title
     assert message_page.message_title_in_table(7) == note_with_specific_picked_date.title
     assert message_page.message_title_in_table(8) == finalise_oldest.title
+
+
+def generic_test_unread_messages_are_highlighted(live_server, page: Page, mocked_authentification_user, object):
+    own_message = MessageFactory(
+        content_object=object,
+        message_type=Message.MESSAGE,
+        sender=mocked_authentification_user.agent.contact_set.get(),
+    )
+    Message.objects.filter(pk=own_message.pk).update(date_publication=timezone.now() - timedelta(hours=1))
+    MessageFactory(content_object=object, message_type=Message.MESSAGE)
+
+    page.goto(f"{live_server.url}{object.get_absolute_url()}")
+    unread_row = page.locator("#table-sm-row-key-1")
+    expect(unread_row).to_have_class(re.compile("message-unread"))
+    expect(unread_row.locator("td:nth-child(4) a")).to_have_css("font-weight", "700")
+    expect(page.locator("#table-sm-row-key-2")).not_to_have_class(re.compile("message-unread"))
+
+    new_page = ListOfMessagesPage(page).open_message(1)
+    new_page.wait_for_load_state()
+    expect(unread_row).not_to_have_class(re.compile("message-unread"))
+
+    page.reload()
+    expect(page.locator(".message-unread")).to_have_count(0)
 
 
 def generic_test_can_preview_image_from_message_details(live_server, page: Page, target_object):

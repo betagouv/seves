@@ -189,7 +189,7 @@ class MessageFactory(DjangoModelFactory):
         if extracted is not None:
             self.recipients.set(extracted)
             return
-        for i in range(random.randint(1, 10)):
+        for i in range(random.randint(1, 3)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
                 self.recipients.add(
@@ -211,7 +211,7 @@ class MessageFactory(DjangoModelFactory):
         if extracted is not None:
             self.recipients_copy.set(extracted)
             return
-        for i in range(random.randint(1, 10)):
+        for i in range(random.randint(1, 3)):
             factory_class = random.choice([ContactAgentFactory, ContactStructureFactory])
             if factory_class is ContactAgentFactory:
                 self.recipients.add(

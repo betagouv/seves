@@ -2,7 +2,7 @@ import choicesDefaults from "choicesDefaults"
 
 export function fetchCommunes(query) {
     return fetch(
-        `https://geo.api.gouv.fr/communes?nom=${query}&fields=departement,codesPostaux&boost=population&limit=15`,
+        `https://geo.api.gouv.fr/communes?nom=${query}&fields=departement,codesPostaux,centre&boost=population&limit=15`,
     )
         .then(response => response.json())
         .then(data => {
@@ -16,6 +16,8 @@ export function fetchCommunes(query) {
                             departementCode: item.departement.code,
                             inseeCode: item.code,
                             postCode,
+                            long: item.centre.coordinates[0],
+                            lat: item.centre.coordinates[1],
                         },
                     })
                 }

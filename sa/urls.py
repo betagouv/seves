@@ -4,9 +4,10 @@ from .views import (
     EvenementAnimalCreationView,
     EvenementAnimalDetailsView,
     EvenementAnimalDocumentExportView,
+    EvenementAnimalUpdateView,
     EvenementListView,
 )
-from .views.api import FindFreeLinksView
+from .views.api import FindFreeLinksView, GetMassActionStatus
 
 app_name = "sa"
 urlpatterns = [
@@ -26,6 +27,11 @@ urlpatterns = [
         name="evenement-animal-details",
     ),
     path(
+        "evenement-animal/<int:pk>/modification/",
+        EvenementAnimalUpdateView.as_view(),
+        name="evenement-animal-update",
+    ),
+    path(
         "evenement-animal/<int:pk>/document/",
         EvenementAnimalDocumentExportView.as_view(),
         name="evenement-animal-export-document",
@@ -34,5 +40,10 @@ urlpatterns = [
         "api/freelinks/recherche/",
         FindFreeLinksView.as_view(),
         name="find-free-link",
+    ),
+    path(
+        "api/mass-action/status/",
+        GetMassActionStatus.as_view(),
+        name="mass-action-status",
     ),
 ]

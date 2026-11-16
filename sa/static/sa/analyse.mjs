@@ -12,16 +12,23 @@ const RESULTAT_EN_ATTENTE = "en_attente"
  * @property {HTMLSelectElement} resultatSelectTarget
  * @property {Object} methodesParLaboratoireValue
  * @property {Object} laboratoiresTypesValue
+ * @property {Object} laboratoiresFrequentsParMaladieValue
  */
 class AnalyseFormController extends BaseFormInModal {
     static targets = ["laboratoireSelect", "methodeSelect", "confirmationInput", "resultatSelect", "dateResultatInput"]
     static values = {
         methodesParLaboratoire: Object,
         laboratoiresTypes: Object,
+        laboratoiresFrequentsParMaladie: Object,
     }
 
+    /** @type {HTMLElement[] | undefined} */
+    #laboratoireElements
+
     connect() {
+        this.refreshLaboratoireGroups()
         this.updateMethodeRequired()
+        this.updateDateResultatState()
         if (this.shouldImmediatelyShowValue) {
             this.openDialog()
         } else {
@@ -45,21 +52,73 @@ class AnalyseFormController extends BaseFormInModal {
         return !event.defaultPrevented
     }
 
+    onMaladieChange() {
+        this.refreshLaboratoireGroups()
+        // Groups visibility from a previous search no longer matches their new content
+        this.application
+            .getControllerForElementAndIdentifier(this.getLaboratoireTreeselect(), "treeselect")
+            ?.onEraseSearch()
+    }
+
     onLaboratoireChange() {
         this.refreshMethodeOptions({keepSelection: true})
         this.updateMethodeRequired()
     }
 
+    getMaladieId() {
+        return this.fieldsetTarget.querySelector(`input[name="${this.formPrefixValue}-maladie"]:checked`)?.value ?? ""
+    }
+
+    getLaboratoireTreeselect() {
+        return this.fieldsetTarget.querySelector('.fr-treeselect[id$="-laboratoire"]')
+    }
+
+    /**
+     * Moves the laboratoires associated with the selected maladie into the group "Les plus fréquents", the others
+     * into "Autres" (without any associated laboratoire, the full list is displayed without groups).
+     */
+    refreshLaboratoireGroups() {
+        const treeselect = this.getLaboratoireTreeselect()
+        const [frequentContainer, otherContainer] = treeselect.querySelectorAll('[data-testid="group-container"]')
+        this.#laboratoireElements ??= Array.from(treeselect.querySelectorAll(".fr-treeselect__element"))
+
+        const frequentIds = new Set((this.laboratoiresFrequentsParMaladieValue[this.getMaladieId()] ?? []).map(String))
+        const isFrequent = element => frequentIds.has(element.querySelector("input").value)
+        const frequent = this.#laboratoireElements.filter(isFrequent)
+        frequentContainer.replaceChildren(...frequent)
+        otherContainer.replaceChildren(...this.#laboratoireElements.filter(it => !isFrequent(it)))
+
+        for (const header of treeselect.querySelectorAll(".fr-treeselect__group-header")) {
+            header.classList.toggle("fr-hidden", frequent.length === 0)
+        }
+    }
+
     onResultatChange() {
         this.updateMethodeRequired()
+        this.updateDateResultatState()
     }
 
     updateMethodeRequired() {
         this.methodeSelectTarget.required = this.resultatSelectTarget.value !== RESULTAT_EN_ATTENTE
     }
 
+    updateDateResultatState() {
+        const isEnAttente = this.resultatSelectTarget.value === RESULTAT_EN_ATTENTE
+        this.dateResultatInputTarget.disabled = isEnAttente
+        this.dateResultatInputTarget.required = !isEnAttente
+        if (isEnAttente) {
+            this.dateResultatInputTarget.value = ""
+        }
+    }
+
+    getLaboratoireId() {
+        return (
+            this.fieldsetTarget.querySelector(`input[name="${this.formPrefixValue}-laboratoire"]:checked`)?.value ?? ""
+        )
+    }
+
     refreshMethodeOptions({keepSelection}) {
-        const laboratoireId = this.laboratoireSelectTarget.value
+        const laboratoireId = this.getLaboratoireId()
         const previousValue = keepSelection ? this.methodeSelectTarget.value : ""
         const methodes = this.methodesParLaboratoireValue[laboratoireId] || []
 
@@ -83,8 +142,7 @@ class AnalyseFormController extends BaseFormInModal {
     }
 
     getLaboratoireType() {
-        const laboratoireId = this.laboratoireSelectTarget.value
-        return this.laboratoiresTypesValue[laboratoireId]
+        return this.laboratoiresTypesValue[this.getLaboratoireId()]
     }
 
     /** @param {Object} analyse */

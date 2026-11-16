@@ -310,22 +310,22 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_apms(self):
-        if self.maladie.needs_arrete:
+        if self.maladie.needs_arrete and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
     def date_apdi(self):
-        if self.maladie.needs_arrete:
-            return fake.date_this_decade()
+        if self.maladie.needs_arrete and self.date_apms:
+            return fake.date_between(start_date=self.date_apms, end_date=self.date_apms + timedelta(days=30))
 
     @factory.lazy_attribute
     def date_levee(self):
-        if self.maladie.needs_arrete:
-            return fake.date_this_decade()
+        if self.maladie.needs_arrete and self.date_apdi:
+            return fake.date_between(start_date=self.date_apdi, end_date=self.date_apdi + timedelta(days=30))
 
     @factory.lazy_attribute
     def date_nd(self):
-        if self.maladie.needs_date_nd:
+        if self.maladie.needs_date_nd and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
@@ -334,19 +334,19 @@ class EvenementAnimalFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def date_d_zero(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.statut_animal != StatutAnimal.SAUVAGE:
             return fake.date_this_decade()
 
     @factory.lazy_attribute
     def date_nd1(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.date_d_zero:
             return fake.date_between(
                 start_date=self.date_d_zero + timedelta(days=1), end_date=self.date_d_zero + timedelta(days=30)
             )
 
     @factory.lazy_attribute
     def date_nd2(self):
-        if self.maladie.needs_dates_desinfection:
+        if self.maladie.needs_dates_desinfection and self.date_nd1:
             return fake.date_between(
                 start_date=self.date_nd1 + timedelta(days=1), end_date=self.date_nd1 + timedelta(days=30)
             )
@@ -364,11 +364,21 @@ class AnalyseFactory(DjangoModelFactory):
     evenement = factory.SubFactory(EvenementAnimalFactory)
     maladie = factory.SelfAttribute("evenement.maladie")
     date_prelevement = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
-    date_resultat = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
     laboratoire = factory.SubFactory(LaboratoireFactory)
     methode = factory.SubFactory(MethodeAnalyseFactory)
     resultat = FuzzyChoice(ResultatAnalyse.values)
-    resultat_confirmation = FuzzyChoice([True, False])
+
+    @factory.lazy_attribute
+    def date_resultat(self):
+        if self.resultat == ResultatAnalyse.EN_ATTENTE:
+            return None
+        return fake.date_this_decade(before_today=True)
+
+    @factory.lazy_attribute
+    def resultat_confirmation(self):
+        if self.resultat == ResultatAnalyse.EN_ATTENTE:
+            return False
+        return random.choice([True, False])
 
     @factory.post_generation
     def link_methode_to_laboratoire(self, create, extracted, **kwargs):
@@ -397,9 +407,9 @@ class VeterinaireFactory(DjangoModelFactory):
     courriel = factory.Faker("email")
 
     @factory.post_generation
-    def especes(self, create, extracted, **kwargs):
-        if create:
-            self.especes.set(extracted if extracted is not None else [self.evenement.espece])
+    def especes_concernees(self, create, extracted, **kwargs):
+        if create and extracted:
+            self.especes_concernees.set(extracted)
 
 
 class EspeceConcerneeFactory(DjangoModelFactory):

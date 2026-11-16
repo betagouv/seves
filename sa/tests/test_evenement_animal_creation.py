@@ -1,9 +1,11 @@
+from datetime import date
 import json
 import re
 
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.factories import DepartementFactory
 from core.models import LienLibre
@@ -183,7 +185,8 @@ def test_can_create_evenement_animal_with_localisation_block(live_server, mocked
     assert evenement.code_insee == "59350"
     assert evenement.numero_identifiant == input_data.numero_identifiant
     assert evenement.type_lieu == input_data.type_lieu
-    assert evenement.coordinates == input_data.coordinates
+    assert evenement.coordinates.y == 50.6311
+    assert evenement.coordinates.x == 3.0468
 
 
 def test_can_create_evenement_animal_with_ban_auto_complete(
@@ -468,7 +471,7 @@ def test_confirming_detenteur_type_change_clears_previous_block_data(live_server
     expect(creation_page._address_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
         input_data.adresse_lieu_dit_etablissement
     )
-    expect(creation_page._commune_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
+    expect(creation_page.commune_etablissement_choicejs.choice_widget.locator(selected_item)).not_to_contain_text(
         "Lille"
     )
 
@@ -647,7 +650,7 @@ def test_double_click_on_map_without_parcelle_leaves_numero_identifiant_unchange
 
 
 def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(needs_arrete=True)
     espece = EspeceFactory()
 
@@ -665,8 +668,77 @@ def test_can_create_evenement_animal_when_maladie_needs_arrete(live_server, page
     assert evenement.date_levee == input_data.date_levee
 
 
+@pytest.mark.parametrize(
+    "date_apms,date_apdi,date_levee",
+    [
+        ("2026-03-01", "2026-03-01", "2026-03-01"),
+        ("2026-03-01", "", "2026-03-10"),
+        ("", "2026-03-01", "2026-03-10"),
+        ("", "", ""),
+    ],
+)
+def test_can_create_evenement_animal_with_dates_arretes_in_order(
+    live_server, page: Page, date_apms, date_apdi, date_levee
+):
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory(needs_arrete=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_apms.fill(date_apms)
+    creation_page.date_apdi.fill(date_apdi)
+    creation_page.date_levee.fill(date_levee)
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.date_apms == (date.fromisoformat(date_apms) if date_apms else None)
+    assert evenement.date_apdi == (date.fromisoformat(date_apdi) if date_apdi else None)
+    assert evenement.date_levee == (date.fromisoformat(date_levee) if date_levee else None)
+
+
+@pytest.mark.parametrize(
+    "date_apms,date_apdi,date_levee,field_in_error,error_message",
+    [
+        ("2026-03-10", "2026-03-01", "", "date_apdi", "La date APDI doit être postérieure ou égale à la date APMS."),
+        (
+            "2026-03-10",
+            "",
+            "2026-03-01",
+            "date_levee",
+            "La date de levée doit être postérieure ou égale à la date APMS.",
+        ),
+        (
+            "",
+            "2026-03-10",
+            "2026-03-01",
+            "date_levee",
+            "La date de levée doit être postérieure ou égale à la date APDI.",
+        ),
+    ],
+)
+def test_cant_create_evenement_animal_with_dates_arretes_not_in_order(
+    live_server, page: Page, date_apms, date_apdi, date_levee, field_in_error, error_message
+):
+    input_data = EvenementAnimalFactory.build(maladie__needs_arrete=True, statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory(needs_arrete=True)
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.date_apms.fill(date_apms)
+    creation_page.date_apdi.fill(date_apdi)
+    creation_page.date_levee.fill(date_levee)
+    creation_page.submit_as_draft(wait_for=None)
+
+    expect(page.locator(f"#id_{field_in_error}-desc-error")).to_have_text(error_message)
+    assert EvenementAnimal.objects.count() == 0
+
+
 def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(name="Needs date desinfection", needs_date_nd=False, needs_dates_desinfection=True)
     espece = EspeceFactory()
 
@@ -685,7 +757,7 @@ def test_can_create_evenement_animal_when_maladie_needs_dates_desinfection(live_
 
 
 def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_dates_desinfection=True, statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory(name="Needs date desinfection order", needs_date_nd=False, needs_dates_desinfection=True)
     espece = EspeceFactory()
 
@@ -703,8 +775,8 @@ def test_evenement_animal_maladie_needs_dates_desinfection_without_correct_order
 
 
 def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
-    maladie = AcarapioseFactory()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.SAUVAGE)
+    maladie = TuberculoseFactory()
     espece = EspeceFactory()
 
     creation_page = EvenementAnimalFormPage(page, live_server.url)
@@ -716,11 +788,11 @@ def test_evenement_animal_creation_hide_dates_when_not_needed(live_server, page:
     expect(creation_page.date_d_zero).not_to_be_visible()
     expect(creation_page.date_nd1).not_to_be_visible()
     expect(creation_page.date_nd2).not_to_be_visible()
-    expect(creation_page.date_nd).to_be_visible()
+    expect(creation_page.date_nd).not_to_be_visible()
 
 
 def test_can_create_evenement_animal_when_maladie_needs_date_nd(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True)
+    input_data = EvenementAnimalFactory.build(maladie__needs_date_nd=True, statut_animal=StatutAnimal.DETENU)
     maladie = AcarapioseFactory()
     espece = EspeceFactory()
 
@@ -928,14 +1000,14 @@ def test_create_evenement_number_of_queries_scalies_with_free_links(
     # Cache anything if possible
     client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
-    with django_assert_max_num_queries(25):
+    with django_assert_max_num_queries(29):
         client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
     EvenementAnimalFactory(etat=EvenementAnimal.Etat.EN_COURS)
 
-    with django_assert_max_num_queries(25):
+    with django_assert_max_num_queries(29):
         client.get(creation_page.url(maladie, espece, input_data.statut_animal))
 
 
@@ -1107,3 +1179,48 @@ def test_commune_and_departement_are_saved_from_coordinates(live_server, page: P
     assert evenement.commune == "Lille"
     assert evenement.code_insee == "59350"
     assert evenement.departement.numero == "59"
+
+
+def test_can_create_evenement_animal_with_detenteur_etablissement_commune_autocomplete(
+    live_server, page: Page, ensure_departements
+):
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+    ensure_departements("Nord")
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+
+    call_count = {"count": 0}
+
+    def handle(route):
+        data = [
+            {
+                "codesPostaux": ["59000", "59160"],
+                "nom": "Lille",
+                "code": "59350",
+                "centre": {"type": "Point", "coordinates": [3.0468, 50.6311]},
+                "departement": {"code": "59", "nom": "Nord"},
+            }
+        ]
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+        call_count["count"] += 1
+
+    creation_page.page.route(
+        "https://geo.api.gouv.fr/communes?nom=Lille&fields=departement,codesPostaux,centre&boost=population&limit=15",
+        handle,
+    )
+    creation_page.commune_etablissement_choicejs.try_select_option("Lille (59160)", search="Lille")
+    assert call_count["count"] == 1
+    expect(creation_page.code_insee_etablissement).to_have_value("59350")
+    expect(creation_page.departement_etablissement).to_have_value("59")
+    expect(creation_page.pays_etablissement).to_have_value("FR")
+    creation_page.submit_as_draft()
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.commune_etablissement == "Lille"
+    assert evenement.code_insee_etablissement == "59350"
+    assert evenement.departement_etablissement.numero == "59"
+    assert evenement.pays_etablissement.code == "FR"

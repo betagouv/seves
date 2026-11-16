@@ -43,10 +43,12 @@ jobs:
       - uses: biomejs/setup-biome@v2
         with:
           version: 2.4.4
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: gdal-bin libgdal-dev
+          execute_install_scripts: true
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gdal-bin libgdal-dev
           pip install --upgrade "pip<26.2" pip-tools
           pip-sync
       - name: Check no missing migrations
@@ -93,10 +95,12 @@ jobs:
         with:
           python-version: 3.13
           cache: pip
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: gdal-bin libgdal-dev
+          execute_install_scripts: true
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gdal-bin libgdal-dev
           pip install --upgrade "pip<26.2" pip-tools
           pip-sync
       - name: Playwright version

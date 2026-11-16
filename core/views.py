@@ -45,7 +45,7 @@ from .mixins import (
     WithFormErrorsAsMessagesMixin,
     WithPublishMixin,
 )
-from .models import Contact, Document, FinSuiviContact, Message, user_is_referent_national
+from .models import Contact, Document, FinSuiviContact, Message, MessageRead, user_is_referent_national
 from .notifications import notify_contact_agent_added_or_removed
 from .redirect import safe_redirect
 
@@ -299,6 +299,10 @@ class MessageDetailsView(PreventActionIfVisibiliteBrouillonMixin, UserPassesTest
     def get_fiche_object(self):
         return self.fiche
 
+    def get(self, request, *args, **kwargs):
+        MessageRead.objects.get_or_create(message=self.message, agent=request.user.agent)
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["can_download_document"] = self.fiche.can_download_document(self.request.user)
@@ -524,6 +528,26 @@ class FinDeSuiviHandlingView(View):
             return redirect(object.get_absolute_url())
 
         raise NotImplementedError
+
+
+class MassFinDeSuiviHandlingView(View):
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = self.request.POST
+        content_type = ContentType.objects.get(pk=data.get("content_type"))
+        objects = content_type.model_class().objects.filter(pk__in=data.get("pks").split(","))
+
+        if not data["mode"] == "add":
+            raise NotImplementedError
+
+        for obj in objects:
+            if not FinSuiviContact.can_add_fin_de_suivi(obj, self.request.user):
+                continue
+
+            obj.add_fin_suivi(structure=self.request.user.agent.structure, made_by=self.request.user)
+        messages.success(request, "Fin(s) de suivi réalisée(s) avec succès.")
+        return redirect(objects[0].get_list_url())
 
 
 def sirene_api(request, siret: str):

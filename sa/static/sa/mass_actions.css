@@ -1,0 +1,7 @@
+.mass-actions .fr-translate__btn::before {
+    display: none;
+}
+
+.mass-actions-col {
+    width: 48px;
+}

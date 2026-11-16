@@ -1,10 +1,11 @@
 {% extends "sa/base.html" %}
-{% load etat_tags or_empty_value_tag static dsfr_tags statut_tags %}
+{% load etat_tags or_empty_value_tag static dsfr_tags statut_tags get_item widget_tweaks %}
 
 {% block extrahead %}
     <link rel="stylesheet" href="{% static 'core/list.css' %}">
     <link rel="stylesheet" href="{% static 'core/has_sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'sa/evenement_list.css' %}">
+    <link rel="stylesheet" href="{% static 'sa/mass_actions.css' %}">
 {% endblock %}
 
 {% block highlight_menu_evenements %}menu__item--active{% endblock %}
@@ -55,54 +56,85 @@
         </div>
     </form>
 
-    <div class="main-container">
+    <div class="main-container" data-controller="mass-actions" data-mass-actions-api-url-value="{% url 'sa:mass-action-status' %}">
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
         </div>
 
-        {% if paginator.count > 0 %}
-            <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Date de création' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut foyer' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='departement' display_name='Dpt' %}</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='commune' display_name='Commune' %}</th>
-                            <th scope="col">Détenteur </th>
-                            <th scope="col">Type de lieu</th>
-                            <th scope="col">Espèces présentes</th>
-                            <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for evenement in evenementanimal_list %}
-                            <tr class="evenements__list-row">
-                                <td>
-                                    <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
-                                </td>
-                                <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                                <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
-                                <td>
-                                    <p class="fr-badge fr-badge--no-icon {{ evenement.statut_evenement|statut_color }} fr-m-0 fr-my-2v">{{ evenement.get_statut_evenement_display }}</p>
-                                    <br/>{{ evenement.date_statut_changed|date:"d/m/Y"|or_empty_value_tag:"table" }}
-                                </td>
-                                <td>{{ evenement.departement.numero|or_empty_value_tag:"table" }}</td>
-                                <td>{{ evenement.displayed_commune|or_empty_value_tag:"table" }}</td>
-                                <td>{{ evenement.displayed_detenteur|or_empty_value_tag:"table" }}</td>
-                                <td>{{ evenement.get_type_lieu_display }}</td>
-                                <td>{{ evenement.displayed_especes|or_empty_value_tag:"table" }}</td>
-                                <td>
-                                    <span class="fr-badge fr-badge--{{ evenement.etat|etat_color }} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% include "core/_pagination.html" %}
+        {% include "sa/_mass_actions_fin_suivi.html" %}
+
+        <nav role="navigation" class="fr-translate fr-nav mass-actions fr-mt-4v" >
+            <div class="fr-nav__item">
+                <button class="fr-translate__btn fr-btn fr-btn--secondary fr-btn--lg" data-mass-actions-target="navigation" disabled aria-controls="action-1" aria-expanded="false" title="Sélectionner une action">Actions groupées</button>
+                <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
+                    <ul class="fr-menu__list">
+                        <li>
+                            <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                        </li>
+                    </ul>
+                </div>
             </div>
+        </nav>
+
+        {% if paginator.count > 0 %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="fr-table fr-table--no-caption fr-table--layout-fixed">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col" class="mass-actions-col">
+                                    <div class="fr-checkbox-group fr-mb-2w">
+                                        <input id="master-checkbox" type="checkbox" data-action="change->mass-actions#onMasterCheckboxChange">
+                                        <label for="master-checkbox" class="fr-label">
+                                            <span class="fr-sr-only">Cocher toutes les cases du tableau</span>
+                                        </label>
+                                    </div>
+                                </th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='numero_evenement' display_name='N°' %}</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='creation' display_name='Date de création' %}</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='maladie' display_name='Maladie' %}</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='statut_evenement' display_name='Statut foyer' %}</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='departement' display_name='Dpt' %}</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='commune' display_name='Commune' %}</th>
+                                <th scope="col">Détenteur </th>
+                                <th scope="col">Type de lieu</th>
+                                <th scope="col">Espèces présentes</th>
+                                <th scope="col">{% include 'core/_evenement_sort_link.html' with field='etat' display_name='État' %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evenement in evenementanimal_list %}
+                                <tr class="evenements__list-row">
+                                    <td>
+                                        {% with mass_action_form|get_bound_field:evenement.pk as field %}
+                                            {% dsfr_form_field field|set_data:"mass-actions-target:checkbox"|set_data:"action:change->mass-actions#onCheckboxChange" %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
+                                    </td>
+                                    <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
+                                    <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
+                                    <td>
+                                        <p class="fr-badge fr-badge--no-icon {{ evenement.statut_evenement|statut_color }} fr-m-0 fr-my-2v">{{ evenement.get_statut_evenement_display }}</p>
+                                        <br/>{{ evenement.date_statut_changed|date:"d/m/Y"|or_empty_value_tag:"table" }}
+                                    </td>
+                                    <td>{{ evenement.departement.numero|or_empty_value_tag:"table" }}</td>
+                                    <td>{{ evenement.displayed_commune|or_empty_value_tag:"table" }}</td>
+                                    <td>{{ evenement.displayed_detenteur|or_empty_value_tag:"table" }}</td>
+                                    <td>{{ evenement.get_type_lieu_display }}</td>
+                                    <td>{{ evenement.displayed_especes|or_empty_value_tag:"table" }}</td>
+                                    <td>
+                                        <span class="fr-badge fr-badge--{{ evenement.etat|etat_color }} fr-badge--no-icon">{{ evenement.readable_etat }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% include "core/_pagination.html" %}
+                </div>
+            </form>
         {% endif %}
     </div>
 {% endblock %}

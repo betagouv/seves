@@ -262,6 +262,10 @@
     background-color: var(--text-default-error) !important;
 }
 
+.fr-nav__link.fr-nav__link--delete {
+    color: var(--text-default-error);
+}
+
 .fr-w-100 {
     width: 100%;
 }

@@ -6,7 +6,7 @@ import re
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
-from core.pages import WithActionsPage, WithSyntheseBlockMixin
+from core.pages import WithActionsPage, WithMassActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import Analyse, EvenementAnimal, Veterinaire
 from seves import settings
@@ -19,6 +19,7 @@ def _default_lille_commune_config():
             "nom": "Lille",
             "code": "59350",
             "_score": 1.8082078747980779,
+            "centre": {"type": "Point", "coordinates": [3.0468, 50.6311]},
             "departement": {"code": "59", "nom": "Nord"},
         }
     ]
@@ -63,7 +64,7 @@ class WithAddressAndCommuneUtils:
     def force_commune(self, config=None):
         config = config or _default_lille_commune_config()
 
-        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux&boost=population&limit=15"
+        url = f"https://geo.api.gouv.fr/communes?nom={config['search_text']}&fields=departement,codesPostaux,centre&boost=population&limit=15"
 
         self.page.route(
             url,
@@ -87,7 +88,7 @@ class WithEtablissementDetenteurUtils:
         return ChoiceJSPage(self.page, self.page.get_by_test_id("ban-search-etablissement"))
 
     @cached_property
-    def _commune_etablissement_choicejs(self):
+    def commune_etablissement_choicejs(self):
         return ChoiceJSPage(self.page, self.page.get_by_test_id("communes-search-etablissement"))
 
     @cached_property
@@ -112,7 +113,7 @@ class WithEtablissementDetenteurUtils:
             ),
         )
 
-        self._commune_etablissement_choicejs.try_select_option(config["option_name"], search=config["search_text"])
+        self.commune_etablissement_choicejs.try_select_option(config["option_name"], search=config["search_text"])
         self.page.unroute(url)
 
     def fill_siret_etablissement(self, exact_siret, *, search=None):
@@ -178,14 +179,20 @@ class WithAnalyseMixin:
             maladie.name_with_acronym
         )
 
+    def get_analyse_laboratoire_treeselect(self, modal: Locator):
+        return TreeselectPage(self.page, modal.locator('[id^="fr-treeselect-"][id$="-laboratoire"]'))
+
+    def fill_analyse_laboratoire(self, modal: Locator, laboratoire):
+        self.get_analyse_laboratoire_treeselect(modal).check_option(laboratoire.name)
+
     def fill_analyse(self, modal: Locator, analyse: Analyse):
         self.fill_analyse_maladie(modal, analyse.maladie)
         modal.locator('[id$="date_prelevement"]').fill(analyse.date_prelevement.strftime("%Y-%m-%d"))
-        if analyse.date_resultat:
-            modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
-        modal.locator('[id$="-laboratoire"]').select_option(str(analyse.laboratoire_id))
+        self.fill_analyse_laboratoire(modal, analyse.laboratoire)
         modal.locator('[id$="-methode"]').select_option(str(analyse.methode_id))
         modal.locator('[id$="-resultat"]').select_option(analyse.resultat)
+        if analyse.date_resultat:
+            modal.locator('[id$="date_resultat"]').fill(analyse.date_resultat.strftime("%Y-%m-%d"))
         if analyse.resultat_confirmation:
             modal.locator('[id$="resultat_confirmation"]').check(force=True)
 
@@ -273,6 +280,10 @@ class WithVeterinaireMixin:
         modal.locator('[id$="-prenom"]').fill(veterinaire.prenom)
         modal.locator('[id$="-telephone"]').fill(veterinaire.telephone)
         modal.locator('[id$="-courriel"]').fill(veterinaire.courriel)
+
+    @staticmethod
+    def get_veterinaire_especes_checkboxes(modal: Locator):
+        return modal.locator('input[type="checkbox"][name$="-especes_concernees"]')
 
     def close_veterinaire_modal(self):
         self.current_modal.locator(".save-btn").click()
@@ -416,7 +427,7 @@ class WithPreCreationFormPage:
         self.pre_creation_modal.get_by_role("button", name="Suivant >", exact=True).click()
 
 
-class EvenementListPage(WithPreCreationFormPage):
+class EvenementListPage(WithPreCreationFormPage, WithMassActionsPage):
     def __init__(self, page: Page, base_url):
         super().__init__(page, base_url)
         self.page = page

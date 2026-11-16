@@ -54,6 +54,7 @@ class Espece(models.Model):
             label="Les plus fréquentes",
             choices=frequent_choices,
             categorised_label=None,
+            can_expand=False,
         )
         other_group = TreeselectGroup(
             label="Autres",
@@ -284,7 +285,7 @@ class TypeDetenteur(models.TextChoices):
     PARTICULIER = "particulier", "Particulier"
 
 
-@reversion.register
+@reversion.register(follow=["analyses", "veterinaires", "especes_exposees"])
 class EvenementAnimal(
     AllowsSoftDeleteMixin,
     WithNumeroMixin,
@@ -544,6 +545,12 @@ class EvenementAnimal(
     def get_absolute_url(self):
         return reverse("sa:evenement-animal-details", kwargs={"pk": self.pk})
 
+    def get_update_url(self):
+        return reverse("sa:evenement-animal-update", kwargs={"pk": self.pk})
+
+    def get_list_url(self):
+        return reverse("sa:evenement-liste")
+
     @property
     def latest_version(self):
         return (
@@ -555,7 +562,22 @@ class EvenementAnimal(
 
     @property
     def show_mesures_block(self):
-        return self.maladie.needs_arrete
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return False
+        return any(
+            [
+                self.maladie.show_mesures_first_row,
+                self.maladie.show_mesures_second_row,
+                self.maladie.show_mesures_third_row,
+            ]
+        )
+
+    def get_prefetch_for_revision_list_view(self):
+        return [
+            ("_prefetched_analyses", self.analyses.all()),
+            ("_prefetched_veterinaires", self.veterinaires.all()),
+            ("_prefetched_especes_exposees", self.especes_exposees.all()),
+        ]
 
     def get_publish_success_message(self):
         return "Évènement publié avec succès"
@@ -700,5 +722,32 @@ class EvenementAnimal(
                 ),
                 name="evenementanimal_dates_desinfection_order",
                 violation_error_message="Les dates D0, ND1 et ND2 doivent respecter l'ordre D0 ≤ ND1 ≤ ND2.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(date_apms__isnull=True) | Q(date_apdi__isnull=True) | Q(date_apms__lte=F("date_apdi")))
+                    & (Q(date_apdi__isnull=True) | Q(date_levee__isnull=True) | Q(date_apdi__lte=F("date_levee")))
+                    & (Q(date_apms__isnull=True) | Q(date_levee__isnull=True) | Q(date_apms__lte=F("date_levee")))
+                ),
+                name="evenementanimal_dates_arretes_order",
+                violation_error_message="Les dates APMS, APDI et levée doivent respecter l'ordre APMS ≤ APDI ≤ levée.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(statut_animal=StatutAnimal.SAUVAGE)
+                    | (
+                        Q(date_apms__isnull=True)
+                        & Q(date_apdi__isnull=True)
+                        & Q(date_levee__isnull=True)
+                        & Q(date_d_zero__isnull=True)
+                        & Q(date_nd1__isnull=True)
+                        & Q(date_nd2__isnull=True)
+                        & Q(date_nd__isnull=True)
+                    )
+                ),
+                name="evenementanimal_no_mesures_gestion_when_sauvage",
+                violation_error_message=(
+                    "Les dates des mesures de gestion ne peuvent pas être renseignées pour un animal sauvage"
+                ),
             ),
         ]

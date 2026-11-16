@@ -2,14 +2,14 @@ import json
 
 from django import forms
 from django.conf import settings
-from django.forms import Media, MultipleChoiceField
+from django.forms import CheckboxInput, Media, MultipleChoiceField
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dsfr.forms import DsfrBaseForm
 
 from core.fields import MultiModelChoiceField, SEVESChoiceField
-from core.form_mixins import WithFreeLinksMixin, js_module
+from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_module
 from core.mixins import WithEtatMixin
 from core.models import Departement
 from core.widgets import TreeselectRadio
@@ -98,7 +98,7 @@ class EvenementAnimalPreCreationForm(DsfrBaseForm):
         return [{"id": pk, "name": name} for pk, name in Espece.objects.order_by("name").values_list("pk", "name")]
 
 
-class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
+class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLocking, forms.ModelForm):
     type_detenteur = forms.ChoiceField(
         choices=TypeDetenteur.choices,
         initial=TypeDetenteur.ETABLISSEMENT,
@@ -347,6 +347,16 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             "telephone_particulier",
         ]
 
+        mesures_fields = [
+            "date_apms",
+            "date_apdi",
+            "date_levee",
+            "date_d_zero",
+            "date_nd1",
+            "date_nd2",
+            "date_nd",
+        ]
+
         fields = [
             "maladie",
             "espece",
@@ -371,13 +381,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             # Typage
             "typage_champ_libre",
             # Mesures de gestion
-            "date_apms",
-            "date_apdi",
-            "date_levee",
-            "date_d_zero",
-            "date_nd1",
-            "date_nd2",
-            "date_nd",
+            *mesures_fields,
             # Adis
             *adis_fields,
         ]
@@ -414,6 +418,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         self._add_free_links(model=EvenementAnimal)
         self.fields["maladie"].initial = self.maladie_id
         self.maladie = Maladie.objects.get(id=self.maladie_id)
+        self.maladie_object = self.maladie
         self._init_typage_fields()
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
@@ -443,8 +448,12 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             self.fields.pop("date_nd1")
             self.fields.pop("date_nd2")
 
-        if self.maladie.needs_date_nd is False:
+        if not self.maladie.show_mesures_third_row:
             self.fields.pop("date_nd")
+
+        if self.show_mesures_block is False:
+            for field in self.Meta.mesures_fields:
+                self.fields.pop(field, None)
 
         if self.user.agent.structure.is_ac is False:
             for field in self.Meta.adis_fields:
@@ -522,20 +531,16 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
         return self.statut_animal == StatutAnimal.DETENU
 
     @property
-    def show_mesures_first_row(self):
-        return self.maladie.needs_arrete
-
-    @property
-    def show_mesures_second_row(self):
-        return self.maladie.needs_dates_desinfection
-
-    @property
-    def show_mesures_third_row(self):
-        return self.maladie.needs_date_nd
-
-    @property
     def show_mesures_block(self):
-        return self.show_mesures_first_row or self.show_mesures_second_row or self.show_mesures_third_row
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return False
+        return any(
+            [
+                self.maladie.show_mesures_first_row,
+                self.maladie.show_mesures_second_row,
+                self.maladie.show_mesures_third_row,
+            ]
+        )
 
     def save(self, commit=True):
         if self.data.get("action") == "publish":
@@ -599,7 +604,21 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             else:
                 self.instance.typage = None
 
+        self._clean_dates_arretes(cleaned_data)
+
         return cleaned_data
+
+    def _clean_dates_arretes(self, cleaned_data):
+        date_apms = cleaned_data.get("date_apms")
+        date_apdi = cleaned_data.get("date_apdi")
+        date_levee = cleaned_data.get("date_levee")
+
+        if date_apms and date_apdi and date_apdi < date_apms:
+            self.add_error("date_apdi", "La date APDI doit être postérieure ou égale à la date APMS.")
+        if date_apms and date_levee and date_levee < date_apms:
+            self.add_error("date_levee", "La date de levée doit être postérieure ou égale à la date APMS.")
+        if date_apdi and date_levee and date_levee < date_apdi:
+            self.add_error("date_levee", "La date de levée doit être postérieure ou égale à la date APDI.")
 
     def get_queryset(self, model, user, instance):
         return (
@@ -620,4 +639,22 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, forms.ModelForm):
             required=False,
             label="Sélectionner un objet",
             model_choices=choices,
+        )
+
+
+class MassActionForm(DsfrBaseForm):
+    def __init__(self, *args, **kwargs):
+        self.queryset = kwargs.pop("queryset")
+        super().__init__(*args, **kwargs)
+
+        for obj in self.queryset:
+            self.fields[str(obj.pk)] = forms.BooleanField(label="", widget=CheckboxInput, required=False)
+
+    def get_bound_field(self, pk):
+        return self[str(pk)]
+
+    @property
+    def media(self):
+        return super().media + Media(
+            js=(js_module("sa/mass_actions_controller.js"),),
         )
