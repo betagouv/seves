@@ -149,7 +149,7 @@ fileignoreconfig:
 - filename: sa/migrations/0018_veterinaire.py
   checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 - filename: go.sum
-  checksum: 1341a2d101bd4fd8411c181e3850d39395abac73cc5d45b58219fa5b0ef565c7
+  checksum: 2770ec322ff9939e3134469e255b38740d50e2b27c421b8b2d5e2283acba4cb8
 - filename: core/static/core/form/widgets/virtual_option_list.mjs
   checksum: 03bc4ccd5b41047072104f5f4601f48738709336905d7b252e86745d48f28f80
 - filename: sa/migrations/0028_situationuniteregle.py
