@@ -37,13 +37,16 @@
             {% endif %}
 
             <div class="fr-flex fr-flex--row fr-flex--space-between">
-                <h1>
-                    {% if is_creation %}
-                        Création d'une fiche détection
-                    {% else %}
-                        Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
-                    {% endif %}
-                </h1>
+                <div>
+                    <h1 class="fr-mb-1w">
+                        {% if is_creation %}
+                            Création d'une fiche détection
+                        {% else %}
+                            Modification de la fiche détection {% if form.instance.numero %}n° {{ form.instance.numero }}{% endif %}
+                        {% endif %}
+                    </h1>
+                    <p class="fr-hint-text">* Champs obligatoires</p>
+                </div>
 
                 <section data-testid="fiche-action-btns">
                     {% partialdef form_btns inline %}

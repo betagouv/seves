@@ -6,13 +6,14 @@
 
         <div class="fr-grid-row">
             <div class="fr-col-8">
-                <h1>
+                <h1 class="fr-mb-1w">
                     {% if fiche.id %}
                         Modification de la fiche zone délimitée
                     {% else %}
                         Création d'une fiche zone délimitée
                     {% endif %}
                 </h1>
+                <p class="fr-hint-text">* Champs obligatoires</p>
             </div>
             <div class="fr-col fichezone_form__save-btn">
                 {% partialdef form_btns inline %}

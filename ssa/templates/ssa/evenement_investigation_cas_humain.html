@@ -10,15 +10,18 @@
         {% csrf_token %}
         <main class="main-container">
             <div class="evenement-produit-form-header">
-                {% block title %}
-                    <h1>
-                        {% if form.instance.pk %}
-                            Modification l'investigation de cas humain {{ form.instance.numero }}
-                        {% else %}
-                            Créer une investigation de cas humain
-                        {% endif %}
-                    </h1>
-                {% endblock %}
+                <div>
+                    {% block title %}
+                        <h1 class="fr-mb-1w">
+                            {% if form.instance.pk %}
+                                Modification l'investigation de cas humain {{ form.instance.numero }}
+                            {% else %}
+                                Créer une investigation de cas humain
+                            {% endif %}
+                        </h1>
+                    {% endblock %}
+                    <p class="fr-hint-text">* Champs obligatoires</p>
+                </div>
                 <div class="action-buttons">
                     {% partialdef form_btns inline %}
                         {% block buttons %}

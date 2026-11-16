@@ -13,13 +13,16 @@
         {{ form.latest_version }}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row" data-testid="top-action-btns">
-                <h1 class="fr-col-6">
-                    {% if form.instance.pk %}
-                        Modification de l'événement {{ object.numero }}
-                    {% else %}
-                        Création d'une investigation de TIAC
-                    {% endif %}
-                </h1>
+                <div class="fr-col-6">
+                    <h1 class="fr-mb-1w">
+                        {% if form.instance.pk %}
+                            Modification de l'événement {{ object.numero }}
+                        {% else %}
+                            Création d'une investigation de TIAC
+                        {% endif %}
+                    </h1>
+                    <p class="fr-hint-text">* Champs obligatoires</p>
+                </div>
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
                     <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-sm">
 

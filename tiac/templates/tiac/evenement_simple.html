@@ -12,7 +12,10 @@
         {{ form.latest_version }}
         <main class="main-container">
             <div class="evenement-produit-form-header fr-grid-row">
-                {% block title %}<h1 class="fr-col-6">Création d'un enregistrement simple</h1>{% endblock %}
+                <div class="fr-col-6">
+                    {% block title %}<h1 class="fr-mb-1w">Création d'un enregistrement simple</h1>{% endblock %}
+                    <p class="fr-hint-text">* Champs obligatoires</p>
+                </div>
                 <div class="fr-col-6 fr-mb-auto fr-grid-row fr-grid-row--right">
                     <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline">
                         {% block buttons %}
