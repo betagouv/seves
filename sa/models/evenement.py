@@ -640,6 +640,12 @@ class EvenementAnimal(
         return self.statut_animal != StatutAnimal.SAUVAGE
 
     @property
+    def date_first_symptoms_label(self):
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return "Date de la suspicion"
+        return self._meta.get_field("date_first_symptoms").verbose_name
+
+    @property
     def typage_niveau_2(self):
         return self.typage.valeur_niveau_2 if self.typage_id else ""
 
