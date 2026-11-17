@@ -1,4 +1,3 @@
-from functools import cached_property
 import json
 
 from django.forms import Media
@@ -25,11 +24,9 @@ class DocumentUploadBaseFormSet(BaseModelFormSet):
     def allowed_extensions(self):
         return AllowedExtensions.values
 
-    @cached_property
+    @property
     def allowed_extensions_per_document_type(self):
-        result = Document.get_accept_attribute_per_document_type()
-        result[""] = "." + ",.".join(self.allowed_extensions)
-        return json.dumps(result)
+        return json.dumps(AllowedExtensions.values)
 
     def __init__(
         self,

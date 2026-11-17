@@ -27,8 +27,8 @@ const fileStore = createStore({
 
 const allowedExtensionsStore = createStore({
     name: "allowedExtensions",
-    type: Object,
-    initialValue: {},
+    type: Array,
+    initialValue: [],
 })
 
 class FormValidationError extends Error {
@@ -68,7 +68,7 @@ class ServerError extends Error {
  *
  * @property {Number} stateValue
  * @property {Boolean} uploadDisabledValue
- * @property {Object} allowedExtensionsValue
+ * @property {Array} allowedExtensionsValue
  * @property {String} nextUrlValue
  * @property {String} genericErrorValue
  *
@@ -94,7 +94,7 @@ class BaseDocumentFormset extends Controller {
     static values = {
         state: {type: Number, default: DOCUMENT_STATE.IDLE},
         uploadDisabled: {type: Boolean, default: true},
-        allowedExtensions: Object,
+        allowedExtensions: Array,
         nextUrl: {type: String, default: undefined},
         genericError: String,
     }
@@ -164,7 +164,6 @@ class BaseDocumentFormset extends Controller {
             0,
         )
         this.setGlobalFileTypeIndexValue(optionIdx)
-        this.allowedExtensionsTarget.textContent = this.allowedExtensionsValue[value || ""]
     }
 
     onDragEnter() {
@@ -501,9 +500,6 @@ class DocumentForm extends Controller {
     onDocumentTypeChanged({target: {value}}) {
         const option = Array.from(this.documentTypeTarget.options).find(option => option.value === value)
         this.accordionTypeLabelTarget.textContent = option.textContent
-        if (this.hasDocumentFileTarget) {
-            this.documentFileTarget.accept = this.documentFormsetOutlet.allowedExtensionsValue[option.value]
-        }
     }
 
     onModify() {

@@ -67,8 +67,6 @@ class BaseDocumentUploadForm(DsfrBaseForm, forms.ModelForm):
             return
         if file.size > MAX_UPLOAD_SIZE_BYTES:
             raise forms.ValidationError(f"La taille du fichier ne doit pas dépasser {MAX_UPLOAD_SIZE_MEGABYTES}Mo")
-        if document_type := self.cleaned_data.get("document_type"):
-            Document.validate_file_extention_for_document_type(file, document_type)
         return file
 
     def full_clean(self):

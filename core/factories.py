@@ -13,6 +13,7 @@ from faker import Faker
 
 from core.constants import DEPARTEMENTS, REGIONS
 from core.models import Agent, Contact, Departement, Document, Message, Region, Structure
+from core.validators import AllowedExtensions
 
 fake = Faker()
 
@@ -152,8 +153,7 @@ class DocumentFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def file(self):
-        ext_by_type = Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[self.document_type]
-        ext = random.choice(ext_by_type).value.lower()
+        ext = random.choice(AllowedExtensions.values).lower()
         return SimpleUploadedFile(f"test.{ext}", b"dummy content")
 
     @factory.lazy_attribute
