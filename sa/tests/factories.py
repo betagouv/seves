@@ -419,9 +419,25 @@ class EspeceConcerneeFactory(DjangoModelFactory):
     evenement = factory.SubFactory(EvenementAnimalFactory)
     espece = factory.SubFactory(EspeceFactory)
     identifiant = factory.Faker("bothify", text="ID-####")
-    presents = factory.Faker("pyint", min_value=0, max_value=100)
     morts = factory.Faker("pyint", min_value=0, max_value=100)
     cas = factory.Faker("pyint", min_value=0, max_value=100)
-    abattus = factory.Faker("pyint", min_value=0, max_value=100)
-    depeuples = factory.Faker("pyint", min_value=0, max_value=100)
-    vaccines = factory.Faker("pyint", min_value=0, max_value=100)
+
+    @factory.lazy_attribute
+    def presents(self):
+        if self.evenement.statut_animal != StatutAnimal.SAUVAGE:
+            return fake.pyint(min_value=0, max_value=100)
+
+    @factory.lazy_attribute
+    def abattus(self):
+        if self.evenement.statut_animal != StatutAnimal.SAUVAGE:
+            return fake.pyint(min_value=0, max_value=100)
+
+    @factory.lazy_attribute
+    def depeuples(self):
+        if self.evenement.statut_animal != StatutAnimal.SAUVAGE:
+            return fake.pyint(min_value=0, max_value=100)
+
+    @factory.lazy_attribute
+    def vaccines(self):
+        if self.evenement.statut_animal != StatutAnimal.SAUVAGE:
+            return fake.pyint(min_value=0, max_value=100)

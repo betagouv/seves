@@ -1,9 +1,17 @@
+from django.urls import reverse
 from playwright.sync_api import Page, expect
 
+from core.mixins import WithEtatMixin
 from sa.models import Espece, EspeceConcernee, EvenementAnimal
 from sa.models.evenement import StatutAnimal
 from sa.referentiels import situation_unite
-from sa.tests.factories import EspeceFactory, EvenementAnimalFactory, MaladieFactory, SituationUniteRegleFactory
+from sa.tests.factories import (
+    EspeceConcerneeFactory,
+    EspeceFactory,
+    EvenementAnimalFactory,
+    MaladieFactory,
+    SituationUniteRegleFactory,
+)
 from sa.tests.pages import EvenementAnimalDetailsPage, EvenementAnimalFormPage
 
 
@@ -26,7 +34,7 @@ def _bovin_with_situation_unite_regles():
 
 
 def test_can_create_evenement_animal_with_one_espece_concernee(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -49,7 +57,7 @@ def test_can_create_evenement_animal_with_one_espece_concernee(live_server, mock
 
 
 def test_can_add_and_delete_especes_concernees(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     espece_2 = EspeceFactory()
@@ -82,7 +90,7 @@ def test_can_add_and_delete_especes_concernees(live_server, mocked_authentificat
 
 
 def test_evenement_animal_show_modal_help(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
 
@@ -92,8 +100,52 @@ def test_evenement_animal_show_modal_help(live_server, page: Page):
     expect(creation_page.page.get_by_text("Aide au remplissage", exact=True)).to_be_visible()
 
 
+def test_can_create_evenement_animal_sauvage_with_espece_concernee(
+    live_server, mocked_authentification_user, page: Page
+):
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.SAUVAGE)
+    maladie = MaladieFactory()
+    espece = EspeceFactory()
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, input_data.statut_animal)
+    creation_page.fill_required_fields(input_data)
+    creation_page.fill_espece_concernee(0, identifiant="ID-1", morts="2", cas="3")
+    creation_page.submit_as_draft()
+
+    espece_concernee = EspeceConcernee.objects.get()
+    assert espece_concernee.identifiant == "ID-1"
+    assert espece_concernee.morts == 2
+    assert espece_concernee.cas == 3
+    assert espece_concernee.presents is None
+    assert espece_concernee.abattus is None
+    assert espece_concernee.depeuples is None
+    assert espece_concernee.vaccines is None
+    assert espece_concernee.situation_unite_regle is None
+
+
+def test_update_evenement_animal_sauvage_keeps_hidden_especes_concernees_values(live_server, page: Page):
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS, statut_animal=StatutAnimal.SAUVAGE)
+    espece_concernee = EspeceConcerneeFactory(
+        evenement=evenement, espece=evenement.espece, presents=10, morts=1, abattus=2, depeuples=3, vaccines=4
+    )
+
+    page.goto(f"{live_server.url}{reverse('sa:evenement-animal-update', kwargs={'pk': evenement.pk})}")
+    form_page = EvenementAnimalFormPage(page, live_server.url)
+    form_page.fill_espece_concernee(0, morts="5")
+    page.get_by_role("button", name="Enregistrer").first.click()
+    expect(page.get_by_text("L’évènement a bien été modifié.")).to_be_visible()
+
+    espece_concernee.refresh_from_db()
+    assert espece_concernee.morts == 5
+    assert espece_concernee.presents == 10
+    assert espece_concernee.abattus == 2
+    assert espece_concernee.depeuples == 3
+    assert espece_concernee.vaccines == 4
+
+
 def test_situation_unite_button_disabled_without_espece(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece, _ = Espece.objects.get_or_create(name="Bovin (Bos taurus)")
 
@@ -107,7 +159,7 @@ def test_situation_unite_button_disabled_without_espece(live_server, mocked_auth
 def test_situation_unite_button_disabled_for_species_absent_from_tableur(
     live_server, mocked_authentification_user, page: Page
 ):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     assert espece.name not in situation_unite.build_tree()
@@ -119,7 +171,7 @@ def test_situation_unite_button_disabled_for_species_absent_from_tableur(
 
 
 def test_situation_unite_full_workflow(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = _bovin_with_situation_unite_regles()
 
@@ -171,7 +223,7 @@ def test_situation_unite_full_workflow(live_server, mocked_authentification_user
 def test_situation_unite_options_are_filtered_by_species_and_path(
     live_server, mocked_authentification_user, page: Page
 ):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = _bovin_with_situation_unite_regles()
 
@@ -195,7 +247,7 @@ def test_situation_unite_options_are_filtered_by_species_and_path(
 def test_situation_unite_leaf_without_children_needs_no_further_level(
     live_server, mocked_authentification_user, page: Page
 ):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = _bovin_with_situation_unite_regles()
 
@@ -212,7 +264,7 @@ def test_situation_unite_leaf_without_children_needs_no_further_level(
 
 
 def test_situation_unite_cancel_discards_changes(live_server, mocked_authentification_user, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = _bovin_with_situation_unite_regles()
 

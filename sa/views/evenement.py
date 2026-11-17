@@ -102,8 +102,10 @@ class EvenementAnimalBaseView(
         kwargs = {"prefix": "especes_concernees"}
         if self.object:
             kwargs["instance"] = self.object
+            kwargs["statut_animal"] = self.object.statut_animal
         else:
             kwargs["initial"] = [{"espece": self.request.GET.get("espece")}]
+            kwargs["statut_animal"] = self.request.GET.get("statut_animal")
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
         return kwargs

@@ -635,6 +635,10 @@ class EvenementAnimal(
         return self.statut_animal == StatutAnimal.DETENU
 
     @property
+    def show_especes_concernees_detenu_fields(self):
+        return self.statut_animal != StatutAnimal.SAUVAGE
+
+    @property
     def typage_niveau_2(self):
         return self.typage.valeur_niveau_2 if self.typage_id else ""
 

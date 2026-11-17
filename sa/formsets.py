@@ -10,6 +10,7 @@ from sa.forms.especes_concernees import EspeceConcerneeForm
 from sa.forms.veterinaire import VeterinaireForm
 from sa.models import Analyse, Espece, EvenementAnimal
 from sa.models.especes_concernees import EspeceConcernee
+from sa.models.evenement import StatutAnimal
 from sa.models.veterinaire import Veterinaire
 from sa.referentiels import situation_unite
 
@@ -86,7 +87,8 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
             ),
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, statut_animal=None, **kwargs):
+        self.statut_animal = statut_animal
         super().__init__(*args, **kwargs)
         if self.forms:
             first_form = self.forms[0]
@@ -95,6 +97,10 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
             first_form.empty_permitted = False
             first_form.always_save = True
 
+    @property
+    def show_detenu_fields(self):
+        return self.statut_animal != StatutAnimal.SAUVAGE
+
     @cached_property
     def _situation_unite_rows(self):
         return situation_unite.fetch_rows()
@@ -102,6 +108,7 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
     def get_form_kwargs(self, index):
         kwargs = super().get_form_kwargs(index)
         kwargs["situation_unite_rows"] = self._situation_unite_rows
+        kwargs["show_detenu_fields"] = self.show_detenu_fields
         return kwargs
 
     @property

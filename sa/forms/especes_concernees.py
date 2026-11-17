@@ -29,8 +29,25 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
 
     always_save = False
 
-    def __init__(self, *args, situation_unite_rows=None, **kwargs):
+    DETENU_FIELDS = (
+        "presents",
+        "abattus",
+        "depeuples",
+        "vaccines",
+        "type_lieu",
+        "mode_elevage",
+        "type_production",
+        "type_elevage",
+    )
+
+    def __init__(self, *args, situation_unite_rows=None, show_detenu_fields=True, **kwargs):
         super().__init__(*args, **kwargs)
+        self.show_detenu_fields = show_detenu_fields
+        if not show_detenu_fields:
+            for field_name in self.DETENU_FIELDS:
+                self.fields.pop(field_name)
+            return
+
         choices = situation_unite.choices_by_level(situation_unite_rows)
         empty_choice = self.fields["type_lieu"].choices[:1]
         self.fields["type_lieu"].choices = empty_choice + choices["type_lieu"]
@@ -48,6 +65,9 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        if not self.show_detenu_fields:
+            return cleaned_data
+
         type_lieu = cleaned_data.get("type_lieu") or ""
         mode_elevage = cleaned_data.get("mode_elevage") or ""
         type_production = cleaned_data.get("type_production") or ""
