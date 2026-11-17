@@ -589,6 +589,23 @@ class EvenementAnimal(
 
     def get_allowed_document_types(self):
         return [
+            Document.TypeDocument.FICHE_SIGNALEMENT,
+            Document.TypeDocument.PHOTOGRAPHIE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.RAPPORT_INSPECTION,
+            Document.TypeDocument.COMPTE_RENDU_BILAN,
+            Document.TypeDocument.RAPPORT_ENQUETE_EPIDEMIOLOGIQUE,
+            Document.TypeDocument.CARTOGRAPHIE,
+            Document.TypeDocument.ARRETE,
+            Document.TypeDocument.AUTRE_DECISION_ADMINISTRATIVE,
+            Document.TypeDocument.DOSSIER_INDEMNISATION,
+            Document.TypeDocument.DOSSIER_PRESTATION_ELEVEUR,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.DOCUMENT_TRACABILITE,
+            Document.TypeDocument.REGLEMENTATION,
+            Document.TypeDocument.COURRIER,
+            Document.TypeDocument.MESURES_SURVEILLANCE_LUTTE,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.AUTRE,
         ]
 
