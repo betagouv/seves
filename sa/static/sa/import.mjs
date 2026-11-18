@@ -4,25 +4,37 @@ import {Controller} from "Stimulus"
 const DRAGGING_CLASS = "document-upload-drag-drop--dragging"
 
 function getCookie(name) {
-    const parts = `; ${document.cookie}`.split(`; ${name}=`)
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
     if (parts.length === 2) return parts.pop().split(";").shift()
 }
 
-/**
- * Dépôt d'un fichier CSV d'import en masse : affiche dans la modale le nombre de lignes
- * éligibles et ignorées renvoyé par le serveur, sans recharger la page.
- * @property {HTMLInputElement} fileTarget
- * @property {HTMLElement} fileNameTarget
- * @property {HTMLButtonElement} submitTarget
- * @property {HTMLElement} dropZoneTarget
- * @property {string} urlValue
- */
 class ImportController extends Controller {
-    static targets = ["file", "fileName", "submit", "dropZone", "result", "eligible", "ignored", "error", "errorText"]
+    static targets = [
+        "file",
+        "fileName",
+        "submit",
+        "dropZone",
+        "result",
+        "eligible",
+        "ignored",
+        "errorText",
+        "submitCreate",
+        "done",
+        "error",
+        "resultCreation",
+    ]
     static values = {url: String}
 
-    /** Do not remove; needed to allow the controller to receive `drop` events */
-    onDragOver() {}
+    /**
+     * Do not remove; this is needed to allow the controller to receive `drop` events
+     * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dragover_event#examples
+     * @param {DragEvent} evt
+     */
+    onDragOver(evt) {
+        evt.preventDefault()
+        evt.stopPropagation()
+    }
 
     onDragEnter() {
         this.dropZoneTarget.classList.add(DRAGGING_CLASS)
@@ -44,12 +56,12 @@ class ImportController extends Controller {
         this.fileNameTarget.textContent = file?.name ?? ""
         this.submitTarget.disabled = !file
         this.resultTarget.hidden = true
-        this.errorTarget.hidden = true
     }
 
     async onSubmit() {
         const body = new FormData()
         body.append("file", this.fileTarget.files[0])
+        body.append("action", "test")
 
         this.submitTarget.disabled = true
         const response = await fetch(this.urlValue, {
@@ -60,14 +72,30 @@ class ImportController extends Controller {
         const data = await response.json()
         this.submitTarget.disabled = false
 
-        if (!response.ok) {
-            this.errorTextTarget.textContent = data.error
-            this.errorTarget.hidden = false
-            return
-        }
         this.eligibleTarget.textContent = data.eligible
         this.ignoredTarget.textContent = data.ignored
         this.resultTarget.hidden = false
+        this.submitCreateTarget.classList.remove("fr-hidden")
+        this.submitTarget.classList.add("fr-hidden")
+    }
+
+    async onSubmitForCreation() {
+        this.submitCreateTarget.disabled = true
+        const body = new FormData()
+        body.append("file", this.fileTarget.files[0])
+        body.append("action", "create")
+
+        this.submitTarget.disabled = true
+        const response = await fetch(this.urlValue, {
+            method: "POST",
+            headers: {"X-CSRFToken": getCookie("csrftoken")},
+            body,
+        })
+        const data = await response.json()
+        this.doneTarget.textContent = data.done
+        this.errorTarget.textContent = data.errors
+        this.resultCreationTarget.classList.remove("fr-hidden")
+        this.resultTarget.hidden = true
     }
 }
 
