@@ -6,6 +6,7 @@ from .views import (
     EvenementAnimalDocumentExportView,
     EvenementAnimalUpdateView,
     EvenementListView,
+    ImportView,
 )
 from .views.api import FindFreeLinksView, GetMassActionStatus
 
@@ -15,6 +16,11 @@ urlpatterns = [
         "evenements/",
         EvenementListView.as_view(),
         name="evenement-liste",
+    ),
+    path(
+        "imports/",
+        ImportView.as_view(),
+        name="import",
     ),
     path(
         "evenement-animal/creation",

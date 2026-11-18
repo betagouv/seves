@@ -1,6 +1,7 @@
 from .analyse import Analyse
 from .especes_concernees import EspeceConcernee
 from .evenement import Espece, EvenementAnimal
+from .imports import Import
 from .laboratoire import Laboratoire
 from .maladie import Maladie
 from .methode_analyse import MethodeAnalyse
@@ -13,6 +14,7 @@ __all__ = (
     "Espece",
     "EspeceConcernee",
     "EvenementAnimal",
+    "Import",
     "Laboratoire",
     "Maladie",
     "MethodeAnalyse",

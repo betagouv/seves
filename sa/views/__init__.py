@@ -5,6 +5,7 @@ from .evenement import (
     EvenementAnimalUpdateView,
     EvenementListView,
 )
+from .imports import ImportView
 
 __all__ = (
     "EvenementAnimalCreationView",
@@ -12,4 +13,5 @@ __all__ = (
     "EvenementAnimalDocumentExportView",
     "EvenementAnimalUpdateView",
     "EvenementListView",
+    "ImportView",
 )

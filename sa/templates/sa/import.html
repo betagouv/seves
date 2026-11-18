@@ -1,0 +1,84 @@
+{% extends "sa/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/form/document_uploads.css' %}">
+{% endblock extrahead %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'sa/import.mjs' %}"></script>
+{% endblock scripts %}
+
+{% block content %}
+    <main class="main-container fr-p-4w">
+        <h1 class="fr-h3">Imports en masse</h1>
+        <button type="button"
+                class="fr-btn fr-btn--icon-left fr-icon-upload-line"
+                data-fr-opened="false"
+                aria-controls="import-modal"
+                data-testid="open-import-modal">
+            Importer des événements
+        </button>
+
+        <dialog id="import-modal" class="fr-modal" aria-labelledby="import-modal-title">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button aria-controls="import-modal" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content"
+                                 data-controller="import"
+                                 data-import-url-value="{% url 'sa:import' %}">
+                                <h2 id="import-modal-title" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                                    Importer des événements en masse
+                                </h2>
+
+                                <section class="document-upload-drag-drop"
+                                         data-import-target="dropZone"
+                                         data-action="dragover->import#onDragOver:prevent:stop
+                                                      drop->import#onDrop:prevent:stop
+                                                      dragenter->import#onDragEnter:prevent:stop
+                                                      dragleave->import#onDragLeave:prevent:stop
+                                                      dragend->import#onDragLeave:prevent:stop">
+                                    <div class="document-upload-drag-drop--zone">
+                                        <p class="fr-m-0">
+                                            Glissez votre fichier ici ou
+                                            <label class="fr-label" for="filechooser-btn" tabindex="0">cliquez pour le sélectionner</label>
+                                            {{ form.file }}
+                                        </p>
+                                        <p class="fr-m-0 fr-mt-2v fr-text--bold" data-import-target="fileName"></p>
+                                    </div>
+                                </section>
+                                <p class="fr-hint-text fr-mt-1w">Format supporté : .csv</p>
+
+                                <div class="fr-alert fr-alert--error fr-mt-2w" data-import-target="error" hidden>
+                                    <p data-import-target="errorText"></p>
+                                </div>
+
+                                <div class="fr-alert fr-alert--success fr-mt-2w" data-import-target="result" hidden>
+                                    <p data-testid="import-eligible-rows">Lignes éligibles à l'import : <span data-import-target="eligible"></span></p>
+                                    <p data-testid="import-ignored-rows">Lignes ignorées : <span data-import-target="ignored"></span></p>
+                                </div>
+
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
+                                    <button type="button" class="fr-btn fr-btn--secondary" aria-controls="import-modal">Annuler</button>
+                                    <button type="button"
+                                            class="fr-btn"
+                                            disabled
+                                            data-import-target="submit"
+                                            data-action="import#onSubmit"
+                                            data-testid="import-submit-btn">
+                                        Analyser le fichier
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </main>
+{% endblock content %}
