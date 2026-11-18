@@ -12,6 +12,7 @@ class PermissionsAdminsFormController extends Controller {
         "form",
         "SSACheckbox",
         "SVCheckbox",
+        "SACheckbox",
         "structureFilter",
     ]
     static values = {config: Object}
@@ -42,6 +43,7 @@ class PermissionsAdminsFormController extends Controller {
         const userId = this.choices.getValue(true)
         this.SSACheckboxTarget.checked = false
         this.SVCheckboxTarget.checked = false
+        this.SACheckboxTarget.checked = false
         if (this.configValue[userId]) {
             this.configValue[userId].forEach(group => {
                 if (group) {
