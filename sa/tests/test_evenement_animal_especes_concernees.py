@@ -1,7 +1,9 @@
 from django.urls import reverse
 from playwright.sync_api import Page, expect
+import pytest
 
 from core.mixins import WithEtatMixin
+from sa.formsets import EspeceConcerneeFormSet
 from sa.models import Espece, EspeceConcernee, EvenementAnimal
 from sa.models.evenement import StatutAnimal
 from sa.referentiels import situation_unite
@@ -142,6 +144,26 @@ def test_update_evenement_animal_sauvage_keeps_hidden_especes_concernees_values(
     assert espece_concernee.abattus == 2
     assert espece_concernee.depeuples == 3
     assert espece_concernee.vaccines == 4
+
+
+@pytest.mark.parametrize(
+    "statut_animal, expected_errors",
+    [(StatutAnimal.SAUVAGE, ["Veuillez soumettre au plus 1 formulaire."]), (StatutAnimal.DETENU, [])],
+)
+def test_especes_concernees_formset_accepts_only_one_espece_for_sauvage(statut_animal, expected_errors):
+    espece, espece_2 = EspeceFactory.create_batch(2)
+    data = {
+        "especes_concernees-TOTAL_FORMS": "2",
+        "especes_concernees-INITIAL_FORMS": "0",
+        "especes_concernees-1-espece": espece_2.pk,
+    }
+
+    formset = EspeceConcerneeFormSet(
+        data=data, prefix="especes_concernees", initial=[{"espece": espece.pk}], statut_animal=statut_animal
+    )
+
+    formset.is_valid()
+    assert formset.non_form_errors() == expected_errors
 
 
 def test_situation_unite_button_disabled_without_espece(live_server, mocked_authentification_user, page: Page):
