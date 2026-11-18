@@ -310,6 +310,7 @@ class EvenementAnimal(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
     decert_id = models.CharField(max_length=255, verbose_name="N° de la fiche dans DECERT", blank=True)
+    import_id = models.CharField(max_length=255, verbose_name="N° identifiant unique dans l'import", blank=True)
 
     # Fields that determines the evenement global setup
     maladie = models.ForeignKey(Maladie, on_delete=models.PROTECT, related_name="cases", null=False)

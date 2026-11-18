@@ -134,6 +134,11 @@ class TuberculoseFactory(MaladieFactory):
         maladie_ref = MALADIES[3]
 
 
+class FCOFactory(MaladieFactory):
+    class Params:
+        maladie_ref = MALADIES[4]
+
+
 class AcarapioseFactory(MaladieFactory):
     class Params:
         maladie_ref = MALADIES[5]

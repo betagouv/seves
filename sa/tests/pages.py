@@ -820,3 +820,53 @@ class EvenementAnimalDetailsPage(WithActionsPage, WithSyntheseBlockMixin, WithPr
             texts.append([t.strip() for t in row.locator("td").all_text_contents()])
 
         return texts
+
+
+class ImportPage:
+    def __init__(self, page: Page, base_url):
+        self.page = page
+        self.base_url = base_url
+
+    def navigate(self):
+        self.page.goto(f"{self.base_url}{reverse('sa:import')}")
+
+    def analyse(self, file):
+        self.page.get_by_test_id("open-import-modal").click()
+        self.page.get_by_test_id("import-filechooser").set_input_files(file)
+        self.analyse_button.click()
+
+    @property
+    def analyse_button(self):
+        return self.page.get_by_role("button", name="Analyser le fichier")
+
+    @property
+    def import_button(self):
+        return self.page.get_by_role("button", name="Lancer l'import")
+
+    @property
+    def analysis_result(self):
+        return self.page.locator("[data-import-target='result']")
+
+    @property
+    def import_result(self):
+        return self.page.locator("[data-import-target='resultCreation']")
+
+    @property
+    def error_message(self):
+        return self.page.locator("[data-import-target='errorText']")
+
+    @property
+    def eligible_count(self):
+        return self.page.locator("[data-import-target='eligible']")
+
+    @property
+    def ignored_count(self):
+        return self.page.locator("[data-import-target='ignored']")
+
+    @property
+    def done_count(self):
+        return self.page.locator("[data-import-target='done']")
+
+    @property
+    def error_count(self):
+        return self.page.locator("[data-import-target='errorCount']")
