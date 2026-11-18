@@ -89,6 +89,9 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
 
     def __init__(self, *args, statut_animal=None, **kwargs):
         self.statut_animal = statut_animal
+        if not self.can_add_especes:
+            self.max_num = 1
+            self.validate_max = True
         super().__init__(*args, **kwargs)
         if self.forms:
             first_form = self.forms[0]
@@ -99,6 +102,10 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
 
     @property
     def show_detenu_fields(self):
+        return self.statut_animal != StatutAnimal.SAUVAGE
+
+    @property
+    def can_add_especes(self):
         return self.statut_animal != StatutAnimal.SAUVAGE
 
     @cached_property

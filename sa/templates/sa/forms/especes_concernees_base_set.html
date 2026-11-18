@@ -172,12 +172,14 @@
             </button>
         </legend>
 
-        <button
-            type="button"
-            class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
-            data-action="especes-concernees-formset#onAddForm:prevent:stop"
-            data-testid="add-espece-concernee"
-        >Ajouter</button>
+        {% if formset.can_add_especes %}
+            <button
+                type="button"
+                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line fr-mb-2w"
+                data-action="especes-concernees-formset#onAddForm:prevent:stop"
+                data-testid="add-espece-concernee"
+            >Ajouter</button>
+        {% endif %}
     </div>
     {{ formset.non_form_errors }}
     {{ formset.situation_unite_tree_json|json_script:"situation-unite-tree" }}
