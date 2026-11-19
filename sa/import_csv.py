@@ -1,12 +1,17 @@
 import csv
 from datetime import datetime
+from functools import cache
 import io
 import re
 
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
+import requests
+from requests import ReadTimeout
 
 from core.mixins import normalize
+from core.models import Departement
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal, StatutEvenement, TypeLieu
 
@@ -32,6 +37,10 @@ class MissingColumnsError(Exception):
     pass
 
 
+class UnableToLocateException(Exception):
+    pass
+
+
 def _clean(value):
     return " ".join(normalize(value).split())
 
@@ -52,6 +61,40 @@ def _maladies_by_name():
     return maladies
 
 
+@cache
+def _get_departements():
+    return {str(d.numero): d.pk for d in Departement.objects.all()}
+
+
+@cache
+def _get_geo_data_from_insee_code(insee_code):
+    try:
+        response = requests.get(f"{settings.GEO_API_ROOT}/communes/{insee_code}?fields=centre,departement", timeout=8)
+    except ReadTimeout:
+        raise UnableToLocateException
+
+    try:
+        response.raise_for_status()
+        response = response.json()
+    except Exception:
+        # Insee code is not valid, json is not valid, any other error
+        raise UnableToLocateException
+
+    departements = _get_departements()
+
+    try:
+        data = {
+            "commune": response["nom"],
+            "code_insee": insee_code,
+            "departement_id": departements[response["departement"]["code"]],
+            "coordinates": Point(response["centre"]["coordinates"][0], response["centre"]["coordinates"][1], srid=4326),
+        }
+    except KeyError:
+        raise UnableToLocateException
+
+    return data
+
+
 def _parse_row(row, especes, maladies, user):
     if not all(row[column] for column in MANDATORY_COLUMNS):
         return None
@@ -70,6 +113,11 @@ def _parse_row(row, especes, maladies, user):
     if not espece or not maladie:
         return None
 
+    try:
+        geo_data = _get_geo_data_from_insee_code(code_insee)
+    except UnableToLocateException:
+        return None
+
     fields = {
         "import_id": row[ID_COLUMN],
         "espece": espece,
@@ -80,7 +128,7 @@ def _parse_row(row, especes, maladies, user):
         "statut_evenement": StatutEvenement.CONFIRME,
         "createur": user.agent.structure,
         "type_lieu": TypeLieu.FARM,
-        "coordinates": Point(1, 1, srid=4326),
+        **geo_data,
     }
     evenement = EvenementAnimal(**fields)
     try:
