@@ -10,7 +10,7 @@ from dsfr.forms import DsfrBaseForm
 
 from core.fields import MultiModelChoiceField, SEVESChoiceField
 from core.form_mixins import WithFreeLinksMixin, WithLatestVersionLocking, js_module
-from core.mixins import WithEtatMixin
+from core.mixins import WithEtatMixin, normalize
 from core.models import Departement
 from core.widgets import TreeselectRadio
 from sa.forms.fields import LatLonField
@@ -290,7 +290,9 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         required=False, label="Origine de l'infection", choices=OrigineInfection.choices
     )
     mesures_controle = MultipleChoiceField(
-        choices=MesureDeControle.choices, label="Mesures de contrôle mises en œuvre", required=False
+        choices=sorted(MesureDeControle.choices, key=lambda c: normalize(c[1])),
+        label="Mesures de contrôle mises en œuvre",
+        required=False,
     )
 
     typage_niveau_2 = forms.ChoiceField(required=False, choices=())
