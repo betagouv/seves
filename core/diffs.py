@@ -1,16 +1,18 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from functools import cache
 import json
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import ManyToOneRel
 from django.utils import timezone
 from django.utils.encoding import force_str
+from django.utils.formats import date_format
 from reversion import is_registered
 from reversion.models import Revision, Version
 from reversion.revisions import _get_options
@@ -122,6 +124,32 @@ def get_queryset_with_related_objects(old_revision, related_model, target_ids):
 
 
 class CompareObject(InitialCompareObject):
+    def _obj_repr(self, obj):
+        """Format values the way they are displayed in the fiches instead of their Python repr"""
+        if isinstance(obj, models.Model):
+            if hasattr(obj, "get_revision_list_display"):
+                return obj.get_revision_list_display()
+            return str(obj)
+        if isinstance(obj, datetime):
+            return date_format(timezone.localtime(obj) if timezone.is_aware(obj) else obj, "d/m/Y à H:i")
+        if isinstance(obj, date):
+            return date_format(obj, "d/m/Y")
+        if isinstance(obj, Point):
+            return f"Latitude : {obj.y}\nLongitude : {obj.x}"
+        if isinstance(obj, (list, tuple)):
+            return ", ".join(item if isinstance(item, str) else self._obj_repr(item) for item in obj)
+        return super()._obj_repr(obj)
+
+    def _to_string_ArrayField(self):
+        if not isinstance(self.value, list):
+            return self._obj_repr(self.value)
+        try:
+            labels = getattr(self.get_object_version().object, f"{self.field_name}_labels")
+        except (AttributeError, ValueError):
+            choices = dict(self.field.base_field.flatchoices)
+            labels = [str(choices.get(value, value)) for value in self.value]
+        return labels if isinstance(labels, str) else ", ".join(labels)
+
     def get_many_to_something(self, target_ids, related_model, is_reverse=False):
         """
         Taken from InitialCompareObject and add select_related to reduce the number of queries

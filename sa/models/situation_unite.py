@@ -22,3 +22,10 @@ class SituationUniteRegle(models.Model):
 
     def __str__(self):
         return f"{self.espece} - {self.type_lieu}"
+
+    def get_revision_list_display(self):
+        return "\n".join(
+            f"{self._meta.get_field(field_name).verbose_name} : {getattr(self, field_name)}"
+            for field_name in ("type_lieu", "mode_elevage", "type_production", "type_elevage")
+            if getattr(self, field_name)
+        )
