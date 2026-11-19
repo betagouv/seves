@@ -1,13 +1,70 @@
+import contextlib
 from datetime import date
+from unittest import mock
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
+import pytest
+from requests import HTTPError, ReadTimeout
 
+from core.models import Departement
+from sa.import_csv import _get_departements, _get_geo_data_from_insee_code
 from sa.models import EvenementAnimal, Import
 from sa.models.evenement import StatutEvenement
 from sa.tests.factories import EspeceFactory, FCOFactory
 from sa.tests.pages import ImportPage
 
 HEADER = "Identifiant unique;Espèce;Maladie;Date de confirmation;Code INSEE commune;N° EDE"
+
+COMMUNES = {
+    "67482": {
+        "nom": "Strasbourg",
+        "centre": {"type": "Point", "coordinates": [7.7521, 48.5734]},
+        "departement": {"code": "67", "nom": "Bas-Rhin"},
+    },
+    "59350": {
+        "nom": "Lille",
+        "centre": {"type": "Point", "coordinates": [3.0468, 50.6311]},
+        "departement": {"code": "59", "nom": "Nord"},
+    },
+}
+
+
+@pytest.fixture(autouse=True)
+def clear_geo_api_caches():
+    for cached in (_get_geo_data_from_insee_code, _get_departements):
+        cached.cache_clear()
+    yield
+    for cached in (_get_geo_data_from_insee_code, _get_departements):
+        cached.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def departements(ensure_departements):
+    return ensure_departements("Bas-Rhin", "Nord")
+
+
+def _departements_by_numero():
+    return {str(d.numero): d.pk for d in Departement.objects.all()}
+
+
+@contextlib.contextmanager
+def mock_geo_api(timeout_for=()):
+    def _get(url, *args, **kwargs):
+        code_insee = url.split("/communes/")[1].split("?")[0]
+        if code_insee in timeout_for:
+            raise ReadTimeout
+        response = mock.Mock()
+        if code_insee not in COMMUNES:
+            response.raise_for_status.side_effect = HTTPError("404 Client Error")
+            return response
+        response.json.return_value = COMMUNES[code_insee]
+        return response
+
+    with (
+        mock.patch("sa.import_csv._get_departements", _departements_by_numero),
+        mock.patch("sa.import_csv.requests.get", side_effect=_get) as mocked_get,
+    ):
+        yield mocked_get
 
 
 def _csv_file(tmp_path, *lines):
@@ -30,12 +87,14 @@ def test_import_analyses_then_creates_evenements_with_one_row_in_error(
 
     import_page = ImportPage(page, live_server.url)
     import_page.navigate()
-    import_page.analyse(file)
 
-    assert not EvenementAnimal.objects.exists()
-
-    import_page.import_button.click()
-    page.wait_for_timeout(500)
+    with mock_geo_api() as mocked_get:
+        import_page.analyse(file)
+        assert not EvenementAnimal.objects.exists()
+        import_page.import_button.click()
+        expect(import_page.import_result).to_be_visible()
+        expect(import_page.done_count).to_have_text("2")
+        expect(import_page.error_count).to_have_text("0")
 
     assert sorted(EvenementAnimal.objects.values_list("import_id", flat=True)) == [
         "TEST-SA-2026-0001",
@@ -48,6 +107,11 @@ def test_import_analyses_then_creates_evenements_with_one_row_in_error(
     assert evenement.date_statut_changed == date(2026, 4, 5)
     assert evenement.statut_evenement == StatutEvenement.CONFIRME
     assert evenement.createur == mocked_authentification_user.agent.structure
+    assert evenement.commune == "Strasbourg"
+    assert evenement.code_insee == "67482"
+    assert evenement.departement.numero == "67"
+    assert (round(evenement.coordinates.x, 4), round(evenement.coordinates.y, 4)) == (7.7521, 48.5734)
+    assert mocked_get.call_count == 2
 
     csv_import = Import.objects.get()
     assert csv_import.createur == mocked_authentification_user.agent.structure
@@ -64,9 +128,13 @@ def test_import_matches_espece_and_maladie_by_full_name(live_server, page: Page,
 
     import_page = ImportPage(page, live_server.url)
     import_page.navigate()
-    import_page.analyse(file)
-    import_page.import_button.click()
-    page.wait_for_timeout(500)
+
+    with mock_geo_api():
+        import_page.analyse(file)
+        import_page.import_button.click()
+        expect(import_page.import_result).to_be_visible()
+        expect(import_page.done_count).to_have_text("2")
+
     assert EvenementAnimal.objects.filter(espece=espece, maladie=maladie).count() == 2
 
 
@@ -77,7 +145,55 @@ def test_import_analysis_alone_creates_nothing(live_server, page: Page, tmp_path
 
     import_page = ImportPage(page, live_server.url)
     import_page.navigate()
-    import_page.analyse(file)
+
+    with mock_geo_api():
+        import_page.analyse(file)
 
     assert not EvenementAnimal.objects.exists()
     assert not Import.objects.exists()
+
+
+def test_import_ignores_row_when_geo_api_times_out(live_server, page: Page, tmp_path):
+    EspeceFactory(name="Bovin (Bos taurus)")
+    FCOFactory()
+    file = _csv_file(
+        tmp_path,
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940",
+    )
+
+    import_page = ImportPage(page, live_server.url)
+    import_page.navigate()
+
+    with mock_geo_api(timeout_for=("59350",)):
+        import_page.analyse(file)
+        import_page.import_button.click()
+        expect(import_page.import_result).to_be_visible()
+        expect(import_page.done_count).to_have_text("1")
+
+    assert list(EvenementAnimal.objects.values_list("import_id", flat=True)) == ["TEST-SA-2026-0001"]
+
+
+def test_import_ignores_row_with_insee_code_unknown_to_geo_api(live_server, page: Page, tmp_path):
+    EspeceFactory(name="Bovin (Bos taurus)")
+    FCOFactory()
+    file = _csv_file(
+        tmp_path,
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;99999;00210940",
+    )
+
+    import_page = ImportPage(page, live_server.url)
+    import_page.navigate()
+
+    with mock_geo_api() as mocked_get:
+        import_page.analyse(file)
+        import_page.import_button.click()
+        expect(import_page.import_result).to_be_visible()
+        expect(import_page.done_count).to_have_text("1")
+
+    assert list(EvenementAnimal.objects.values_list("import_id", flat=True)) == ["TEST-SA-2026-0001"]
+    assert sorted({call.args[0] for call in mocked_get.call_args_list}) == [
+        "https://geo.api.gouv.fr/communes/67482?fields=centre,departement",
+        "https://geo.api.gouv.fr/communes/99999?fields=centre,departement",
+    ]
