@@ -56,7 +56,13 @@
         </div>
     </form>
 
-    <div class="main-container" data-controller="mass-actions" data-mass-actions-api-url-value="{% url 'sa:mass-action-status' %}">
+    <div
+        class="main-container"
+        data-controller="mass-actions"
+        data-mass-actions-api-url-value="{% url 'sa:mass-action-status' %}"
+        data-mass-actions-pks-url-value="{% url 'sa:mass-action-pks' %}?{{ query_without_page }}"
+        data-mass-actions-total-count-value="{{ paginator.count }}"
+    >
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
         </div>
@@ -86,6 +92,12 @@
             </nav>
             <span class="fr-text--sm fr-mb-0" aria-live="polite" data-mass-actions-target="selectionCount" data-testid="mass-actions-selection-count"></span>
         </div>
+
+        <p class="mass-actions-banner fr-background-default--grey fr-mt-2v fr-mb-0 fr-hidden" aria-live="polite" data-mass-actions-target="banner" data-testid="mass-actions-banner">
+            <span data-mass-actions-target="bannerText"></span>
+            <button type="button" class="fr-btn fr-btn--tertiary-no-outline" data-mass-actions-target="selectAllFilteredButton" data-action="mass-actions#selectAllFiltered">Sélectionner les {{ paginator.count }} événements correspondant aux filtres</button>
+            <button type="button" class="fr-btn fr-btn--tertiary-no-outline" data-mass-actions-target="clearSelectionButton" data-action="mass-actions#clearSelection">Effacer la sélection</button>
+        </p>
 
         {% if paginator.count > 0 %}
             <form method="post">
