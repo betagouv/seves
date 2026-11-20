@@ -22,6 +22,7 @@ MALADIE_COLUMN = "Maladie"
 DATE_COLUMN = "Date de confirmation"
 INSEE_COLUMN = "Code INSEE commune"
 EDE_COLUMN = "N° EDE"
+SEROTYPE_COLUMN = "Sérotype"
 MANDATORY_COLUMNS = (
     ID_COLUMN,
     ESPECE_COLUMN,
@@ -30,6 +31,8 @@ MANDATORY_COLUMNS = (
     INSEE_COLUMN,
     EDE_COLUMN,
 )
+COLUMNS = (*MANDATORY_COLUMNS, SEROTYPE_COLUMN)
+
 CODE_INSEE_RE = re.compile(r"^(?:\d{5}|2A\d{3}|2B\d{3})$")
 
 
@@ -95,7 +98,14 @@ def _get_geo_data_from_insee_code(insee_code):
     return data
 
 
-def _parse_row(row, especes, maladies, user):
+def _get_typages():
+    typages = {}
+    for maladie in Maladie.objects.filter(acronym__in=IMPORTABLE_MALADIE_ACRONYMS).prefetch_related("typages"):
+        typages[maladie.pk] = {t.valeur_niveau_2: t.id for t in maladie.typages.all()}
+    return typages
+
+
+def _parse_row(row, especes, maladies, user, typages):
     if not all(row[column] for column in MANDATORY_COLUMNS):
         return None
 
@@ -118,10 +128,19 @@ def _parse_row(row, especes, maladies, user):
     except UnableToLocateException:
         return None
 
+    serotype = _clean(row[SEROTYPE_COLUMN])
+    typage = None
+    if serotype:
+        try:
+            typage = typages[maladie.pk][serotype]
+        except KeyError:
+            return None
+
     fields = {
         "import_id": row[ID_COLUMN],
         "espece": espece,
         "maladie": maladie,
+        "typage_id": typage,
         "statut_animal": StatutAnimal.DETENU,
         "numero_identifiant_etablissement": row[EDE_COLUMN],
         "date_statut_changed": date_confirmation,
@@ -149,11 +168,12 @@ def parse_csv(file, user):
     especes = _especes_by_name()
     maladies = _maladies_by_name()
     evenements, seen_identifiants, ignored, read = [], set(), 0, 0
+    typages = _get_typages()
 
     for raw_row in reader:
         read += 1
-        cleaned_row = {column: raw_row[column].strip() for column in MANDATORY_COLUMNS}
-        evenement = _parse_row(cleaned_row, especes, maladies, user)
+        cleaned_row = {column: raw_row[column].strip() for column in COLUMNS}
+        evenement = _parse_row(cleaned_row, especes, maladies, user, typages)
 
         if not evenement or evenement.import_id.lower() in seen_identifiants:
             ignored += 1
