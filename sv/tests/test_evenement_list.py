@@ -2,6 +2,7 @@ from django.urls import reverse
 from playwright.sync_api import Page, expect
 
 from sv.factories import EvenementFactory, FicheDetectionFactory, LieuFactory
+from sv.views import EvenementListView
 
 
 def test_commune_column_with_multiple_communes(live_server, page: Page):
@@ -80,10 +81,11 @@ def test_list_ordered_by_most_recent_date_derniere_modification(live_server, pag
     )
 
 
-def test_compteur_fiche(live_server, page: Page):
-    nb_evenements = 101
+def test_compteur_fiche(live_server, page: Page, monkeypatch):
+    monkeypatch.setattr(EvenementListView, "paginate_by", 2)
+    nb_evenements = 3
     EvenementFactory.create_batch(nb_evenements)
     page.goto(f"{live_server.url}{reverse('sv:evenement-liste')}")
-    expect(page.get_by_text(f"101 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text(f"{nb_evenements} sur un total de {nb_evenements}", exact=True)).to_be_visible()
     page.get_by_role("link", name="Dernière page").click()
-    expect(page.get_by_text(f"101 sur un total de {nb_evenements}", exact=True)).to_be_visible()
+    expect(page.get_by_text(f"{nb_evenements} sur un total de {nb_evenements}", exact=True)).to_be_visible()
