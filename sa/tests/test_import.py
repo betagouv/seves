@@ -13,7 +13,7 @@ from sa.models.evenement import StatutEvenement
 from sa.tests.factories import EspeceFactory, FCOFactory
 from sa.tests.pages import ImportPage
 
-HEADER = "Identifiant unique;Espèce;Maladie;Date de confirmation;Code INSEE commune;N° EDE"
+HEADER = "Identifiant unique;Espèce;Maladie;Date de confirmation;Code INSEE commune;N° EDE;Sérotype"
 
 COMMUNES = {
     "67482": {
@@ -80,9 +80,9 @@ def test_import_analyses_then_creates_evenements_with_one_row_in_error(
     maladie = FCOFactory()
     file = _csv_file(
         tmp_path,
-        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939",
-        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940",
-        f"TEST-SA-2026-0003;bovin;FCO;07/04/2026;59350;{'9' * 300}",
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939;",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940;",
+        f"TEST-SA-2026-0003;bovin;FCO;07/04/2026;59350;{'9' * 300};",
     )
 
     import_page = ImportPage(page, live_server.url)
@@ -122,8 +122,8 @@ def test_import_matches_espece_and_maladie_by_full_name(live_server, page: Page,
     maladie = FCOFactory()
     file = _csv_file(
         tmp_path,
-        "TEST-SA-2026-0001;Bovin (Bos taurus);Fièvre catarrhale ovine;05/04/2026;67482;00210939",
-        "TEST-SA-2026-0002;BOVIN;fco;06/04/2026;59350;00210940",
+        "TEST-SA-2026-0001;Bovin (Bos taurus);Fièvre catarrhale ovine;05/04/2026;67482;00210939;",
+        "TEST-SA-2026-0002;BOVIN;fco;06/04/2026;59350;00210940;",
     )
 
     import_page = ImportPage(page, live_server.url)
@@ -141,7 +141,7 @@ def test_import_matches_espece_and_maladie_by_full_name(live_server, page: Page,
 def test_import_analysis_alone_creates_nothing(live_server, page: Page, tmp_path):
     EspeceFactory(name="Bovin (Bos taurus)")
     FCOFactory()
-    file = _csv_file(tmp_path, "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939")
+    file = _csv_file(tmp_path, "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939;")
 
     import_page = ImportPage(page, live_server.url)
     import_page.navigate()
@@ -158,8 +158,8 @@ def test_import_ignores_row_when_geo_api_times_out(live_server, page: Page, tmp_
     FCOFactory()
     file = _csv_file(
         tmp_path,
-        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939",
-        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940",
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939;",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940;",
     )
 
     import_page = ImportPage(page, live_server.url)
@@ -179,8 +179,8 @@ def test_import_ignores_row_with_insee_code_unknown_to_geo_api(live_server, page
     FCOFactory()
     file = _csv_file(
         tmp_path,
-        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939",
-        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;99999;00210940",
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939;",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;99999;00210940;",
     )
 
     import_page = ImportPage(page, live_server.url)
@@ -197,3 +197,29 @@ def test_import_ignores_row_with_insee_code_unknown_to_geo_api(live_server, page
         "https://geo.api.gouv.fr/communes/67482?fields=centre,departement",
         "https://geo.api.gouv.fr/communes/99999?fields=centre,departement",
     ]
+
+
+def test_import_with_serotype(live_server, page: Page, tmp_path, mocked_authentification_user):
+    EspeceFactory(name="Bovin (Bos taurus)")
+    FCOFactory()
+    file = _csv_file(
+        tmp_path,
+        # Correct for FCO
+        "TEST-SA-2026-0001;bovin;FCO;05/04/2026;67482;00210939;8",
+        # Incorrect for FCO
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59350;00210940;99",
+    )
+
+    import_page = ImportPage(page, live_server.url)
+    import_page.navigate()
+
+    with mock_geo_api():
+        import_page.analyse(file)
+        assert not EvenementAnimal.objects.exists()
+        import_page.import_button.click()
+        expect(import_page.import_result).to_be_visible()
+        expect(import_page.done_count).to_have_text("1")
+
+    evenement = EvenementAnimal.objects.get()
+    assert evenement.typage.maladie == evenement.maladie
+    assert evenement.typage.valeur_niveau_2 == "8"
