@@ -494,6 +494,13 @@ class WithMassActionsPage:
         return self.page.get_by_test_id("mass-actions-selection-count")
 
     @property
+    def selection_banner(self):
+        return self.page.get_by_test_id("mass-actions-banner")
+
+    def select_all_filtered(self):
+        self.selection_banner.get_by_role("button", name="correspondant aux filtres").click()
+
+    @property
     def fin_de_suivi_modal(self):
         return self.page.locator("#modal-fin-suivi")
 

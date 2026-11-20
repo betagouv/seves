@@ -21,3 +21,19 @@
 .mass-actions .fr-nav__link {
     justify-content: flex-start;
 }
+
+.mass-actions-banner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.25rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    text-align: center;
+}
+
+.mass-actions-banner .fr-btn {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    font-weight: 400;
+}

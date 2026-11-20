@@ -8,6 +8,8 @@ from core.models import FinSuiviContact
 from sa.models import EvenementAnimal
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
 
+from .mixins import WithFilteredListMixin
+
 
 class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
     def get(self, request):
@@ -38,6 +40,12 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
             ]
 
         return JsonResponse({"results": results})
+
+
+class GetMassActionPks(WithFilteredListMixin, View):
+    def get(self, request):
+        queryset = self.get_queryset().prefetch_related(None).order_by()
+        return JsonResponse({"pks": list(queryset.values_list("pk", flat=True))})
 
 
 class GetMassActionStatus(View):

@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 import pytest
 from reversion.models import Version
 
-from core.factories import ContactStructureFactory
+from core.factories import ContactStructureFactory, StructureFactory
 from core.models import FinSuiviContact
 from sa.models import EvenementAnimal
 from sa.tests.factories import EvenementAnimalFactory
@@ -345,6 +345,67 @@ def test_mass_cloture_from_a_page_that_no_longer_exists_afterwards(live_server, 
     assert "etat=en_cours" in page.url
     assert "page=" not in page.url
     expect(list_page.row_checkboxes).to_have_count(2)
+
+
+def test_mass_action_on_all_evenements_matching_filters(
+    live_server, page: Page, mocked_authentification_user, monkeypatch
+):
+    monkeypatch.setattr(EvenementListView, "paginate_by", 2)
+    evenements = [_evenement_en_cours(mocked_authentification_user) for _ in range(3)]
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.CLOTURE)
+
+    list_page = EvenementListPage(page, live_server.url)
+    page.goto(f"{live_server.url}{reverse('sa:evenement-liste')}?etat=en_cours")
+    list_page.row_checkboxes.first.check(force=True)
+    expect(list_page.selection_banner).to_be_hidden()
+
+    list_page.select_all()
+    list_page.select_all_filtered()
+    expect(list_page.selection_count).to_have_text("3 événements sélectionnés")
+    list_page.open_fin_de_suivi_modal()
+    expect(list_page.fin_de_suivi_modal_content).to_contain_text(
+        "Vous êtes sur le point de signaler la fin de suivi de 3 événements."
+    )
+    list_page.confirm_fin_de_suivi()
+
+    expect(page.get_by_text("Fin de suivi réalisée avec succès pour 3 événements.")).to_be_visible()
+    assert {fin_suivi.object_id for fin_suivi in FinSuiviContact.objects.all()} == {e.pk for e in evenements}
+
+
+def test_unselected_evenement_is_excluded_from_all_evenements_matching_filters(
+    live_server, page: Page, mocked_authentification_user, monkeypatch
+):
+    monkeypatch.setattr(EvenementListView, "paginate_by", 2)
+    for _ in range(3):
+        _evenement_en_cours(mocked_authentification_user)
+
+    list_page = EvenementListPage(page, live_server.url)
+    list_page.navigate()
+    list_page.select_all()
+    list_page.select_all_filtered()
+    expect(list_page.selection_count).to_have_text("3 événements sélectionnés")
+    unselected_pk = int(list_page.row_checkboxes.first.get_attribute("name"))
+    list_page.row_checkboxes.first.uncheck(force=True)
+
+    expect(list_page.selection_count).to_have_text("2 événements sélectionnés")
+    list_page.open_fin_de_suivi_modal()
+    list_page.confirm_fin_de_suivi()
+
+    expect(page.get_by_text("Fin de suivi réalisée avec succès pour 2 événements.")).to_be_visible()
+    assert FinSuiviContact.objects.count() == 2
+    assert not FinSuiviContact.objects.filter(object_id=unselected_pk).exists()
+
+
+def test_mass_action_pks_returns_visible_evenements_matching_filters(client, mocked_authentification_user):
+    en_cours = [_evenement_en_cours(mocked_authentification_user) for _ in range(2)]
+    cloture = EvenementAnimalFactory(etat=EvenementAnimal.Etat.CLOTURE)
+    EvenementAnimalFactory(etat=EvenementAnimal.Etat.BROUILLON, createur=StructureFactory())
+
+    response = client.get(reverse("sa:mass-action-pks"))
+    assert set(response.json()["pks"]) == {*(e.pk for e in en_cours), cloture.pk}
+
+    response = client.get(reverse("sa:mass-action-pks"), {"etat": "en_cours", "page": 2})
+    assert set(response.json()["pks"]) == {e.pk for e in en_cours}
 
 
 def test_having_structures_not_in_fin_suivi(mus_contact):
