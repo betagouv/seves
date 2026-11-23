@@ -715,9 +715,9 @@ class ConclusionForm(DsfrBaseForm, forms.ModelForm):
         return cleaned_data
 
     def _init_conclusion(self):
-        categories_danger = list(
+        categories_danger = [
             danger for analyse in self.instance.analyses_alimentaires.all() for danger in analyse.categorie_danger
-        )
+        ]
         hazards = categories_danger + self.instance.agents_confirmes_ars
         if hazards:
             self.fields["suspicion_conclusion"].widget = SelectConclusionWithAttributeField(

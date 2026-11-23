@@ -239,7 +239,7 @@ class CompareObject(InitialCompareObject):
 
             # If there is a _ptr this is a multi-inheritance table and inherits from a non-abstract class
             ids = {force_str(v.pk) for v in related_objects}
-            if not ids and any([f.name.endswith("_ptr") for f in obj._meta.get_fields()]):
+            if not ids and any(f.name.endswith("_ptr") for f in obj._meta.get_fields()):
                 # If there is a _ptr this is a multi-inheritance table and inherits from a non-abstract class
                 # lets try and get the parent items associated entries for this field
                 others = self.version_record.revision.version_set.filter(object_id=self.version_record.object_id).all()

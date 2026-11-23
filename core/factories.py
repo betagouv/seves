@@ -248,7 +248,7 @@ class DepartementFactory(DjangoModelFactory):
 
     @factory.lazy_attribute
     def nom(self):
-        return [d[1] for d in DEPARTEMENTS if self.numero == d[0]][0]
+        return next(d[1] for d in DEPARTEMENTS if self.numero == d[0])
 
 
 class BaseEtablissementFactory(DjangoModelFactory):
