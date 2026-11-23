@@ -62,6 +62,13 @@ class GetMassActionStatus(View):
                 return JsonResponse({"error": "Action non autorisée"}, status=403)
             return JsonResponse(self.get_cloture_status(queryset))
 
+        if action == "reprise_suivi":
+            can_be_done = 0
+            for evenement in queryset:
+                if evenement.is_published and FinSuiviContact.can_remove_fin_de_suivi(evenement, self.request.user):
+                    can_be_done += 1
+            return JsonResponse({"can_be_done": can_be_done})
+
         raise NotImplementedError
 
     def get_cloture_status(self, queryset):
