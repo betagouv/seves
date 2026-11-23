@@ -1,4 +1,5 @@
 import csv
+from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
 import io
@@ -31,6 +32,15 @@ MANDATORY_COLUMNS = (
     EDE_COLUMN,
 )
 CODE_INSEE_RE = re.compile(r"^(?:\d{5}|2A\d{3}|2B\d{3})$")
+
+
+@dataclass
+class CSVImportError:
+    line: int
+    id: str
+    field: str
+    value: str
+    message: str
 
 
 class MissingColumnsError(Exception):
@@ -95,28 +105,86 @@ def _get_geo_data_from_insee_code(insee_code):
     return data
 
 
-def _parse_row(row, especes, maladies, user):
+def _parse_row(row, especes, maladies, user, line_number):
+    errors = []
     if not all(row[column] for column in MANDATORY_COLUMNS):
-        return None
+        for column in MANDATORY_COLUMNS:
+            if not row[column]:
+                errors.append(
+                    CSVImportError(
+                        line=line_number,
+                        id=row.get(ID_COLUMN),
+                        field=column,
+                        value="",
+                        message="Ce champ est obligatoire.",
+                    )
+                )
 
     code_insee = row[INSEE_COLUMN].upper()
-    if not CODE_INSEE_RE.match(code_insee):
-        return None
+    geo_data = {}
+    if CODE_INSEE_RE.match(code_insee):
+        try:
+            geo_data = _get_geo_data_from_insee_code(code_insee)
+        except UnableToLocateException:
+            errors.append(
+                CSVImportError(
+                    line=line_number,
+                    id=row.get(ID_COLUMN),
+                    field=INSEE_COLUMN,
+                    value=code_insee,
+                    message="Le code insee n'est pas valable ou le service de géolocalisation n'est pas joignable",
+                )
+            )
+    else:
+        errors.append(
+            CSVImportError(
+                line=line_number,
+                id=row.get(ID_COLUMN),
+                field=INSEE_COLUMN,
+                value=code_insee,
+                message="Le code insee n'est pas correctement formaté",
+            )
+        )
 
     try:
         date_confirmation = datetime.strptime(row[DATE_COLUMN], "%d/%m/%Y").date()
     except ValueError:
-        return None
+        errors.append(
+            CSVImportError(
+                line=line_number,
+                id=row.get(ID_COLUMN),
+                field=DATE_COLUMN,
+                value=row[DATE_COLUMN],
+                message="Le date n'est pas correctement formatée",
+            )
+        )
 
     espece = especes.get(_clean(row[ESPECE_COLUMN]))
-    maladie = maladies.get(_clean(row[MALADIE_COLUMN]))
-    if not espece or not maladie:
-        return None
+    if not espece:
+        errors.append(
+            CSVImportError(
+                line=line_number,
+                id=row.get(ID_COLUMN),
+                field=ESPECE_COLUMN,
+                value=row[ESPECE_COLUMN],
+                message="Espèce non reconnue",
+            )
+        )
 
-    try:
-        geo_data = _get_geo_data_from_insee_code(code_insee)
-    except UnableToLocateException:
-        return None
+    maladie = maladies.get(_clean(row[MALADIE_COLUMN]))
+    if not maladie:
+        errors.append(
+            CSVImportError(
+                line=line_number,
+                id=row.get(ID_COLUMN),
+                field=MALADIE_COLUMN,
+                value=row[MALADIE_COLUMN],
+                message="Maladie non reconnue ou non compatible avec l'import CSV (Seules FCO et MHE sont acceptées)",
+            )
+        )
+
+    if len(errors):
+        return None, [e.__dict__ for e in errors]
 
     fields = {
         "import_id": row[ID_COLUMN],
@@ -136,8 +204,8 @@ def _parse_row(row, especes, maladies, user):
             exclude=[f.name for f in EvenementAnimal._meta.fields if f.name not in fields],
         )
     except ValidationError:
-        return None
-    return evenement
+        return None, []
+    return evenement, []
 
 
 def parse_csv(file, user):
@@ -149,15 +217,17 @@ def parse_csv(file, user):
     especes = _especes_by_name()
     maladies = _maladies_by_name()
     evenements, seen_identifiants, ignored, read = [], set(), 0, 0
+    errors_list = []
 
     for raw_row in reader:
         read += 1
         cleaned_row = {column: raw_row[column].strip() for column in MANDATORY_COLUMNS}
-        evenement = _parse_row(cleaned_row, especes, maladies, user)
-
+        evenement, errors = _parse_row(cleaned_row, especes, maladies, user, read)
+        if errors:
+            errors_list.extend(errors)
         if not evenement or evenement.import_id.lower() in seen_identifiants:
             ignored += 1
             continue
         seen_identifiants.add(evenement.import_id.lower())
         evenements.append(evenement)
-    return evenements, ignored, read
+    return evenements, ignored, read, errors_list
