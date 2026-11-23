@@ -223,6 +223,66 @@ class CommonMessageForm(forms.ModelForm):
         self._contacts = self._contacts.select_related("agent__structure")
         return self._contacts
 
+    def _recipients_treeselect_choices(self, queryset):
+        ac_items, by_region, others = [], defaultdict(list), []
+
+        for contact in queryset:
+            if not contact.structure:
+                continue
+            item = TreeselectItem(
+                value=contact.pk,
+                label=contact.display_with_agent_unit,
+                categorised_label=contact.display_with_agent_unit,
+            )
+            structure = contact.structure
+            if structure.is_ac:
+                ac_items.append(item)
+            elif structure.region_id:
+                by_region[structure.region].append(item)
+            elif structure.departement_id:
+                by_region[structure.departement.region].append(item)
+            else:
+                others.append(item)
+
+        regions = [
+            TreeselectGroup(
+                value=f"region-{region.pk}",
+                label=region.nom,
+                categorised_label=region.nom,
+                choices=items,
+            )
+            for region, items in sorted(by_region.items(), key=lambda kv: kv[0].nom)
+        ]
+
+        if others:
+            regions.append(TreeselectGroup(label="Autres", categorised_label=None, choices=others))
+
+        structures = TreeselectGroup(
+            label="Structures",
+            categorised_label=None,
+            can_expand=False,
+            choices=[
+                TreeselectGroup(label="Administration centrale", categorised_label=None, choices=ac_items),
+                TreeselectGroup(label="Services déconcentrés", categorised_label=None, choices=regions),
+            ],
+        )
+
+        agents = TreeselectGroup(
+            label="Agents",
+            categorised_label=None,
+            can_expand=False,
+            choices=[
+                TreeselectItem(
+                    value=contact.pk,
+                    label=contact.display_with_agent_unit,
+                    categorised_label=contact.display_with_agent_unit,
+                )
+                for contact in queryset
+                if contact.agent
+            ],
+        )
+        return structures, agents
+
     def _build_label_with_shortcuts(self, label_text, obj, with_contacts=False, prefix="destinataires"):
         structure_ids = ",".join([str(c.id) for c in self._get_structures(obj)])
         html_parts = [f"{label_text}"]
@@ -306,52 +366,8 @@ class BasicMessageForm(CommonMessageForm, DsfrBaseForm):
             queryset = queryset.for_apps(obj.limit_contacts_to_user_from_app).distinct()
 
         self.fields["recipients"].queryset = queryset
-
-        contacts_by_region = defaultdict(list)
-        contact_structures = [r for r in queryset if r.structure]
-        for contact in contact_structures:
-            if contact.structure.region:
-                contacts_by_region[contact.structure.region.nom].append(contact.pk)
-            if contact.structure.departement:
-                contacts_by_region[contact.structure.departement.region.nom].append(contact.pk)
-
-        structures = TreeselectGroup(
-            label="Structures",
-            choices=[
-                TreeselectItem(
-                    value=recipient.pk,
-                    label=recipient.display_with_agent_unit,
-                    categorised_label=recipient.display_with_agent_unit,
-                )
-                for recipient in contact_structures
-            ],
-            categorised_label=None,
-        )
-        regions = TreeselectGroup(
-            label="Régions (Toutes les structures)",
-            choices=tuple(
-                TreeselectItem(value=f"region-{nom}", label=nom, categorised_label=None, selects=pks)
-                for nom, pks in sorted(contacts_by_region.items())
-            ),
-            can_expand=True,
-            categorised_label=None,
-        )
-        agents = TreeselectGroup(
-            label="Agents",
-            choices=[
-                TreeselectItem(
-                    value=recipient.pk,
-                    label=recipient.display_with_agent_unit,
-                    categorised_label=recipient.display_with_agent_unit,
-                )
-                for recipient in queryset
-                if recipient.agent
-            ],
-            categorised_label=None,
-        )
-
         self.fields["recipients"].widget = TreeselectCheckbox(
-            choices=(structures, regions, agents),
+            choices=self._recipients_treeselect_choices(queryset),
             attrs={"placeholder": "Rechercher", "required": True},
         )
 

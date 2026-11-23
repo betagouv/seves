@@ -47,7 +47,7 @@
             {% if not widget.can_expand %}
                 <p
                     id="{{ widget.aria_controls_prefix }}-label-{{ widget.group_index }}"
-                    class="fr-h6 fr-mb-4v"
+                    class="fr-h6 fr-mb-4v fr-mt-2v"
                 >{{ widget.group }}</p>
             {% elif widget.group_option %}
                 {% with widget=widget.group_option parent_index=widget.group_index %}
