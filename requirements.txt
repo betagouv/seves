@@ -85,7 +85,7 @@ django-environ==0.14.0
     # via -r requirements.in
 django-filter==26.1
     # via -r requirements.in
-django-post-office==3.11.2
+django-post-office==3.13.0
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
