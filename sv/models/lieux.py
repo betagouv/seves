@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models, transaction
@@ -67,7 +68,7 @@ class Lieu(WithLocalisableMixin, models.Model):
         verbose_name="Code INSEE de la commune",
         validators=[
             RegexValidator(
-                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
+                regex=settings.RE_INSEE_CODE,
                 message="Le code INSEE doit contenir exactement 5 chiffres",
                 code="invalid_code_insee",
             ),

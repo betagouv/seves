@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import RegexValidator
@@ -110,7 +111,7 @@ class WithLocalisableMixin(models.Model):
         verbose_name="Code INSEE de la commune",
         validators=[
             RegexValidator(
-                regex=r"^(?:\d{5}|2A\d{3}|2B\d{3})$",
+                regex=settings.RE_INSEE_CODE,
                 message="Le code INSEE doit être valide",
                 code="invalid_code_insee",
             ),
