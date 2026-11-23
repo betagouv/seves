@@ -48,14 +48,16 @@ def _departements_by_numero():
 
 
 @contextlib.contextmanager
-def mock_geo_api(timeout_for=()):
+def mock_geo_api(timeout_for=(), not_found_for=()):
     def _get(url, *args, **kwargs):
         code_insee = url.split("/communes/")[1].split("?")[0]
         if code_insee in timeout_for:
             raise ReadTimeout
         response = mock.Mock()
-        if code_insee not in COMMUNES:
-            response.raise_for_status.side_effect = HTTPError("404 Client Error")
+        if code_insee in not_found_for or code_insee not in COMMUNES:
+            response.status_code = 404
+            response.json.return_value = {"code": 404, "message": f"Commune {code_insee} introuvable"}
+            response.raise_for_status.side_effect = HTTPError("404 Client Error", response=response)
             return response
         response.json.return_value = COMMUNES[code_insee]
         return response
@@ -197,3 +199,53 @@ def test_import_ignores_row_with_insee_code_unknown_to_geo_api(live_server, page
         "https://geo.api.gouv.fr/communes/67482?fields=centre,departement",
         "https://geo.api.gouv.fr/communes/99999?fields=centre,departement",
     ]
+
+
+def test_import_errors_are_visible(live_server, page: Page, tmp_path):
+    EspeceFactory(name="Bovin (Bos taurus)")
+    FCOFactory()
+    file = _csv_file(
+        tmp_path,
+        ";bovin;FCO;05/04/2026;67482;00210939",
+        "TEST-SA-2026-0002;meuh-meuh;FCO;05/04/2026;67482;00210939",
+        "TEST-SA-2026-0002;bovin;Tuberculose;06/04/2026;59350;00210940",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/226;59350;00210940",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;595959;00210940",
+        "TEST-SA-2026-0002;bovin;FCO;06/04/2026;59999;00210940",
+    )
+
+    import_page = ImportPage(page, live_server.url)
+    import_page.navigate()
+
+    expected_rows = [
+        [],
+        ["1", "", "Identifiant unique", "", "Ce champ est obligatoire."],
+        ["2", "TEST-SA-2026-0002", "Espèce", "meuh-meuh", "Espèce non reconnue"],
+        [
+            "3",
+            "TEST-SA-2026-0002",
+            "Maladie",
+            "Tuberculose",
+            "Maladie non reconnue ou non compatible avec l'import CSV (Seules FCO et MHE sont acceptées)",
+        ],
+        ["4", "TEST-SA-2026-0002", "Date de confirmation", "06/04/226", "Le date n'est pas correctement formatée"],
+        ["5", "TEST-SA-2026-0002", "Code INSEE commune", "595959", "Le code insee n'est pas correctement formaté"],
+        [
+            "6",
+            "TEST-SA-2026-0002",
+            "Code INSEE commune",
+            "59999",
+            "Le code insee n'est pas valable ou le service de géolocalisation n'est pas joignable",
+        ],
+    ]
+
+    with mock_geo_api(not_found_for=("59999",)):
+        import_page.analyse(file)
+        page.wait_for_timeout(1000)
+        texts = []
+        for row in page.locator("table tr").all():
+            texts.append([t.strip() for t in row.locator("td").all_text_contents()])
+        assert not EvenementAnimal.objects.exists()
+        assert len(texts) == len(expected_rows)
+        for expected in expected_rows:
+            assert expected in texts, f"{expected} not found in {texts}"

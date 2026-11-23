@@ -26,6 +26,8 @@ class ImportController extends Controller {
         "errorText",
         "description",
         "read",
+        "errorDetails",
+        "errorDetailsContent",
     ]
     static values = {url: String}
 
@@ -73,6 +75,21 @@ class ImportController extends Controller {
         this.errorTarget.classList.remove("fr-hidden")
     }
 
+    showErrorTable(errors) {
+        this.errorDetailsTarget.classList.remove("fr-hidden")
+        for (const error of errors) {
+            const html = `<tr>
+               <td>${error.line}</td>
+               <td>${error.id}</td>
+               <td>${error.field}</td>
+               <td>${error.value}</td>
+               <td>${error.message}</td>
+            </tr>`
+
+            this.errorDetailsContentTarget.insertAdjacentHTML("beforeend", html)
+        }
+    }
+
     async onSubmit() {
         const body = new FormData()
         body.append("file", this.fileTarget.files[0])
@@ -97,6 +114,7 @@ class ImportController extends Controller {
         this.submitTarget.classList.add("fr-hidden")
         this.dropZoneTarget.classList.add("fr-hidden")
         this.descriptionTarget.classList.remove("fr-hidden")
+        this.showErrorTable(data.errors)
     }
 
     async onSubmitForCreation() {

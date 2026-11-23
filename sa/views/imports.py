@@ -22,12 +22,12 @@ class ImportView(TemplateView):
             return JsonResponse({"error": "Veuillez sélectionner un fichier au format .csv."}, status=400)
 
         try:
-            evenements, ignored, read = parse_csv(form.cleaned_data["file"], request.user)
+            evenements, ignored, read, errors_msg = parse_csv(form.cleaned_data["file"], request.user)
         except MissingColumnsError as error:
             return JsonResponse({"error": f"Colonnes manquantes dans le fichier : {error}."}, status=400)
 
         if self.request.POST.get("action") == "test":
-            return JsonResponse({"eligible": len(evenements), "ignored": ignored, "read": read})
+            return JsonResponse({"eligible": len(evenements), "ignored": ignored, "read": read, "errors": errors_msg})
 
         if self.request.POST.get("action") == "create":
             csv_import = form.save(commit=False)

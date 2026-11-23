@@ -72,23 +72,53 @@
                                                     <p>Ligne(s) lues</p>
                                                 </div>
                                             </div>
-                                            <div class="fr-col-4">                <div class="fr-alert fr-alert--success fr-alert--sm">
-                                                <h3 class="fr-alert__title" data-import-target="eligible"></h3>
-                                                <p>Ligne(s) valide(s)</p>
-                                            </div></div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--success fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="eligible"></h3>
+                                                    <p>Ligne(s) valide(s)</p>
+                                                </div>
+                                            </div>
                                             <div class="fr-col-4">
                                                 <div class="fr-alert fr-alert--error fr-alert--sm">
                                                     <h3 class="fr-alert__title" data-import-target="ignored"></h3>
                                                     <p>Ligne(s) en erreur</p>
-                                                </div></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-
-
-
-
-
                                 </div>
+
+                                <section class="fr-accordion fr-hidden fr-mt-4v" data-import-target="errorDetails">
+                                    <h3 class="fr-accordion__title">
+                                        <button type="button" class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-id">Voir le détails des erreurs</button>
+                                    </h3>
+                                    <div class="fr-collapse" id="accordion-id" >
+                                        <p>Certaines lignes contiennent des erreurs et ne pourront pas être importées. Retrouvez les informations concernées ci-dessous, corrigez-les dans votre tableur de suivi initial, puis générez un nouveau fichier pour Sèves. </p>
+                                        <div class="fr-table" id="table-0-component">
+                                            <div class="fr-table__wrapper">
+                                                <div class="fr-table__container">
+                                                    <div class="fr-table__content">
+                                                        <table id="table-0">
+                                                            <caption> Erreurs de l'import CSV </caption>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Ligne </th>
+                                                                    <th>Identifiant </th>
+                                                                    <th>Champ </th>
+                                                                    <th>Valeur incorrecte </th>
+                                                                    <th>Error </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody data-import-target="errorDetailsContent">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <div class="fr-alert fr-alert--success fr-mt-2w fr-hidden" data-import-target="resultCreation">
                                     <p>Lignes importées : <span data-import-target="done"></span></p>
                                     <p>Lignes en erreur : <span data-import-target="errorCount"></span></p>
