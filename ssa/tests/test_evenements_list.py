@@ -11,6 +11,7 @@ from ssa.factories import EtablissementFactory, EvenementProduitFactory, Investi
 from ssa.models import EvenementProduit, TemperatureConservation
 from ssa.models.evenement_produit import ActionEngagees
 from ssa.tests.pages import EvenementProduitListPage
+from ssa.views import EvenementsListView
 
 
 def test_old_url_redirects(client):
@@ -267,13 +268,15 @@ def test_list_can_reset_form_after_search(live_server, mocked_authentification_u
     expect(search_page.numero_field).to_have_value("")
 
 
-def test_compteur_fiche(live_server, page: Page):
-    EvenementProduitFactory.create_batch(101)
+def test_compteur_fiche(live_server, page: Page, monkeypatch):
+    monkeypatch.setattr(EvenementsListView, "paginate_by", 2)
+    nb_evenements = 3
+    EvenementProduitFactory.create_batch(nb_evenements)
     search_page = EvenementProduitListPage(page, live_server.url)
     search_page.navigate()
-    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
+    expect(page.get_by_text(f"{nb_evenements} sur un total de {nb_evenements}", exact=True)).to_be_visible()
     page.get_by_role("link", name="Dernière page").click()
-    expect(page.get_by_text("101 sur un total de 101", exact=True)).to_be_visible()
+    expect(page.get_by_text(f"{nb_evenements} sur un total de {nb_evenements}", exact=True)).to_be_visible()
 
 
 def test_list_can_filter_with_free_search(live_server, mocked_authentification_user, page: Page):

@@ -170,4 +170,8 @@ fileignoreconfig:
   checksum: fd35c1512abec7a75185e5159886fb37a2112dee39f72bc66cf0e9ca46fb6f8d
 - filename: core/migrations/0070_alter_document_document_type.py
   checksum: 3b6ef8b1ef9347980b13666bc8fdb36620a0fa5cf0358285244906fef509be94
+- filename: ssa/tests/test_evenements_list.py
+  checksum: 349f4bdd6a3976cd542fe04b34ca7e29afd1d415d11ea71d3152f96b76d3ba55
+- filename: sv/tests/test_evenement_list.py
+  checksum: 62cf05363784a3ee62d99c99c1c196f958f223b7a7494394256b63b4397ac7c5
 version: "1.0"
