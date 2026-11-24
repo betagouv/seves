@@ -9,6 +9,7 @@ from playwright.sync_api import Locator, Page, expect
 from core.pages import WithActionsPage, WithMassActionsPage, WithSyntheseBlockMixin
 from core.tests.pages import ChoiceJSPage, TreeselectPage
 from sa.models import Analyse, EvenementAnimal, Veterinaire
+from sa.models.evenement import MesureDeControle
 from seves import settings
 
 
@@ -730,8 +731,9 @@ class EvenementAnimalFormPage(
         self.effectif_retenu.fill(str(evenement.effectif_retenu))
         self.origine_infection.select_option(evenement.origine_infection)
 
-        for value in evenement.mesures_controle_labels.split(", "):
-            choice_js_fill(self.page, "#adis .choices__list", value, value)
+        for value in evenement.mesures_controle:
+            label = MesureDeControle(value).label
+            choice_js_fill(self.page, "#adis .choices__list", label, label)
 
     def fill_detenteur_etablissement_block(self, evenement):
         self.numero_identifiant_etablissement.fill(evenement.numero_identifiant_etablissement)

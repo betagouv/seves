@@ -131,7 +131,7 @@ class MesureDeControle(models.TextChoices):
     # Values in English to ease the integration with ADIS system
     ANTE_AND_POST_MORTEM_INSPECTIONS = (
         "Ante and post-mortem inspections",
-        "Inspections ante mortem et post mortem",
+        "Inspections ante et post-mortem",
     )
     COMPARTMENTALISATION = "Compartmentalisation", "Compartimentation"
     CONTROL_OF_VECTORS = "Control of vectors", "Contrôle des vecteurs"
@@ -145,9 +145,9 @@ class MesureDeControle(models.TextChoices):
     )
     DIPPING_SPRAYING_FOR_CONTROL_OF_VECTORS_OR_PARASITES = (
         "Dipping / Spraying for control of vectors or parasites",
-        "Bains / pulvérisations pour lutter contre les vecteurs ou les parasites",
+        "Trempage / pulvérisation pour la lutte contre les vecteurs ou les parasites",
     )
-    DISEASE_NOTIFICATION = "Disease notification", "Notification d’une maladie"
+    DISEASE_NOTIFICATION = "Disease notification", "Notification de maladie"
     DISINFECTION = "Disinfection", "Désinfection"
     DISINFECTION_DISINFESTATION = (
         "Disinfection / Disinfestation",
@@ -155,7 +155,7 @@ class MesureDeControle(models.TextChoices):
     )
     DISINFESTATION = "Disinfestation", "Désinfestation"
     EMERGENCY_HARVEST = "Emergency harvest", "Récolte d’urgence"
-    GENERAL_SURVEILLANCE = "General Surveillance", "Surveillance générale"
+    GENERAL_SURVEILLANCE = "General Surveillance", "Surveillance de routine"
     KILLING_FOR_COMMERCIAL_USE_OR_OWN_USE = (
         "Killing for commercial use or own use",
         "Abattage à des fins commerciales ou pour usage personnel",
@@ -168,12 +168,12 @@ class MesureDeControle(models.TextChoices):
     )
     OFFICIAL_DISPOSAL_OF_CARCASSES_BY_PRODUCTS_AND_WASTE = (
         "Official disposal of carcasses, by-products and waste",
-        "Élimination officielle des carcasses, sous-produits animaux et déchets",
+        "Élimination officielle des carcasses, des sous-produits animaux et des déchets",
     )
     OFFICIAL_VACCINATION = "Official vaccination", "Vaccination officielle"
     PRECAUTIONS_AT_THE_BORDERS = (
         "Precautions at the borders",
-        "Mesures de précaution aux frontières",
+        "Précautions aux frontières",
     )
     PROCESS_TO_INACTIVATE_THE_PATHOGENIC_AGENT = (
         "Process to inactivate the pathogenic agent in products or by-products",
@@ -183,19 +183,15 @@ class MesureDeControle(models.TextChoices):
     SCREENING = "Screening", "Dépistage"
     SELECTIVE_KILLING_AND_DISPOSAL = (
         "Selective killing and disposal",
-        "Abattage sélectif et élimination",
-    )
-    SLAUGHTER = (
-        "Slaughter",
-        "Abattage ciblé d’animaux infectés ou suspects",
+        "Abattage sanitaire sélectif (dépeuplement partiel)",
     )
     STAMPING_OUT = (
         "Stamping out",
-        "Abattage sanitaire total du foyer",
+        "Abattage sanitaire (dépeuplement)",
     )
     SURVEILLANCE_OUTSIDE_THE_RESTRICTED_ZONE = (
         "Surveillance outside the restricted zone",
-        "Surveillance hors de la zone de restriction",
+        "Surveillance en dehors de la zone de restriction",
     )
     SURVEILLANCE_WITHIN_THE_RESTRICTED_ZONE = (
         "Surveillance within the restricted zone",
@@ -210,8 +206,12 @@ class MesureDeControle(models.TextChoices):
         "Vaccination en réponse à un ou plusieurs foyers",
     )
     VACCINATION_PROHIBITED = "Vaccination prohibited", "Vaccination interdite"
-    VECTOR_SURVEILLANCE = "Vector surveillance", "Surveillance des vecteurs"
+    VECTOR_SURVEILLANCE = "Vector surveillance", "Surveillance vectorielle"
     ZONING = "Zoning", "Zonage"
+
+    @classproperty
+    def sorted_choices(cls):
+        return sorted(cls.choices, key=lambda choice: normalize(choice[1]))
 
 
 class TypeLieu(models.TextChoices):
@@ -586,7 +586,7 @@ class EvenementAnimal(
 
     @property
     def mesures_controle_labels(self):
-        return ", ".join(sorted(MesureDeControle(d).label for d in self.mesures_controle))
+        return ", ".join(label for value, label in MesureDeControle.sorted_choices if value in self.mesures_controle)
 
     def get_allowed_document_types(self):
         return [
