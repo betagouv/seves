@@ -30,7 +30,7 @@ MANDATORY_COLUMNS = (
     INSEE_COLUMN,
     EDE_COLUMN,
 )
-CODE_INSEE_RE = re.compile(r"^(?:\d{5}|2A\d{3}|2B\d{3})$")
+CODE_INSEE_RE = re.compile(settings.RE_INSEE_CODE)
 
 
 class MissingColumnsError(Exception):
