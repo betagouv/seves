@@ -170,4 +170,6 @@ fileignoreconfig:
   checksum: fd35c1512abec7a75185e5159886fb37a2112dee39f72bc66cf0e9ca46fb6f8d
 - filename: core/migrations/0070_alter_document_document_type.py
   checksum: 3b6ef8b1ef9347980b13666bc8fdb36620a0fa5cf0358285244906fef509be94
+- filename: account/views.py
+  checksum: 74b591aa1b8d420a391e91b26ef9ddbf6ea88171ae28074c21ac2dafa69defcf
 version: "1.0"

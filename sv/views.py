@@ -349,7 +349,7 @@ class FicheDetectionUpdateView(
         actual_ids = Prelevement.objects.filter(lieu__fiche_detection__pk=pk)
         actual_ids = actual_ids.values_list(field_name + "_id", flat=True)
         inactive_ids = model._base_manager.filter(is_active=False).values_list("id", flat=True)
-        has_inactive_value = any([pk in inactive_ids for pk in actual_ids])
+        has_inactive_value = any(pk in inactive_ids for pk in actual_ids)
         queryset = model._base_manager if has_inactive_value else model.objects
         return queryset.order_by("nom")
 

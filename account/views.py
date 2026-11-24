@@ -101,9 +101,7 @@ class HandlePermissionsView(FormView):
 
         for key in form.changed_data:
             value = form.cleaned_data[key]
-            if not (
-                value in (True, False) and (key.startswith("sv_") or key.startswith("ssa_") or key.startswith("sa_"))
-            ):
+            if not (value in (True, False) and (key.startswith(("sv_", "ssa_", "sa_")))):
                 continue
             group_name, user_pk = key.upper().split("_")
             user = self.get_users_in_structure().get(pk=user_pk)
@@ -190,7 +188,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
 
         users_with_groups = [u for u in self.get_users_for_add_admin_form() if u.groups.all()]
         map = {settings.SV_GROUP: "SV", settings.SSA_GROUP: "SSA", settings.SA_GROUP: "SA"}
-        user_id_to_group_list = {u.id: list(map.get(g.name, "") for g in u.groups.all()) for u in users_with_groups}
+        user_id_to_group_list = {u.id: [map.get(g.name, "") for g in u.groups.all()] for u in users_with_groups}
         context["user_to_groups"] = json.dumps(user_id_to_group_list)
         context["filter"] = filter
         return context
