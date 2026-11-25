@@ -10,6 +10,7 @@ class Import(models.Model):
         verbose_name="Fichier",
         validators=[FileExtensionValidator(["csv"])],
     )
+    nom_fichier = models.CharField(max_length=255, verbose_name="Nom du fichier importé")
     createur = models.ForeignKey(Structure, on_delete=models.PROTECT, verbose_name="Structure créatrice")
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
 

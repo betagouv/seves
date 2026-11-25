@@ -53,9 +53,10 @@
                                     </div>
                                 </section>
                                 <p data-import-target="description" class="fr-hidden">
+                                    Les événements importés sont rattachés à votre structure et au nom du fichier : pour les mettre à jour, importez une nouvelle version du fichier sous le même nom.
                                     Chaque événement est reconnu par son identifiant unique.
                                     Un nouvel identifiant crée un événement. Un identifiant déjà importé met à jour l’événement si la ligne a changé, et le laisse tel quel sinon.
-                                    « Oui » dans la colonne « Supprimer » supprime l’événement.
+                                    Les événements déjà importés depuis ce fichier qui n’y figurent plus sont supprimés, sauf si le fichier contient des lignes en erreur.
                                 </p>
                                 <p class="fr-hint-text fr-mt-1w">Format supporté : .csv</p>
 
@@ -63,35 +64,59 @@
                                     <p data-import-target="errorText"></p>
                                 </div>
                                 <div class="fr-hidden" data-import-target="result">
-
                                     <div class="fr-container--fluid">
                                         <div class="fr-grid-row fr-grid-row--gutters">
                                             <div class="fr-col-4">
-                                                <div class="fr-alert fr-alert--sm">
-                                                    <h3 class="fr-alert__title" data-import-target="read"></h3>
-                                                    <p>Ligne(s) lues</p>
+                                                <div class="fr-alert fr-alert--info fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="read"></h3>
+                                                    <p>Ligne(s) lue(s)</p>
                                                 </div>
                                             </div>
-                                            <div class="fr-col-4">                <div class="fr-alert fr-alert--success fr-alert--sm">
-                                                <h3 class="fr-alert__title" data-import-target="eligible"></h3>
-                                                <p>Ligne(s) valide(s)</p>
-                                            </div></div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--success fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="to_create"></h3>
+                                                    <p>Événement(s) à créer</p>
+                                                </div>
+                                            </div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--success fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="to_update"></h3>
+                                                    <p>Événement(s) à mettre à jour</p>
+                                                </div>
+                                            </div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--info fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="unchanged"></h3>
+                                                    <p>Événement(s) inchangé(s)</p>
+                                                </div>
+                                            </div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--warning fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="to_delete"></h3>
+                                                    <p>Événement(s) à supprimer</p>
+                                                </div>
+                                            </div>
                                             <div class="fr-col-4">
                                                 <div class="fr-alert fr-alert--error fr-alert--sm">
-                                                    <h3 class="fr-alert__title" data-import-target="ignored"></h3>
-                                                    <p>Ligne(s) en erreur</p>
-                                                </div></div>
+                                                    <h3 class="fr-alert__title" data-import-target="count" data-field="ignored"></h3>
+                                                    <p>Ligne(s) ignorée(s)</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-
-
-
-
-
+                                    <div class="fr-alert fr-alert--warning fr-alert--sm fr-mt-2w fr-hidden" data-import-target="skippedDeletionsWarning">
+                                        <p>
+                                            <span data-import-target="count" data-field="skipped_deletions"></span>
+                                            événement(s) absent(s) du fichier ne seront pas supprimés car le fichier contient des lignes en erreur.
+                                        </p>
+                                    </div>
                                 </div>
                                 <div class="fr-alert fr-alert--success fr-mt-2w fr-hidden" data-import-target="resultCreation">
-                                    <p>Lignes importées : <span data-import-target="done"></span></p>
-                                    <p>Lignes en erreur : <span data-import-target="errorCount"></span></p>
+                                    <p>Événements créés : <span data-import-target="count" data-field="created"></span></p>
+                                    <p>Événements mis à jour : <span data-import-target="count" data-field="updated"></span></p>
+                                    <p>Événements inchangés : <span data-import-target="count" data-field="unchanged"></span></p>
+                                    <p>Événements supprimés : <span data-import-target="count" data-field="deleted"></span></p>
+                                    <p>Lignes en erreur : <span data-import-target="count" data-field="errors"></span></p>
                                 </div>
 
                                 <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">

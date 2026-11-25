@@ -1,13 +1,10 @@
-import logging
-
-from django.db import transaction
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 
 from sa.forms.imports import ImportForm
-from sa.import_csv import MissingColumnsError, parse_csv
+from sa.import_csv import EmptyFileError, MissingColumnsError, parse_csv
 
-logger = logging.getLogger(__name__)
+EMPTY_FILE_ERROR = "Le fichier ne contient aucune ligne à importer."
 
 
 class ImportView(TemplateView):
@@ -18,29 +15,25 @@ class ImportView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         form = ImportForm(request.POST, request.FILES)
+        if form.has_error("file", "empty"):
+            return JsonResponse({"error": EMPTY_FILE_ERROR}, status=400)
         if not form.is_valid():
             return JsonResponse({"error": "Veuillez sélectionner un fichier au format .csv."}, status=400)
 
         try:
-            evenements, ignored, read = parse_csv(form.cleaned_data["file"], request.user)
+            plan = parse_csv(form.cleaned_data["file"], request.user)
         except MissingColumnsError as error:
             return JsonResponse({"error": f"Colonnes manquantes dans le fichier : {error}."}, status=400)
+        except EmptyFileError:
+            return JsonResponse({"error": EMPTY_FILE_ERROR}, status=400)
 
         if self.request.POST.get("action") == "test":
-            return JsonResponse({"eligible": len(evenements), "ignored": ignored, "read": read})
+            return JsonResponse(plan.summary())
 
         if self.request.POST.get("action") == "create":
             csv_import = form.save(commit=False)
             csv_import.createur = request.user.agent.structure
+            csv_import.nom_fichier = form.cleaned_data["file"].name
             csv_import.save()
-            done, errors = 0, 0
-            for evenement in evenements:
-                try:
-                    with transaction.atomic():
-                        evenement.save()
-                    done += 1
-                except Exception as e:
-                    logger.warning(f"Could not import row {evenement.import_id}: {e}")
-                    errors += 1
-            return JsonResponse({"done": done, "errors": errors})
+            return JsonResponse(plan.apply(csv_import, request.user))
         raise NotImplementedError
