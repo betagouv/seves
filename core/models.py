@@ -413,7 +413,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         (NOTE, "Note"),
         (POINT_DE_SITUATION, "Point de situation"),
         (DEMANDE_INTERVENTION, "Demande d'intervention"),
-        (COMPTE_RENDU, "Compte rendu sur demande d'intervention"),
+        (COMPTE_RENDU, "Compte-rendu d'intervention"),
         (FIN_SUIVI, "Fin de suivi"),
         (NOTIFICATION_AC, "Notification à l'administration centrale"),
     )
@@ -573,7 +573,7 @@ class Message(AllowsSoftDeleteMixin, WithDocumentPermissionMixin, WithLastUpdate
         if self.message_type == self.POINT_DE_SITUATION:
             return "Réponse à un point de situation"
         if self.message_type == self.COMPTE_RENDU:
-            return "Réponse à un compte rendu sur demande d'intervention"
+            return "Réponse à un compte-rendu d'intervention"
         if self.message_type == self.DEMANDE_INTERVENTION:
             return "Réponse à une demande d'intervention"
 

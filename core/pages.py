@@ -205,7 +205,7 @@ class BaseMessagePage(BaseDocumentPage, ListOfMessagesPage, ABC):
 
     def new_compte_rendu(self):
         self.page.get_by_test_id("element-actions").click()
-        self.page.get_by_role("link", name="Compte rendu sur demande d'intervention").click()
+        self.page.get_by_role("link", name="Compte-rendu d'intervention").click()
         self.page.wait_for_timeout(600)
 
     def new_demande_intervention(self):

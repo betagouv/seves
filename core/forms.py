@@ -444,7 +444,7 @@ class DemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
 
 
 class BaseCompteRenduDemandeInterventionForm(CommonMessageForm, DsfrBaseForm):
-    page_title = "Nouveau compte rendu sur demande d'intervention"
+    page_title = "Nouveau compte-rendu d'intervention"
     recipients = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), label="Destinataires")
     recipients_copy = ContactModelMultipleChoiceField(queryset=Contact.objects.none(), required=False, label="Copie")
     content = MessageContentField()
