@@ -42,7 +42,6 @@
 
 		Include @owasp_crs/*.conf
 		SecRuleEngine On
-		SecRuleEngine DetectionOnly
 		SecRequestBodyLimit 78643200
 		SecDebugLogLevel 1
 		SecResponseBodyAccess Off
