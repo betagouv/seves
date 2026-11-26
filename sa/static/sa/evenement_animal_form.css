@@ -95,3 +95,7 @@
 .veterinaire-fields {
     background-color: var(--background-alt-grey);
 }
+
+.veterinaires-fieldset .fr-notice .fr-container {
+    max-width: unset;
+}
