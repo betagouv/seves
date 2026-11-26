@@ -708,13 +708,14 @@ class EvenementAnimal(
         name_without_precisions = self.maladie.name
         if "(" in name_without_precisions:
             name_without_precisions, _ = name_without_precisions.rsplit("(", 1)
+        name_without_precisions = name_without_precisions.strip()
 
-        if self.typage:
-            typage_value = ", ".join(  # noqa: FLY002
-                [self.typage.valeur_niveau_2, self.typage.valeur_niveau_3, self.typage_champ_libre]
-            )
-            return f"{name_without_precisions.strip()} ({typage_value})"
-        return name_without_precisions.strip()
+        typage_values = [
+            value for value in (self.typage_niveau_2, self.typage_niveau_3, self.typage_champ_libre) if value
+        ]
+        if typage_values:
+            return f"{name_without_precisions} ({', '.join(typage_values)})"
+        return name_without_precisions
 
     class Meta:
         constraints = [
