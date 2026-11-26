@@ -4,6 +4,7 @@ from playwright.sync_api import Page, expect
 from core.factories import DepartementFactory
 from core.mixins import WithEtatMixin
 from sa.models import EvenementAnimal, Veterinaire
+from sa.models.evenement import StatutAnimal
 from sa.tests.factories import (
     EspeceConcerneeFactory,
     EspeceFactory,
@@ -115,7 +116,7 @@ def test_single_espece_is_checked_and_cannot_be_unchecked(live_server, page: Pag
 
 
 def test_can_select_especes_when_there_are_several(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece, other_espece, last_espece = EspeceFactory.create_batch(3)
     veterinaire = VeterinaireFactory.build()
@@ -151,7 +152,7 @@ def test_can_select_especes_when_there_are_several(live_server, page: Page):
 
 
 def test_rows_with_same_espece_can_be_selected_independently(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     poule = EspeceFactory()
@@ -177,7 +178,7 @@ def test_rows_with_same_espece_can_be_selected_independently(live_server, page: 
 
 
 def test_deleting_selected_espece_updates_veterinaire(live_server, page: Page):
-    input_data = EvenementAnimalFactory.build()
+    input_data = EvenementAnimalFactory.build(statut_animal=StatutAnimal.DETENU)
     maladie = MaladieFactory()
     espece = EspeceFactory()
     other_espece = EspeceFactory()
@@ -207,7 +208,7 @@ def test_deleting_selected_espece_updates_veterinaire(live_server, page: Page):
 
 
 def test_selection_is_kept_when_updating_veterinaire(live_server, page: Page):
-    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS)
+    evenement = EvenementAnimalFactory(etat=WithEtatMixin.Etat.EN_COURS, statut_animal=StatutAnimal.DETENU)
     selected = EspeceConcerneeFactory(evenement=evenement, espece=evenement.espece)
     not_selected = EspeceConcerneeFactory(evenement=evenement)
     VeterinaireFactory(evenement=evenement, especes_concernees=[selected])

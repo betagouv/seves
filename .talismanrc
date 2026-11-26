@@ -149,7 +149,7 @@ fileignoreconfig:
 - filename: sa/migrations/0018_veterinaire.py
   checksum: 2957c53fada66c71d2239fe1773adae870df0b974426410cbaac19ff6c32a4c8
 - filename: go.sum
-  checksum: 1341a2d101bd4fd8411c181e3850d39395abac73cc5d45b58219fa5b0ef565c7
+  checksum: 2770ec322ff9939e3134469e255b38740d50e2b27c421b8b2d5e2283acba4cb8
 - filename: core/static/core/form/widgets/virtual_option_list.mjs
   checksum: 03bc4ccd5b41047072104f5f4601f48738709336905d7b252e86745d48f28f80
 - filename: sa/migrations/0028_situationuniteregle.py
@@ -166,5 +166,8 @@ fileignoreconfig:
   checksum: e62bb8f205f7f012d182cf0713d927503e3f20a815e3a30b67bf1cff9c5e5474
 - filename: core/migrations/0069_message_read.py
   checksum: b6067ab927d8c77c8f4528ae30a1ab19fc49819d6e0f6fe399f856e49c2f4047
-
+- filename: sa/tests/test_evenement_animal_mass_actions.py
+  checksum: fd35c1512abec7a75185e5159886fb37a2112dee39f72bc66cf0e9ca46fb6f8d
+- filename: core/migrations/0070_alter_document_document_type.py
+  checksum: 3b6ef8b1ef9347980b13666bc8fdb36620a0fa5cf0358285244906fef509be94
 version: "1.0"

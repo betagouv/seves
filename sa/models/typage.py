@@ -41,3 +41,10 @@ class Typage(models.Model):
 
     def __str__(self):
         return f"{self.maladie.name} - {self.valeur_niveau_2} {self.valeur_niveau_3}".strip()
+
+    def get_revision_list_display(self):
+        lines = (
+            (self.maladie.intitule_typage_niveau_2, self.valeur_niveau_2),
+            (self.maladie.intitule_typage_niveau_3, self.valeur_niveau_3),
+        )
+        return "\n".join(f"{intitule} : {valeur}" if intitule else valeur for intitule, valeur in lines if valeur)

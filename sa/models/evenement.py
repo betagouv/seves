@@ -310,6 +310,7 @@ class EvenementAnimal(
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     date_publication = models.DateTimeField(verbose_name="Date de publication", blank=True, null=True)
     decert_id = models.CharField(max_length=255, verbose_name="N° de la fiche dans DECERT", blank=True)
+    import_id = models.CharField(max_length=255, verbose_name="N° identifiant unique dans l'import", blank=True)
 
     # Fields that determines the evenement global setup
     maladie = models.ForeignKey(Maladie, on_delete=models.PROTECT, related_name="cases", null=False)
@@ -548,7 +549,8 @@ class EvenementAnimal(
     def get_update_url(self):
         return reverse("sa:evenement-animal-update", kwargs={"pk": self.pk})
 
-    def get_list_url(self):
+    @classmethod
+    def get_list_url(cls):
         return reverse("sa:evenement-liste")
 
     @property
@@ -588,6 +590,23 @@ class EvenementAnimal(
 
     def get_allowed_document_types(self):
         return [
+            Document.TypeDocument.FICHE_SIGNALEMENT,
+            Document.TypeDocument.PHOTOGRAPHIE,
+            Document.TypeDocument.RAPPORT_ANALYSE,
+            Document.TypeDocument.RAPPORT_INSPECTION,
+            Document.TypeDocument.COMPTE_RENDU_BILAN,
+            Document.TypeDocument.RAPPORT_ENQUETE_EPIDEMIOLOGIQUE,
+            Document.TypeDocument.CARTOGRAPHIE,
+            Document.TypeDocument.ARRETE,
+            Document.TypeDocument.AUTRE_DECISION_ADMINISTRATIVE,
+            Document.TypeDocument.DOSSIER_INDEMNISATION,
+            Document.TypeDocument.DOSSIER_PRESTATION_ELEVEUR,
+            Document.TypeDocument.CERTIFICAT_SANITAIRE,
+            Document.TypeDocument.DOCUMENT_TRACABILITE,
+            Document.TypeDocument.REGLEMENTATION,
+            Document.TypeDocument.COURRIER,
+            Document.TypeDocument.MESURES_SURVEILLANCE_LUTTE,
+            Document.TypeDocument.COMMUNIQUE_PRESSE,
             Document.TypeDocument.AUTRE,
         ]
 
@@ -635,6 +654,16 @@ class EvenementAnimal(
         return self.statut_animal == StatutAnimal.DETENU
 
     @property
+    def show_especes_concernees_detenu_fields(self):
+        return self.statut_animal != StatutAnimal.SAUVAGE
+
+    @property
+    def date_first_symptoms_label(self):
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return "Date de la suspicion"
+        return self._meta.get_field("date_first_symptoms").verbose_name
+
+    @property
     def typage_niveau_2(self):
         return self.typage.valeur_niveau_2 if self.typage_id else ""
 
@@ -673,6 +702,20 @@ class EvenementAnimal(
             .distinct()
             .order_by("name")
         )
+
+    @property
+    def maladie_str_with_typage(self):
+        name_without_precisions = self.maladie.name
+        if "(" in name_without_precisions:
+            name_without_precisions, _ = name_without_precisions.rsplit("(", 1)
+        name_without_precisions = name_without_precisions.strip()
+
+        typage_values = [
+            value for value in (self.typage_niveau_2, self.typage_niveau_3, self.typage_champ_libre) if value
+        ]
+        if typage_values:
+            return f"{name_without_precisions} ({', '.join(typage_values)})"
+        return name_without_precisions
 
     class Meta:
         constraints = [

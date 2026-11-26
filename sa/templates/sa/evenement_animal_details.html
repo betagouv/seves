@@ -206,13 +206,17 @@
                                         <tr>
                                             <th scope="col">Espèce</th>
                                             <th scope="col">Identifiant</th>
-                                            <th scope="col">Description du site de détention</th>
-                                            <th scope="col">Présents</th>
+                                            {% if object.show_especes_concernees_detenu_fields %}
+                                                <th scope="col">Description du site de détention</th>
+                                                <th scope="col">Présents</th>
+                                            {% endif %}
                                             <th scope="col">Morts</th>
                                             <th scope="col">Cas</th>
-                                            <th scope="col">Abattus</th>
-                                            <th scope="col">Dépeuplés/euthanasiés</th>
-                                            <th scope="col">Vaccinés</th>
+                                            {% if object.show_especes_concernees_detenu_fields %}
+                                                <th scope="col">Abattus</th>
+                                                <th scope="col">Dépeuplés/euthanasiés</th>
+                                                <th scope="col">Vaccinés</th>
+                                            {% endif %}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -220,19 +224,23 @@
                                             <tr>
                                                 <td>{{ row.espece }}</td>
                                                 <td>{{ row.identifiant|or_empty_value_tag }}</td>
-                                                <td>
-                                                    {% for line in row.get_situation_unite_lines %}
-                                                        <div>{{ line }}</div>
-                                                    {% empty %}
-                                                        <span class="empty-value">Vide</span>
-                                                    {% endfor %}
-                                                </td>
-                                                <td>{{ row.presents|or_empty_value_tag }}</td>
+                                                {% if object.show_especes_concernees_detenu_fields %}
+                                                    <td>
+                                                        {% for line in row.get_situation_unite_lines %}
+                                                            <div>{{ line }}</div>
+                                                        {% empty %}
+                                                            <span class="empty-value">Vide</span>
+                                                        {% endfor %}
+                                                    </td>
+                                                    <td>{{ row.presents|or_empty_value_tag }}</td>
+                                                {% endif %}
                                                 <td>{{ row.morts|or_empty_value_tag }}</td>
                                                 <td>{{ row.cas|or_empty_value_tag }}</td>
-                                                <td>{{ row.abattus|or_empty_value_tag }}</td>
-                                                <td>{{ row.depeuples|or_empty_value_tag }}</td>
-                                                <td>{{ row.vaccines|or_empty_value_tag }}</td>
+                                                {% if object.show_especes_concernees_detenu_fields %}
+                                                    <td>{{ row.abattus|or_empty_value_tag }}</td>
+                                                    <td>{{ row.depeuples|or_empty_value_tag }}</td>
+                                                    <td>{{ row.vaccines|or_empty_value_tag }}</td>
+                                                {% endif %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -249,7 +257,7 @@
                     <div class="fr-col-12 fr-col-lg-4">
                         <div class="bold">Contexte de la suspicion</div>
                         <div>{{ object.get_context_suspicion_display|or_empty_value_tag }}</div>
-                        <div class="bold fr-mt-2w">Date d'apparition des éventuels 1ers symptômes</div>
+                        <div class="bold fr-mt-2w">{{ object.date_first_symptoms_label }}</div>
                         <div>{{ object.date_first_symptoms|date:"d/m/Y"|or_empty_value_tag }}</div>
                         <div class="bold fr-mt-2w">Humains exposés pour lesquels des actions sont engagées ?</div>
                         <div>{{ object.get_human_involved_display|or_empty_value_tag }}</div>

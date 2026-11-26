@@ -8,7 +8,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from playwright.sync_api import Page, expect
-import pytest
 
 from core.factories import DocumentFactory, MessageFactory, StructureFactory
 from core.models import Document, Message, Structure
@@ -47,9 +46,7 @@ def test_cant_add_document_with_incorrect_extension(live_server, page: Page, moc
 
     with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
         expect(accordion.locator(".errorlist")).to_have_text(
-            "L'extension de fichier « json » n’est pas autorisée pour le type de document « Compte rendu de réunion ». "
-            "Les extensions autorisées sont : png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, "
-            "txt, eml, ppt, pptx, odp."
+            "L'extension de fichier « json » n’est pas autorisée. Les extensions autorisées sont :  png, jpg, jpeg, gif, pdf, doc, docx, xls, xlsx, odt, ods, csv, qgs, qgz, txt, eml, ppt, pptx, odp."
         )
         expect(accordion.locator('[name$="nom"]')).to_have_value(document_page.BASIC_DOCUMENT_NAME)
         expect(accordion.locator('[name$="document_type"]')).to_have_value(Document.TypeDocument.COMPTE_RENDU_REUNION)
@@ -466,58 +463,6 @@ def test_can_see_download_document_btn_even_if_evenement_is_cloture(live_server,
     page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
     page.get_by_test_id("documents").click()
     expect(page.locator(f'[href*="{document.file.url}"]')).to_be_visible()
-
-
-def test_change_document_type_to_cartographie_updates_accept_attribute_and_infos_span(live_server, page: Page):
-    evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    documents_page = WithDocumentsPage(page)
-    documents_page.add_basic_document(close=False)
-    with documents_page.modify_document_by_name(documents_page.BASIC_DOCUMENT_NAME) as accordion:
-        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.CARTOGRAPHIE)
-        expect(accordion.locator('[name$="file"]')).to_have_attribute("accept", ".png,.jpg,.jpeg")
-
-
-@pytest.mark.django_db
-def test_can_upload_document_with_allowed_extension_for_cartographie(live_server, page: Page):
-    evenement = EvenementFactory()
-    previous = evenement.documents.count()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    documents_page = WithDocumentsPage(page)
-    documents_page.add_basic_document(document=settings.BASE_DIR / "static/images/marianne.png")
-
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == previous + 1
-
-
-@pytest.mark.django_db
-def test_cant_upload_document_with_not_allowed_extension_for_cartographie(live_server, page: Page):
-    evenement = EvenementFactory()
-
-    page.goto(f"{live_server.url}{evenement.get_absolute_url()}")
-    document_page = WithDocumentsPage(page)
-
-    with open("test.txt", mode="w+") as file:
-        file.write("Test")
-
-    document_page.add_basic_document(document=settings.BASE_DIR / "test.txt", close=False)
-    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
-        accordion.locator('[name$="document_type"]').select_option(Document.TypeDocument.CARTOGRAPHIE)
-
-    document_page.validate_document_modal(expect_error=True)
-
-    with document_page.modify_document_by_name(document_page.BASIC_DOCUMENT_NAME, validate_modal=False) as accordion:
-        expect(accordion.locator(".errorlist")).to_have_text(
-            "L'extension de fichier « txt » n’est pas autorisée pour le type de document « Cartographie / plans / localisation ». "
-            "Les extensions autorisées sont : png, jpg, jpeg."
-        )
-
-    evenement.refresh_from_db()
-    assert evenement.documents.count() == 0
-
-    Path("test.txt").unlink()
 
 
 def test_document_name_length_validation(live_server, page: Page, mocked_authentification_user: User):

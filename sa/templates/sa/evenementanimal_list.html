@@ -56,25 +56,48 @@
         </div>
     </form>
 
-    <div class="main-container" data-controller="mass-actions" data-mass-actions-api-url-value="{% url 'sa:mass-action-status' %}">
+    <div
+        class="main-container"
+        data-controller="mass-actions"
+        data-mass-actions-api-url-value="{% url 'sa:mass-action-status' %}"
+        data-mass-actions-pks-url-value="{% url 'sa:mass-action-pks' %}?{{ query_without_page }}"
+        data-mass-actions-total-count-value="{{ paginator.count }}"
+    >
         <div class="evenements_liste__table--header">
             <div>{{ paginator.count }} sur un total de {{ total_object_count }}</div>
         </div>
 
         {% include "sa/_mass_actions_fin_suivi.html" %}
+        {% if can_mass_cloturer %}
+            {% include "sa/_mass_actions_cloture.html" %}
+        {% endif %}
 
-        <nav role="navigation" class="fr-translate fr-nav mass-actions fr-mt-4v" >
-            <div class="fr-nav__item">
-                <button class="fr-translate__btn fr-btn fr-btn--secondary fr-btn--lg" data-mass-actions-target="navigation" disabled aria-controls="action-1" aria-expanded="false" title="Sélectionner une action">Actions groupées</button>
-                <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
-                    <ul class="fr-menu__list">
-                        <li>
-                            <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
-                        </li>
-                    </ul>
+        <div class="mass-actions-toolbar fr-mt-4v">
+            <nav role="navigation" class="fr-translate fr-nav mass-actions">
+                <div class="fr-nav__item">
+                    <button class="fr-translate__btn fr-btn fr-btn--secondary fr-btn--lg" data-mass-actions-target="navigation" disabled aria-controls="action-1" aria-expanded="false" title="Sélectionner une action">Actions groupées</button>
+                    <div class="fr-collapse fr-translate__menu fr-menu" id="action-1">
+                        <ul class="fr-menu__list">
+                            <li>
+                                <button data-action="mass-actions#onFinDeSuivi:prevent:default" class="fr-translate__language fr-nav__link"><span class="ri-notification-off-fill fr-mr-2v" aria-hidden="true"></span>Signaler la fin de suivi</button>
+                            </li>
+                            {% if can_mass_cloturer %}
+                                <li>
+                                    <button data-action="mass-actions#onCloture:prevent:default" class="fr-translate__language fr-nav__link"><span class="fr-icon-close-circle-fill fr-icon--sm fr-mr-2v" aria-hidden="true"></span>Clôturer</button>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+            <span class="fr-text--sm fr-mb-0" aria-live="polite" data-mass-actions-target="selectionCount" data-testid="mass-actions-selection-count"></span>
+        </div>
+
+        <p class="mass-actions-banner fr-background-default--grey fr-mt-2v fr-mb-0 fr-hidden" aria-live="polite" data-mass-actions-target="banner" data-testid="mass-actions-banner">
+            <span data-mass-actions-target="bannerText"></span>
+            <button type="button" class="fr-btn fr-btn--tertiary-no-outline" data-mass-actions-target="selectAllFilteredButton" data-action="mass-actions#selectAllFiltered">Sélectionner les {{ paginator.count }} événements correspondant aux filtres</button>
+            <button type="button" class="fr-btn fr-btn--tertiary-no-outline" data-mass-actions-target="clearSelectionButton" data-action="mass-actions#clearSelection">Effacer la sélection</button>
+        </p>
 
         {% if paginator.count > 0 %}
             <form method="post">
@@ -85,7 +108,7 @@
                             <tr>
                                 <th scope="col" class="mass-actions-col">
                                     <div class="fr-checkbox-group fr-mb-2w">
-                                        <input id="master-checkbox" type="checkbox" data-action="change->mass-actions#onMasterCheckboxChange">
+                                        <input id="master-checkbox" type="checkbox" data-mass-actions-target="masterCheckbox" data-action="change->mass-actions#onMasterCheckboxChange">
                                         <label for="master-checkbox" class="fr-label">
                                             <span class="fr-sr-only">Cocher toutes les cases du tableau</span>
                                         </label>
@@ -115,7 +138,7 @@
                                         <a href="{{ evenement.get_absolute_url }}" class="fr-link">{{ evenement.numero }}</a>
                                     </td>
                                     <td>{{ evenement.date_creation|date:"d/m/Y" }}</td>
-                                    <td>{{ evenement.maladie|or_empty_value_tag:"table" }}</td>
+                                    <td>{{ evenement.maladie_str_with_typage|or_empty_value_tag:"table" }}</td>
                                     <td>
                                         <p class="fr-badge fr-badge--no-icon {{ evenement.statut_evenement|statut_color }} fr-m-0 fr-my-2v">{{ evenement.get_statut_evenement_display }}</p>
                                         <br/>{{ evenement.date_statut_changed|date:"d/m/Y"|or_empty_value_tag:"table" }}

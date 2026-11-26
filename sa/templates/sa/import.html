@@ -1,0 +1,122 @@
+{% extends "sa/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'core/form/document_uploads.css' %}">
+{% endblock extrahead %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'sa/import.mjs' %}"></script>
+{% endblock scripts %}
+
+{% block content %}
+    <main class="main-container fr-p-4w">
+        <h1 class="fr-h1">Imports en masse</h1>
+        <button type="button"
+                class="fr-btn fr-btn--icon-left fr-icon-upload-line"
+                data-fr-opened="false"
+                aria-controls="import-modal"
+                data-testid="open-import-modal">
+            Importer des événements
+        </button>
+
+        <dialog id="import-modal" class="fr-modal" aria-labelledby="import-modal-title">
+            <div class="fr-container fr-container--fluid fr-container-md">
+                <div class="fr-grid-row fr-grid-row--center">
+                    <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                        <div class="fr-modal__body">
+                            <div class="fr-modal__header">
+                                <button aria-controls="import-modal" title="Fermer" type="button" class="fr-btn--close fr-btn">Fermer</button>
+                            </div>
+                            <div class="fr-modal__content"
+                                 data-controller="import"
+                                 data-import-url-value="{% url 'sa:import' %}">
+                                <h2 id="import-modal-title" class="fr-modal__title">
+                                    <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                                    Importer des événements en masse
+                                </h2>
+
+                                <section class="document-upload-drag-drop"
+                                         data-import-target="dropZone"
+                                         data-action="dragover->import#onDragOver:prevent:stop
+                                                      drop->import#onDrop:prevent:stop
+                                                      dragenter->import#onDragEnter:prevent:stop
+                                                      dragleave->import#onDragLeave:prevent:stop
+                                                      dragend->import#onDragLeave:prevent:stop">
+                                    <div class="document-upload-drag-drop--zone">
+                                        <p class="fr-m-0">
+                                            Glissez votre fichier ici ou
+                                            <label class="fr-label" for="filechooser-btn" tabindex="0">cliquez pour le sélectionner</label>
+                                            {{ form.file }}
+                                        </p>
+                                        <p class="fr-m-0 fr-mt-2v fr-text--bold" data-import-target="fileName"></p>
+                                    </div>
+                                </section>
+                                <p data-import-target="description" class="fr-hidden">
+                                    Chaque événement est reconnu par son identifiant unique.
+                                    Un nouvel identifiant crée un événement. Un identifiant déjà importé met à jour l’événement si la ligne a changé, et le laisse tel quel sinon.
+                                    « Oui » dans la colonne « Supprimer » supprime l’événement.
+                                </p>
+                                <p class="fr-hint-text fr-mt-1w">Format supporté : .csv</p>
+
+                                <div class="fr-alert fr-alert--error fr-mt-2w fr-hidden" data-import-target="error">
+                                    <p data-import-target="errorText"></p>
+                                </div>
+                                <div class="fr-hidden" data-import-target="result">
+
+                                    <div class="fr-container--fluid">
+                                        <div class="fr-grid-row fr-grid-row--gutters">
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="read"></h3>
+                                                    <p>Ligne(s) lues</p>
+                                                </div>
+                                            </div>
+                                            <div class="fr-col-4">                <div class="fr-alert fr-alert--success fr-alert--sm">
+                                                <h3 class="fr-alert__title" data-import-target="eligible"></h3>
+                                                <p>Ligne(s) valide(s)</p>
+                                            </div></div>
+                                            <div class="fr-col-4">
+                                                <div class="fr-alert fr-alert--error fr-alert--sm">
+                                                    <h3 class="fr-alert__title" data-import-target="ignored"></h3>
+                                                    <p>Ligne(s) en erreur</p>
+                                                </div></div>
+                                        </div>
+                                    </div>
+
+
+
+
+
+                                </div>
+                                <div class="fr-alert fr-alert--success fr-mt-2w fr-hidden" data-import-target="resultCreation">
+                                    <p>Lignes importées : <span data-import-target="done"></span></p>
+                                    <p>Lignes en erreur : <span data-import-target="errorCount"></span></p>
+                                </div>
+
+                                <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-lg fr-mt-4w">
+                                    <button type="button" class="fr-btn fr-btn--secondary" aria-controls="import-modal">Annuler</button>
+                                    <button type="button"
+                                            class="fr-btn"
+                                            disabled
+                                            data-import-target="submit"
+                                            data-action="import#onSubmit"
+                                    >
+                                        Analyser le fichier
+                                    </button>
+                                    <button type="button"
+                                            class="fr-btn fr-hidden"
+                                            data-import-target="submitCreate"
+                                            data-action="import#onSubmitForCreation"
+                                    >
+                                        Lancer l'import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    </main>
+{% endblock content %}

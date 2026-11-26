@@ -8,7 +8,7 @@ import pytest
 from core.constants import AC_STRUCTURE, MUS_STRUCTURE
 from core.factories import AgentFactory, ContactAgentFactory
 from core.models import Structure
-from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP
+from seves.settings import CAN_GIVE_ACCESS_GROUP, SA_GROUP, SSA_GROUP, SV_GROUP
 
 User = get_user_model()
 
@@ -158,3 +158,51 @@ def test_can_filter_table_on_structure(live_server, page, mocked_authentificatio
     expect(
         page.locator("table").get_by_text(agent_already_admin_2.agent_with_structure, exact=True)
     ).not_to_be_visible()
+
+
+@pytest.mark.django_db
+def test_can_add_sa_admin_permissions_in_combination_with_other_domains(
+    live_server, page, mocked_authentification_user, choice_js_fill
+):
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    mocked_authentification_user.agent.structure = structure
+    agent_already_admin = AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, SV_GROUP])
+    ContactAgentFactory(agent=agent_already_admin)
+
+    page.goto(f"{live_server.url}/{reverse('handle-admins')}")
+    choice_js_fill(page, ".choices", agent_already_admin.agent_with_structure, agent_already_admin.agent_with_structure)
+    form = page.locator(".white-container")
+    expect(form.get_by_text("SV", exact=True)).to_be_checked()
+    expect(form.get_by_text("Alim", exact=True)).not_to_be_checked()
+    expect(form.get_by_text("SA", exact=True)).not_to_be_checked()
+    form.get_by_text("SA", exact=True).check()
+    page.get_by_role("button", name="Accorder le rôle administrateur").click()
+    expect(page.locator("#fr-modal-add-user")).to_be_visible()
+    page.get_by_role("button", name="Confirmer le rôle d’administrateur").click()
+    expect(page.get_by_text("Le rôle administrateur a été accordé")).to_be_visible()
+
+    row = page.locator("table tbody tr").filter(has_text=agent_already_admin.agent_with_structure)
+    expect(row.get_by_role("cell", name="SV, SA", exact=True)).to_be_visible()
+
+    agent_already_admin.refresh_from_db()
+    assert set(agent_already_admin.user.groups.values_list("name", flat=True)) == {
+        CAN_GIVE_ACCESS_GROUP,
+        SV_GROUP,
+        SA_GROUP,
+    }
+
+
+@pytest.mark.django_db
+def test_admin_with_all_domains_is_not_proposed_in_add_form(client, mocked_authentification_user):
+    structure, _ = Structure.objects.get_or_create(niveau1=AC_STRUCTURE, niveau2=MUS_STRUCTURE)
+    mocked_authentification_user.agent.structure = structure
+    admin_all_domains = AgentFactory(
+        with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, SA_GROUP, SV_GROUP, SSA_GROUP]
+    )
+    admin_without_sa = AgentFactory(with_active_user__with_groups=[settings.CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP])
+
+    response = client.get(reverse("handle-admins"))
+
+    proposed_users = response.context["form"].fields["user"].queryset
+    assert admin_all_domains.user not in proposed_users
+    assert admin_without_sa.user in proposed_users

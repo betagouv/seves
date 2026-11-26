@@ -20,10 +20,10 @@
 		SecRule REQUEST_FILENAME "@rx ^/tiac/(evenement-simple/(creation|\d+/edition)|investigation-tiac/(creation|edition/\d+))$" "id:10001,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:contenu,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:precisions,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:/^repas-\d+-menu$/,ctl:ruleRemoveTargetByTag=attack-lfi;ARGS:contenu"
 
 		# SSA free text (same cause) and chemical denominations mistaken for SQL
-		SecRule REQUEST_FILENAME "@rx ^/ssa/evenement-produit/(creation|\d+/modification)$" "id:10002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description_complementaire,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:evaluation,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:lots,ctl:ruleRemoveTargetById=942100;ARGS:denomination"
+		SecRule REQUEST_FILENAME "@rx ^/ssa/evenement-produit/(creation|\d+/modification)$" "id:10002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:description_complementaire,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:evaluation,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:lots,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:description,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:description_complementaire,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:evaluation,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:lots,ctl:ruleRemoveTargetById=942100;ARGS:denomination"
 
 		# Messages: editor HTML, sanitized by an allowlist on the Django side (core/html.py)
-		SecRule REQUEST_FILENAME "@rx ^/core/(message-add/\d+/\d+|message/\d+/update)/$" "id:10003,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:content,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:content,ctl:ruleRemoveTargetByTag=attack-injection-php;ARGS:content"
+		SecRule REQUEST_FILENAME "@rx ^/core/(message-add/\d+/\d+|message/\d+/update)/$" "id:10003,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:content,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:content,ctl:ruleRemoveTargetByTag=attack-injection-php;ARGS:content,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:content"
 
 		# Document upload: filenames with an apostrophe ("demande d'information.eml")
 		SecRule REQUEST_FILENAME "@streq /core/document-upload/" "id:10004,phase:1,pass,nolog,ctl:ruleRemoveById=920120,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:nom"
@@ -36,6 +36,9 @@
 
 		# PostHog cookies set on .beta.gouv.fr by other services, never read by Seves: their JSON keys ("$initial_...") look like MongoDB operators
 		SecRule REQUEST_COOKIES_NAMES "@rx ^ph_.+_posthog$" "id:10007,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=OWASP_CRS;REQUEST_COOKIES:/^ph_.+_posthog$/"
+
+		# TIAC : page de conclusion
+		SecRule REQUEST_FILENAME "@rx ^/tiac/investigation-tiac/edition/\d+/conclusion/$" "id:10008,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:conclusion_comment,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:conclusion_comment"
 
 		Include @owasp_crs/*.conf
 		SecRuleEngine On

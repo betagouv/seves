@@ -431,6 +431,9 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         self.fields["date_statut_changed"].widget.attrs["max"] = today
         self.fields["date_statut_changed"].initial = today
         self.fields["date_first_symptoms"].widget.attrs["max"] = today
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            self["date_first_symptoms"].label = "Date de la suspicion"
+            self["date_first_symptoms"].help_text = ""
         self.fields["date_notification_adis"].widget.attrs["max"] = today
         self.fields["date_cloture_adis"].widget.attrs["max"] = today
 

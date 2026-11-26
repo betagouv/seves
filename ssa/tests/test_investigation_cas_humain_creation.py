@@ -365,7 +365,6 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     page: Page,
     ensure_departements,
     choice_js_cant_pick,
-    choice_js_fill,
     settings,
 ):
     settings.SIRENE_CONSUMER_KEY = "FOO"
@@ -437,11 +436,8 @@ def test_can_create_etablissement_with_full_siren_will_filter_results(
     choice_js_cant_pick(
         creation_page.page, 'label[for="search-siret-input-"] ~ div.choices', "12312312322222", expected_value
     )
-    creation_page.page.keyboard.press("Escape")
     expected_value = "DIRECTION GENERALE DE L'ALIMENTATION DIRECTION GENERALE DE L'ALIMENTATION   12312312322222 - 175 RUE DU CHEVALERET - 75013 PARIS"
-    choice_js_fill(
-        creation_page.page, 'label[for="search-siret-input-"] ~ div.choices', "12312312322222", expected_value
-    )
+    creation_page.page.get_by_role("option", name=expected_value, exact=True).click()
     departement = page.locator(".fr-modal__content").locator("visible=true").locator('[id$="-departement"]')
     expect(departement).to_have_value("75")
     assert call_count["count_communes"] == 1

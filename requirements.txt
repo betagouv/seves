@@ -85,7 +85,7 @@ django-environ==0.14.0
     # via -r requirements.in
 django-filter==26.1
     # via -r requirements.in
-django-post-office==3.11.2
+django-post-office==3.13.0
     # via -r requirements.in
 django-querysetsequence==0.18
     # via -r requirements.in
@@ -170,7 +170,7 @@ pillow==13.0.0
     #   pikepdf
 platformdirs==4.13.5
     # via virtualenv
-playwright==1.63.0
+playwright==1.64.1
     # via
     #   -r requirements.in
     #   pytest-playwright
@@ -250,13 +250,13 @@ ruff==0.17.3
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
-sentry-sdk[django]==2.68.1
+sentry-sdk[django]==2.75.0
     # via -r requirements.in
 six==1.16.0
     # via
     #   docxcompose3
     #   python-dateutil
-soupsieve==2.9
+soupsieve==4.0
     # via beautifulsoup4
 sqlparse==0.6.0
     # via

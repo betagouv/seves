@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from bs4 import BeautifulSoup
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -305,12 +303,17 @@ class Document(models.Model):
         COMPTE_RENDU = "compte_rendu", "Compte-rendu"
         FICHE_PRODUIT = "fiche_produit", "Fiche produit à risque particulier : œuf, huitre…"
 
-    ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE = defaultdict(
-        lambda: list(AllowedExtensions),
-        {
-            TypeDocument.CARTOGRAPHIE: [AllowedExtensions.PNG, AllowedExtensions.JPG, AllowedExtensions.JPEG],
-        },
-    )
+        FICHE_SIGNALEMENT = "fiche_signalement", "Fiche de signalement / commémoratifs"
+        PHOTOGRAPHIE = "photographie", "Photographie / image"
+        COMPTE_RENDU_BILAN = "compte_rendu_bilan", "Compte rendu / bilan"
+        RAPPORT_ENQUETE_EPIDEMIOLOGIQUE = "rapport_enquete_epidemiologique", "Rapport d'enquête épidémiologique"
+        AUTRE_DECISION_ADMINISTRATIVE = "autre_decision_administrative", "Autre décision administrative"
+        DOSSIER_INDEMNISATION = "dossier_indemnisation", "Dossier d'indemnisation pour l'État"
+        DOSSIER_PRESTATION_ELEVEUR = "dossier_prestation_eleveur", "Dossier de prestation de l'éleveur"
+        DOCUMENT_TRACABILITE = "document_tracabilite", "Document de traçabilité"
+        REGLEMENTATION = "reglementation", "Réglementation / instruction / documentation"
+        COURRIER = "courrier", "Courrier / courriel"
+        MESURES_SURVEILLANCE_LUTTE = "mesures_surveillance_lutte", "Mesures de surveillance et de lutte"
 
     nom = models.CharField(max_length=256)
     description = models.TextField(blank=True)
@@ -379,37 +382,12 @@ class Document(models.Model):
     def can_pdf_be_viewed(self):
         return self.is_infected is False and self.mimetype == AllowedMimeTypes.APPLICATION_PDF
 
-    @classmethod
-    def validate_file_extention_for_document_type(cls, file, document_type):
-        if document_type not in Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE:
-            return
-        document_type_label = Document.TypeDocument(document_type).label
-        FileExtensionValidator(
-            Document.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type],
-            message=(
-                "L'extension de fichier « %(extension)s » n’est pas autorisée pour le type de document "
-                f"« {document_type_label} ». Les extensions autorisées sont : %(allowed_extensions)s."
-            ),
-        )(file)
-
-    @classmethod
-    def get_accept_attribute_per_document_type(cls):
-        """Retourne un dictionnaire associant chaque type de document à une liste d'extensions formatées pour l'attribut HTML 'accept'."""
-        accept_allowed_extensions = {}
-        for document_type in cls.TypeDocument:
-            extensions = cls.ALLOWED_EXTENSIONS_PER_DOCUMENT_TYPE[document_type]
-            extension_values = [ext.value for ext in extensions]
-            accept_allowed_extensions[document_type] = "." + ",.".join(extension_values)
-        return accept_allowed_extensions
-
     def clean(self):
         super().clean()
         if self.document_type not in self.content_object.get_allowed_document_types():
             raise ValidationError(
                 {"document_type": f"Type '{self.document_type}' non autorisé pour le modèle {self.content_type.model}."}
             )
-        if self.file and self.document_type:
-            self.validate_file_extention_for_document_type(self.file, self.document_type)
 
     @property
     def pdf_preview_url(self):

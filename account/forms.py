@@ -46,7 +46,9 @@ class UserPermissionForm(DSFRForm, forms.Form):
 
 class AddAdminForm(DsfrBaseForm, forms.Form):
     user = forms.ModelChoiceField(queryset=User.objects.none(), label="Agent")
-    domains = forms.MultipleChoiceField(choices=[("SV", "SV"), ("SSA", "SSA")], widget=CheckboxSelectMultiple)
+    domains = forms.MultipleChoiceField(
+        choices=[("SV", "SV"), ("SSA", "SSA"), ("SA", "SA")], widget=CheckboxSelectMultiple
+    )
 
     def __init__(self, *args, **kwargs):
         users = kwargs.pop("users")

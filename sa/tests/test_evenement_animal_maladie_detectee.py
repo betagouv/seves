@@ -191,14 +191,19 @@ def test_can_create_evenement_from_alert(
     for expected, actual in zip(sorted([detected_analyse, other_analyse], key=lambda a: a.maladie.name), analyses):
         assert_models_are_equal(expected, actual, to_exclude=to_exclude)
 
-    especes_concernees = evenement_enfant.especes_exposees.order_by("pk")
-    assert len(especes_concernees) == 2
-    assert_models_are_equal(espece_concernee, especes_concernees[0], to_exclude=to_exclude)
-    assert_models_are_equal(other_espece_concernee, especes_concernees[1], to_exclude=to_exclude)
+    expected_especes_concernees = (
+        [espece_concernee]
+        if source.statut_animal == StatutAnimal.SAUVAGE
+        else [espece_concernee, other_espece_concernee]
+    )
+    especes_concernees = list(evenement_enfant.especes_exposees.order_by("pk"))
+    assert len(especes_concernees) == len(expected_especes_concernees)
+    for expected, actual in zip(expected_especes_concernees, especes_concernees):
+        assert_models_are_equal(expected, actual, to_exclude=to_exclude)
 
     copied_veterinaire = evenement_enfant.veterinaires.get()
     assert_models_are_equal(veterinaire, copied_veterinaire, to_exclude=to_exclude)
-    assert list(copied_veterinaire.especes_concernees.all()) == [especes_concernees[1]]
+    assert list(copied_veterinaire.especes_concernees.all()) == [especes_concernees[-1]]
 
     assert LienLibre.objects.for_both_objects(source, evenement_enfant) is not None
     assert source_contact not in evenement_enfant.contacts.all()

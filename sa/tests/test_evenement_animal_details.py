@@ -218,7 +218,7 @@ def test_evenement_animal_details_page_enquete_block(live_server, page: Page):
 
 
 def test_evenement_animal_details_page_especes_concernees_block(live_server, page: Page):
-    evenement = EvenementAnimalFactory()
+    evenement = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     espece_1 = EspeceConcerneeFactory(evenement=evenement)
     espece_2 = EspeceConcerneeFactory(evenement=evenement)
 
@@ -252,7 +252,7 @@ def test_evenement_animal_details_page_especes_concernees_block(live_server, pag
 
 
 def test_evenement_animal_details_page_especes_concernees_block_when_empty(live_server, page: Page):
-    evenement = EvenementAnimalFactory()
+    evenement = EvenementAnimalFactory(statut_animal=StatutAnimal.DETENU)
     espece_1 = EspeceConcerneeFactory(
         evenement=evenement,
         identifiant="",

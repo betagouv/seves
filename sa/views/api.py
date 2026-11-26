@@ -8,6 +8,8 @@ from core.models import FinSuiviContact
 from sa.models import EvenementAnimal
 from ssa.form_mixins import WithFreeLinksQuerysetsMixin
 
+from .mixins import WithFilteredListMixin
+
 
 class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
     def get(self, request):
@@ -40,6 +42,12 @@ class FindFreeLinksView(WithFreeLinksQuerysetsMixin, View):
         return JsonResponse({"results": results})
 
 
+class GetMassActionPks(WithFilteredListMixin, View):
+    def get(self, request):
+        queryset = self.get_queryset().prefetch_related(None).order_by()
+        return JsonResponse({"pks": list(queryset.values_list("pk", flat=True))})
+
+
 class GetMassActionStatus(View):
     def post(self, request):
         try:
@@ -57,5 +65,21 @@ class GetMassActionStatus(View):
                 if FinSuiviContact.can_add_fin_de_suivi(evenement, self.request.user):
                     can_be_done += 1
             return JsonResponse({"can_be_done": can_be_done})
+        if action == "cloture":
+            if not EvenementAnimal.can_be_cloture_by(self.request.user):
+                return JsonResponse({"error": "Action non autorisée"}, status=403)
+            return JsonResponse(self.get_cloture_status(queryset))
 
         raise NotImplementedError
+
+    def get_cloture_status(self, queryset):
+        eligibles = queryset.filter(etat=EvenementAnimal.Etat.EN_COURS)
+        return {
+            "can_be_done": eligibles.count(),
+            "draft": queryset.filter(etat=EvenementAnimal.Etat.BROUILLON).count(),
+            "already_cloture": queryset.filter(etat=EvenementAnimal.Etat.CLOTURE).count(),
+            # La structure de l'agent n'est pas comptée : sa fin de suivi est ajoutée lors de la clôture
+            "not_in_fin_suivi": eligibles.having_structures_not_in_fin_suivi(
+                excluded_structure=self.request.user.agent.structure
+            ).count(),
+        }

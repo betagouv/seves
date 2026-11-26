@@ -17,7 +17,7 @@ from core.mixins import MediaDefiningMixin
 from core.models import Contact
 from core.redirect import safe_redirect
 from seves import settings
-from seves.settings import CAN_GIVE_ACCESS_GROUP, SSA_GROUP, SV_GROUP
+from seves.settings import CAN_GIVE_ACCESS_GROUP, SA_GROUP, SSA_GROUP, SV_GROUP
 
 User = get_user_model()
 
@@ -159,7 +159,7 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         if hasattr(self, "users_for_add_admin_form"):
             return self.users_for_add_admin_form
 
-        groups = [CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP]
+        groups = [CAN_GIVE_ACCESS_GROUP, SV_GROUP, SSA_GROUP, SA_GROUP]
         existing_admin_with_all_groups = User.objects
 
         for g in groups:
@@ -183,13 +183,13 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
 
         filter = AdminUserFilter(self.request.GET, queryset=self.get_existing_admins())
 
+        domain_labels = {SSA_GROUP: "Alim", SV_GROUP: "SV", SA_GROUP: "SA"}
         for admin in filter.qs:
-            app_groups_for_user = [g for g in admin.groups.all() if g.name in [settings.SV_GROUP, settings.SSA_GROUP]]
-            admin.domains = ", ".join([g.name.split("_user")[0].title() for g in app_groups_for_user])
-            admin.domains = admin.domains.replace("Ssa", "Alim")
+            user_group_names = {g.name for g in admin.groups.all()}
+            admin.domains = ", ".join(label for group, label in domain_labels.items() if group in user_group_names)
 
         users_with_groups = [u for u in self.get_users_for_add_admin_form() if u.groups.all()]
-        map = {settings.SV_GROUP: "SV", settings.SSA_GROUP: "SSA"}
+        map = {settings.SV_GROUP: "SV", settings.SSA_GROUP: "SSA", settings.SA_GROUP: "SA"}
         user_id_to_group_list = {u.id: list(map.get(g.name, "") for g in u.groups.all()) for u in users_with_groups}
         context["user_to_groups"] = json.dumps(user_id_to_group_list)
         context["filter"] = filter
@@ -218,14 +218,11 @@ class HandleAdminsView(UserPassesTestMixin, MediaDefiningMixin, FormView):
         user.is_active = True
         user.groups.add(Group.objects.get(name=CAN_GIVE_ACCESS_GROUP))
         user.save()
-        if "SV" in form.cleaned_data["domains"]:
-            user.groups.add(Group.objects.get(name=settings.SV_GROUP))
-        else:
-            user.groups.remove(Group.objects.get(name=settings.SV_GROUP))
-        if "SSA" in form.cleaned_data["domains"]:
-            user.groups.add(Group.objects.get(name=settings.SSA_GROUP))
-        else:
-            user.groups.remove(Group.objects.get(name=settings.SSA_GROUP))
+        for domain, group_name in (("SV", SV_GROUP), ("SSA", SSA_GROUP), ("SA", SA_GROUP)):
+            if domain in form.cleaned_data["domains"]:
+                user.groups.add(Group.objects.get(name=group_name))
+            else:
+                user.groups.remove(Group.objects.get(name=group_name))
 
         notify_new_admin_permission(user.agent.contact_set.get(), form.cleaned_data["domains"])
         messages.success(self.request, "Le rôle administrateur a été accordé")

@@ -12,6 +12,7 @@ from .views import (
     DocumentUploadView,
     EvenementOuvrirView,
     FinDeSuiviHandlingView,
+    MassCloturerView,
     MassFinDeSuiviHandlingView,
     MessageCreateView,
     MessageDetailsView,
@@ -100,6 +101,11 @@ urlpatterns = [
         "cloturer/<int:pk>",
         CloturerView.as_view(),
         name="cloturer",
+    ),
+    path(
+        "cloturer/mass/",
+        MassCloturerView.as_view(),
+        name="cloturer-mass",
     ),
     path(
         "evenement/<int:pk>/ouvrir/",
