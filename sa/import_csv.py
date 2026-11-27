@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 import requests
 from requests import ReadTimeout
 
-from core.mixins import normalize
+from core.mixins import WithEtatMixin, normalize
 from core.models import Departement
 from sa.models import Espece, EvenementAnimal, Maladie
 from sa.models.evenement import StatutAnimal, StatutEvenement, TypeLieu
@@ -119,6 +119,7 @@ def _parse_row(row, especes, maladies, user):
         return None
 
     fields = {
+        "etat": WithEtatMixin.Etat.EN_COURS,
         "import_id": row[ID_COLUMN],
         "espece": espece,
         "maladie": maladie,

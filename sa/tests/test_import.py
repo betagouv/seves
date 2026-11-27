@@ -6,6 +6,7 @@ from playwright.sync_api import Page, expect
 import pytest
 from requests import HTTPError, ReadTimeout
 
+from core.mixins import WithEtatMixin
 from core.models import Departement
 from sa.import_csv import _get_departements, _get_geo_data_from_insee_code
 from sa.models import EvenementAnimal, Import
@@ -100,6 +101,7 @@ def test_import_analyses_then_creates_evenements_with_one_row_in_error(
         "TEST-SA-2026-0001",
         "TEST-SA-2026-0002",
     ]
+    assert EvenementAnimal.objects.filter(etat=WithEtatMixin.Etat.EN_COURS).count() == 2
     evenement = EvenementAnimal.objects.get(import_id="TEST-SA-2026-0001")
     assert evenement.espece == espece
     assert evenement.maladie == maladie
