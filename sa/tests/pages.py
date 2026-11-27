@@ -856,17 +856,11 @@ class ImportPage:
         return self.page.locator("[data-import-target='errorText']")
 
     @property
-    def eligible_count(self):
-        return self.page.locator("[data-import-target='eligible']")
+    def skipped_deletions_warning(self):
+        return self.page.locator("[data-import-target='skippedDeletionsWarning']")
 
-    @property
-    def ignored_count(self):
-        return self.page.locator("[data-import-target='ignored']")
+    def analysis_count(self, field):
+        return self.analysis_result.locator(f"[data-import-target='count'][data-field='{field}']")
 
-    @property
-    def done_count(self):
-        return self.page.locator("[data-import-target='done']")
-
-    @property
-    def error_count(self):
-        return self.page.locator("[data-import-target='errorCount']")
+    def import_count(self, field):
+        return self.import_result.locator(f"[data-import-target='count'][data-field='{field}']")

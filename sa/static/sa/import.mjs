@@ -16,16 +16,13 @@ class ImportController extends Controller {
         "submit",
         "dropZone",
         "result",
-        "eligible",
-        "ignored",
         "submitCreate",
-        "done",
-        "errorCount",
         "resultCreation",
         "error",
         "errorText",
         "description",
-        "read",
+        "count",
+        "skippedDeletionsWarning",
     ]
     static values = {url: String}
 
@@ -73,6 +70,13 @@ class ImportController extends Controller {
         this.errorTarget.classList.remove("fr-hidden")
     }
 
+    /** @param {Object<string, number>} data */
+    fillCounts(data) {
+        for (const count of this.countTargets) {
+            if (count.dataset.field in data) count.textContent = data[count.dataset.field]
+        }
+    }
+
     async onSubmit() {
         const body = new FormData()
         body.append("file", this.fileTarget.files[0])
@@ -89,9 +93,8 @@ class ImportController extends Controller {
         const data = await this.getData(response)
         if (!data) return
 
-        this.eligibleTarget.textContent = data.eligible
-        this.ignoredTarget.textContent = data.ignored
-        this.readTarget.textContent = data.read
+        this.fillCounts(data)
+        this.skippedDeletionsWarningTarget.classList.toggle("fr-hidden", !data.skipped_deletions)
         this.resultTarget.classList.remove("fr-hidden")
         this.submitCreateTarget.classList.remove("fr-hidden")
         this.submitTarget.classList.add("fr-hidden")
@@ -117,8 +120,7 @@ class ImportController extends Controller {
             return
         }
 
-        this.doneTarget.textContent = data.done
-        this.errorCountTarget.textContent = data.errors
+        this.fillCounts(data)
         this.resultCreationTarget.classList.remove("fr-hidden")
         this.resultTarget.classList.add("fr-hidden")
     }
