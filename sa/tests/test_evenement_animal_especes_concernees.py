@@ -320,7 +320,22 @@ def test_numero_identifiant_detenteur_is_copied_to_first_espece_concernee_only(
 
     creation_page.numero_identifiant_etablissement.fill("FR123456")
 
-    first_identifiant = creation_page.get_espece_concernee_row(0).locator('[id$="-identifiant"]')
-    second_identifiant = creation_page.get_espece_concernee_row(1).locator('[id$="-identifiant"]')
-    expect(first_identifiant).to_have_value("FR123456")
-    expect(second_identifiant).to_have_value("")
+    expect(creation_page.espece_concernee_identifiant(0)).to_have_value("FR123456")
+    expect(creation_page.espece_concernee_identifiant(1)).to_have_value("")
+
+
+def test_espece_concernee_identifiant_placeholder_follows_espece_of_each_row(live_server, page: Page):
+    maladie = MaladieFactory()
+    espece = EspeceFactory(identifiant_placeholder="Numéro EDE (FR 12 345 678)")
+    espece_with_placeholder = EspeceFactory(identifiant_placeholder="Numéro ruche")
+
+    creation_page = EvenementAnimalFormPage(page, live_server.url)
+    creation_page.navigate(maladie, espece, StatutAnimal.DETENU)
+
+    expect(creation_page.espece_concernee_identifiant(0)).to_have_attribute("placeholder", "Numéro EDE (FR 12 345 678)")
+
+    creation_page.add_espece_concernee()
+    expect(creation_page.espece_concernee_identifiant(1)).to_have_attribute("placeholder", "Numéro détenteur")
+
+    creation_page.fill_espece_concernee(1, espece=espece_with_placeholder, identifiant="ID-1")
+    expect(creation_page.espece_concernee_identifiant(1)).to_have_attribute("placeholder", "Numéro ruche")

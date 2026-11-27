@@ -40,9 +40,20 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
         "type_elevage",
     )
 
-    def __init__(self, *args, situation_unite_rows=None, show_detenu_fields=True, **kwargs):
+    def __init__(
+        self,
+        *args,
+        situation_unite_rows=None,
+        show_detenu_fields=True,
+        identifiant_placeholders=None,
+        default_identifiant_placeholder=Espece.IDENTIFIANT_PLACEHOLDER_DETENU,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.show_detenu_fields = show_detenu_fields
+        self.identifiant_placeholders = identifiant_placeholders or {}
+        self.default_identifiant_placeholder = default_identifiant_placeholder
+        self.fields["identifiant"].widget.attrs["placeholder"] = self.identifiant_placeholder
         if not show_detenu_fields:
             for field_name in self.DETENU_FIELDS:
                 self.fields.pop(field_name)
@@ -59,6 +70,11 @@ class EspeceConcerneeForm(DsfrBaseForm, forms.ModelForm):
             self.initial.setdefault("mode_elevage", self.instance.mode_elevage)
             self.initial.setdefault("type_production", self.instance.type_production)
             self.initial.setdefault("type_elevage", self.instance.type_elevage)
+
+    @property
+    def identifiant_placeholder(self):
+        espece_id = str(self["espece"].value() or "")
+        return self.identifiant_placeholders.get(espece_id) or self.default_identifiant_placeholder
 
     def has_changed(self):
         return self.always_save or super().has_changed()

@@ -419,6 +419,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         self.fields["maladie"].initial = self.maladie_id
         self.maladie = Maladie.objects.get(id=self.maladie_id)
         self.maladie_object = self.maladie
+        self.espece_object = Espece.objects.get(id=self.espece)
         self._init_typage_fields()
         self.fields["espece"].initial = self.espece
         self.fields["statut_animal"].initial = self.statut_animal
@@ -463,6 +464,9 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
                 self.fields.pop(field)
 
         if self.show_detenteur_block is True:
+            self.fields["numero_identifiant_etablissement"].widget.attrs["placeholder"] = (
+                self.espece_object.identifiant_placeholder or Espece.IDENTIFIANT_PLACEHOLDER_DETENU
+            )
             if type_detenteur == TypeDetenteur.PARTICULIER:
                 self.fields["numero_identifiant_etablissement"].required = False
                 self.fields["nom_particulier"].required = True

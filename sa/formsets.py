@@ -112,10 +112,24 @@ class EspeceConcerneeBaseFormSet(WithExtraFormsForInitialMixin, BaseInlineFormSe
     def _situation_unite_rows(self):
         return situation_unite.fetch_rows()
 
+    @cached_property
+    def identifiant_placeholders(self):
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return {}
+        return Espece.identifiant_placeholders()
+
+    @property
+    def default_identifiant_placeholder(self):
+        if self.statut_animal == StatutAnimal.SAUVAGE:
+            return Espece.IDENTIFIANT_PLACEHOLDER_SAUVAGE
+        return Espece.IDENTIFIANT_PLACEHOLDER_DETENU
+
     def get_form_kwargs(self, index):
         kwargs = super().get_form_kwargs(index)
         kwargs["situation_unite_rows"] = self._situation_unite_rows
         kwargs["show_detenu_fields"] = self.show_detenu_fields
+        kwargs["identifiant_placeholders"] = self.identifiant_placeholders
+        kwargs["default_identifiant_placeholder"] = self.default_identifiant_placeholder
         return kwargs
 
     @property
