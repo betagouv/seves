@@ -290,7 +290,7 @@ class EvenementAnimalForm(DsfrBaseForm, WithFreeLinksMixin, WithLatestVersionLoc
         required=False, label="Origine de l'infection", choices=OrigineInfection.choices
     )
     mesures_controle = MultipleChoiceField(
-        choices=MesureDeControle.choices, label="Mesures de contrôle mises en œuvre", required=False
+        choices=MesureDeControle.sorted_choices, label="Mesures de contrôle mises en œuvre", required=False
     )
 
     typage_niveau_2 = forms.ChoiceField(required=False, choices=())
