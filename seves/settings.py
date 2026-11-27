@@ -142,9 +142,17 @@ DATABASES = {
     },
 }
 
+
+def redis_url_with_db(url, db):
+    return urlparse(url)._replace(path=f"/{db}").geturl()
+
+
+# Use another DB than the Celery broker, so that a clearing do not empty the task queue
 CACHES = {
     "default": {
-        "BACKEND": env("CACHE_CLASS", default="django.core.cache.backends.locmem.LocMemCache"),
+        "BACKEND": env("CACHE_CLASS", default="core.cache.MemoryGuardedRedisCache"),
+        "LOCATION": env("CACHE_REDIS_URL", default=None) or redis_url_with_db(env("SCALINGO_REDIS_URL"), 1),
+        "TIMEOUT": 24 * 60 * 60,
     }
 }
 
@@ -277,7 +285,7 @@ ANTIVIRUS_TOKEN = env("ANTIVIRUS_TOKEN", default=None)
 
 CELERY_TASK_ALWAYS_EAGER = env("CELERY_TASK_ALWAYS_EAGER", default=False)
 if not CELERY_TASK_ALWAYS_EAGER:
-    CELERY_BROKER_URL = env.cache_url("SCALINGO_REDIS_URL")["LOCATION"]
+    CELERY_BROKER_URL = redis_url_with_db(env("SCALINGO_REDIS_URL"), 0)
     CELERY_REDIS_SOCKET_KEEPALIVE = True
     CELERY_BROKER_CONNECTION_MAX_RETRIES = None
 

@@ -2,12 +2,13 @@ import contextlib
 from datetime import date
 from unittest import mock
 
+from django.core.cache import cache
 from playwright.sync_api import Page, expect
 import pytest
 from requests import HTTPError, ReadTimeout
 
 from core.models import Departement
-from sa.import_csv import _get_departements, _get_geo_data_from_insee_code
+from sa.import_csv import _get_departements
 from sa.models import EvenementAnimal, Import
 from sa.models.evenement import StatutEvenement
 from sa.tests.factories import EspeceFactory, FCOFactory
@@ -30,12 +31,13 @@ COMMUNES = {
 
 
 @pytest.fixture(autouse=True)
-def clear_geo_api_caches():
-    for cached in (_get_geo_data_from_insee_code, _get_departements):
-        cached.cache_clear()
+def geo_api_caches(settings):
+    settings.CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    _get_departements.cache_clear()
+    cache.clear()
     yield
-    for cached in (_get_geo_data_from_insee_code, _get_departements):
-        cached.cache_clear()
+    _get_departements.cache_clear()
+    cache.clear()
 
 
 @pytest.fixture(autouse=True)

@@ -159,9 +159,9 @@ fileignoreconfig:
 - filename: sa/templates/sa/_evenement_animal_advanced_filters.html
   checksum: a9a5cb7cbdc171df21144a5520a3c90ea402dd0f6af8141144e63f085d4a6996
 - filename: .env.dist
-  checksum: 1b95670d36ffefcb24cc6d74571b3feb8e26bb3e1b0763c43580b1d78b45ccd4
+  checksum: d514cc4bed6854b91701b655b38e6a67019eb39ea24cd12228dbe75372b8ca67
 - filename: seves/settings.py
-  checksum: 2960939d78ddd40da9ec5180a05b2a3ed1787b6919fe8811d6c94cf6a79ece73
+  checksum: 74692bf8eb8f8e3ffcc449d0770693d763ca8ac799ec5d4d1e2a470c645bafba
 - filename: core/static/core/base.js
   checksum: e62bb8f205f7f012d182cf0713d927503e3f20a815e3a30b67bf1cff9c5e5474
 - filename: core/migrations/0069_message_read.py
@@ -170,4 +170,8 @@ fileignoreconfig:
   checksum: fd35c1512abec7a75185e5159886fb37a2112dee39f72bc66cf0e9ca46fb6f8d
 - filename: core/migrations/0070_alter_document_document_type.py
   checksum: 3b6ef8b1ef9347980b13666bc8fdb36620a0fa5cf0358285244906fef509be94
+- filename: core/cache.py
+  checksum: 584ab0ef3c8f49b9e2be2ba5203136b9b6fb43cb569f4de141c96a7aa70afe7b
+- filename: core/tests/test_cache.py
+  checksum: 080269c304af513a67c6c62004cb9603ff688c69a8cbb9d5c9e6f3d68f1455f2
 version: "1.0"

@@ -1,11 +1,12 @@
 import csv
 from datetime import datetime
-from functools import cache
+import functools
 import io
 import re
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 import requests
 from requests import ReadTimeout
@@ -31,6 +32,7 @@ MANDATORY_COLUMNS = (
     EDE_COLUMN,
 )
 CODE_INSEE_RE = re.compile(r"^(?:\d{5}|2A\d{3}|2B\d{3})$")
+GEO_DATA_CACHE_TIMEOUT = 30 * 24 * 60 * 60
 
 
 class MissingColumnsError(Exception):
@@ -61,13 +63,12 @@ def _maladies_by_name():
     return maladies
 
 
-@cache
+@functools.cache
 def _get_departements():
     return {str(d.numero): d.pk for d in Departement.objects.all()}
 
 
-@cache
-def _get_geo_data_from_insee_code(insee_code):
+def _fetch_geo_data_from_insee_code(insee_code):
     try:
         response = requests.get(f"{settings.GEO_API_ROOT}/communes/{insee_code}?fields=centre,departement", timeout=8)
     except ReadTimeout:
@@ -93,6 +94,14 @@ def _get_geo_data_from_insee_code(insee_code):
         raise UnableToLocateException
 
     return data
+
+
+def _get_geo_data_from_insee_code(insee_code):
+    return cache.get_or_set(
+        f"sa_import_geo_data_{insee_code}",
+        lambda: _fetch_geo_data_from_insee_code(insee_code),
+        GEO_DATA_CACHE_TIMEOUT,
+    )
 
 
 def _parse_row(row, especes, maladies, user):
