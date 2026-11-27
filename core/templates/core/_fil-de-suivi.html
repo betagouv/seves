@@ -17,7 +17,7 @@
                             <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=demande_intervention">Demande d'intervention</a></li>
                         {% endif %}
                         {% if can_add_cr_di %}
-                            <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=cr_demande_intervention">Compte rendu sur demande d'intervention</a></li>
+                            <li><a class="fr-translate__language fr-nav__link" href="{% url 'message-add' content_type.pk object.pk %}?type=cr_demande_intervention">Compte-rendu d'intervention</a></li>
                         {% endif %}
                     </ul>
                 </div>

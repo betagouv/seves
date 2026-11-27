@@ -135,7 +135,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     message_page = CreateMessagePage(page)
     message_page.new_compte_rendu()
 
-    expect(page.get_by_text("Nouveau compte rendu sur demande d'intervention")).to_be_visible()
+    expect(page.get_by_text("Nouveau compte-rendu d'intervention")).to_be_visible()
     expect(page.locator(".label-marked", has_text="Destinataires")).to_be_visible()
     page.get_by_text("MUS", exact=True).click()
     page.get_by_text("BSV", exact=True).click()
@@ -149,7 +149,7 @@ def test_can_add_and_see_compte_rendu_in_new_tab(live_server, page: Page, choice
     assert message_page.message_sender_in_table() == "Structure Test"
     assert message_page.message_recipient_in_table().strip().split() == ["MUS", "et", "1", "autre"]
     assert message_page.message_title_in_table() == "Title of the message"
-    assert message_page.message_type_in_table() == "Compte rendu sur demande d'intervention"
+    assert message_page.message_type_in_table() == "Compte-rendu d'intervention"
 
     assert evenement.messages.get().status == Message.Status.FINALISE
     assert evenement.messages.get().recipients_copy.all().count() == 2
@@ -884,7 +884,7 @@ def test_can_add_draft_compte_rendu(live_server, page: Page, mailoutbox):
     cell_selector = f"#table-sm-row-key-1 td:nth-child({4}) a"
     assert page.text_content(cell_selector) == "[BROUILLON] Title of the message"
     cell_selector = f"#table-sm-row-key-1 td:nth-child({6}) a"
-    assert page.text_content(cell_selector) == "Compte rendu sur demande d'intervention [BROUILLON]"
+    assert page.text_content(cell_selector) == "Compte-rendu d'intervention [BROUILLON]"
     assert evenement.messages.get().status == Message.Status.BROUILLON
     assert len(mailoutbox) == 0
 
