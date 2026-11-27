@@ -341,6 +341,9 @@ class WithEspecesConcerneesMixin:
         for field_name, value in fields.items():
             row.locator(f'[id$="-{field_name}"]').fill(str(value))
 
+    def espece_concernee_identifiant(self, index=0):
+        return self.get_espece_concernee_row(index).locator('[id$="-identifiant"]')
+
     def delete_espece_concernee(self, index):
         self.get_espece_concernee_row(index).get_by_role("button", name="Supprimer").click()
 

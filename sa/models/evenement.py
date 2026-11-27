@@ -24,11 +24,24 @@ from sa.models.maladie import Maladie
 
 
 class Espece(models.Model):
+    IDENTIFIANT_PLACEHOLDER_DETENU = "Numéro détenteur"
+    IDENTIFIANT_PLACEHOLDER_SAUVAGE = "Numéro SAGIR"
+
     name = models.CharField(max_length=255, verbose_name="Nom", unique=True)
     is_highlighted = models.BooleanField(default=False, verbose_name="Espèce courante")
+    identifiant_placeholder = models.CharField(blank=True, null=True, verbose_name="Exemple d'identifiant")
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def identifiant_placeholders():
+        return {
+            str(pk): placeholder
+            for pk, placeholder in Espece.objects.exclude(identifiant_placeholder__isnull=True)
+            .exclude(identifiant_placeholder="")
+            .values_list("pk", "identifiant_placeholder")
+        }
 
     @property
     def _treeselect_item(self):

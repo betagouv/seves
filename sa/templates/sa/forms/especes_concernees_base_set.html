@@ -6,6 +6,7 @@
         data-controller="especes-concernees-row{% if formset.show_detenu_fields %} situation-unite{% endif %}"
         {% if formset.show_detenu_fields %}data-situation-unite-form-prefix-value="{{ form.prefix }}"{% endif %}
         data-espece-concernee-prefix="{{ form.prefix }}"
+        data-especes-concernees-row-default-placeholder-value="{{ form.default_identifiant_placeholder }}"
         data-action="change->especes-concernees-row#notifyChanged{% if is_first %} detenteur-form:numeroIdentifiantChanged@window->especes-concernees-row#onNumeroIdentifiantDetenteurChanged{% endif %}"
     >
         {{ form.id }}
@@ -17,7 +18,7 @@
                 data-espece-autres-source-value="especes-concernees-autres"
                 data-situation-unite-target="especeField"
                 data-especes-concernees-row-target="especeField"
-                data-action="click->espece-autres#loadAutres change->situation-unite#onEspeceChange"
+                data-action="click->espece-autres#loadAutres change->situation-unite#onEspeceChange change->especes-concernees-row#onEspeceChange"
             >
                 {% dsfr_form_field form.espece %}
             </div>
@@ -184,6 +185,7 @@
     {{ formset.non_form_errors }}
     {{ formset.situation_unite_tree_json|json_script:"situation-unite-tree" }}
     {{ formset.autres_especes|json_script:"especes-concernees-autres" }}
+    {{ formset.identifiant_placeholders|json_script:"espece-identifiant-placeholders" }}
     {% for field in formset.management_form %}
         {% with data_target=field.name|strfmt:"especes-concernees-formset-target:{0}" %}
             {{ field|set_data:data_target }}
