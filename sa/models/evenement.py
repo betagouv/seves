@@ -120,11 +120,33 @@ class Foyer(models.TextChoices):
 
 
 class OrigineInfection(models.TextChoices):
-    CONTACT_DIRECT = auto(), "Contact direct"
-    IMPORTATION = auto(), "Importation"
-    INCONNUE = auto(), "Inconnue"
-    INTERVENTION_HUMAINE = auto(), "Intervention humaine"
-    VECTEUR = auto(), "Vecteur"
+    ALIMENTATION_DECHETS_ALIMENTAIRES = auto(), "Alimentation à base de déchets alimentaires"
+    ALIMENTATION_PRODUITS_CRUS_AQUATIQUES = auto(), "Alimentation à base de produits crus d'origine aquatique"
+    ANIMAUX_EN_TRANSIT = auto(), "Animaux en transit"
+    CONTACT_ESPECES_SAUVAGES = auto(), "Contact avec des espèces sauvages"
+    CONTACT_ETABLISSEMENT_VOISIN_INFECTE = auto(), "Contact avec un établissement voisin infecté"
+    CONTACT_ANIMAUX_INFECTES_PATURAGE_ABREUVEMENT = (
+        auto(),
+        "Contact avec un ou des animaux infectés sur des lieux de pâturage ou d’abreuvement",
+    )
+    DEPLACEMENT_ILLEGAL_ANIMAUX = auto(), "Déplacement illégal d’animaux"
+    DEPLACEMENT_LEGAL_ANIMAUX = auto(), "Déplacement légal d’animaux"
+    INCONNU_OU_NON_CONCLUANT = auto(), "Inconnu ou non concluant"
+    INTRODUCTION_ANIMAUX_VIVANTS = auto(), "Introduction de nouveaux animaux vivants"
+    INTRODUCTION_PRODUITS_ANIMAUX_NON_VIABLES = (
+        auto(),
+        "Introduction de nouveaux produits d’origine animale non viables",
+    )
+    PROPAGATION_HORIZONTALE_EAU = auto(), "Propagation horizontale par l’eau"
+    PROPAGATION_AERIENNE = auto(), "Propagation par voie aérienne"
+    TRANSMISSION_VERTICALE_APPARENTE = (
+        auto(),
+        "Transmission verticale apparente (via des œufs ou des gamètes contaminés)",
+    )
+    TRANSMISSION_VERTICALE_VRAIE = auto(), "Transmission verticale vraie (via des œufs ou des gamètes infectés)"
+    VECTEUR_PASSIF = auto(), "Vecteur passif de transmission (humains, véhicules, aliments, etc.)"
+    VECTEURS = auto(), "Vecteurs"
+    AUTRE = auto(), "Autre"
 
 
 class MesureDeControle(models.TextChoices):
